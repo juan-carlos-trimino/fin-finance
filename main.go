@@ -2,7 +2,7 @@
 package main
 
 import (
-	"finances"
+	"finance/finances"
 	// // "app/umath"
 	"fmt"
 	// "math"

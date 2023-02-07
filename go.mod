@@ -1,3 +1,3 @@
-module main
+module finance
 
 go 1.19
