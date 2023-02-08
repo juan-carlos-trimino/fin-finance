@@ -120,6 +120,11 @@ func main() {
   var m finances.Miscellaneous
   var real = (&m).RealInterestRate(0.045, 0.065)
   fmt.Printf("Real Interest Rate = %.2f%%\n", real * 100)
+  fmt.Printf("Growth/Decay Of Funds = %.2f\n", m.GrowthDecayOfFunds(.15, finances.Annually, 2.0))
+  var ear float64 = m.NominalToEffectiveAnnualRate(0.12, finances.Monthly)
+  fmt.Printf("Effective Annual Rate = %.6f%%\n", ear * 100.0)
+  fmt.Printf("Nomial Rate = %.6f%%\n", m.EffectiveAnnualToNominalRate(ear, finances.Monthly) * 100.0)
+
 
   // fmt.Println("eps = ", math.Nextafter(1.0, 2.0) - 1.0)
   fmt.Println("Hello, world.")
