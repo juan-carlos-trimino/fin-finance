@@ -1,11 +1,11 @@
 //
-package umath
+package mathutil
 
 import (
 	"math"
 )
 
-type Umath struct{}
+type MathUtil struct{}
 
 /***
                              Prologue
@@ -65,7 +65,7 @@ History of Changes:
   1.01  JC Trimino 123108 Changed to use template.
   1.02  JC Trimino xxxxxx Translated to Go.
 ***/
-func (u *Umath) Mod64(x, y float64) float64 {
+func (m *MathUtil) Mod64(x, y float64) float64 {
   //Epsilon is the smallest value that, when added to one, yields a result different from one.
   var epsilon float64 = math.Nextafter(float64(1), float64(2)) - float64(1)
   //If |y| < EPSILON, then y = 0.

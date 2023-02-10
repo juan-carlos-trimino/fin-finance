@@ -1,4 +1,4 @@
-package umath
+package mathutil
 
 /***
 A 'go test' (or 'go build') command with no package arguments operates on the package in the
@@ -31,13 +31,13 @@ func TestMod64(t *testing.T) {
     //Reduce the angle x (in radians) to the range [0, 2 * math.Pi).
     {[2]float64{45256.25, 2 * math.Pi}, 4.749418},
   }
-  var um Umath
+  var mu MathUtil
   /***
   'range' on arrays and slices provides both the index and value for each entry. Since we don't
   need the index, we will ignore it with the blank identifier _.
   ***/
   for _, test := range tests {
-    got := um.Mod64(test.input[0], test.input[1])
+    got := mu.Mod64(test.input[0], test.input[1])
     if math.IsNaN(got) {
       if !math.IsNaN(test.want) {
         t.Errorf("Mod64(%f, %f) = %f; want %f", test.input[0], test.input[1], got, test.want)
