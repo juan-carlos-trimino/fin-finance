@@ -6,7 +6,7 @@ import (
 )
 
 type Miscellaneous struct {
-  P Periods
+  Periods
 }
 
 /***
@@ -140,7 +140,7 @@ func (m *Miscellaneous) NominalToEffectiveAnnualRate(i float64, c int) float64 {
   if c == Continuously {
     r = math.Pow(math.E, i) - 1.0
   } else {
-    r = math.Pow(1.0 + (*m).P.PeriodicInterestRate(i, c), float64(c)) - 1.0
+    r = math.Pow(1.0 + (*m).PeriodicInterestRate(i, c), float64(c)) - 1.0
   }
   return r
 }

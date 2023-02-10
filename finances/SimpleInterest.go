@@ -1,7 +1,8 @@
+// SimpleInterest computes simple interests (Ordinary Simple Interest, Commercial (Banker's)
+// Interest, and Accurate (Exact) Interest).
 package finances
 
 import (
-	// "fmt"
 	"math"
 )
 
@@ -9,29 +10,24 @@ import (
 Parameter  Definition
 ---------  ----------
 
-	p, PV     The present value of an amount of money.
-	INT       Interest.
-	n         A number of equal-time intervals between the present time and a future time (n for
-	          number of periods).
-	i         Interest rate per period.
-	c         Compounding period.
-	t         Time period; i.e., years, months, days, etc.
+  p, PV     The present value of an amount of money.
+  INT       Interest.
+  n         A number of equal-time intervals between the present time and a future time (n for
+            number of periods).
+  i         Interest rate per period.
+  c         Compounding period.
+  t         Time period; i.e., years, months, days, etc.
 
 Simple interest is the amount paid on money borrowed (principal) where the principal remains
 unchanged for the period of time the money is in use.
 
 There are three types of simple interest:
 (a) Ordinary Simple Interest, based on "a 30-day month and a 360-day year," is frequently used for
-
-	real estate loans, installment loans, and periodic repayment personal loans;
-
+    real estate loans, installment loans, and periodic repayment personal loans;
 (b) Commercial (Banker's) Interest, based on "a 360-day year and an exactly specified number of
-
-	days," results in the greatest return for the lender;
-
+    days," results in the greatest return for the lender;
 (c) Accurate (Exact) Interest, based on "a 365-day year and an exact number of days," is more
-
-	frequently used in commercial transactions.
+    frequently used in commercial transactions.
 
 The basis for a loan determines the way in which time is calculated for computing simple interest.
 The time calculation depends on whether a 30-day month or an exact number of days is used. In the
@@ -47,11 +43,11 @@ be added when accounting for leap year.
 
 The formula for computing simple interest is:
 
-	interest = principal * interest rate * time
+  interest = principal * interest rate * time
 
 or
 
-	INT = PV * i * n
+  INT = PV * i * n
 
 where PV is the present value of the principal or amount loaned (or borrowed), INT is interest, i
 is the interest rate per period, and n is the number of days the money is on loan. Since it is
@@ -63,12 +59,12 @@ is in days, the annual rate must be divided by either 360 (Ordinary and Banker's
 To illustrate the difference between Banker's, Acccurate, and Ordinary interest, consider the case
 of $10,000 loaned at 9% from June 1 to November 1.
 
-	INT = 10,000 * 0.09 * (153 / 360) = 382.50 (Banker's)
-	INT = 10,000 * 0.09 * (153 / 365) = 377.26 (Accurate)
-	INT = 10,000 * 0.09 * (150 / 360) = 375.00 (Ordinary [Five 30-day months])
+  INT = 10,000 * 0.09 * (153 / 360) = 382.50 (Banker's)
+  INT = 10,000 * 0.09 * (153 / 365) = 377.26 (Accurate)
+  INT = 10,000 * 0.09 * (150 / 360) = 375.00 (Ordinary [Five 30-day months])
 ***/
 type SimpleInterest struct {
-	P Periods
+  Periods  //Composition.
 }
 
 func (si *SimpleInterest) OrdinaryInterest(p, i float64, c int, n float64, t int) float64 {
@@ -76,7 +72,7 @@ func (si *SimpleInterest) OrdinaryInterest(p, i float64, c int, n float64, t int
 		m, _ := math.Modf(n / 30.0) //Break n into its fractional (ignore) and integer (m) parts.
 		n = m * 30                  //30-day months.
 	}
-	n = si.P.NumberOfPeriods(n, t, c, float64(Daily360))
+	n = si.NumberOfPeriods(n, t, c, float64(Daily360))
 	return (p * i * n) //INT
 }
 
@@ -85,7 +81,7 @@ func (si *SimpleInterest) OrdinaryRate(p, INT float64, c int, n float64, t int) 
 		m, _ := math.Modf(n / 30.0) //Break n into its fractional (ignore) and integer (m) parts.
 		n = m * 30                  //30-day months.
 	}
-	n = si.P.NumberOfPeriods(n, t, c, float64(Daily360))
+	n = si.NumberOfPeriods(n, t, c, float64(Daily360))
 	return (INT / (p * n)) //rate.
 }
 
@@ -94,7 +90,7 @@ func (si *SimpleInterest) OrdinaryPrincipal(INT, rate float64, c int, n float64,
 		m, _ := math.Modf(n / 30.0) //Divide n into its fractional (ignore) and integer (m) parts.
 		n = m * 30                  //30-day months.
 	}
-	n = si.P.NumberOfPeriods(n, t, c, float64(Daily360))
+	n = si.NumberOfPeriods(n, t, c, float64(Daily360))
 	return (INT / (rate * n)) //p
 }
 
@@ -114,17 +110,17 @@ func (si *SimpleInterest) OrdinaryTime(p, INT, rate float64, c, t int) float64 {
 }
 
 func (si *SimpleInterest) BankersInterest(p, i float64, c int, n float64, t int) float64 {
-  n = si.P.NumberOfPeriods(n, t, c, float64(Daily360))
+  n = si.NumberOfPeriods(n, t, c, float64(Daily360))
   return (p * i * n) //INT
 }
 
 func (si *SimpleInterest) BankersRate(p, INT float64, c int, n float64, t int) float64 {
-  n = si.P.NumberOfPeriods(n, t, c, float64(Daily360))
+  n = si.NumberOfPeriods(n, t, c, float64(Daily360))
   return (INT / (p * n)) //rate.
 }
 
 func (si *SimpleInterest) BankersPrincipal(INT, rate float64, c int, n float64, t int) float64 {
-  n = si.P.NumberOfPeriods(n, t, c, float64(Daily360))
+  n = si.NumberOfPeriods(n, t, c, float64(Daily360))
   return (INT / (rate * n)) //p
 }
 
@@ -144,17 +140,17 @@ func (si *SimpleInterest) BankersTime(p, INT, rate float64, c, t int) float64 {
 }
 
 func (si *SimpleInterest) AccurateInterest(p, i float64, c int, n float64, t int) float64 {
-  n = si.P.NumberOfPeriods(n, t, c, float64(Daily365))
+  n = si.NumberOfPeriods(n, t, c, float64(Daily365))
   return (p * i * n) //INT
 }
 
 func (si *SimpleInterest) AccurateRate(p, INT float64, c int, n float64, t int) float64 {
-  n = si.P.NumberOfPeriods(n, t, c, float64(Daily365))
+  n = si.NumberOfPeriods(n, t, c, float64(Daily365))
   return (INT / (p * n)) //rate.
 }
 
 func (si *SimpleInterest) AccuratePrincipal(INT, rate float64, c int, n float64, t int) float64 {
-  n = si.P.NumberOfPeriods(n, t, c, float64(Daily365))
+  n = si.NumberOfPeriods(n, t, c, float64(Daily365))
   return (INT / (rate * n)) //p
 }
 

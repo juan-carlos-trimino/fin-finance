@@ -1,4 +1,4 @@
-//
+// Periods adjusts compounding periods and time (interest) periods.
 package finances
 
 import (
