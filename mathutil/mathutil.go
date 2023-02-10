@@ -2,7 +2,7 @@
 package mathutil
 
 import (
-	"math"
+  "math"
 )
 
 type MathUtil struct{}
