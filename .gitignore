@@ -11,8 +11,10 @@
 # ... and these files under the 'finances' directory...
 !finances/
 finances/*
+!finances/Annuities.go
 !finances/Miscellaneous_test.go
 !finances/Miscellaneous.go
+!finances/Mortgage.go
 !finances/Periods.go
 !finances/SimpleInterest.go
 # ... and this directory and its file...
