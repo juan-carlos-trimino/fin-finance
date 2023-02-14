@@ -39,9 +39,9 @@ Refinance mortgage and HELOC with one load.
 If the blended interest rate is higher than what you could get on a new fixed-rate mortgage,
 consider it.
 ***/
-func (m *Mortgage) MortgageHeloc(mortgageBalance, mortgageRate, helocBalance, helocRate float64) float64 {
-  var blendedInterestRate = m.BlendedInterestRate(mortgageBalance, mortgageRate, helocBalance, helocRate) * hundred
-  return blendedInterestRate
+func (m *Mortgage) MortgageHeloc(mortgageBalance, mortgageRate, helocBalance, helocRate float64) (blendedInterestRate float64) {
+  blendedInterestRate = m.BlendedInterestRate(mortgageBalance, mortgageRate, helocBalance, helocRate) * hundred
+  return
 }
 
 type row struct { //Rows for the amortization table.
