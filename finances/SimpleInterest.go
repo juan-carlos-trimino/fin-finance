@@ -15,8 +15,8 @@ Parameter  Definition
   n         A number of equal-time intervals between the present time and a future time (n for
             number of periods).
   i         Interest rate per period.
-  c         Compounding period.
-  t         Time period; i.e., years, months, days, etc.
+  cp        Compounding period.
+  tp        Time period; i.e., years, months, days, etc.
 
 Simple interest is the amount paid on money borrowed (principal) where the principal remains
 unchanged for the period of time the money is in use.
@@ -67,104 +67,104 @@ type SimpleInterest struct {
   Periods  //Composition.
 }
 
-func (si *SimpleInterest) OrdinaryInterest(p, i float64, c int, n float64, t int) float64 {
-	if t == Days {
+func (si *SimpleInterest) OrdinaryInterest(p, i float64, cp int, n float64, tp int) float64 {
+	if tp == Days {
 		m, _ := math.Modf(n / 30.0) //Break n into its fractional (ignore) and integer (m) parts.
 		n = m * 30                  //30-day months.
 	}
-	n = si.NumberOfPeriods(n, t, c, float64(Daily360))
+	n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
 	return (p * i * n) //INT
 }
 
-func (si *SimpleInterest) OrdinaryRate(p, INT float64, c int, n float64, t int) float64 {
-	if t == Days {
+func (si *SimpleInterest) OrdinaryRate(p, INT float64, cp int, n float64, tp int) float64 {
+	if tp == Days {
 		m, _ := math.Modf(n / 30.0) //Break n into its fractional (ignore) and integer (m) parts.
 		n = m * 30                  //30-day months.
 	}
-	n = si.NumberOfPeriods(n, t, c, float64(Daily360))
+	n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
 	return (INT / (p * n)) //rate.
 }
 
-func (si *SimpleInterest) OrdinaryPrincipal(INT, rate float64, c int, n float64, t int) float64 {
-	if t == Days {
+func (si *SimpleInterest) OrdinaryPrincipal(INT, rate float64, cp int, n float64, tp int) float64 {
+	if tp == Days {
 		m, _ := math.Modf(n / 30.0) //Divide n into its fractional (ignore) and integer (m) parts.
 		n = m * 30                  //30-day months.
 	}
-	n = si.NumberOfPeriods(n, t, c, float64(Daily360))
+	n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
 	return (INT / (rate * n)) //p
 }
 
-func (si *SimpleInterest) OrdinaryTime(p, INT, rate float64, c, t int) float64 {
-	rate /= float64(c)
-	var tp float64 = INT / (rate * p)
-	if t == Days {
-		t = Daily360
+func (si *SimpleInterest) OrdinaryTime(p, INT, rate float64, cp, tp int) float64 {
+	rate /= float64(cp)
+	var time float64 = INT / (rate * p)
+	if tp == Days {
+		tp = Daily360
 	}
 	//
-	if c == t {
-		tp /= float64(t)
+	if cp == tp {
+		time /= float64(tp)
 	} else {
-		tp *= float64(t)
+		time *= float64(tp)
 	}
-	return tp
+	return time
 }
 
-func (si *SimpleInterest) BankersInterest(p, i float64, c int, n float64, t int) float64 {
-  n = si.NumberOfPeriods(n, t, c, float64(Daily360))
+func (si *SimpleInterest) BankersInterest(p, i float64, cp int, n float64, tp int) float64 {
+  n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
   return (p * i * n) //INT
 }
 
-func (si *SimpleInterest) BankersRate(p, INT float64, c int, n float64, t int) float64 {
-  n = si.NumberOfPeriods(n, t, c, float64(Daily360))
+func (si *SimpleInterest) BankersRate(p, INT float64, cp int, n float64, tp int) float64 {
+  n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
   return (INT / (p * n)) //rate.
 }
 
-func (si *SimpleInterest) BankersPrincipal(INT, rate float64, c int, n float64, t int) float64 {
-  n = si.NumberOfPeriods(n, t, c, float64(Daily360))
+func (si *SimpleInterest) BankersPrincipal(INT, rate float64, cp int, n float64, tp int) float64 {
+  n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
   return (INT / (rate * n)) //p
 }
 
-func (si *SimpleInterest) BankersTime(p, INT, rate float64, c, t int) float64 {
-  rate /= float64(c)
-  var tp float64 = INT / (rate * p)
-  if t == Days {
-    t = Daily360
+func (si *SimpleInterest) BankersTime(p, INT, rate float64, cp, tp int) (time float64) {
+  rate /= float64(cp)
+  time = INT / (rate * p)
+  if tp == Days {
+    tp = Daily360
   }
   //
-  if c == t {
-    tp /= float64(t)
+  if cp == tp {
+    time /= float64(tp)
   } else {
-    tp *= float64(t)
+    time *= float64(tp)
   }
-  return tp
+  return time
 }
 
-func (si *SimpleInterest) AccurateInterest(p, i float64, c int, n float64, t int) float64 {
-  n = si.NumberOfPeriods(n, t, c, float64(Daily365))
+func (si *SimpleInterest) AccurateInterest(p, i float64, cp int, n float64, tp int) float64 {
+  n = si.NumberOfPeriods(n, tp, float64(Daily365), cp)
   return (p * i * n) //INT
 }
 
-func (si *SimpleInterest) AccurateRate(p, INT float64, c int, n float64, t int) float64 {
-  n = si.NumberOfPeriods(n, t, c, float64(Daily365))
+func (si *SimpleInterest) AccurateRate(p, INT float64, cp int, n float64, tp int) float64 {
+  n = si.NumberOfPeriods(n, tp, float64(Daily365), cp)
   return (INT / (p * n)) //rate.
 }
 
-func (si *SimpleInterest) AccuratePrincipal(INT, rate float64, c int, n float64, t int) float64 {
-  n = si.NumberOfPeriods(n, t, c, float64(Daily365))
+func (si *SimpleInterest) AccuratePrincipal(INT, rate float64, cp int, n float64, tp int) float64 {
+  n = si.NumberOfPeriods(n, tp, float64(Daily365), cp)
   return (INT / (rate * n)) //p
 }
 
-func (si *SimpleInterest) AccurateTime(p, INT, rate float64, c, t int) float64 {
-  rate /= float64(c)
-  var tp float64 = INT / (rate * p)
-  if t == Days {
-    t = Daily365
+func (si *SimpleInterest) AccurateTime(p, INT, rate float64, cp, tp int) (time float64) {
+  rate /= float64(cp)
+  time = INT / (rate * p)
+  if tp == Days {
+    tp = Daily365
   }
   //
-  if c == t {
-    tp /= float64(t)
+  if cp == tp {
+    time /= float64(tp)
   } else {
-    tp *= float64(t)
+    time *= float64(tp)
   }
-  return tp
+  return
 }

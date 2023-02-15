@@ -47,79 +47,79 @@ Adjust if compound period (c) does not equal number of interest periods (t); e.g
 (1) n is 20, t is years, and c is monthly, then n = 20 * 12 = 240 months.
 (2) n is 6.5, t is years, and c is quarterly, then n = 6.5 * 4 = 26 quarters.
 ***/
-func (p *Periods) NumberOfPeriods(n float64, t, c int, forDaysOnly float64) float64 {
-  if t != c {
-    switch c {
+func (p *Periods) NumberOfPeriods(n float64, tp int, forDaysOnly float64, cp int) float64 {
+  if tp != cp {
+    switch cp {
       case Monthly:
-        if t == Years {
+        if tp == Years {
           return (n * monthsPerYear)
-        } else if t == Quarters {
+        } else if tp == Quarters {
           return (n * monthsPerQuarter)
-        } else if t == Weeks {
+        } else if tp == Weeks {
           return (n / weeksPerMonth)
-        } else if t == Days {
+        } else if tp == Days {
           return (n / daysPerMonth)
         } else {
           return (math.NaN())
         }
       case Annually:
-        if t == Months {
+        if tp == Months {
           return (n / monthsPerYear)
-        } else if t == Quarters {
+        } else if tp == Quarters {
           return (n / quartersPerYear)
-        } else if t == Weeks {
+        } else if tp == Weeks {
           return (n / weeksPerYear)
-        } else if t == Days {
+        } else if tp == Days {
           return (n / forDaysOnly)
         } else {
           return (math.NaN())
         }
       case SemiAnnually:
-        if t == Months {
+        if tp == Months {
           return (n / monthsPerSemiYearly)
-        } else if t == Years {
+        } else if tp == Years {
           return (n * semiYearlyPerYear)
-        } else if t == Quarters {
+        } else if tp == Quarters {
           return (n / quartersPerSemiYearly)
-        } else if t == Weeks {
+        } else if tp == Weeks {
           return (n / weeksPerSemiYearly)
-        } else if t == Days {
+        } else if tp == Days {
           return (n / daysPerSemiYearly)
         } else {
           return (math.NaN())
         }
       case Quarterly:
-        if t == Years {
+        if tp == Years {
           return (n * quartersPerYear)
-        } else if t == Months {
+        } else if tp == Months {
           return (n / monthsPerQuarter)
-        } else if t == Weeks {
+        } else if tp == Weeks {
           return (n / weeksPerQuarter)
-        } else if t == Days {
+        } else if tp == Days {
           return (n / daysPerQuarter)
         } else {
           return (math.NaN())
         }
       case Weekly:
-        if t == Months {
+        if tp == Months {
           return (n * weeksPerMonth)
-        } else if t == Years {
+        } else if tp == Years {
           return (n * weeksPerYear)
-        } else if t == Quarters {
+        } else if tp == Quarters {
           return (n * weeksPerQuarter)
-        } else if t == Days {
+        } else if tp == Days {
           return (n / daysPerWeek)
         } else {
           return (math.NaN())
         }
       case Daily, Daily360, Daily365:
-        if t == Months {
+        if tp == Months {
           return (n * daysPerMonth)
-        } else if t == Years {
+        } else if tp == Years {
           return (n * forDaysOnly)
-        } else if t == Quarters {
+        } else if tp == Quarters {
           return (n * daysPerQuarter)
-        } else if t == Weeks {
+        } else if tp == Weeks {
           return (n * daysPerWeek)
         } else {
           return (math.NaN())
@@ -128,7 +128,7 @@ func (p *Periods) NumberOfPeriods(n float64, t, c int, forDaysOnly float64) floa
   } else {
     return n
   }
-  return (n * float64(c))
+  return (n * float64(cp))
 }
 
 /***

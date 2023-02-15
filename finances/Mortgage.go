@@ -29,7 +29,7 @@ func (m *Mortgage) CostOfMortgage(mortgage, i float64, compoundingPeriod byte, n
   var cp int = (*m).GetCompoundingPeriod(compoundingPeriod, true)
   var tp int = (*m).GetTimePeriod(timePeriod, true)
   payment = (*m).O_Payment_PV(mortgage, i, cp, n, tp)
-  totalCost = payment * (*m).NumberOfPeriods(n, tp, cp, float64(Daily365))
+  totalCost = payment * (*m).NumberOfPeriods(n, tp, float64(Daily365), cp)
   totalInterest = totalCost - mortgage
   return
 }
@@ -80,7 +80,7 @@ func (m *Mortgage) AmortizationTable(mortgage, i float64, compoundingPeriod byte
   var payment, totalCost, totalInterest = m.CostOfMortgage(mortgage, i, compoundingPeriod, n, timePeriod)
   var cp int = m.GetCompoundingPeriod(compoundingPeriod, true)
   var tp int = m.GetTimePeriod(timePeriod, true)
-  var periods int = int(m.NumberOfPeriods(n, tp, cp, float64(Daily365)))
+  var periods int = int(m.NumberOfPeriods(n, tp, float64(Daily365), cp))
   var rows = make([]row, 0, periods)
   var balance, pmtPrincipal, pmtInterest float64 = zero, zero, zero
   periods--
