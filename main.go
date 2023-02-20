@@ -125,6 +125,7 @@ func main() {
   fmt.Printf("Effective Annual Rate = %.6f%%\n", ear * 100.0)
   fmt.Printf("Nomial Rate = %.6f%%\n", m.EffectiveAnnualToNominalRate(ear, finances.Monthly) * 100.0)
   ***/
+  /***
   var m finances.Mortgage
   var payment, totalCost, totalInterest = (&m).CostOfMortgage(300000.00, 2.74 / 100.0, 'm', 15.0, 'y')
   fmt.Printf("Payment = $%.2f Total cost = $%.2f Total interest = $%.2f\n", payment, totalCost, totalInterest)
@@ -135,8 +136,20 @@ func main() {
   for i, v := range table.Rows {
     fmt.Printf("pmtNumber = %d payment = $%.2f pmtPrincipal = $%.2f pmtInterest = $%.2f balance = $%.2f\n", i + 1, v.Payment, v.PmtPrincipal, v.PmtInterest, v.Balance)
   }
+  ***/
+
+  var a finances.Annuities
+	var ear = a.NominalToEAR(0.12, finances.Monthly)
+  fmt.Printf("ear = %.2f%%\n", ear * 100.0)
+  fmt.Printf("nr = %.2f%%\n", a.EARToNominal(ear, finances.Monthly) * 100.0)
 
 
+
+
+  v := []float64{5.0, -3.0, 12.0, 10.0}
+  fmt.Printf("gmr = %.2f%%\n", a.AverageRateOfReturn(v) * 100.0)
+  v1 := []float64{2.0, 8.0, -1.0, 10.0}
+  fmt.Printf("gmr = %.2f%%\n", a.AverageRateOfReturn(v1) * 100.0)
 
 
   // fmt.Println("eps = ", math.Nextafter(1.0, 2.0) - 1.0)
