@@ -1,12 +1,6 @@
 // Mortgage computes information about mortgages.
 package finances
 
-const (
-  zero float64 = 0.0
-  one float64 = 1.0
-  hundred float64 = 100.0
-)
-
 /***
 (1) The struct type with no fields is called the empty struct, written struct{}. It has size zero
     and carries no information.
