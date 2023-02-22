@@ -125,17 +125,45 @@ func main() {
   fmt.Printf("Effective Annual Rate = %.6f%%\n", ear * 100.0)
   fmt.Printf("Nomial Rate = %.6f%%\n", m.EffectiveAnnualToNominalRate(ear, finances.Monthly) * 100.0)
   ***/
+  /***
   var m finances.Mortgage
-  // var payment, totalCost, totalInterest = (&m).CostOfMortgage(300000.00, 2.74 / 100.0, 'm', 15.0, 'y')
-  // fmt.Printf("Payment = $%.2f Total cost = $%.2f Total interest = $%.2f\n", payment, totalCost, totalInterest)
-  // var bir = (&m).MortgageHeloc(200000, 0.065, 100000, 0.105)
-  // fmt.Printf("Blended Interest Rate = %.2f%%\n", bir)
+  var payment, totalCost, totalInterest = (&m).CostOfMortgage(300000.00, 2.74 / 100.0, 'm', 15.0, 'y')
+  fmt.Printf("Payment = $%.2f Total cost = $%.2f Total interest = $%.2f\n", payment, totalCost, totalInterest)
+  var bir = (&m).MortgageHeloc(200000, 0.065, 100000, 0.105)
+  fmt.Printf("Blended Interest Rate = %.2f%%\n", bir)
   var table = m.AmortizationTable(300000.00, 0.03375, 'm', 30.0, 'y')
   fmt.Printf("payment = $%.2f total cost = $%.2f total interest = $%.2f\n", table.Payment, table.TotalCost, table.TotalInterest)
   for i, v := range table.Rows {
     fmt.Printf("pmtNumber = %d payment = $%.2f pmtPrincipal = $%.2f pmtInterest = $%.2f balance = $%.2f\n", i + 1, v.Payment, v.PmtPrincipal, v.PmtInterest, v.Balance)
-    // fmt.Printf("i = %d\n", i)
   }
+  ***/
+  /***
+  var a finances.Annuities
+	var ear = a.NominalToEAR(0.12, finances.Monthly)
+  fmt.Printf("ear = %.2f%%\n", ear * 100.0)
+  fmt.Printf("nr = %.2f%%\n", a.EARToNominal(ear, finances.Monthly) * 100.0)
+  //
+  v := []float64{5.0, -3.0, 12.0, 10.0}
+  fmt.Printf("gmr = %.2f%%\n", a.AverageRateOfReturn(v) * 100.0)
+  v1 := []float64{2.0, 8.0, -1.0, 10.0}
+  fmt.Printf("gmr = %.2f%%\n", a.AverageRateOfReturn(v1) * 100.0)
+	***/
+
+  var a finances.Annuities
+  var cp = finances.Monthly
+  var i = a.O_Interest_PV_PMT(24000.0, 500.0, 60.0, cp, 1.0, 31.0, 1e-6)
+  fmt.Printf("i(0.7628634%% per month) = %.8f%%\n", i * 100)
+  fmt.Printf("i(9.154323%% per year) = %.8f%%\n", i * 100 * float64(cp))
+  //
+  i = a.O_Interest_PV_PMT(11200, 291, 48, cp, 4.0, 12.0, 1e-6)
+  fmt.Printf("i(0.94007411%% per month) = %.8f%%\n", i * 100)
+  fmt.Printf("i(11.28%% per year) = %.8f%%\n", i * 100 * float64(cp))
+  //
+  cp = finances.Annually
+  i = a.O_Interest_PV_PMT(50000, 13500, 5, cp, 10.0, 15.0, 1e-6)
+  fmt.Printf("i(10.91616%% per year) = %.8f%%\n", i * 100)
+  fmt.Printf("i(10.91616%% per year) = %.8f%%\n", i * 100 * float64(cp))
+
 
 
 

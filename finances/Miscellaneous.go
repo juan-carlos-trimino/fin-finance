@@ -16,9 +16,9 @@ Nominal (non-inflation-adjusted) vs. Real Interest Rates:
   Real Interest Rate = -------------------- - 1
                         1 + Inflation Rate
 ***/
-func (m *Miscellaneous) RealInterestRate(nominalRate, inflationRate float64) float64 {
-  var realRate float64 = ((1.0 + nominalRate) / (1.0 + inflationRate)) - 1.0
-  return realRate
+func (m *Miscellaneous) RealInterestRate(nominalRate, inflationRate float64) (realRate float64) {
+  realRate = ((1.0 + nominalRate) / (1.0 + inflationRate)) - 1.0
+  return
 }
 
 /***
@@ -34,15 +34,15 @@ Exponential Growth (positive rate of change) and Decay (negative rate of change)
   ln(F) = n * i * ln(e)
   n = ln(F) / i
 ***/
-func (m *Miscellaneous) GrowthDecayOfFunds(rate float64, c int,	factor float64) float64 {
-  var n float64 = 0.0;
-  if Continuously == c {
+func (m *Miscellaneous) GrowthDecayOfFunds(rate float64, cp int,	factor float64) (n float64) {
+  n = zero
+  if Continuously == cp {
     n = math.Log(factor) / rate
   } else {
-    rate /= float64(c)
+    rate /= float64(cp)
     n = math.Log10(factor) / math.Log10(1.0 + rate)
   }
-  return n
+  return
 }
 
 /***
@@ -135,22 +135,22 @@ rate compounded monthly involves 12 periods per year, for example. Using the rel
 above, any effective annual rate can be converted to a rate compounded more frequently, and any
 rate compounded more frequently than once a year can be converted to an effective annual rate.
 ***/
-func (m *Miscellaneous) NominalToEffectiveAnnualRate(i float64, c int) float64 {
-  var r float64 = 0.0
-  if c == Continuously {
+func (m *Miscellaneous) NominalToEffectiveAnnualRate(i float64, cp int) (r float64) {
+  r = zero
+  if cp == Continuously {
     r = math.Pow(math.E, i) - 1.0
   } else {
-    r = math.Pow(1.0 + (*m).PeriodicInterestRate(i, c), float64(c)) - 1.0
+    r = math.Pow(1.0 + (*m).PeriodicInterestRate(i, cp), float64(cp)) - 1.0
   }
-  return r
+  return
 }
 
-func (m *Miscellaneous) EffectiveAnnualToNominalRate(i float64, c int) float64 {
-  var r float64 = 0.0
+func (m *Miscellaneous) EffectiveAnnualToNominalRate(i float64, c int) (r float64) {
+  r = zero
   if c == Continuously {
     r = math.Log(1.0 + i)
   } else {
     r = float64(c) * (math.Pow(1.0 + i, 1.0 / float64(c)) - 1.0)
   }
-  return r
+  return
 }

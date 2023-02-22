@@ -1,12 +1,6 @@
 // Mortgage computes information about mortgages.
 package finances
 
-const (
-  zero float64 = 0.0
-  one float64 = 1.0
-  hundred float64 = 100.0
-)
-
 /***
 (1) The struct type with no fields is called the empty struct, written struct{}. It has size zero
     and carries no information.
@@ -29,7 +23,7 @@ func (m *Mortgage) CostOfMortgage(mortgage, i float64, compoundingPeriod byte, n
   var cp int = (*m).GetCompoundingPeriod(compoundingPeriod, true)
   var tp int = (*m).GetTimePeriod(timePeriod, true)
   payment = (*m).O_Payment_PV(mortgage, i, cp, n, tp)
-  totalCost = payment * (*m).NumberOfPeriods(n, tp, cp, float64(Daily365))
+  totalCost = payment * (*m).NumberOfPeriods(n, tp, float64(Daily365), cp)
   totalInterest = totalCost - mortgage
   return
 }
@@ -39,9 +33,9 @@ Refinance mortgage and HELOC with one load.
 If the blended interest rate is higher than what you could get on a new fixed-rate mortgage,
 consider it.
 ***/
-func (m *Mortgage) MortgageHeloc(mortgageBalance, mortgageRate, helocBalance, helocRate float64) float64 {
-  var blendedInterestRate = m.BlendedInterestRate(mortgageBalance, mortgageRate, helocBalance, helocRate) * hundred
-  return blendedInterestRate
+func (m *Mortgage) MortgageHeloc(mortgageBalance, mortgageRate, helocBalance, helocRate float64) (blendedInterestRate float64) {
+  blendedInterestRate = m.BlendedInterestRate(mortgageBalance, mortgageRate, helocBalance, helocRate) * hundred
+  return
 }
 
 type row struct { //Rows for the amortization table.
@@ -80,7 +74,7 @@ func (m *Mortgage) AmortizationTable(mortgage, i float64, compoundingPeriod byte
   var payment, totalCost, totalInterest = m.CostOfMortgage(mortgage, i, compoundingPeriod, n, timePeriod)
   var cp int = m.GetCompoundingPeriod(compoundingPeriod, true)
   var tp int = m.GetTimePeriod(timePeriod, true)
-  var periods int = int(m.NumberOfPeriods(n, tp, cp, float64(Daily365)))
+  var periods int = int(m.NumberOfPeriods(n, tp, float64(Daily365), cp))
   var rows = make([]row, 0, periods)
   var balance, pmtPrincipal, pmtInterest float64 = zero, zero, zero
   periods--
