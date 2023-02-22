@@ -1,4 +1,4 @@
-//
+//Ordinary Annuity and Annuity Due.
 package finances
 
 import (
@@ -126,10 +126,43 @@ func (a *Annuities) O_PresentValue_PMT(PMT, i float64, cp int, n float64, tp int
  i = (----)^(1/n) - 1
        PV
 ***/
-func (a *Annuities) O_Interest_PV_FV(PV, FV, n float64, tp, cp int) float64 {
+func (a *Annuities) O_Interest_PV_FV(PV, FV, n float64, tp, cp int) (i float64) {
   n = a.NumberOfPeriods(n, tp, float64(Daily365), cp)
-  var i float64 = math.Pow(FV / PV, one / n) - one
-  return(i * float64(cp))
+  i = (math.Pow(FV / PV, one / n) - one) * float64(cp)
+  return
+}
+
+/***
+     PMT
+i = ----- * (1 - (1 + i)^-n)
+     PV
+
+For an efficient realization of Newton-Raphson the user provides a routine that evaluates both f(x)
+and its first derivative f'(x) at the point x.
+
+         PV
+ f(x) = ----- * i * (1 + i)^n - (1 + i)^n + 1
+         PMT
+
+          PV
+ f'(x) = ----- * ((1 + i)^n + n * i * (1 + i)^(n - 1)) - n * (1 + i)^(n - 1)
+          PMT
+***/
+func evaluateGivenPoint(pv, pmt, n, i float64, f, fPrime *float64) () {
+  var pvDivByPmt = pv / pmt
+  var iTon = math.Pow(one + i, n)
+  var iTonMinus1 = math.Pow(one + i, n - 1)
+  *f = (pvDivByPmt * i * iTon) - iTon + one
+  *fPrime = pvDivByPmt * (iTon + (n * i * iTonMinus1)) - (n * iTonMinus1)
+  return
+}
+
+func (a *Annuities) O_Interest_PV_PMT(pv, pmt, n float64, cp int, i1, i2, accurancy float64) (i float64) {
+  var mu mathutil.MathUtil
+  i1 = a.PeriodicInterestRate(i1 / hundred, cp)
+  i2 = a.PeriodicInterestRate(i2 / hundred, cp)
+  i = mu.NewtonRaphsonBisection(evaluateGivenPoint, pv, pmt, n, i1, i2, accurancy)
+  return
 }
 
 /***
@@ -679,65 +712,6 @@ f(x) = ----- * i * (1 + i)^-n + (1 + i)^-n - 1
 f'(x) = TBD
 
 ***/
-
-
-
-
-
-/***
-  const char* const pLocale = "english_usa.1252";
-  locale::global(locale(pLocale));
-  cout << std::setfill(' ') << std::fixed << std::left << std::showpoint;
-  std::cin.imbue(locale());  //Register global locale.
-  cout.imbue(locale());
-
-  std::unique_ptr<Annuities> spA = std::make_unique<Annuities>();
-  int cp = spA->GetCompoundingPeriod(L'm');
-  double i = spA->O_Interest_PV_PMT(60, 24000, 500, cp, 1.0, 31.0);
-  cout << "i(0.7628634% per month) = " << (i * 100) << endl;
-  cout << "i(9.154323% per year) = " << (i * 100 * cp) << endl;
-
-  i = spA->O_Interest_PV_PMT(48, 11200, 291, cp, 4.0, 12.0);
-  cout << "i(0.94007411% per month) = " << (i * 100) << endl;
-  cout << "i(11.28% per year) = " << (i * 100 * cp) << endl;
-
-  cp = spA->GetCompoundingPeriod(L'a');
-  i = spA->O_Interest_PV_PMT(5, 50000, 13500, cp, 10.0, 15.0);
-  cout << "i(10.91616% per year) = " << (i * 100) << endl;
-  cout << "i(10.91616% per year) = " << (i * 100 * cp) << endl;
-
-     PMT
-i = ----- * (1 - (1 + i)^-n)
-     PV
-
-For an efficient realization of Newton-Raphson the user provides a routine that evaluates both f(x)
-and its first derivative f'(x) at the point x.
-
-         PV
- f(x) = ----- * i * (1 + i)^n - (1 + i)^n + 1
-         PMT
-
-          PV
- f'(x) = ----- * ((1 + i)^n + n * i * (1 + i)^(n - 1)) - n * (1 + i)^(n - 1)
-          PMT
-***/
-func /*(a *Annuities)*/ evaluateGivenPoint(pv, pmt, n, i float64, f, fPrime *float64) () {
-  var pvDivByPmt = pv / pmt
-  var i_To_n = math.Pow(one + i, n)
-  var i_To_n_minus_1 = math.Pow(one + i, n - 1)
-  *f = (pvDivByPmt * i * i_To_n) - i_To_n + one
-  *fPrime = pvDivByPmt * (i_To_n + (n * i * i_To_n_minus_1)) - (n * i_To_n_minus_1)
-  return
-}
-
-func (a *Annuities) O_Interest_PV_PMT(pv, pmt, n float64, cp int, x1, x2, accurancy float64) (i float64) {
-  var mu mathutil.MathUtil
-  x1 = a.PeriodicInterestRate(x1 / hundred, cp)
-  x2 = a.PeriodicInterestRate(x2 / hundred, cp)
-  i = mu.NewtonRaphsonBisection(evaluateGivenPoint, pv, pmt, n, x1, x2, accurancy)
-  return
-}
-
 
 
 

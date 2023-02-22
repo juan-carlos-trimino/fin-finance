@@ -159,9 +159,9 @@ func main() {
   fmt.Printf("i(0.94007411%% per month) = %.8f%%\n", i * 100)
   fmt.Printf("i(11.28%% per year) = %.8f%%\n", i * 100 * float64(cp))
   //
-	cp = finances.Annually
+  cp = finances.Annually
   i = a.O_Interest_PV_PMT(50000, 13500, 5, cp, 10.0, 15.0, 1e-6)
-  fmt.Printf("i(10.91616%% per month) = %.8f%%\n", i * 100)
+  fmt.Printf("i(10.91616%% per year) = %.8f%%\n", i * 100)
   fmt.Printf("i(10.91616%% per year) = %.8f%%\n", i * 100 * float64(cp))
 
 

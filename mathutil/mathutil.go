@@ -227,8 +227,3 @@ func (a *MathUtil) NewtonRaphsonBisection(userFunc func(pv, pmt, n, i float64, f
   }
   return(math.NaN()) //Maximum number of iterations exceeded.
 }
-
-
-
-
-
