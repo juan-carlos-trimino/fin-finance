@@ -12,6 +12,8 @@
 !finances/
 finances/*
 !finances/Annuities.go
+!finances/Bonds_test.go
+!finances/Bonds.go
 !finances/Miscellaneous_test.go
 !finances/Miscellaneous.go
 !finances/Mortgage.go
