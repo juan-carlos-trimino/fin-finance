@@ -1,5 +1,4 @@
 //
-
 package finances
 
 import "testing"
