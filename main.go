@@ -148,7 +148,7 @@ func main() {
   v1 := []float64{2.0, 8.0, -1.0, 10.0}
   fmt.Printf("gmr = %.2f%%\n", a.AverageRateOfReturn(v1) * 100.0)
 	***/
-
+  /***
   var a finances.Annuities
   var cp = finances.Monthly
   var i = a.O_Interest_PV_PMT(24000.0, 500.0, 60.0, cp, 1.0, 31.0, 1e-6)
@@ -163,9 +163,63 @@ func main() {
   i = a.O_Interest_PV_PMT(50000, 13500, 5, cp, 10.0, 15.0, 1e-6)
   fmt.Printf("i(10.91616%% per year) = %.8f%%\n", i * 100)
   fmt.Printf("i(10.91616%% per year) = %.8f%%\n", i * 100 * float64(cp))
-
-
-
+  ***/
+	var b finances.Bonds
+	var cashFlow = b.CashFlow(1000, 3, finances.SemiAnnually, 5, finances.Years)
+	fmt.Printf("Cash Flow\n")
+  for idx := range cashFlow {
+    fmt.Printf("Payment[%d] = $%.2f\n", idx, cashFlow[idx])
+  }
+  //FV = $1,000.00
+  //coupon rate = 10%; compounding period semiannually
+  //t = 10-year
+  //current interest = 10%; compounding period semiannually
+  cashFlow = b.CashFlow(1000.00, 10.0, b.GetCompoundingPeriod('s', false), 10.0, b.GetTimePeriod('y', false))
+  var price = b.CurrentPrice(cashFlow, 10.0, b.GetCompoundingPeriod('s', false))
+  fmt.Printf("price($1,000.00 (par)) = $%.2f\n", price)
+  //FV = $1,000.00
+  //coupon rate = 10%; compounding period semiannually
+  //t = 10-year
+  //current interest = 11%; compounding period semiannually
+  cashFlow = b.CashFlow(1000.00, 10.0, b.GetCompoundingPeriod('s', false), 10.0, b.GetTimePeriod('y', false))
+  price = b.CurrentPrice(cashFlow, 11.0, b.GetCompoundingPeriod('s', false))
+  fmt.Printf("price($940.25 (discount)) = $%.2f\n", price)
+  //FV = $1,000.00
+  //coupon rate = 10%; compounding period semiannually
+  //t = 10-year
+  //current interest = 9%; compounding period semiannually
+  cashFlow = b.CashFlow(1000.00, 10.0, b.GetCompoundingPeriod('s', false), 10.0, b.GetTimePeriod('y', false))
+  price = b.CurrentPrice(cashFlow, 9.00, b.GetCompoundingPeriod('s', false))
+  fmt.Printf("price($1,065.04 (premium)) = $%.2f\n", price)
+  //FV = $1,000.00
+  //coupon rate = 10%; compounding period semiannually
+  //t = 10-year
+  //current interest = 1%; compounding period semiannually
+  //price = $1,854.43 (premium)
+  cashFlow = b.CashFlow(1000.00, 10.0, b.GetCompoundingPeriod('s', false), 10.0, b.GetTimePeriod('y', false))
+  price = b.CurrentPrice(cashFlow, 1.00, b.GetCompoundingPeriod('s', false))
+  fmt.Printf("price($1,854.43 (premium)) = $%.2f\n", price)
+  //FV = $1,000.00
+  //coupon rate = 10%; compounding period semiannually
+  //t = 10-year
+  //current interest = 19%; compounding period semiannually
+  cashFlow = b.CashFlow(1000.00, 10.0, b.GetCompoundingPeriod('s', false), 10.0, b.GetTimePeriod('y', false))
+  price = b.CurrentPrice(cashFlow, 19.00, b.GetCompoundingPeriod('s', false))
+  fmt.Printf("price($603.44 (discount)) = $%.2f\n", price)
+  //FV = $1,000.00
+  //coupon rate = 10%; compounding period semiannually
+  //t = 20-semiannually
+  //current interest = 10%; compounding period semiannually
+  cashFlow = b.CashFlow(1000.00, 10.0, b.GetCompoundingPeriod('s', false), 20.0, b.GetTimePeriod('s', false))
+  price = b.CurrentPrice(cashFlow, 10.0, b.GetCompoundingPeriod('s', false))
+  fmt.Printf("price($1,000.00 (par)) = $%.2f\n", price)
+  //FV = $100.00
+  //coupon rate = 10%; compounding period annually
+  //t = 3-year
+  //current interest = 9%; compounding period annually
+  cashFlow = b.CashFlow(100.00, 10.0, b.GetCompoundingPeriod('a', false), 3, b.GetTimePeriod('y', false))
+  price = b.CurrentPrice(cashFlow, 9.0, b.GetCompoundingPeriod('a', false))
+  fmt.Printf("price($102.531) = $%.2f\n", price)
 
 
   // fmt.Println("eps = ", math.Nextafter(1.0, 2.0) - 1.0)
