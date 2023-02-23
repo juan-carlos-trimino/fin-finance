@@ -262,6 +262,44 @@ func main() {
   cashFlow = b.CashFlow(100.00, 10.0, b.GetCompoundingPeriod('a', false), 3, b.GetTimePeriod('y', false))
   var years = b.Duration(cashFlow, 9, b.CurrentPrice(cashFlow, 9, b.GetCompoundingPeriod('a', false)))
   fmt.Printf("years(2.738954) = %.2f\n", years)
+  //FV = $100.00
+  //coupon rate = 10%; compounding period annually
+  //t = 3-year
+  //current interest = 9%; compounding period annually
+  cashFlow = b.CashFlow(100.00, 10.0, b.GetCompoundingPeriod('a', false), 3.0, b.GetTimePeriod('y', false))
+  var macyears = b.MacaulayDuration(cashFlow, b.GetCompoundingPeriod('A', false), b.CurrentPrice(cashFlow, 9, b.GetCompoundingPeriod('a', false)))
+  fmt.Printf("macyears(2.738954) = %.2f\n", macyears)
+  //FV = $100.00
+  //coupon rate = 10%; compounding period annually
+  //t = 3-year
+  //current interest = 9%; compounding period annually
+  cashFlow = b.CashFlow(100.00, 10.0, b.GetCompoundingPeriod('a', false), 3.0, b.GetTimePeriod('y', false))
+  var MDuration = b.ModifiedDuration(cashFlow, b.GetCompoundingPeriod('a', false), b.CurrentPrice(cashFlow, 9, b.GetCompoundingPeriod('a', false)))
+  fmt.Printf("MDuration(2.512801%%) = %.2f%%\n", MDuration)
+  //FV = $100.00
+  //coupon rate = 10%; compounding period annually
+  //t = 3-year
+  //current interest = 9%; compounding period annually
+  cashFlow = b.CashFlow(100.00, 10.0, b.GetCompoundingPeriod('a', false), 3.0, b.GetTimePeriod('y', false))
+  var Cx = b.Convexity(cashFlow, 9, b.GetCompoundingPeriod('a', false))
+  fmt.Printf("Cx(8.932479) = %.2f\n", Cx)
+  //FV = $100.00
+  //coupon rate = 10% (compounding period is annually)
+  //t = 3-year
+  //current interest = 9% (compounding period is continuously)
+  cashFlow = b.CashFlow(100.00, 10.0, b.GetCompoundingPeriod('a', false), 3.0, b.GetTimePeriod('y', false))
+  price = b.CurrentPriceContinuous(cashFlow, 9)
+  fmt.Printf("Price(101.463758) = %.2f\n", price)
+  var duration = b.DurationContinuous(cashFlow, 9, b.CurrentPriceContinuous(cashFlow, 9))
+  fmt.Printf("duration(2.737529) = %.2f\n", duration)
+  ytm = b.YieldToMaturityContinuous(cashFlow, b.CurrentPriceContinuous(cashFlow, 9))
+  fmt.Printf("ytm(9.000000) = %.2f\n", ytm)
+  var macdur = b.MacaulayDurationContinuous(cashFlow, b.CurrentPriceContinuous(cashFlow, 9))
+  fmt.Printf("Macaulay Duration(2.737529) = %.2f\n", macdur)
+  var convexity = b.ConvexityContinuous(cashFlow, 9, b.CurrentPriceContinuous(cashFlow, 9))
+  fmt.Printf("convexity(7.867793) = %.2f\n", convexity)
+  price = b.CurrentPriceContinuous(cashFlow, 8)
+  fmt.Printf("Price(104.281666 (new rate is 8%%)) = %.2f\n", price)
 	
 
 

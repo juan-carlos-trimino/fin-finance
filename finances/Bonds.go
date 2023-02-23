@@ -223,23 +223,14 @@ func (b *Bonds) Duration(cashFlow []float64, currentRate, bondPrice float64) flo
   return(D / bondPrice)
 }
 
-
-
 /***
-If the bond is priced correctly, the yield to maturity must equal the current interest rate. If current interest rate EQUALS yield to maturity the calculations from Duration and MacaulayDuration will produce the same number.
+If the bond is priced correctly, the yield to maturity must equal the current interest rate. If
+current interest rate EQUALS yield to maturity the calculations from Duration and MacaulayDuration
+will produce the same number.
 Notes:
 (1) The longer the duration is the more sensitive the bond will be to changes in interest rates.
-(2) For a standard bond the Macaulay duration will be between 0 and the maturity of the bond. It is equal to the maturity if and only if the bond is a zero-coupon bond.
-
-FV = $100.00
-coupon rate = 10%; compounding period annually
-t = 3-year
-current interest = 9%; compounding period annually
-
-std::unique_ptr<Bonds> spBond = std::make_unique<Bonds>();
-vector<double> cashFlow = spBond->CashFlow(100.00, 10.0, spBond->GetCompoundingPeriod(L'a'), 3.0, spBond->GetTimePeriod(L'y'));
-double macyears = spBond->MacaulayDuration(cashFlow, spBond->GetCompoundingPeriod(L'a'), spBond->CurrentPrice(cashFlow, 9, spBond->GetCompoundingPeriod(L'a')));
-cout << "macyears(2.738954) = " << macyears << endl;
+(2) For a standard bond the Macaulay duration will be between 0 and the maturity of the bond. It is
+    equal to the maturity if and only if the bond is a zero-coupon bond.
 ***/
 func (b *Bonds) MacaulayDuration(cashFlow []float64, cp int, bondPrice float64) float64 {
   var ytm = b.YieldToMaturity(cashFlow, bondPrice, cp)
@@ -247,56 +238,73 @@ func (b *Bonds) MacaulayDuration(cashFlow []float64, cp int, bondPrice float64) 
 }
 
 /***
-Modified duration is a formula that expresses the measurable change in the value of a security in response to a change in interest rates. Modified duration follows the concept that interest rates and bond prices move in opposite directions. This formula is used to determine the effect that a 100-basis point (1%) change in interest rates will have on the price of a bond.
+Modified duration is a formula that expresses the measurable change in the value of a security in
+response to a change in interest rates. Modified duration follows the concept that interest rates
+and bond prices move in opposite directions. This formula is used to determine the effect that a
+100-basis point (1%) change in interest rates will have on the price of a bond.
 
-How to interpret the result below? The modified duration illustrates the effect of a 100-basis point (1%) change in interest rates on the price of a bond. Therefore,
+How to interpret the result below? The modified duration illustrates the effect of a 100-basis
+point (1%) change in interest rates on the price of a bond. Therefore,
+(1) If interest rates increase by 1%, the price of the 3-year bond will decrease by 2.513%.
+(2) If interest rates decrease by 1%, the price of the 3-year bond will increase by 2.513%.
 
-* If interest rates increase by 1%, the price of the 3-year bond will decrease by 2.513%.
-* If interest rates decrease by 1%, the price of the 3-year bond will increase by 2.513%.
-
-The modified duration provides a good measurement of a bond's sensitivity to changes in interest rates.
+The modified duration provides a good measurement of a bond's sensitivity to changes in interest
+rates.
 
 FV = $100.00
 coupon rate = 10%; compounding period annually
 t = 3-year
 current interest = 9%; compounding period annually
-
-std::unique_ptr<Bonds> spBond = std::make_unique<Bonds>();
-vector<double> cashFlow = spBond->CashFlow(100.00, 10.0, spBond->GetCompoundingPeriod(L'a'), 3.0, spBond->GetTimePeriod(L'y'));
-double MDuration = spBond->ModifiedDuration(cashFlow, 9, spBond->GetCompoundingPeriod(L'a'), spBond->CurrentPrice(cashFlow, 9, spBond->GetCompoundingPeriod(L'a')));
-cout << "MDuration(2.512801%) = " << MDuration << endl;
+Modified Duration: 2.512801%
 ***/
 func (b *Bonds) ModifiedDuration(cashFlow []float64, cp int, bondPrice float64) float64 {
   var ytm = b.YieldToMaturity(cashFlow, bondPrice, cp)
   return(b.Duration(cashFlow, ytm, bondPrice) / (one + (ytm / hundred)))
 }
 
-
 /***
-Duration is a linear measure or 1st derivative of how the price of a bond changes in response to interest rate changes. As interest rates change, the price is not likely to change linearly, but instead it would change over some curved function of interest rates. The more curved the price function of the bond is, the more inaccurate duration is as a measure of the interest rate sensitivity.
+Duration is a linear measure or 1st derivative of how the price of a bond changes in response to
+interest rate changes. As interest rates change, the price is not likely to change linearly, but
+instead it would change over some curved function of interest rates. The more curved the price
+function of the bond is, the more inaccurate duration is as a measure of the interest rate
+sensitivity.
 
-(Duration can be a good measure of how bond prices may be affected due to small and sudden fluctuations in interest rates. However, the relationship between bond prices and yields is typically more sloped, or convex. Therefore, convexity is a better measure for assessing the impact on bond prices when there are large fluctuations in interest rates.)
+(Duration can be a good measure of how bond prices may be affected due to small and sudden
+fluctuations in interest rates. However, the relationship between bond prices and yields is
+typically more sloped, or convex. Therefore, convexity is a better measure for assessing the
+impact on bond prices when there are large fluctuations in interest rates.)
 
-Convexity is a measure of the curvature or 2nd derivative of how the price of a bond varies with interest rate; i.e., how the duration of a bond changes as the interest rate changes. Specifically, one assumes that the interest rate is constant across the life of the bond and that changes in interest rates occur evenly. Using these assumptions, duration can be formulated as the first derivative of the price function of the bond with respect to the interest rate in question. Then the convexity would be the second derivative of the price function with respect to the interest rate.
+Convexity is a measure of the curvature or 2nd derivative of how the price of a bond varies with
+interest rate; i.e., how the duration of a bond changes as the interest rate changes. Specifically,
+one assumes that the interest rate is constant across the life of the bond and that changes in
+interest rates occur evenly. Using these assumptions, duration can be formulated as the first
+derivative of the price function of the bond with respect to the interest rate in question. Then
+the convexity would be the second derivative of the price function with respect to the interest
+rate.
 
-In actual markets, the assumption of constant interest rates and even changes is not correct, and more complex models are needed to actually price bonds. However, these simplifying assumptions allow one to quickly and easily calculate factors which describe the sensitivity of the bond prices to interest rate changes.
+In actual markets, the assumption of constant interest rates and even changes is not correct, and
+more complex models are needed to actually price bonds. However, these simplifying assumptions
+allow one to quickly and easily calculate factors which describe the sensitivity of the bond prices
+to interest rate changes.
 
-Convexity does not assume the relationship between bond value and interest rates to be linear. For large fluctuations in interest rates, it is a better measure than duration.
+Convexity does not assume the relationship between bond value and interest rates to be linear. For
+large fluctuations in interest rates, it is a better measure than duration.
 Notes:
-(1) It's important to know how bond prices and market interest rates relate to one another. As interest rates fall, bond prices rise. Conversely, rising market interest rates lead to falling bond prices. This opposite reaction is because as rates rise, the bond may fall behind in the earnings they may offer a potential investor in comparison to other securities.
-(2) If a bond's duration increases as yields increase, the bond is said to have negative convexity. In other words, the bond price will decline by a greater rate with a rise in yields than if yields had fallen. Therefore, if a bond has negative convexity, its duration would increase - the price would fall. As interest rates rise, the opposite is true.
-(3) If a bond's duration rises and yields fall, the bond is said to have positive convexity. In other words, as yields fall, bond prices rise by a greater rate - or duration - than if yields rose. Positive convexity leads to greater increases in bond prices. If a bond has positive convexity, it would typically experience larger price increases as yields fall, compared to price decreases when yields increase.
-(4) Zero-coupon bonds have the highest degree of convexity because they do not offer any coupon payments.
-
-FV = $100.00
-coupon rate = 10%; compounding period annually
-t = 3-year
-current interest = 9%; compounding period annually
-
-std::unique_ptr<Bonds> spBond = std::make_unique<Bonds>();
-vector<double> cashFlow = spBond->CashFlow(100.00, 10.0, spBond->GetCompoundingPeriod(L'a'), 3.0, spBond->GetTimePeriod(L'y'));
-double Cx = spBond->Convexity(cashFlow, 9, spBond->GetCompoundingPeriod(L'a'));
-cout << "Cx(8.932479) = " << Cx << endl;
+(1) It's important to know how bond prices and market interest rates relate to one another. As
+    interest rates fall, bond prices rise. Conversely, rising market interest rates lead to falling
+    bond prices. This opposite reaction is because as rates rise, the bond may fall behind in the
+    earnings they may offer a potential investor in comparison to other securities.
+(2) If a bond's duration increases as yields increase, the bond is said to have negative convexity.
+    In other words, the bond price will decline by a greater rate with a rise in yields than if
+    yields had fallen. Therefore, if a bond has negative convexity, its duration would increase --
+    the price would fall. As interest rates rise, the opposite is true.
+(3) If a bond's duration rises and yields fall, the bond is said to have positive convexity. In
+    other words, as yields fall, bond prices rise by a greater rate -- or duration -- than if
+    yields rose. Positive convexity leads to greater increases in bond prices. If a bond has
+    positive convexity, it would typically experience larger price increases as yields fall,
+    compared to price decreases when yields increase.
+(4) Zero-coupon bonds have the highest degree of convexity because they do not offer any coupon
+    payments.
 ***/
 func (b *Bonds) Convexity(cashFlow []float64, currentRate float64, cp int) float64 {
   var price float64 = b.CurrentPrice(cashFlow, currentRate, cp)
@@ -314,26 +322,6 @@ func (b *Bonds) Convexity(cashFlow []float64, currentRate float64, cp int) float
 /***
 When using continuously compounded interest, one does not need the concept of modified duration.
 When the bond is correctly priced, the duration and Macaulay duration will produce the same number.
-
-FV = $100.00
-coupon rate = 10% (compounding period is annually)
-t = 3-year
-current interest = 9% (compounding period is continuously)
-
-std::unique_ptr<Bonds> spBond = std::make_unique<Bonds>();
-vector<double> cashFlow = spBond->CashFlow(100.00, 10.0, spBond->GetCompoundingPeriod(L'a'), 3.0, spBond->GetTimePeriod(L'y'));
-double price = spBond->CurrentPriceContinuous(cashFlow, 9);
-cout << "Price(101.463758) = " << price << endl;
-double duration = spBond->DurationContinuous(cashFlow, 9, spBond->CurrentPriceContinuous(cashFlow, 9));
-cout << "duration(2.737529) = " << duration << endl;
-double ytm = spBond->YieldToMaturityContinuous(cashFlow, spBond->CurrentPriceContinuous(cashFlow, 9));
-cout << "ytm(9.000000) = " << ytm << endl;
-double macdur = spBond->MacaulayDurationContinuous(cashFlow, spBond->CurrentPriceContinuous(cashFlow, 9));
-cout << "Macaulay Duration(2.737529) = " << macdur << endl;
-double convexity = spBond->ConvexityContinuous(cashFlow, 9, spBond->CurrentPriceContinuous(cashFlow, 9));
-cout << "convexity(7.867793) = " << convexity << endl;
-price = spBond->CurrentPriceContinuous(cashFlow, 8);
-cout << "Price(104.281666 (new rate is 8%)) = " << price << endl;
 ***/
 func (b *Bonds) CurrentPriceContinuous(cashFlow []float64, currentRate float64) (price float64) {
   currentRate /= hundred
@@ -357,9 +345,14 @@ func (b *Bonds) DurationContinuous(cashFlow []float64, currentRate, bondPrice fl
 
 func (b *Bonds) YieldToMaturityContinuous(cashFlow []float64, bondPrice float64) (r float64) {
   /***
-  Since the structure of cash flows is such that there exists only one solution to the equation, there is much less likelihood of having multiple solutions when doing this yield estimation for bonds.
+  Since the structure of cash flows is such that there exists only one solution to the equation,
+  there is much less likelihood of having multiple solutions when doing this yield estimation for
+  bonds.
 
-  Since the bond yield is above zero, set the lower bound to zero. Then find an upper bound on the yield by increasing the interest rate until the bond price with this interest rate is negative. Finally, bisect the interval between the upper and lower bounds until the desired accuracy is obtained.
+  Since the bond yield is above zero, set the lower bound to zero. Then find an upper bound on the
+  yield by increasing the interest rate until the bond price with this interest rate is negative.
+  Finally, bisect the interval between the upper and lower bounds until the desired accuracy is
+  obtained.
   ***/
   var bottom float64 = zero
   var top float64 = one
@@ -372,7 +365,10 @@ func (b *Bonds) YieldToMaturityContinuous(cashFlow []float64, bondPrice float64)
   const ACCURACY float64 = 1e-5
   for idx := 0; idx < MAX_BISECTION; idx++ { //Bisection loop.
     /***
-    The bisection method must succeed. Over some interval the function is known to pass through zero because it changes sign. Evaluate the function at the interval's midpoint and examine its sign. Use the midpoint to replace whichever limit has the same sign. After each iteration the bounds containing the root decrease by a factor of two.
+    The bisection method must succeed. Over some interval the function is known to pass through
+    zero because it changes sign. Evaluate the function at the interval's midpoint and examine its
+    sign. Use the midpoint to replace whichever limit has the same sign. After each iteration the
+    bounds containing the root decrease by a factor of two.
     ***/
     diff = b.CurrentPriceContinuous(cashFlow, r) - bondPrice
     if ACCURACY > math.Abs(diff) {
