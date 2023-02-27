@@ -1,4 +1,4 @@
-//
+//Testing the functions in Bonds.go.
 package finances
 
 import (
