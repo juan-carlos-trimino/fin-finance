@@ -6,6 +6,7 @@ import (
 )
 
 const (
+  //Compounding
   Invalid int = -1
   Annually int = 1
   SemiAnnually int = 2
@@ -16,9 +17,9 @@ const (
   Daily360 int = 360
   Daily365 int = 365
   Continuously int = -100
-  //
+  //Time Periods
   Years int = 1
-  //Semiyears int = 2
+  Semiyears int = 2
   Quarters int = 4
   Months int = 12
   Weeks int = 52
@@ -182,15 +183,15 @@ func (p *Periods) GetCompoundingPeriod(compoundingPeriod byte, isDaily365 bool) 
 func (p *Periods) GetTimePeriod(timePeriod byte, isDaily365 bool) int {
   switch timePeriod {
     case 'm', 'M':  //(M)onths
-      return Monthly
+      return Months
     case 'y', 'Y':  //(Y)ears
-      return Annually
-    // case 's', 'S':  //(S)emiannuals
-    //   return SemiAnnually
+      return Years
+    case 's', 'S':  //(S)emiyears
+      return Semiyears
     case 'q', 'Q':  //(Q)uarters
-      return Quarterly
+      return Quarters
     case 'w', 'W':  //(W)eeks
-      return Weekly
+      return Weeks
     case 'd', 'D':  //(D)ays
       if isDaily365 == true {
         return Daily365

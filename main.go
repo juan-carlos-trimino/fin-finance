@@ -148,7 +148,7 @@ func main() {
   v1 := []float64{2.0, 8.0, -1.0, 10.0}
   fmt.Printf("gmr = %.2f%%\n", a.AverageRateOfReturn(v1) * 100.0)
 	***/
-
+  /***
   var a finances.Annuities
   var cp = finances.Monthly
   var i = a.O_Interest_PV_PMT(24000.0, 500.0, 60.0, cp, 1.0, 31.0, 1e-6)
@@ -163,9 +163,11 @@ func main() {
   i = a.O_Interest_PV_PMT(50000, 13500, 5, cp, 10.0, 15.0, 1e-6)
   fmt.Printf("i(10.91616%% per year) = %.8f%%\n", i * 100)
   fmt.Printf("i(10.91616%% per year) = %.8f%%\n", i * 100 * float64(cp))
+  ***/
 
+  
 
-
+  
 
 
   // fmt.Println("eps = ", math.Nextafter(1.0, 2.0) - 1.0)
