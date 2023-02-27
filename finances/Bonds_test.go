@@ -1,6 +1,18 @@
 //Testing the functions in Bonds.go.
 package finances
 
+/***
+To build and run the tests:
+$ go test
+
+The -v flag prints the name and execution time of each test in the package:
+$ go test -v
+
+The -run flag, whose argument is a regular expression, causes 'go test' to run only those tests
+whose function name matches the pattern:
+$ go test -v -run="Bonds"
+***/
+
 import (
   "fmt"
   "math"
