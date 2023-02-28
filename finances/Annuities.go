@@ -157,7 +157,7 @@ func evaluateGivenPoint(pv, pmt, n, i float64, f, fPrime *float64) () {
   return
 }
 
-func (a *Annuities) O_Interest_PV_PMT(pv, pmt, n float64, cp int, i1, i2, accurancy float64) (i float64) {
+func (a *Annuities) O_Interest_PV_PMT(pv, pmt, n, i1, i2 float64, cp int, accurancy float64) (i float64) {
   var mu mathutil.MathUtil
   i1 = a.PeriodicInterestRate(i1 / hundred, cp)
   i2 = a.PeriodicInterestRate(i2 / hundred, cp)
@@ -567,7 +567,7 @@ func (a *Annuities) NominalToEAR(i float64, cp int) (ear float64) {
   return
 }
 
-func (a *Annuities) EARToNominal(ear float64, cp int) (r float64) {
+func (a *Annuities) EAToNominalRate(ear float64, cp int) (r float64) {
   r = zero
   if cp == Continuously {
     r = math.Log(ear + one)
