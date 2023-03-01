@@ -11,13 +11,13 @@
 # ... and these files under the 'finances' directory...
 !finances/
 finances/*
+!finances/Annuities_test.go
 !finances/Annuities.go
 !finances/Bonds_test.go
 !finances/Bonds.go
-!finances/Miscellaneous_test.go
-!finances/Miscellaneous.go
 !finances/Mortgage.go
 !finances/Periods.go
+!finances/SimpleInterest_test.go
 !finances/SimpleInterest.go
 # ... and this directory and its file...
 !umath/
