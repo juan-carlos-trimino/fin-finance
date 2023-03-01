@@ -557,7 +557,7 @@ rate compounded monthly involves 12 periods per year, for example. Using the rel
 above, any effective annual rate can be converted to a rate compounded more frequently, and any
 rate compounded more frequently than once a year can be converted to an effective annual rate.
 ***/
-func (a *Annuities) NominalToEAR(i float64, cp int) (ear float64) {
+func (a *Annuities) NominalRateToEAR(i float64, cp int) (ear float64) {
   ear = zero
   if cp == Continuously {
     ear = math.Pow(math.E, i) - one
@@ -567,7 +567,7 @@ func (a *Annuities) NominalToEAR(i float64, cp int) (ear float64) {
   return
 }
 
-func (a *Annuities) EAToNominalRate(ear float64, cp int) (r float64) {
+func (a *Annuities) EARToNominalRate(ear float64, cp int) (r float64) {
   r = zero
   if cp == Continuously {
     r = math.Log(ear + one)
