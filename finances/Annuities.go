@@ -43,6 +43,9 @@ for an apartment, life insurance premiums, and lottery payoffs are typically set
 due.
 ***/
 type Annuities struct {
+  //In Go, a struct field is called embedded if it's declared without a name; embedding is used to
+  //promote the fields and methods of an embedded type. Embedding is about composition, not
+  //inheritance.
   Periods
   mathutil.MathUtil
 }
