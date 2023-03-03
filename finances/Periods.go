@@ -48,7 +48,7 @@ Adjust if compound period (c) does not equal number of interest periods (t); e.g
 (1) n is 20, t is years, and c is monthly, then n = 20 * 12 = 240 months.
 (2) n is 6.5, t is years, and c is quarterly, then n = 6.5 * 4 = 26 quarters.
 ***/
-func (p Periods) NumberOfPeriods(n float64, tp int, forDaysOnly float64, cp int) float64 {
+func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int) float64 {
   if tp != cp {
     switch cp {
       case Monthly:
@@ -147,11 +147,11 @@ single month is 0.08 divided by 12, working out to 0.0067 or 0.67%.
 The remaining principal balance of the mortgage loan would have a 0.67% interest rate applied to it
 each month.
 ***/
-func (p Periods) PeriodicInterestRate(interestRate float64, compoundingPeriods int) float64 {
+func (p Periods) periodicInterestRate(interestRate float64, compoundingPeriods int) float64 {
   return (interestRate / float64(compoundingPeriods))
 }
 
-func (p Periods) GetCompoundingPeriod(compoundingPeriod byte, isDaily365 bool) int {
+func (p Periods) getCompoundingPeriod(compoundingPeriod byte, isDaily365 bool) int {
   // Cases are evaluated from top to bottom, so the first matching one is executed.
   // The optional default case matches if none of the other cases does; it may be placed anywhere.
   // Cases do not fall through from one to the next as in C-like languages (though there is a
@@ -180,7 +180,7 @@ func (p Periods) GetCompoundingPeriod(compoundingPeriod byte, isDaily365 bool) i
   }
 }
 
-func (p Periods) GetTimePeriod(timePeriod byte, isDaily365 bool) int {
+func (p Periods) getTimePeriod(timePeriod byte, isDaily365 bool) int {
   switch timePeriod {
     case 'm', 'M':  //(M)onths
       return Months
