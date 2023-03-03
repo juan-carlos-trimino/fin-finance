@@ -43,6 +43,9 @@ for an apartment, life insurance premiums, and lottery payoffs are typically set
 due.
 ***/
 type Annuities struct {
+  //In Go, a struct field is called embedded if it's declared without a name; embedding is used to
+  //promote the fields and methods of an embedded type. Embedding is about composition, not
+  //inheritance.
   Periods
   mathutil.MathUtil
 }
@@ -157,7 +160,7 @@ func evaluateGivenPoint(pv, pmt, n, i float64, f, fPrime *float64) () {
   return
 }
 
-func (a *Annuities) O_Interest_PV_PMT(pv, pmt, n float64, cp int, i1, i2, accurancy float64) (i float64) {
+func (a *Annuities) O_Interest_PV_PMT(pv, pmt, n, i1, i2 float64, cp int, accurancy float64) (i float64) {
   var mu mathutil.MathUtil
   i1 = a.PeriodicInterestRate(i1 / hundred, cp)
   i2 = a.PeriodicInterestRate(i2 / hundred, cp)
@@ -557,7 +560,7 @@ rate compounded monthly involves 12 periods per year, for example. Using the rel
 above, any effective annual rate can be converted to a rate compounded more frequently, and any
 rate compounded more frequently than once a year can be converted to an effective annual rate.
 ***/
-func (a *Annuities) NominalToEAR(i float64, cp int) (ear float64) {
+func (a *Annuities) NominalRateToEAR(i float64, cp int) (ear float64) {
   ear = zero
   if cp == Continuously {
     ear = math.Pow(math.E, i) - one
@@ -567,7 +570,7 @@ func (a *Annuities) NominalToEAR(i float64, cp int) (ear float64) {
   return
 }
 
-func (a *Annuities) EARToNominal(ear float64, cp int) (r float64) {
+func (a *Annuities) EARToNominalRate(ear float64, cp int) (r float64) {
   r = zero
   if cp == Continuously {
     r = math.Log(ear + one)

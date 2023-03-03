@@ -1,5 +1,17 @@
-//
+//Testing the functions in Bonds.go.
 package finances
+
+/***
+To build and run the tests:
+$ go test
+
+The -v flag prints the name and execution time of each test in the package:
+$ go test -v
+
+The -run flag, whose argument is a regular expression, causes 'go test' to run only those tests
+whose function name matches the pattern:
+$ go test -v -run="Bonds"
+***/
 
 import (
   "fmt"
@@ -41,7 +53,6 @@ func TestBonds_CurrentPrice(t *testing.T) {
     { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0,
       currentRate_cp: 'a', want: 102.53129466 },
   }
-  //
   var b Bonds
   for _, tc := range tests {
     var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
@@ -72,7 +83,6 @@ func TestBonds_CurrentPriceContinuous(t *testing.T) {
     //Price = $104.281666
     { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 8.0, want: 104.281666 },
   }
-  //
   var b Bonds
   for _, tc := range tests {
     var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
@@ -100,7 +110,6 @@ func TestBonds_DurationContinuous(t *testing.T) {
     //Duration = 2.737529
     { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0, want: 2.737529 },
   }
-  //
   var b Bonds
   for _, tc := range tests {
     var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
@@ -129,7 +138,6 @@ func TestBonds_YieldToMaturityContinuous(t *testing.T) {
     //Duration = 9.0
     { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0, want: 9.0 },
   }
-  //
   var b Bonds
   for _, tc := range tests {
     var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
@@ -158,7 +166,6 @@ func TestBonds_MacaulayDurationContinuous(t *testing.T) {
     //Duration = 2.737529
     { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0, want: 2.737529 },
   }
-  //
   var b Bonds
   for _, tc := range tests {
     var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
@@ -187,7 +194,6 @@ func TestBonds_ConvexityContinuous(t *testing.T) {
     //Convexity = 7.867793
     { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0, want: 7.867793 },
   }
-  //
   var b Bonds
   for _, tc := range tests {
     var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
