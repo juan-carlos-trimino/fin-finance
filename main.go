@@ -47,7 +47,7 @@ var a finances.Annuities
 var real = a.RealInterestRate(9.00 / 100, 3.00 / 100) * 100.0
 fmt.Printf("real = %.2f%%\n", real)
 
-var i = a.O_Interest_PV_PMT(24000.00, 500.00, 60.0, 1.0, 31.0, finances.Monthly, 1e-6) * 100.0
+var i = a.O_Interest_PV_PMT(24_000.00, 500.00, 60.0, 1.0, 31.0, finances.Monthly, 1e-6) * 100.0
 fmt.Printf("Interest = %.2f%%\n", i)
 
 
