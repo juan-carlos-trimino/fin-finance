@@ -48,9 +48,9 @@ cp (Compound period or coupon frequency)
 ***/
 func (b *Bonds) CashFlow(FV, couponRate float64, cp int, n float64, tp int) (cashFlow [] float64) {
   couponRate /= hundred
-  couponRate = b.PeriodicInterestRate(couponRate, cp)
+  couponRate = b.periodicInterestRate(couponRate, cp)
   var C = FV * couponRate
-  var sz int = int(b.NumberOfPeriods(n, tp, float64(Daily365), cp))
+  var sz int = int(b.numberOfPeriods(n, tp, float64(Daily365), cp))
   cashFlow = make([]float64, sz, sz) //len=cap=sz
   for idx := range cashFlow {
     cashFlow[idx] = C
@@ -83,7 +83,7 @@ t - Number of time periods.
 ***/
 func (b *Bonds) CurrentPrice(cashFlow []float64, currentRate float64, cp int) (price float64) {
   currentRate /= hundred
-  currentRate = b.PeriodicInterestRate(currentRate, cp)
+  currentRate = b.periodicInterestRate(currentRate, cp)
   price = zero
   currentRate += one
   var sz int = len(cashFlow)

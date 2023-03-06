@@ -81,8 +81,8 @@ func (a *Annuities) O_FutureValue_PV(PV, i float64, cp int, n float64, tp int) (
     n *= i
     FV = PV * math.Pow(math.E, n)
   } else {
-    i = a.PeriodicInterestRate(i, cp)
-    n = a.NumberOfPeriods(n, tp, float64(Daily365), cp)
+    i = a.periodicInterestRate(i, cp)
+    n = a.numberOfPeriods(n, tp, float64(Daily365), cp)
     FV = PV * math.Pow(one + i, n)
   }
   return
@@ -94,8 +94,8 @@ func (a *Annuities) O_FutureValue_PV(PV, i float64, cp int, n float64, tp int) (
                   i
 ***/
 func (a *Annuities) O_FutureValue_PMT(PMT, i float64, cp int, n float64, tp int) (FV float64) {
-  i = a.PeriodicInterestRate(i, cp)
-  n = a.NumberOfPeriods(n, tp, float64(Daily365), cp)
+  i = a.periodicInterestRate(i, cp)
+  n = a.numberOfPeriods(n, tp, float64(Daily365), cp)
   FV = PMT * ((math.Pow(one + i, n) - one) / i)
   return
 }
@@ -106,8 +106,8 @@ PV = -----------
       (1 + i)^n
 ***/
 func (a *Annuities) O_PresentValue_FV(FV, i float64, cp int, n float64, tp int) (PV float64) {
-  i = a.PeriodicInterestRate(i, cp)
-  n = a.NumberOfPeriods(n, tp, float64(Daily365), cp)
+  i = a.periodicInterestRate(i, cp)
+  n = a.numberOfPeriods(n, tp, float64(Daily365), cp)
   PV = FV / math.Pow(one + i, n)
   return
 }
@@ -118,8 +118,8 @@ func (a *Annuities) O_PresentValue_FV(FV, i float64, cp int, n float64, tp int) 
                     i
 ***/
 func (a *Annuities) O_PresentValue_PMT(PMT, i float64, cp int, n float64, tp int) (PV float64) {
-  i = a.PeriodicInterestRate(i, cp)
-  n = a.NumberOfPeriods(n, tp, float64(Daily365), cp)
+  i = a.periodicInterestRate(i, cp)
+  n = a.numberOfPeriods(n, tp, float64(Daily365), cp)
   PV = PMT * ((one - math.Pow(one + i, -n)) / i)
   return
 }
@@ -130,7 +130,7 @@ func (a *Annuities) O_PresentValue_PMT(PMT, i float64, cp int, n float64, tp int
        PV
 ***/
 func (a *Annuities) O_Interest_PV_FV(PV, FV, n float64, tp, cp int) (i float64) {
-  n = a.NumberOfPeriods(n, tp, float64(Daily365), cp)
+  n = a.numberOfPeriods(n, tp, float64(Daily365), cp)
   i = (math.Pow(FV / PV, one / n) - one) * float64(cp)
   return
 }
@@ -162,8 +162,8 @@ func evaluateGivenPoint(pv, pmt, n, i float64, f, fPrime *float64) () {
 
 func (a *Annuities) O_Interest_PV_PMT(pv, pmt, n, i1, i2 float64, cp int, accurancy float64) (i float64) {
   var mu mathutil.MathUtil
-  i1 = a.PeriodicInterestRate(i1 / hundred, cp)
-  i2 = a.PeriodicInterestRate(i2 / hundred, cp)
+  i1 = a.periodicInterestRate(i1 / hundred, cp)
+  i2 = a.periodicInterestRate(i2 / hundred, cp)
   i = mu.NewtonRaphsonBisection(evaluateGivenPoint, pv, pmt, n, i1, i2, accurancy)
   return
 }
@@ -174,8 +174,8 @@ func (a *Annuities) O_Interest_PV_PMT(pv, pmt, n, i1, i2 float64, cp int, accura
              (1 + i)^n - 1
 ***/
 func (a *Annuities) O_Payment_FV(FV, i float64, cp int, n float64, tp int) (PMT float64) {
-  i = a.PeriodicInterestRate(i, cp)
-  n = a.NumberOfPeriods(n, tp, float64(Daily365), cp)
+  i = a.periodicInterestRate(i, cp)
+  n = a.numberOfPeriods(n, tp, float64(Daily365), cp)
   PMT = FV * (i / (math.Pow(one + i, n) - one))
   return
 }
@@ -186,8 +186,8 @@ func (a *Annuities) O_Payment_FV(FV, i float64, cp int, n float64, tp int) (PMT 
              1 - (1 + i)^(-n)
 ***/
 func (a *Annuities) O_Payment_PV(PV, i float64, cp int, n float64, tp int) (PMT float64) {
-  i = a.PeriodicInterestRate(i, cp)
-  n = a.NumberOfPeriods(n, tp, float64(Daily365), cp)
+  i = a.periodicInterestRate(i, cp)
+  n = a.numberOfPeriods(n, tp, float64(Daily365), cp)
   PMT = PV * (i / (one - math.Pow(one + i, -n)))
   return
 }
@@ -200,7 +200,7 @@ func (a *Annuities) O_Payment_PV(PV, i float64, cp int, n float64, tp int) (PMT 
       ln(1 + i)
 ***/
 func (a *Annuities) O_Periods_PV_FV(PV, FV, i float64, cp int) (n float64) {
-  i = a.PeriodicInterestRate(i, cp)
+  i = a.periodicInterestRate(i, cp)
   n = math.Log(FV / PV) / math.Log(one + i)
   return
 }
@@ -213,7 +213,7 @@ func (a *Annuities) O_Periods_PV_FV(PV, FV, i float64, cp int) (n float64) {
             ln(1 + i)
 ***/
 func (a *Annuities) O_Periods_PMT_PV(PMT, PV, i float64, cp int) (n float64) {
-  i = a.PeriodicInterestRate(i, cp)
+  i = a.periodicInterestRate(i, cp)
   n = math.Log(math.Pow(one - ((i * PV) / PMT), -1)) / math.Log(one + i)
   return
 }
@@ -226,7 +226,7 @@ func (a *Annuities) O_Periods_PMT_PV(PMT, PV, i float64, cp int) (n float64) {
          ln(1 + i)
 ***/
 func (a *Annuities) O_Periods_PMT_FV(PMT, FV, i float64, cp int) (n float64) {
-  i = a.PeriodicInterestRate(i, cp)
+  i = a.periodicInterestRate(i, cp)
   n = math.Log(one + ((i * FV) / PMT)) / math.Log(one + i)
   return
 }
@@ -300,8 +300,8 @@ FV = Future Value of Growing Annuity
  n = Number of deposits.
 ***/
 func (a *Annuities) O_GrowingAnnuityFutureValue(C, n, g, i float64, cp int) (FV float64) {
-  i = a.PeriodicInterestRate(i, cp)
-  g = a.PeriodicInterestRate(g, cp)
+  i = a.periodicInterestRate(i, cp)
+  g = a.periodicInterestRate(g, cp)
   FV = C * ((math.Pow(one + i, n) - math.Pow(one + g, n)) / (i - g))
   return
 }
@@ -312,8 +312,8 @@ PV = ------- (1 - (-------)^n)
       i - g         1 + i
 ***/
 func (a *Annuities) O_GrowingAnnuityPresentValue(C, n, g, i float64, cp int) (PV float64) {
-  i = a.PeriodicInterestRate(i, cp)
-  g = a.PeriodicInterestRate(g, cp)
+  i = a.periodicInterestRate(i, cp)
+  g = a.periodicInterestRate(g, cp)
   PV = (C / (i - g)) * (one - math.Pow((one + g) / (one + i), n))
   return
 }
@@ -325,7 +325,7 @@ func (a *Annuities) O_GrowingAnnuityPresentValue(C, n, g, i float64, cp int) (PV
 ***/
 func (a *Annuities) D_PresentValue_PMT(PMT, i float64, cp int, n float64, tp int) (PV float64) {
   PV = a.O_PresentValue_PMT(PMT, i, cp, n, tp)
-  i = a.PeriodicInterestRate(i, cp)
+  i = a.periodicInterestRate(i, cp)
   PV *= (one + i)
   return
 }
@@ -337,7 +337,7 @@ func (a *Annuities) D_PresentValue_PMT(PMT, i float64, cp int, n float64, tp int
 ***/
 func (a *Annuities) D_FutureValue_PMT(PMT, i float64, cp int, n float64, tp int) (FV float64) {
   FV = a.O_FutureValue_PMT(PMT, i, cp, n, tp)
-  i = a.PeriodicInterestRate(i, cp)
+  i = a.periodicInterestRate(i, cp)
   FV *= (one + i)
   return
 }
@@ -349,7 +349,7 @@ func (a *Annuities) D_FutureValue_PMT(PMT, i float64, cp int, n float64, tp int)
 ***/
 func (a *Annuities) D_Payment_PV(PV, i float64, cp int, n float64, tp int) (PMT float64) {
   PMT = a.O_Payment_PV(PV, i, cp, n, tp)
-  i = a.PeriodicInterestRate(i, cp)
+  i = a.periodicInterestRate(i, cp)
   PMT /= (one + i)
   return
 }
@@ -361,7 +361,7 @@ func (a *Annuities) D_Payment_PV(PV, i float64, cp int, n float64, tp int) (PMT 
 ***/
 func (a *Annuities) D_Payment_FV(FV, i float64, cp int, n float64, tp int) (PMT float64) {
   PMT = a.O_Payment_FV(FV, i, cp, n, tp)
-  i = a.PeriodicInterestRate(i, cp)
+  i = a.periodicInterestRate(i, cp)
   PMT /= (one + i)
   return
 }
@@ -394,8 +394,8 @@ rate. We can use the compound interest formula to find the value of PV dollars n
  particular year.
 ***/
 func (a *Annuities) Depreciation(PV, i float64, cp int, n float64, tp int) (FV float64) {
-  i = a.PeriodicInterestRate(i, cp)
-  n = a.NumberOfPeriods(n, tp, float64(Daily365), cp)
+  i = a.periodicInterestRate(i, cp)
+  n = a.numberOfPeriods(n, tp, float64(Daily365), cp)
   FV = PV * math.Pow(one - (i / (i + one)), n)
   return
 }
@@ -565,7 +565,7 @@ func (a *Annuities) NominalRateToEAR(i float64, cp int) (ear float64) {
   if cp == Continuously {
     ear = math.Pow(math.E, i) - one
   } else {
-    ear = math.Pow(one + a.PeriodicInterestRate(i, cp), float64(cp)) - one
+    ear = math.Pow(one + a.periodicInterestRate(i, cp), float64(cp)) - one
   }
   return
 }
@@ -715,7 +715,3 @@ f(x) = ----- * i * (1 + i)^-n + (1 + i)^-n - 1
 f'(x) = TBD
 
 ***/
-
-
-
-

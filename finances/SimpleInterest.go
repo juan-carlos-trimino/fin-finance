@@ -72,7 +72,7 @@ func (si *SimpleInterest) OrdinaryInterest(p, i float64, cp int, n float64, tp i
 		m, _ := math.Modf(n / 30.0) //Break n into its fractional (ignore) and integer (m) parts.
 		n = m * 30                  //30-day months.
 	}
-	n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
+	n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
 	return (p * i * n) //INT
 }
 
@@ -81,7 +81,7 @@ func (si *SimpleInterest) OrdinaryRate(p, INT float64, cp int, n float64, tp int
 		m, _ := math.Modf(n / 30.0) //Break n into its fractional (ignore) and integer (m) parts.
 		n = m * 30                  //30-day months.
 	}
-	n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
+	n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
 	return (INT / (p * n)) //rate.
 }
 
@@ -90,7 +90,7 @@ func (si *SimpleInterest) OrdinaryPrincipal(INT, rate float64, cp int, n float64
 		m, _ := math.Modf(n / 30.0) //Divide n into its fractional (ignore) and integer (m) parts.
 		n = m * 30                  //30-day months.
 	}
-	n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
+	n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
 	return (INT / (rate * n)) //p
 }
 
@@ -110,17 +110,17 @@ func (si *SimpleInterest) OrdinaryTime(p, INT, rate float64, cp, tp int) float64
 }
 
 func (si *SimpleInterest) BankersInterest(p, i float64, cp int, n float64, tp int) float64 {
-  n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
+  n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
   return (p * i * n) //INT
 }
 
 func (si *SimpleInterest) BankersRate(p, INT float64, cp int, n float64, tp int) float64 {
-  n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
+  n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
   return (INT / (p * n)) //rate.
 }
 
 func (si *SimpleInterest) BankersPrincipal(INT, rate float64, cp int, n float64, tp int) float64 {
-  n = si.NumberOfPeriods(n, tp, float64(Daily360), cp)
+  n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
   return (INT / (rate * n)) //p
 }
 
@@ -140,17 +140,17 @@ func (si *SimpleInterest) BankersTime(p, INT, rate float64, cp, tp int) (time fl
 }
 
 func (si *SimpleInterest) AccurateInterest(p, i float64, cp int, n float64, tp int) float64 {
-  n = si.NumberOfPeriods(n, tp, float64(Daily365), cp)
+  n = si.numberOfPeriods(n, tp, float64(Daily365), cp)
   return (p * i * n) //INT
 }
 
 func (si *SimpleInterest) AccurateRate(p, INT float64, cp int, n float64, tp int) float64 {
-  n = si.NumberOfPeriods(n, tp, float64(Daily365), cp)
+  n = si.numberOfPeriods(n, tp, float64(Daily365), cp)
   return (INT / (p * n)) //rate.
 }
 
 func (si *SimpleInterest) AccuratePrincipal(INT, rate float64, cp int, n float64, tp int) float64 {
-  n = si.NumberOfPeriods(n, tp, float64(Daily365), cp)
+  n = si.numberOfPeriods(n, tp, float64(Daily365), cp)
   return (INT / (rate * n)) //p
 }
 
