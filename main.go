@@ -1,35 +1,48 @@
-// Test the app.
 package main
 
 import (
-	"finance/finances"
-	// // "app/umath"
-	"fmt"
-	// "math"
+	// "finance/finances"
+	// "fmt"
+	// "finance/finances"
+	"log"
+	"net/http"
+
+	// "strconv"
+	"finance/webfinances"
+	// "strings"
 )
 
 // type S struct{}
 // func (s *S) addr() { fmt.Printf("%p\n", s) }
 
+/***
+How to kill a process using a port on localhost (Windows).
+C:\> netstat -ano | findstr :<port>
+C:\> taskkill /PID <PID> /F
+
+or
+
+C:\> npx kill-port <port>
+***/
 func main() {
 
-	// var a, b S
-	// a.addr()
-	// b.addr()
+  // var a, b S
+  // a.addr()
+  // b.addr()
 
-	// if len(os.Args) > 2 && strings.EqualFold(os.Args[1], "ordinary") {
-	//   if os.Args[2] == "interest" && len(os.Args) == 8 {
-	//     _, err := strconv.Atoi(os.Args[4])
-	//     if err != nil {
-	//       panic(err)
-	//     }
-	//     var si finances.SimpleInterest
-	//     var interest = (&si).OrdinaryInterest(100, 0.04, finances.Monthly, 1, finances.Months)
-	//     fmt.Printf("interest = $%.2f (Ordinary Interest)\n", interest)
-	//   }
-	// }
+  // if len(os.Args) > 2 && strings.EqualFold(os.Args[1], "ordinary") {
+  //   if os.Args[2] == "interest" && len(os.Args) == 8 {
+  //     _, err := strconv.Atoi(os.Args[4])
+  //     if err != nil {
+  //       panic(err)
+  //     }
+  //     var si finances.SimpleInterest
+  //     var interest = (&si).OrdinaryInterest(100, 0.04, finances.Monthly, 1, finances.Months)
+  //     fmt.Printf("interest = $%.2f (Ordinary Interest)\n", interest)
+  //   }
+  // }
 
-	
+  
   /***
   var m finances.Mortgage
   var payment, totalCost, totalInterest = (&m).CostOfMortgage(300000.00, 2.74 / 100.0, 'm', 15.0, 'y')
@@ -42,15 +55,59 @@ func main() {
     fmt.Printf("pmtNumber = %d payment = $%.2f pmtPrincipal = $%.2f pmtInterest = $%.2f balance = $%.2f\n", i + 1, v.Payment, v.PmtPrincipal, v.PmtInterest, v.Balance)
   }
 ***/
-
-var a finances.Annuities
-var real = a.RealInterestRate(9.00 / 100, 3.00 / 100) * 100.0
-fmt.Printf("real = %.2f%%\n", real)
-
-var i = a.O_Interest_PV_PMT(24_000.00, 500.00, 60.0, 1.0, 31.0, finances.Monthly, 1e-6) * 100.0
-fmt.Printf("Interest = %.2f%%\n", i)
-
-
-
   // fmt.Println("eps = ", math.Nextafter(1.0, 2.0) - 1.0)
+
+  var w webfinances.Annuities
+  /***
+  net/http provides ServeMux, a request multiplexer, to simplify the association between URLs and
+  handlers. A ServeMux aggregates a collection of http.Handlers into a single http.Handler.
+  Different types satisfying the same interface are substitutable: the web server can dispatch
+  requests to any http.Handler, regardless of which concrete type is behind it.
+  ***/
+  // var mux = http.NewServeMux()
+  // http.HandleFunc("/bonds", db.bonds)
+  http.HandleFunc("/annuities/AverageRateOfReturn", w.AverageRateOfReturn)
+  /***
+  ListenAndServe runs forever, or until the server fails (or fails to start) with an error,
+  always non-nil, which it returns.
+
+  The web server invokes each handler in a new goroutine, so handlers must take precautions such as
+  locking when accessing variables that other goroutines, including other requests to the same
+  handler, may be accessing.
+  ***/
+  log.Fatal(http.ListenAndServe("localhost:8000", nil)) //DefaultServeMux
 }
+
+// type database map[string]int
+
+// func (db database) bonds(res http.ResponseWriter, req *http.Request) () {
+//   fmt.Fprintf(res, "URL.Path = %q\n", req.URL.Path)
+// }
+
+// func (db database) annuities(res http.ResponseWriter, req *http.Request) () {
+//   params := req.URL.Query()
+//   if len(params) != 1 {
+//     fmt.Fprintf(res, "Parameters required = 1; parameters provided = %d\n", len(params))
+//     return
+//   }
+//   const length int = 16
+//   var returns []float64 = nil
+//   //Iterate over all the query parameters.
+//   for _, v := range params {
+//     returns = make([]float64, 0, length)
+//     for idx := 0; idx < len(v); idx++ {
+//       f, err := strconv.ParseFloat(v[idx], 64)
+//       if err != nil {
+//         fmt.Fprintf(res, "'%s' is not a floating number.\n%s", v[idx], v)
+//         return
+//       }
+//       returns = append(returns, f)
+//     }
+//   }
+//   var a finances.Annuities
+//   var gmr = a.AverageRateOfReturn(returns) * 100.0
+//   fmt.Fprintf(res, "AverageRateOfReturn = %.3f\n", gmr)
+// }
+
+
+
