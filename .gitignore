@@ -5,26 +5,28 @@
 !.gitignore
 !LICENSE
 !README.md
-!go.mod
-!main.go
-
+# ... and these files under the 'src' directory...
+!src/
+src/*
+!src/go.mod
+!src/main.go
 # ... and these files under the 'finances' directory...
-!finances/
-finances/*
-!finances/Annuities_test.go
-!finances/Annuities.go
-!finances/Bonds_test.go
-!finances/Bonds.go
-!finances/Mortgage.go
-!finances/Periods.go
-!finances/SimpleInterest_test.go
-!finances/SimpleInterest.go
+!src/finances/
+src/finances/*
+!src/finances/Annuities_test.go
+!src/finances/Annuities.go
+!src/finances/Bonds_test.go
+!src/finances/Bonds.go
+!src/finances/Mortgage.go
+!src/finances/Periods.go
+!src/finances/SimpleInterest_test.go
+!src/finances/SimpleInterest.go
 # ... and this directory and its file...
-!umath/
-umath/*
-!umath/umath_test.go
-!umath/umath.go
+!src/umath/
+src/umath/*
+!src/umath/umath_test.go
+!src/umath/umath.go
 # ... and this directory and its file...
-!webfinances/
-webfinances/*
-!webfinances/annuities.go
+!src/webfinances/
+src/webfinances/*
+!src/webfinances/annuities.go
