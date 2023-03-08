@@ -2,6 +2,7 @@
 **
 
 # But include these files...
+!Dockerfile
 !.gitignore
 !LICENSE
 !README.md
