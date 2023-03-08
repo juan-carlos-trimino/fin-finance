@@ -24,3 +24,7 @@ finances/*
 umath/*
 !umath/umath_test.go
 !umath/umath.go
+# ... and this directory and its file...
+!webfinances/
+webfinances/*
+!webfinances/annuities.go
