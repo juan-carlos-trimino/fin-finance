@@ -1,42 +1,51 @@
+# To test the image using docker:
+# Build the image.
+# $ docker build -t webserver:1.0.0 .
+# List the images.
+# $ docker image ls
+# To remove an image.
+# docker rmi <image-id>
+# To start a container.
+# docker run -d --name finances -p 8000:8000 webserver
+# To list all running containers.
+# docker ps
+# To stop a running container.
+# $ docker stop <container-id>
+# To run commands inside an image.
+# Alpine images provide the Almquist shell (ash) from BusyBox.
+# $ docker exec -it <container-id> ash
+# -------------------------------------------------------------------------------------------------
 # Use an offical golang image to create the binary.
-# https://hub.docker.com/_/golang
-FROM 1.20.2-alpine3.17 AS builder
+# Alpine images provide the Almquist shell (ash) from BusyBox.
+FROM golang:1.20.2-alpine3.17 AS builder
 
 # Create a working directory in the image.
-WORKDIR /app
+WORKDIR /goapp/
 
-# Copy local go.mod and, if present, go.sum to the container image.
-COPY go.* ./
+# Copy go.mod and, if present, go.sum from the local machine to the container image.
+COPY ./src/go.* ./
+# Copy the code from the local machine to the container image.
+COPY ./src/main.go ./
+COPY ./src/finances ./finances/
+COPY ./src/mathutil ./mathutil/
+COPY ./src/webfinances ./webfinances/
+
 # Download necessary Go modules; https://go.dev/ref/mod#go-mod-download
 RUN go mod download
 
-# Copy local code to the container image.
-COPY . ./
+# Build the binary; https://go.googlesource.com/sublime-build/+/HEAD/docs/configuration.md
+RUN go build -o godir/webserver -v main.go
 
-#Build the binary.
-RUN go build -v -o /server
-
-
-
-
-  # Use the official Debian slim image for a lean production container.
-  # https://hub.docker.com/_/debian
-  # https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-buildsFROM gcr.io/distroless/base-debian10
-FROM debian:buster-slim
+FROM alpine:3.17
 
 WORKDIR /
 
-RUN set -x && \
-    apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
-
 # Copy the binary to the production image from the builder stage.
-COPY --from=builder /app/server /app/server
+COPY --from=builder godir/ goapp/
 
-EXPOSE 8080
+EXPOSE 8000
 
-USER nonroot:nonroot
+USER 1000:1000
 
 # Run the web service on container startup.
-CMD [ "/app/server" ]
+ENTRYPOINT ["./goapp/webserver"]
