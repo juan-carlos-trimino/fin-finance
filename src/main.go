@@ -1,15 +1,12 @@
 package main
 
 import (
-	// "finance/finances"
-	// "fmt"
-	// "finance/finances"
-	"log"
-	"net/http"
-
-	// "strconv"
-	"finance/webfinances"
-	// "strings"
+  "finance/webfinances"
+  "fmt"
+  "log"
+  "net/http"
+  "os"
+  "time"
 )
 
 // type S struct{}
@@ -57,6 +54,13 @@ func main() {
 ***/
   // fmt.Println("eps = ", math.Nextafter(1.0, 2.0) - 1.0)
 
+
+  dns, exists := os.LookupEnv("DNS")
+  if !exists {
+    fmt.Println("Missing environment parameter: DNS=localhost:8000 go run main.go")
+    return
+  }
+  fmt.Printf("%s - DNS=%s\n", time.Now().UTC().Format(time.RFC3339Nano), dns)
   var w webfinances.Annuities
   /***
   net/http provides ServeMux, a request multiplexer, to simplify the association between URLs and
@@ -67,6 +71,7 @@ func main() {
   // var mux = http.NewServeMux()
   // http.HandleFunc("/bonds", db.bonds)
   http.HandleFunc("/annuities/AverageRateOfReturn", w.AverageRateOfReturn)
+  fmt.Printf("%s - Starting the server...\n", time.Now().UTC().Format(time.RFC3339Nano))
   /***
   ListenAndServe runs forever, or until the server fails (or fails to start) with an error,
   always non-nil, which it returns.
@@ -75,7 +80,7 @@ func main() {
   locking when accessing variables that other goroutines, including other requests to the same
   handler, may be accessing.
   ***/
-  log.Fatal(http.ListenAndServe("localhost:8000", nil)) //DefaultServeMux
+  log.Fatal(http.ListenAndServe(dns, nil)) //DefaultServeMux
 }
 
 // type database map[string]int
