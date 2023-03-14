@@ -57,7 +57,7 @@ func main() {
   }
   ***/
   //////////////////////  // fmt.Println("eps = ", math.Nextafter(1.0, 2.0) - 1.0)
-  //http://localhost:18000/annuities/AverageRateOfReturn?ret=5.0&ret=-3.0&ret=12.0&ret=10
+  //http://localhost:8001/annuities/AverageRateOfReturn?ret=5.0&ret=-3.0&ret=12.0&ret=10
 
 
   var exists bool = false
