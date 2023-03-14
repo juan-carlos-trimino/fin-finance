@@ -23,10 +23,10 @@ src/finances/*
 !src/finances/SimpleInterest_test.go
 !src/finances/SimpleInterest.go
 # ... and this directory and its file...
-!src/umath/
-src/umath/*
-!src/umath/umath_test.go
-!src/umath/umath.go
+!src/mathutil/
+src/mathutil/*
+!src/mathutil/mathutil_test.go
+!src/mathutil/mathutil.go
 # ... and this directory and its file...
 !src/webfinances/
 src/webfinances/*
