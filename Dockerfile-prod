@@ -1,6 +1,6 @@
 # To test the image using docker:
 # Build the image.
-# $ docker build -t webserver:1.0.0 .
+# $ docker build -t webserver:1.0.0 . --file Dockerfile-prod
 # List the images.
 # $ docker image ls
 # To remove an image.
@@ -34,16 +34,16 @@ COPY ./src/webfinances ./webfinances/
 RUN go mod download
 
 # Build the binary; https://go.googlesource.com/sublime-build/+/HEAD/docs/configuration.md
-RUN go build -o godir/webserver -v main.go
+RUN go build -o ./godir/webserver -v main.go
 
 FROM alpine:3.17
 
 WORKDIR /
 
 # Copy the binary to the production image from the builder stage.
-COPY --from=builder godir/ goapp/
+COPY --from=builder /goapp/godir/ ./goapp/
 
-EXPOSE 8000
+EXPOSE 8001
 
 USER 1000:1000
 
