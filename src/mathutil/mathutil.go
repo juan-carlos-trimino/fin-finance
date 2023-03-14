@@ -2,7 +2,9 @@
 package mathutil
 
 import (
+  "fmt"
   "math"
+  "strconv"
 )
 
 const (
@@ -13,6 +15,22 @@ const (
 )
 
 type MathUtil struct{}
+
+func (m *MathUtil) ConvertToFloat64(values []string) (floats []float64, err error) {
+  var length int = len(values)
+  floats = make([]float64, length, length)
+  var f float64
+  err = error(nil)
+  for idx := 0; idx < length; idx++ {
+    f, err = strconv.ParseFloat(values[idx], 64)
+    if err != nil {
+      err = fmt.Errorf("'%s' is not a floating number.\n%s", values[idx], values)
+      return
+    }
+    floats[idx] = f
+  }
+  return
+}
 
 /***
                              Prologue

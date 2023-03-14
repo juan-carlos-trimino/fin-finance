@@ -1,11 +1,11 @@
-//
 package webfinances
 
 import (
-  "finance/finances"
-  "fmt"
-  "net/http"
-  "strconv"
+	"finance/finances"
+	"finance/mathutil"
+	"fmt"
+	"net/http"
+	// "strconv"
 )
 
 type Annuities struct{}
@@ -21,12 +21,13 @@ func (a Annuities) AverageRateOfReturn(res http.ResponseWriter, req *http.Reques
     fmt.Fprintf(res, "Parameters required = 1; parameters provided = %d", len(params))
     return
   }
+  var mu mathutil.MathUtil
   //A nil slice is also an empty slice; no allocation of memory.
   var returns []float64
   var err = error(nil)
   //Iterate over all the query parameters.
   for _, v := range params {
-    returns, err = convertToFloat64(v)
+    returns, err = mu.ConvertToFloat64(v)
     if err != nil {
       fmt.Fprintf(res, "%s", err)
       return
@@ -35,28 +36,4 @@ func (a Annuities) AverageRateOfReturn(res http.ResponseWriter, req *http.Reques
   var fa finances.Annuities
   var gmr = fa.AverageRateOfReturn(returns) * 100.0
   fmt.Fprintf(res, "Average Rate of Return = %.3f\n", gmr)
-}
-
-func convertToFloat64(values []string) (floats []float64, err error) {
-  var length int = len(values)
-  floats = make([]float64, length, length)
-  var f float64
-  err = error(nil)
-  for idx := 0; idx < length; idx++ {
-    f, err = strconv.ParseFloat(values[idx], 64)
-    if err != nil {
-      err = fmt.Errorf("'%s' is not a floating number.\n%s", values[idx], values)
-      return
-    }
-    floats[idx] = f
-  }
-  return
-}
-
-func convertToInt(value string) (i int64, err error) {
-  i, err = strconv.ParseInt(value, 10, 0)
-  if err != nil {
-    err = fmt.Errorf("'%s' is not an int number.\n", value)
-  }
-  return
 }
