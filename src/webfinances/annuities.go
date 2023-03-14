@@ -53,4 +53,10 @@ func convertToFloat64(values []string) (floats []float64, err error) {
   return
 }
 
-
+func convertToInt(value string) (i int64, err error) {
+  i, err = strconv.ParseInt(value, 10, 0)
+  if err != nil {
+    err = fmt.Errorf("'%s' is not an int number.\n", value)
+  }
+  return
+}
