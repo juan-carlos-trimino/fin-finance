@@ -20,8 +20,8 @@ type Mortgage struct {
 }
 
 func (m *Mortgage) CostOfMortgage(mortgage, i float64, compoundingPeriod byte, n float64, timePeriod byte) (payment, totalCost, totalInterest float64) {
-  var cp int = (*m).getCompoundingPeriod(compoundingPeriod, true)
-  var tp int = (*m).getTimePeriod(timePeriod, true)
+  var cp int = (*m).GetCompoundingPeriod(compoundingPeriod, true)
+  var tp int = (*m).GetTimePeriod(timePeriod, true)
   payment = (*m).O_Payment_PV(mortgage, i, cp, n, tp)
   totalCost = payment * (*m).numberOfPeriods(n, tp, float64(Daily365), cp)
   totalInterest = totalCost - mortgage
@@ -72,8 +72,8 @@ type AmortizationTable struct {
 ***/
 func (m *Mortgage) AmortizationTable(mortgage, i float64, compoundingPeriod byte, n float64, timePeriod byte) (at AmortizationTable) {
   var payment, totalCost, totalInterest = m.CostOfMortgage(mortgage, i, compoundingPeriod, n, timePeriod)
-  var cp int = m.getCompoundingPeriod(compoundingPeriod, true)
-  var tp int = m.getTimePeriod(timePeriod, true)
+  var cp int = m.GetCompoundingPeriod(compoundingPeriod, true)
+  var tp int = m.GetTimePeriod(timePeriod, true)
   var periods int = int(m.numberOfPeriods(n, tp, float64(Daily365), cp))
   var rows = make([]row, 0, periods)
   var balance, pmtPrincipal, pmtInterest float64 = zero, zero, zero
