@@ -16,7 +16,7 @@ const (
 
 type MathUtil struct{}
 
-func (m *MathUtil) ConvertToFloat64(values []string) (floats []float64, err error) {
+func (m MathUtil) ConvertToFloats64(values []string) (floats []float64, err error) {
   var length int = len(values)
   floats = make([]float64, length, length)
   var f float64
@@ -28,6 +28,26 @@ func (m *MathUtil) ConvertToFloat64(values []string) (floats []float64, err erro
       return
     }
     floats[idx] = f
+  }
+  return
+}
+
+func (m MathUtil) ConvertToFloat64(value string) (f float64, err error) {
+  f = 0.0
+  err = error(nil)
+  f, err = strconv.ParseFloat(value, 64)
+  if err != nil {
+    err = fmt.Errorf("'%s' is not a floating number.\n", value)
+  }
+  return
+}
+
+func (m MathUtil) ConvertToInt(value string) (i int, err error) {
+  i = 0
+  err = error(nil)
+  i, err = strconv.Atoi(value)
+  if err != nil {
+    err = fmt.Errorf("'%s' is not an integer number.\n", value)
   }
   return
 }
@@ -90,7 +110,7 @@ History of Changes:
   1.01  JC Trimino 123108 Changed to use template.
   1.02  JC Trimino 021023 Translated to Go.
 ***/
-func (m *MathUtil) Mod64(x, y float64) float64 {
+func (m MathUtil) Mod64(x, y float64) float64 {
   //Epsilon is the smallest value that, when added to one, yields a result different from one.
   var epsilon float64 = math.Nextafter(float64(1), float64(2)) - float64(1)
   //If |y| < EPSILON, then y = 0.
@@ -169,7 +189,7 @@ x1 and x2. The root will be refined until its accuracy is known within +/-accura
 EvaluateGivenPoint is a user-supplied routine that returns both the function value and the first
 derivative of the function.
 ***/
-func (a *MathUtil) NewtonRaphsonBisection(userFunc func(pv, pmt, n, i float64, f, fPrime *float64) (),
+func (a MathUtil) NewtonRaphsonBisection(userFunc func(pv, pmt, n, i float64, f, fPrime *float64) (),
                                           pv, pmt, n, x1, x2, accurancy float64) float64 {
   var maxIterations int = 100 //Maximum allowed number of iterations.
   var (
