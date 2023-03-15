@@ -151,11 +151,13 @@ func (p Periods) periodicInterestRate(interestRate float64, compoundingPeriods i
   return (interestRate / float64(compoundingPeriods))
 }
 
-func (p Periods) getCompoundingPeriod(compoundingPeriod byte, isDaily365 bool) int {
-  // Cases are evaluated from top to bottom, so the first matching one is executed.
-  // The optional default case matches if none of the other cases does; it may be placed anywhere.
-  // Cases do not fall through from one to the next as in C-like languages (though there is a
-  // rarely used fallthrough statement that overrides this behavior).
+func (p Periods) GetCompoundingPeriod(compoundingPeriod byte, isDaily365 bool) int {
+  /***
+  Cases are evaluated from top to bottom, so the first matching one is executed. The optional
+  default case matches if none of the other cases does; it may be placed anywhere. Cases do not
+  fall through from one to the next as in C-like languages (though there is a rarely used
+  fallthrough statement that overrides this behavior).
+  ***/
   switch compoundingPeriod {
     case 'm', 'M':  //(M)onthly
       return Monthly
@@ -180,7 +182,7 @@ func (p Periods) getCompoundingPeriod(compoundingPeriod byte, isDaily365 bool) i
   }
 }
 
-func (p Periods) getTimePeriod(timePeriod byte, isDaily365 bool) int {
+func (p Periods) GetTimePeriod(timePeriod byte, isDaily365 bool) int {
   switch timePeriod {
     case 'm', 'M':  //(M)onths
       return Months
