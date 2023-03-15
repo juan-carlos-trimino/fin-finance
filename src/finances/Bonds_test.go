@@ -55,10 +55,10 @@ func TestBonds_CurrentPrice(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-                              b.getTimePeriod(tc.tp, false))
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+                              b.GetTimePeriod(tc.tp, false))
     var price = b.CurrentPrice(cashFlow, tc.currentRate,
-                               b.getCompoundingPeriod(tc.currentRate_cp, false))
+                               b.GetCompoundingPeriod(tc.currentRate_cp, false))
     if math.Abs(price - tc.want) < 1e-5 {
       fmt.Printf("Price = $%.2f\n", price)
     } else {
@@ -85,8 +85,8 @@ func TestBonds_CurrentPriceContinuous(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-                              b.getTimePeriod(tc.tp, false))
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+                              b.GetTimePeriod(tc.tp, false))
     var price = b.CurrentPriceContinuous(cashFlow, tc.currentRate)
     if math.Abs(price - tc.want) < 1e-5 {
       fmt.Printf("Price = $%.2f\n", price)
@@ -112,8 +112,8 @@ func TestBonds_DurationContinuous(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-                              b.getTimePeriod(tc.tp, false))
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+                              b.GetTimePeriod(tc.tp, false))
     var duration = b.DurationContinuous(cashFlow, tc.currentRate,
                                         b.CurrentPriceContinuous(cashFlow, tc.currentRate))
     if math.Abs(duration - tc.want) < 1e-5 {
@@ -140,8 +140,8 @@ func TestBonds_YieldToMaturityContinuous(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-                              b.getTimePeriod(tc.tp, false))
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+                              b.GetTimePeriod(tc.tp, false))
     var ytm = b.YieldToMaturityContinuous(cashFlow,
                                           b.CurrentPriceContinuous(cashFlow, tc.currentRate))
     if math.Abs(ytm - tc.want) < 1e-5 {
@@ -168,8 +168,8 @@ func TestBonds_MacaulayDurationContinuous(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-                              b.getTimePeriod(tc.tp, false))
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+                              b.GetTimePeriod(tc.tp, false))
     var duration = b.MacaulayDurationContinuous(cashFlow,
                                                 b.CurrentPriceContinuous(cashFlow, tc.currentRate))
     if math.Abs(duration - tc.want) < 1e-5 {
@@ -196,8 +196,8 @@ func TestBonds_ConvexityContinuous(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-                              b.getTimePeriod(tc.tp, false))
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+                              b.GetTimePeriod(tc.tp, false))
     var convexity = b.ConvexityContinuous(cashFlow, tc.currentRate,
                                           b.CurrentPriceContinuous(cashFlow, tc.currentRate))
     if math.Abs(convexity - tc.want) < 1e-5 {
@@ -234,15 +234,15 @@ func TestBonds_YieldToMaturity(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-		                          b.getTimePeriod(tc.tp, false))
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+		                          b.GetTimePeriod(tc.tp, false))
     var ytm float64
     if tc.withPrice {
-      ytm = b.YieldToMaturity(cashFlow, tc.price, b.getCompoundingPeriod(tc.cp, false))
+      ytm = b.YieldToMaturity(cashFlow, tc.price, b.GetCompoundingPeriod(tc.cp, false))
     } else {
       ytm = b.YieldToMaturity(cashFlow, b.CurrentPrice(cashFlow, tc.currentRate,
-                              b.getCompoundingPeriod(tc.currentRate_cp, false)),
-                              b.getCompoundingPeriod(tc.currentRate_cp, false))
+                              b.GetCompoundingPeriod(tc.currentRate_cp, false)),
+                              b.GetCompoundingPeriod(tc.currentRate_cp, false))
     }
     //
     if math.Abs(ytm - tc.want) < 1e-5 {
@@ -274,8 +274,8 @@ func TestBonds_YieldToCall(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var ytc = b.YieldToCall(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-                            b.getTimePeriod(tc.tp, false), tc.bondPrice, tc.callPrice)
+    var ytc = b.YieldToCall(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+                            b.GetTimePeriod(tc.tp, false), tc.bondPrice, tc.callPrice)
     if math.Abs(ytc - tc.want) < 1e-5 {
       fmt.Printf("ytc = %.2f%%\n", ytc)
     } else {
@@ -302,10 +302,10 @@ func TestBonds_Convexity(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false),
-                              tc.n, b.getTimePeriod(tc.tp, false))
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false),
+                              tc.n, b.GetTimePeriod(tc.tp, false))
     var Cx = b.Convexity(cashFlow, tc.currentInterest,
-                         b.getCompoundingPeriod(tc.currentInterest_cp, false))
+                         b.GetCompoundingPeriod(tc.currentInterest_cp, false))
     if math.Abs(Cx - tc.want) < 1e-5 {
       fmt.Printf("Cx = %.2f\n", Cx)
     } else {
@@ -332,11 +332,11 @@ func TestBonds_ModifiedDuration(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-                              b.getTimePeriod(tc.tp, false))
-    var MDuration = b.ModifiedDuration(cashFlow, b.getCompoundingPeriod(tc.cp, false),
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+                              b.GetTimePeriod(tc.tp, false))
+    var MDuration = b.ModifiedDuration(cashFlow, b.GetCompoundingPeriod(tc.cp, false),
                                        b.CurrentPrice(cashFlow, tc.currentInterest,
-                                       b.getCompoundingPeriod(tc.currentInterest_cp, false)))
+                                       b.GetCompoundingPeriod(tc.currentInterest_cp, false)))
     if math.Abs(MDuration - tc.want) < 1e-5 {
       fmt.Printf("MDuration = %.2f%%\n", MDuration)
     } else {
@@ -363,11 +363,11 @@ func TestBonds_MacaulayDuration(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-                              b.getTimePeriod(tc.tp, false))
-    var macyears = b.MacaulayDuration(cashFlow, b.getCompoundingPeriod(tc.cp, false),
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+                              b.GetTimePeriod(tc.tp, false))
+    var macyears = b.MacaulayDuration(cashFlow, b.GetCompoundingPeriod(tc.cp, false),
                               b.CurrentPrice(cashFlow, tc.currentInterest,
-                                             b.getCompoundingPeriod(tc.currentInterest_cp, false)))
+                                             b.GetCompoundingPeriod(tc.currentInterest_cp, false)))
     if math.Abs(macyears - tc.want) < 1e-5 {
       fmt.Printf("macyears = %.2f\n", macyears)
     } else {
@@ -394,11 +394,11 @@ func TestBonds_Duration(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-                              b.getTimePeriod(tc.tp, false))
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+                              b.GetTimePeriod(tc.tp, false))
     var years = b.Duration(cashFlow, tc.currentInterest,
                            b.CurrentPrice(cashFlow, tc.currentInterest,
-                                          b.getCompoundingPeriod(tc.currentInterest_cp, false)))
+                                          b.GetCompoundingPeriod(tc.currentInterest_cp, false)))
     if math.Abs(years - tc.want) < 1e-5 {
       fmt.Printf("years = %.2f\n", years)
     } else {
@@ -422,8 +422,8 @@ func TestBonds_CashFlow(t *testing.T) {
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.getCompoundingPeriod(tc.cp, false), tc.n,
-                              b.getTimePeriod(tc.tp, false))
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+                              b.GetTimePeriod(tc.tp, false))
     for idx := range cashFlow {
       if math.Abs(cashFlow[idx] - tc.want[idx]) < 1e-5 {
         fmt.Printf("Payment[%d] = $%.2f\n", idx + 1, cashFlow[idx])
