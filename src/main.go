@@ -1,17 +1,18 @@
-//HTTP server.
+// HTTP server.
 package main
 
 import (
-  "context"
-  "errors"
-  "finance/webfinances"
-  "fmt"
-  "net/http"
-  "os"
-  "os/signal"
-  "strconv"
-  "syscall"
-  "time"
+	"context"
+	"errors"
+	// "finance/mathutil"
+	"finance/webfinances"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
+	"time"
 )
 
 //Environment variables.
@@ -92,8 +93,9 @@ func main() {
   var a webfinances.Annuities
   var h handlers = handlers{}
   h.mux = make(map[string]func(http.ResponseWriter, *http.Request), 16)
-  h.mux["/annuities/AverageRateOfReturn"] = a.AverageRateOfReturn
-  server := &http.Server {
+  h.mux["/fin/annuities/AverageRateOfReturn"] = a.AverageRateOfReturn
+  h.mux["/fin/annuities/GrowthDecayOfFunds"] = a.GrowthDecayOfFunds
+   server := &http.Server {
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
     associated with the computer, and it will listen on port PORT.
