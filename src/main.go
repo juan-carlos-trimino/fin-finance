@@ -4,9 +4,9 @@ package main
 import (
 	"context"
 	"errors"
-	// "finance/mathutil"
 	"finance/webfinances"
 	"fmt"
+  "net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,10 +17,11 @@ import (
 
 //Environment variables.
 var MAX_RETRIES int = 10
-var PORT string = "8001"
+var SHUTDOWN_TIMEOUT int = 15
+var PORT string = "8080"
 var SVC_NAME string
 var APP_NAME_VER string
-var SHUTDOWN_TIMEOUT int = 15
+var SERVER string
 
 type handlers struct{
   mux map[string]func(http.ResponseWriter, *http.Request)
@@ -47,21 +48,27 @@ func main() {
   //http://localhost:8001/annuities/AverageRateOfReturn?ret=5.0&ret=-3.0&ret=12.0&ret=10
 
   var exists bool = false
-  // SVC_NAME, exists = os.LookupEnv("SVC_NAME")
-  // if !exists {
-  //   fmt.Println("Missing environment parameter: SVC_NAME")
-  //   return
-  // }
-  // APP_NAME_VER, exists = os.LookupEnv("APP_NAME_VER")
-  // if !exists {
-  //   fmt.Println("Missing environment parameter: APP_NAME_VER")
-  //   return
-  // }
+  SVC_NAME, exists = os.LookupEnv("SVC_NAME")
+  if !exists {
+    fmt.Println("Missing environment parameter: SVC_NAME")
+    return
+  }
+  APP_NAME_VER, exists = os.LookupEnv("APP_NAME_VER")
+  if !exists {
+    fmt.Println("Missing environment parameter: APP_NAME_VER")
+    return
+  }
+  SERVER, exists = os.LookupEnv("SERVER")
+  if !exists {
+    fmt.Println("Missing environment parameter: SERVER")
+    return
+  }
   _, exists = os.LookupEnv("PORT")
   if exists {
     PORT = os.Getenv("PORT")
   }
   fmt.Printf("Using PORT: %s\n", PORT)
+  SERVER += ":" + PORT
   //
   _, exists = os.LookupEnv("SHUTDOWN_TIMEOUT")
   if exists {
@@ -75,12 +82,46 @@ func main() {
   }
   fmt.Printf("Using SHUTDOWN_TIMEOUT: %d\n", SHUTDOWN_TIMEOUT)
   //
+  //Clients and Transports are safe for concurrent use by multiple goroutines and for efficiency should only be created once and re-used.
+  transport := http.Transport {
+    IdleConnTimeout: 1500 * time.Millisecond, //Close connection after 1500 milliseconds.
+    MaxIdleConns: 2,
+    MaxConnsPerHost: 2,
+    MaxIdleConnsPerHost: 2,
+    Dial: (&net.Dialer {
+      Timeout: 1 * time.Second,
+    }).Dial,
+  }
+  var client = &http.Client {
+    Timeout: 500 * time.Millisecond, //Cancel request.
+    Transport: &transport,
+  }
   var a webfinances.Annuities
   var h handlers = handlers{}
   h.mux = make(map[string]func(http.ResponseWriter, *http.Request), 16)
+  h.mux["/readiness"] =
+  func (res http.ResponseWriter, req *http.Request) {
+    fmt.Printf("\naaaaaaServer not ready. %s\n", "http://"+SERVER)
+    req, err := http.NewRequest("HEAD", "http://"+SERVER, nil)
+    if err != nil {
+      fmt.Println("Server not ready.")
+      res.WriteHeader(http.StatusInternalServerError)
+      return
+    }
+    resp, err := client.Do(req)
+    if err != nil {
+      fmt.Printf("err: %v", err)
+      res.WriteHeader(http.StatusInternalServerError)
+      return
+    }
+    resp.Body.Close()
+    fmt.Println("Server is ready.")
+    //https://go.dev/src/net/http/status.go
+    res.WriteHeader(http.StatusOK)
+  }
   h.mux["/fin/annuities/AverageRateOfReturn"] = a.AverageRateOfReturn
   h.mux["/fin/annuities/GrowthDecayOfFunds"] = a.GrowthDecayOfFunds
-   server := &http.Server {
+  server := &http.Server {
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
     associated with the computer, and it will listen on port PORT.
@@ -146,3 +187,26 @@ func main() {
   <- waitMainChan //Block until shutdown is done.
   return
 }
+
+
+
+
+/********
+started := time.Now()
+http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+    duration := time.Now().Sub(started)
+    if duration.Seconds() > 10 {
+        w.WriteHeader(500)
+        w.Write([]byte(fmt.Sprintf("error: %v", duration.Seconds())))
+    } else {
+        w.WriteHeader(200)
+        w.Write([]byte("ok"))
+    }
+})
+
+
+if err := redirectServer.Shutdown(ctx); err == context.DeadlineExceeded {
+	return fmt.Errorf("%v timeout exceeded while waiting on HTTP shutdown", redirectTimeout)
+}
+
+************/
