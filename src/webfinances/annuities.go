@@ -11,8 +11,7 @@ import (
 type Annuities struct{}
 
 /***
-To execute this function from a browser:
-fin/annuities/AverageRateOfReturn?rets=5.0&rets=-3.0&rets=12.0&rets=10
+PS> curl.exe "http://169.44.159.85/fin/annuities/AverageRateOfReturn?rets=5.0&rets=-3.0&rets=12.0&rets=10"
 Average Rate of Return = 5.838
 ***/
 func (a Annuities) AverageRateOfReturn(res http.ResponseWriter, req *http.Request) {
@@ -46,8 +45,6 @@ func (a Annuities) AverageRateOfReturn(res http.ResponseWriter, req *http.Reques
 }
 
 /***
-To execute this function from a browser:
-fin/annuities/GrowthDecayOfFunds?factor=2.0&rate=15.0&cp=A
 PS> curl.exe "http://169.44.159.85/fin/annuities/GrowthDecayOfFunds?factor=2.0&rate=15.0&cp=A"
 Growth/Decay of Funds = 4.959484454
 ***/

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"finance/webfinances"
 	"fmt"
-  "net"
+  // "net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -83,40 +83,40 @@ func main() {
   fmt.Printf("Using SHUTDOWN_TIMEOUT: %d\n", SHUTDOWN_TIMEOUT)
   //
   //Clients and Transports are safe for concurrent use by multiple goroutines and for efficiency should only be created once and re-used.
-  transport := http.Transport {
-    IdleConnTimeout: 1500 * time.Millisecond, //Close connection after 1500 milliseconds.
-    MaxIdleConns: 2,
-    MaxConnsPerHost: 2,
-    MaxIdleConnsPerHost: 2,
-    Dial: (&net.Dialer {
-      Timeout: 1 * time.Second,
-    }).Dial,
-  }
-  var client = &http.Client {
-    Timeout: 500 * time.Millisecond, //Cancel request.
-    Transport: &transport,
-  }
+  // transport := http.Transport {
+  //   IdleConnTimeout: 1500 * time.Millisecond, //Close connection after 1500 milliseconds.
+  //   MaxIdleConns: 2,
+  //   MaxConnsPerHost: 2,
+  //   MaxIdleConnsPerHost: 2,
+  //   Dial: (&net.Dialer {
+  //     Timeout: 1 * time.Second,
+  //   }).Dial,
+  // }
+  // var client = &http.Client {
+  //   Timeout: 500 * time.Millisecond, //Cancel request.
+  //   Transport: &transport,
+  // }
   var a webfinances.Annuities
   var h handlers = handlers{}
   h.mux = make(map[string]func(http.ResponseWriter, *http.Request), 16)
   h.mux["/readiness"] =
   func (res http.ResponseWriter, req *http.Request) {
-    fmt.Printf("\naaaaaaServer not ready. %s\n", "http://"+SERVER)
-    req, err := http.NewRequest("HEAD", "http://"+SERVER, nil)
-    if err != nil {
-      fmt.Println("Server not ready.")
-      res.WriteHeader(http.StatusInternalServerError)
-      return
-    }
-    resp, err := client.Do(req)
-    if err != nil {
-      fmt.Printf("err: %v", err)
-      res.WriteHeader(http.StatusInternalServerError)
-      return
-    }
-    resp.Body.Close()
-    fmt.Println("Server is ready.")
-    //https://go.dev/src/net/http/status.go
+    fmt.Printf("\naaaaaaServer not ready. %s\n", SERVER)
+    // req, err := http.NewRequest(http.MethodHead, SERVER, nil)
+    // if err != nil {
+    //   fmt.Println("Server not ready.")
+    //   res.WriteHeader(http.StatusInternalServerError)
+    //   return
+    // }
+    // resp, err := client.Do(req)
+    // if err != nil {
+    //   fmt.Printf("client: error making http request: %s\n", err)
+    //   res.WriteHeader(http.StatusInternalServerError)
+    //   return
+    // }
+    // resp.Body.Close()
+    // fmt.Println("Server is ready.")
+    // //https://go.dev/src/net/http/status.go
     res.WriteHeader(http.StatusOK)
   }
   h.mux["/fin/annuities/AverageRateOfReturn"] = a.AverageRateOfReturn
