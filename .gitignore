@@ -28,6 +28,10 @@ src/mathutil/*
 !src/mathutil/mathutil_test.go
 !src/mathutil/mathutil.go
 # ... and this directory and its file...
+!src/misc/
+src/misc/*
+!src/misc/misc.go
+# ... and this directory and its file...
 !src/webfinances/
 src/webfinances/*
 !src/webfinances/annuities.go
