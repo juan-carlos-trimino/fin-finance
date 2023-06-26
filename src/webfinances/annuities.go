@@ -11,7 +11,7 @@ import (
 type Annuities struct{}
 
 /***
-PS> curl.exe "http://169.44.159.85/fin/annuities/AverageRateOfReturn?rets=5.0&rets=-3.0&rets=12.0&rets=10"
+PS> curl.exe "http://localhost:8080/fin/annuities/AverageRateOfReturn?ret=5.0&ret=-3.0&ret=12.0&ret=10"
 Average Rate of Return = 5.838
 ***/
 func (a Annuities) AverageRateOfReturn(res http.ResponseWriter, req *http.Request) {
@@ -28,7 +28,7 @@ func (a Annuities) AverageRateOfReturn(res http.ResponseWriter, req *http.Reques
   //Iterate over all the query parameters.
   for k, v := range params { //map[string][]string
     switch strings.ToLower(k) {
-    case "rets":
+    case "ret":
       returns, err = mu.ConvertToFloats64(v)
       if err != nil {
         fmt.Fprintf(res, "%s", err)
@@ -45,7 +45,7 @@ func (a Annuities) AverageRateOfReturn(res http.ResponseWriter, req *http.Reques
 }
 
 /***
-PS> curl.exe "http://169.44.159.85/fin/annuities/GrowthDecayOfFunds?factor=2.0&rate=15.0&cp=A"
+PS> curl.exe "http://localhost:8080/fin/annuities/GrowthDecayOfFunds?factor=2.0&rate=15.0&cp=A"
 Growth/Decay of Funds = 4.959484454
 ***/
 func (a Annuities) GrowthDecayOfFunds(res http.ResponseWriter, req *http.Request) {
