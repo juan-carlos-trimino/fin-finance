@@ -1,12 +1,10 @@
 {{define "header"}}
 <header>
   <div class="title">
-    <b>{.Header}</b>
-    <!-- <b>{{.Header}}</b> -->
+    <b>{{.Header}}</b>
   </div>
   <div class="datetime">
-    <b>{.Datetime}</b>
-    <!-- <b>{{.Datetime}}</b> -->
+    <b>{{.Datetime}}</b>
   </div>
 </header>
 <nav>
@@ -18,3 +16,9 @@
 </nav>
 {{end}}
 
+{{define "footer"}}
+  <footer style="background:indigo;color:white;padding:15px;">
+    <h4>&copy 2023 xyz Company. All rights reserved.</h4>
+    <p>Contact information: <a href="mailto:juancarlos@trimino.io">juancarlos@trimino.io</a>.</p>
+  </footer>
+{{end}}
