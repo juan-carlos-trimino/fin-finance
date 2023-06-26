@@ -31,3 +31,16 @@ src/mathutil/*
 !src/webfinances/
 src/webfinances/*
 !src/webfinances/annuities.go
+!src/webfinances/WebFinancesPages.go
+!src/webfinances/public/
+src/webfinances/public/*
+!src/webfinances/public/.gitkeep
+!src/webfinances/public/css/
+src/webfinances/public/css/*
+!src/webfinances/public/css/home.css
+!src/webfinances/templates/
+src/webfinances/templates/*
+!src/webfinances/templates/about.html
+!src/webfinances/templates/contact.html
+!src/webfinances/templates/headerfooter.html
+!src/webfinances/templates/index.html
