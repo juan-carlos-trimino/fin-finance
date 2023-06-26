@@ -2,17 +2,18 @@
 package main
 
 import (
-	"context"
-	"errors"
-	"finance/webfinances"
-	"fmt"
-  // "net"
-	"net/http"
-	"os"
-	"os/signal"
-	"strconv"
-	"syscall"
-	"time"
+  "context"
+  "errors"
+  "finance/webfinances"
+  "fmt"
+  "net/http"
+  "finance/misc"
+  // "mime"
+  "os"
+  "os/signal"
+  "strconv"
+  "syscall"
+  "time"
 )
 
 //Environment variables.
@@ -21,33 +22,47 @@ var SHUTDOWN_TIMEOUT int = 15
 var PORT string = "8080"
 var SVC_NAME string
 var APP_NAME_VER string
-var SERVER string
+var SERVER string = "localhost"
 
-type handlers struct{
+// func init() {
+//   fmt.Printf("%s - Entering init/main.\n", time.Now().UTC().Format(time.RFC3339Nano))
+//   // mime.AddExtensionType(".js", "application/javascript; charset=utf-8")
+//   ct := mime.TypeByExtension(".css")
+//   fmt.Printf("ct: %s\n", ct)
+//   // mime.AddExtensionType(".css", "text/css; charset=utf-8")
+// }
+
+var m = misc.Misc{}
+
+type handlers struct {
   mux map[string]func(http.ResponseWriter, *http.Request)
 }
 
 func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering ServeHTTP/main.\n", m.DTF())
+  fmt.Printf("%s - Method: %s, Request URI: %s\n", m.DTF(), req.Method, req.RequestURI)
+  //Implement route forwarding.
   if handler, ok := h.mux[req.URL.Path]; ok {
+    fmt.Printf("%s - URL Path: %s\n", m.DTF(), req.URL.Path)
     handler(res, req)
     return
   }
-  http.NotFound(res, req) //404 - page not found
+  http.NotFound(res, req)  //404 - page not found.
 }
 
 /***
 How to kill a process using a port on localhost (Windows).
 C:\> netstat -ano | findstr :<port>
 C:\> taskkill /PID <PID> /F
-
 or
-
 C:\> npx kill-port <port>
+
+To display the headers:
+$ curl.exe -IL "http://localhost:8080"
 ***/
 func main() {
-  //http://localhost:8001/annuities/AverageRateOfReturn?ret=5.0&ret=-3.0&ret=12.0&ret=10
-
   var exists bool = false
+  /*** k8s
   SVC_NAME, exists = os.LookupEnv("SVC_NAME")
   if !exists {
     fmt.Println("Missing environment parameter: SVC_NAME")
@@ -63,13 +78,13 @@ func main() {
     fmt.Println("Missing environment parameter: SERVER")
     return
   }
+  k8s ***/
   _, exists = os.LookupEnv("PORT")
   if exists {
     PORT = os.Getenv("PORT")
   }
-  fmt.Printf("Using PORT: %s\n", PORT)
+  fmt.Printf("%s - Using PORT: %s\n", m.DTF(), PORT)
   SERVER += ":" + PORT
-  //
   _, exists = os.LookupEnv("SHUTDOWN_TIMEOUT")
   if exists {
     sdto := os.Getenv("SHUTDOWN_TIMEOUT")
@@ -77,26 +92,12 @@ func main() {
     if err == nil {
       SHUTDOWN_TIMEOUT = tm
     } else {
-      fmt.Printf("'%s' is not an int number.\n", sdto)
+      fmt.Printf("%s - '%s' is not an int number.\n", m.DTF(), sdto)
     }
   }
-  fmt.Printf("Using SHUTDOWN_TIMEOUT: %d\n", SHUTDOWN_TIMEOUT)
-  //
-  //Clients and Transports are safe for concurrent use by multiple goroutines and for efficiency should only be created once and re-used.
-  // transport := http.Transport {
-  //   IdleConnTimeout: 1500 * time.Millisecond, //Close connection after 1500 milliseconds.
-  //   MaxIdleConns: 2,
-  //   MaxConnsPerHost: 2,
-  //   MaxIdleConnsPerHost: 2,
-  //   Dial: (&net.Dialer {
-  //     Timeout: 1 * time.Second,
-  //   }).Dial,
-  // }
-  // var client = &http.Client {
-  //   Timeout: 500 * time.Millisecond, //Cancel request.
-  //   Transport: &transport,
-  // }
-  var a webfinances.Annuities
+  fmt.Printf("%s - Using SHUTDOWN_TIMEOUT: %d\n", m.DTF(), SHUTDOWN_TIMEOUT)
+  var wfp webfinances.WebFinancesPages
+  var wfa webfinances.Annuities
   var h handlers = handlers{}
   h.mux = make(map[string]func(http.ResponseWriter, *http.Request), 16)
   h.mux["/readiness"] =
@@ -119,15 +120,20 @@ func main() {
     // //https://go.dev/src/net/http/status.go
     res.WriteHeader(http.StatusOK)
   }
-  h.mux["/fin/annuities/AverageRateOfReturn"] = a.AverageRateOfReturn
-  h.mux["/fin/annuities/GrowthDecayOfFunds"] = a.GrowthDecayOfFunds
-  server := &http.Server {
+  h.mux["/"] = wfp.HomePage
+  h.mux["/public/css/app.css"] = wfp.PublicHomeFile
+  h.mux["/contact"] = wfp.ContactPage
+  h.mux["/about"] = wfp.AboutPage
+  h.mux["/fin/annuities/AverageRateOfReturn"] = wfa.AverageRateOfReturn
+  h.mux["/fin/annuities/GrowthDecayOfFunds"] = wfa.GrowthDecayOfFunds
+  server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
     associated with the computer, and it will listen on port PORT.
     ***/
     Addr: ":" + PORT,
     Handler: &h,
+    MaxHeaderBytes: 1 << 20,  //1 MB.
   }
   /***
   A channel is a communication mechanism that lets one goroutine send values to another goroutine.
@@ -145,6 +151,7 @@ func main() {
   ***/
   waitMainChan := make(chan struct{})
   go func() {
+    fmt.Printf("%s - Waiting for notification to shut down the server.\n", m.DTF())
     /***
     signal.Notify disables the default behavior for a given set of asynchronous signals and instead
     delivers them over one or more registered channels.
@@ -165,10 +172,10 @@ func main() {
     }()
     //https://pkg.go.dev/net/http#Server.Shutdown
     if err := server.Shutdown(ctx); err != nil {
-      fmt.Printf("Server shutdown failed: %+v", err) //https://pkg.go.dev/fmt
+      fmt.Printf("%s - Server shutdown failed: %+v\n", m.DTF(), err)  //https://pkg.go.dev/fmt
     }
   }()
-  fmt.Printf("%s - Starting the server at port %s...\n", time.Now().UTC().Format(time.RFC3339Nano), PORT)
+  fmt.Printf("%s - Starting the server at port %s...\n", m.DTF(), PORT)
   /***
   ListenAndServe runs forever, or until the server fails (or fails to start) with an error,
   always non-nil, which it returns.
@@ -179,34 +186,11 @@ func main() {
   ***/
   err := server.ListenAndServe()
   if errors.Is(err, http.ErrServerClosed) {
-    fmt.Println("Server has been closed.")
+    fmt.Printf("%s - Server has been closed.\n", m.DTF())
   } else if err != nil {
-    fmt.Printf("Server error: %s\n", "err")
+    fmt.Printf("%s - Server error: %+v\n", m.DTF(), err)
     signalChan <- syscall.SIGINT //Let the goroutine finish.
   }
   <- waitMainChan //Block until shutdown is done.
   return
 }
-
-
-
-
-/********
-started := time.Now()
-http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-    duration := time.Now().Sub(started)
-    if duration.Seconds() > 10 {
-        w.WriteHeader(500)
-        w.Write([]byte(fmt.Sprintf("error: %v", duration.Seconds())))
-    } else {
-        w.WriteHeader(200)
-        w.Write([]byte("ok"))
-    }
-})
-
-
-if err := redirectServer.Shutdown(ctx); err == context.DeadlineExceeded {
-	return fmt.Errorf("%v timeout exceeded while waiting on HTTP shutdown", redirectTimeout)
-}
-
-************/
