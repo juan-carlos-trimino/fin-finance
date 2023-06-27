@@ -13,7 +13,7 @@
     </div>
     <div class="split-screen">
       <div class="left-side">
-        <div class="div-center">
+        <div class="div-center" style="margin-top: 20px">
           <a href="/fin/simpleinterestx" target="_blank">
             <button class="button">Amount of Interest</button>
           </a>
@@ -39,14 +39,60 @@
           </a>
         </div>
       </div>
+      <!---->
       <div class="right-side">
-        <div class="div-center">
-          <a href="/fin/simpleinterest" target="_blank">
-            <button class="button">Backright</button>
-          </a>
+        <div style="margin-top: 20px">
+          <label class="text-box" for="tbtime">Time (n)</label>
+          <input class="text-combo" type="number" id="tbtime" placeholder="Enter days, weeks, months, etc.", maxlength="7"/>
+        </div>
+        <div style="margin-top: 20px">
+          <label class="text-box" for="tp">Time Period</label>
+          <select class="text-combo" name="tp" id="cars">
+            <option class="text-combo" value="invalid">-- Select Time Period --</option>
+            <option class="text-combo" value="year">Year(s)</option>
+            <option class="text-combo" value="semiyear">Semiyear(s)</option>
+            <option class="text-combo" value="quarter">Quarter(s)</option>
+            <option class="text-combo" value="month">Month(s)</option>
+            <option class="text-combo" value="week">Week(s)</option>
+            <option class="text-combo" value="day">Day(s)</option>
+          </select>
+        </div>
+        <div style="margin-top: 20px;">
+          <label class="text-box" for="tbinterest">Interest (i %)</label>
+          <input class="text-combo" type="number" id="tbinterest" placeholder="Enter interest (y%)", maxlength="7"/>
+        </div>
+        <div style="margin-top: 20px;">
+          <label class="text-box" for="cp">Time Period</label>
+          <select class="text-combo" name="cp" id="cars">
+            <option class="text-combo" value="invalid">-- Select Compounding Period --</option>
+            <option class="text-combo" value="annual">Annually</option>
+            <option class="text-combo" value="semiannual">Semiannually</option>
+            <option class="text-combo" value="quarterly">Quarterly</option>
+            <option class="text-combo" value="monthly">Monthly</option>
+            <option class="text-combo" value="weekly">Weekly</option>
+            <option class="text-combo" value="daily">Daily</option>
+            <option class="text-combo" value="continuously">Continuously</option>
+          </select>
+        </div>
+        <div style="margin-top: 20px;">
+          <label class="text-box" for="tbpv">Present Value (PV)</label>
+          <input class="text-combo" type="number" id="tbpv" placeholder="Enter present value", maxlength="7"/>
+        </div>
+        <div class="div-center" style="margin-top: 45px;">
+          <input class="button" type="button" id="btcompute" value="Compute"/>
         </div>
       </div>
     </div>
     {{template "footer"}}
+    <script>
+      const n = document.getElementById('tbtime');
+      const i = document.getElementById('tbinterest');
+      const pv = document.getElementById('tbpv');
+      const tp = document.getElementById('tp').value;
+      const cp = document.getElementById('cp').value;
+    </script>
   </body>
 </html>
+
+
+<!-- <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script> -->

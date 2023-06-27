@@ -120,3 +120,18 @@ button[disabled] {
   height: 100vh;
   width: 80%;
 }
+
+.text-box {
+  text-align: left;
+  margin-left: 15px;
+  color:rgb(2, 71, 31);
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.text-combo {
+  color: rgb(2, 71, 31);
+  background-color: rgb(182, 239, 160);
+  font-weight: bold;
+  font-size: 18px;
+}
