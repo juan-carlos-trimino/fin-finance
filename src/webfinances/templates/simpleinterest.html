@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Simple Interest</title>
+    <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
+  </head>
+  <body>
+    <main>
+      {{template "header" .}}
+      <div class="div-center">
+        <a href="/fin/simpleinterest/ordinary" target="_blank">
+          <button class="button">Ordinary Interest</button>
+        </a>
+      </div>
+      <div class="div-center">
+        <button class="button" disabled>Banker's (Commercial) Interest</button>
+      </div>
+      <div class="div-center">
+        <button class="button" disabled>Accurate (Exact) Interest</button>
+      </div>
+      <div class="div-center">
+        <a href="/finances" target="_blank">
+          <button class="button">Back</button>
+        </a>
+      </div>
+    </main>
+    {{template "footer"}}
+  </body>
+</html>
