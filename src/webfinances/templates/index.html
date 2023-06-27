@@ -5,13 +5,20 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Finances</title>
-    <link rel="stylesheet" type="text/css" href="/public/css/app.css"/>
+    <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
   </head>
   <body>
-    {{template "header" .}}
-    <!-- <div class="footer">
-      <p>&copy 2023 xyz Company. All rights reserved.</p>
-    </div> -->
+    <main>
+      {{template "header" .}}
+      <div class="div-center">
+        <button class="button" disabled>Securities</button>
+      </div>
+      <div class="div-center">
+        <a href="/finances" target="_blank">
+          <button class="button">Finances</button>
+        </a>
+      </div>
+    </main>
     {{template "footer"}}
   </body>
 </html>

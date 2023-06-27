@@ -121,9 +121,12 @@ func main() {
     res.WriteHeader(http.StatusOK)
   }
   h.mux["/"] = wfp.HomePage
-  h.mux["/public/css/app.css"] = wfp.PublicHomeFile
+  h.mux["/public/css/home.css"] = wfp.PublicHomeFile
   h.mux["/contact"] = wfp.ContactPage
   h.mux["/about"] = wfp.AboutPage
+  h.mux["/finances"] = wfp.FinancesPage
+  h.mux["/fin/simpleinterest"] = wfp.SimpleInterestPage
+  h.mux["/fin/simpleinterest/ordinary"] = wfp.SimpleInterestOrdinaryPage
   h.mux["/fin/annuities/AverageRateOfReturn"] = wfa.AverageRateOfReturn
   h.mux["/fin/annuities/GrowthDecayOfFunds"] = wfa.GrowthDecayOfFunds
   server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux

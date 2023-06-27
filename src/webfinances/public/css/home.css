@@ -1,7 +1,12 @@
+/***
+A dot (.) is used in CSS to designate class names.
+***/
 
 body {
-  width: 90% auto;
-  margin: 30px;
+  display: flex;
+  flex-direction: column;
+  background-color: #d1f7cc;
+  min-height: 100vh;
 }
 
 .title {
@@ -11,6 +16,7 @@ body {
 }
 
 .title b {
+  color:rgb(2, 71, 31);
   font-size: 30px;
 }
 
@@ -21,6 +27,7 @@ body {
 }
 
 .datetime b {
+  color:rgb(2, 71, 31);
   font-size: 15px;
 }
 
@@ -29,31 +36,31 @@ nav {
 }
 
 nav ul {
-  background-color: black;
+  background-color: rgb(2, 71, 31);
   height: 80px;
 }
 
 nav ul li {
   display: inline-block;
   text-decoration: none;
-  color: white;
+  color: rgb(185, 241, 163);
   padding: 20px;
 }
 
 nav ul li a {
-  color: white;
+  color: rgb(185, 241, 163);
   text-decoration: none;
   font-size: 30px;
 }
 
 nav ul li a:hover {
-  background-color: white;
-  color: black
+  background-color: rgb(185, 241, 163);
+  color: rgb(2, 71, 31)
 }
 
 nav ul li:hover {
-  background-color: white;
-  color: black
+  background-color: rgb(185, 241, 163);
+  color: rgb(2, 71, 31)
 }
 
 .footer {
@@ -65,4 +72,53 @@ nav ul li:hover {
   margin-top: 5px;
   margin-bottom: 5px;
   font-size: 15px;
+}
+
+.div-center {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.button {
+  background-color: rgb(2, 71, 31);
+  color: rgb(185, 241, 163);
+  border-radius: 8px;
+  height: 50px;
+  width: 200px;
+  font-size: 18px;
+}
+
+.button:hover {
+  background-color: rgb(185, 241, 163);
+  color: rgb(2, 71, 31);
+  border: 2px solid rgb(2, 71, 31);
+}
+
+button:disabled,
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Split the screen in half. */
+.split {
+  height: 100%;
+  width: 30%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+/* Control the left side. */
+.split-left {
+  left: 0;
+  background-color: #d1f7cc;
+}
+
+/* Control the right side. */
+.split-right {
+  right: 0;
+  background-color: red;
 }
