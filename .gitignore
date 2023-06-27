@@ -46,5 +46,8 @@ src/webfinances/public/css/*
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
 !src/webfinances/templates/contact.html
+!src/webfinances/templates/finances.html
 !src/webfinances/templates/headerfooter.html
 !src/webfinances/templates/index.html
+!src/webfinances/templates/simpleinterest.html
+!src/webfinances/templates/simpleinterestordinary.html
