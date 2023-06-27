@@ -101,24 +101,22 @@ button[disabled] {
 }
 
 /* Split the screen in half. */
-.split {
-  height: 100%;
-  width: 30%;
-  position: fixed;
-  z-index: 1;
-  top: 0;
-  overflow-x: hidden;
-  padding-top: 20px;
+.split-screen {
+  height: 100vh;
+  width: 100%;
 }
 
 /* Control the left side. */
-.split-left {
-  left: 0;
-  background-color: #d1f7cc;
+.left-side {
+  float: left;
+  height: 100vh;
+  width: 20%;
+  background-color: rgb(182, 239, 160);
 }
 
 /* Control the right side. */
-.split-right {
-  right: 0;
-  background-color: red;
+.right-side {
+  float: right;
+  height: 100vh;
+  width: 80%;
 }
