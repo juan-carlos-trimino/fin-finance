@@ -127,6 +127,7 @@ func main() {
   h.mux["/finances"] = wfp.FinancesPage
   h.mux["/fin/simpleinterest"] = wfp.SimpleInterestPage
   h.mux["/fin/simpleinterest/ordinary"] = wfp.SimpleInterestOrdinaryPage
+  h.mux["/fin/simpleinterest/ordinarycompute"] = wfp.SimpleInterestOrdinaryCompute
   h.mux["/fin/annuities/AverageRateOfReturn"] = wfa.AverageRateOfReturn
   h.mux["/fin/annuities/GrowthDecayOfFunds"] = wfa.GrowthDecayOfFunds
   server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
