@@ -12,7 +12,6 @@
       {{template "header" .}}
     </div>
     <div class="split-screen">
-      {{if .Done}}
       <div class="left-side">
         <div class="div-center" style="margin-top: 20px">
           <a href="/fin/simpleinterestx" target="_blank">
@@ -40,55 +39,55 @@
           </a>
         </div>
       </div>
-      {{end}}
       <!---->
       <div class="right-side">
-        {{if .Done}}
-        <form action="/fin/simpleinterest/ordinarycompute" method="POST">
+        <form action="/fin/simpleinterest/ordinary" method="POST">
           <div style="margin-top: 20px">
-            <label class="text-box" for="tbtime">Time (n)....................</label>
-            <input class="text-combo" name="n" type="number" id="tbtime" value="30" maxlength="7"/>
+            <label class="text-box" for="tbtime">Time (n).........................</label>
+            <input class="text-combo" name="n" type="number" id="tbtime" value="{{.Time}}" step="any" min="1" maxlength="7"/>
           </div>
           <div style="margin-top: 20px">
-            <label class="text-box" for="tp">Time Period..............</label>
+            <label class="text-box" for="tp">Time Period..................</label>
             <select class="text-combo" name="tp" id="tp">
-              <option class="text-combo" value="year">Year(s)</option>
-              <option class="text-combo" value="semiyear">Semiyear(s)</option>
-              <option class="text-combo" value="quarter">Quarter(s)</option>
-              <option class="text-combo" value="month">Month(s)</option>
-              <option class="text-combo" value="week">Week(s)</option>
-              <option class="text-combo" value="day">Day(s)</option>
+              {{$selection := .TimePeriod}}
+              <option class="text-combo" value="year" {{if eq $selection "year"}} selected {{end}}>Year(s)</option>
+              <option class="text-combo" value="semiyear" {{if eq $selection "semiyear"}} selected {{end}}>Semiyear(s)</option>
+              <option class="text-combo" value="quarter" {{if eq $selection "quarter"}} selected {{end}}>Quarter(s)</option>
+              <option class="text-combo" value="month" {{if eq $selection "month"}} selected {{end}}>Month(s)</option>
+              <option class="text-combo" value="week" {{if eq $selection "week"}} selected {{end}}>Week(s)</option>
+              <option class="text-combo" value="day" {{if eq $selection "day"}} selected {{end}}>Day(s)</option>
             </select>
           </div>
           <div style="margin-top: 20px;">
-            <label class="text-box" for="tbinterest">Interest (i %)............</label>
-            <input class="text-combo" name="i" type="number" id="tbinterest" value="3.5" maxlength="7"/>
+            <label class="text-box" for="tbinterest">Interest (i %)................</label>
+            <input class="text-combo" name="i" type="number" id="tbinterest" value="{{.Interest}}" step="any" maxlength="7"/>
           </div>
           <div style="margin-top: 20px;">
-            <label class="text-box" for="cp">Time Period..............</label>
+            <label class="text-box" for="cp">Compounding Period...</label>
             <select class="text-combo" name="cp" id="cp" value="daily">
-              <option class="text-combo" value="annual">Annually</option>
-              <option class="text-combo" value="semiannual">Semiannually</option>
-              <option class="text-combo" value="quarterly">Quarterly</option>
-              <option class="text-combo" value="monthly">Monthly</option>
-              <option class="text-combo" value="weekly">Weekly</option>
-              <option class="text-combo" value="daily" selected>Daily</option>
-              <option class="text-combo" value="continuously">Continuously</option>
+              {{$selection := .CompoundingPeriod}}
+              <option class="text-combo" value="annually" {{if eq $selection "annually"}} selected {{end}}>Annually</option>
+              <option class="text-combo" value="semiannually" {{if eq $selection "semiannually"}} selected {{end}}>Semiannually</option>
+              <option class="text-combo" value="quarterly" {{if eq $selection "quarterly"}} selected {{end}}>Quarterly</option>
+              <option class="text-combo" value="monthly" {{if eq $selection "monthly"}} selected {{end}}>Monthly</option>
+              <option class="text-combo" value="weekly" {{if eq $selection "weekly"}} selected {{end}}>Weekly</option>
+              <option class="text-combo" value="daily" {{if eq $selection "daily"}} selected {{end}}>Daily</option>
+              <option class="text-combo" value="continuously" {{if eq $selection "continuously"}} selected {{end}}>Continuously</option>
             </select>
           </div>
           <div style="margin-top: 20px;">
-            <label class="text-box" for="tbpv">Present Value (PV)...</label>
-            <input class="text-combo" name="pv" type="number" id="tbpv" value="1000.00" maxlength="7"/>
+            <label class="text-box" for="tbpv">Present Value (PV).......</label>
+            <input class="text-combo" name="pv" type="number" id="tbpv" value="{{.PresentValue}}" step="any" min="1" maxlength="7"/>
           </div>
           <div class="div-center" style="margin-top: 45px;">
             <input class="button" type="submit" id="btcompute" value="Compute"/>
           </div>
         </form>
-        {{else}}
+        {{if .Result}}
         <div>
-          <p>{{.Result}}</p>
+          <p>{{.Answer}}</p>
         </div>
-        {{end}}
+        {{ end }}
       </div>
     </div>
     {{template "footer"}}
