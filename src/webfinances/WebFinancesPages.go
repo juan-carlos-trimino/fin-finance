@@ -109,14 +109,9 @@ func (p *WebFinancesPages) SimpleInterestOrdinaryPage(res http.ResponseWriter, r
     } else {
       var si finances.SimpleInterest
       var periods finances.Periods
-
-      cp1 := periods.GetCompoundingPeriod(scp[0], false)
-      tp1 := periods.GetTimePeriod(stp[0], false)
-      
-      c := si.OrdinaryInterest(pv, i / 100.0, periods.GetCompoundingPeriod(scp[0], false), n, periods.GetTimePeriod(stp[0], false))
-
-      fmt.Printf("%s - n = %.5f, tp = %d, i = %.5f, cp = %d, pv = %.5f c=%.5f\n", m.DTF(), n, tp1, i / 100.0, cp1, pv, c)
-      answer = fmt.Sprintf("Amount of Interest: $%.5f", c)
+      answer = fmt.Sprintf("Amount of Interest: $%.5f", si.OrdinaryInterest(pv, i / 100.0,
+                           periods.GetCompoundingPeriod(scp[0], false), n,
+                           periods.GetTimePeriod(stp[0], false)))
     }
     fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, pv = %s\n", m.DTF(), sn, stp, si, scp, spv)
     tmpl.ExecuteTemplate(res, "simpleinterestordinary.html", struct {

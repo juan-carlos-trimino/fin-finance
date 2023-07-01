@@ -4,6 +4,7 @@ package finances
 
 import (
 	"math"
+"fmt"
 )
 
 /***
@@ -68,12 +69,21 @@ type SimpleInterest struct {
 }
 
 func (si *SimpleInterest) OrdinaryInterest(p, i float64, cp int, n float64, tp int) float64 {
-	if tp == Days {
+
+  fmt.Printf("xxx - n = %.5f, tp = %d, i = %.5f, cp = %d, pv = %.5f\n", n, tp, i, cp, p)
+
+
+  if tp == Days {
 		m, _ := math.Modf(n / 30.0) //Break n into its fractional (ignore) and integer (m) parts.
 		n = m * 30                  //30-day months.
 	}
 	n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
-	return (p * i * n) //INT
+
+
+  fmt.Printf("xxx - n = %.5f\n", n)
+
+
+  return (p * i * n) //INT
 }
 
 func (si *SimpleInterest) OrdinaryRate(p, INT float64, cp int, n float64, tp int) float64 {
