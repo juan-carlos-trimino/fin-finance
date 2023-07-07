@@ -36,6 +36,7 @@ src/misc/*
 src/webfinances/*
 !src/webfinances/annuities.go
 !src/webfinances/WebFinancesPages.go
+!src/webfinances/WfMiscellaneousPages.go
 !src/webfinances/public/
 src/webfinances/public/*
 !src/webfinances/public/.gitkeep
@@ -49,5 +50,6 @@ src/webfinances/templates/*
 !src/webfinances/templates/finances.html
 !src/webfinances/templates/headerfooter.html
 !src/webfinances/templates/index.html
+!src/webfinances/templates/miscellaneous.html
 !src/webfinances/templates/simpleinterest.html
 !src/webfinances/templates/simpleinterestordinary.html
