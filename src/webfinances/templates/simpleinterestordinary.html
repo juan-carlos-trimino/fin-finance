@@ -8,29 +8,29 @@
     <script type="text/javascript">
       function disableElements(eid) {
         if (eid === "amount") {
-          document.getElementById("uiamount").style.display = "block"
-          document.getElementById("uiinterest").style.display = "none"
+          document.getElementById("uiamount").style.display = "block";
+          document.getElementById("uiinterest").style.display = "none";
           document.getElementById("amount").disabled = true;
           document.getElementById("interest").disabled = false;
           document.getElementById("principal").disabled = false;
           document.getElementById("time").disabled = false;
         } else if (eid === "interest") {
-          document.getElementById("uiamount").style.display = "none"
-          document.getElementById("uiinterest").style.display = "block"
+          document.getElementById("uiamount").style.display = "none";
+          document.getElementById("uiinterest").style.display = "block";
           document.getElementById("amount").disabled = false;
           document.getElementById("interest").disabled = true;
           document.getElementById("principal").disabled = false;
           document.getElementById("time").disabled = false;
         } else if (eid === "principal") {
-          document.getElementById("uiamount").style.display = "none"
-          document.getElementById("uiinterest").style.display = "none"
+          document.getElementById("uiamount").style.display = "none";
+          document.getElementById("uiinterest").style.display = "none";
           document.getElementById("amount").disabled = false;
           document.getElementById("interest").disabled = false;
           document.getElementById("principal").disabled = true;
           document.getElementById("time").disabled = false;
         } else if (eid === "time") {
-          document.getElementById("uiamount").style.display = "none"
-          document.getElementById("uiinterest").style.display = "none"
+          document.getElementById("uiamount").style.display = "none";
+          document.getElementById("uiinterest").style.display = "none";
           document.getElementById("amount").disabled = false;
           document.getElementById("interest").disabled = false;
           document.getElementById("principal").disabled = false;
