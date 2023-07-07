@@ -33,7 +33,7 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
     answer1: "",
     result2: false,
     effectiveRate2: "3.5",
-    compoundPeriod2: "monthly",
+    compoundPeriod2: "quarterly",
     answer2: "",
   }
 }
@@ -42,7 +42,9 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
   fmt.Printf("%s - Entering MiscellaneousPage/webfinances.\n", m.DTF())
   if req.Method == http.MethodGet {
 
-    fmt.Printf("%s\n", req.FormValue("buttons"))
+    // p.id1 = "uinominal" //req.FormValue("buttons")
+    fmt.Printf("result1:%t\n", p.result1)
+    fmt.Printf("result2:%t\n", p.result2)
 
     tmpl.ExecuteTemplate(res, "miscellaneous.html", struct {
       Header string
@@ -116,7 +118,4 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
   } else {
       fmt.Printf("zzzzzzzzzzzzxxxxxxxxxxxxxx\n")
   }
-
-
-
 }

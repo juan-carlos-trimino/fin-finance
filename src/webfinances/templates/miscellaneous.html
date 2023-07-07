@@ -8,34 +8,27 @@
     <script>
       function disableElements(eid) {
         if (eid === "btnominal") {
-          document.getElementById("uinominal").style.display = "block"
-          document.getElementById("uieffective").style.display = "none"
+          document.getElementById("uinominal").style.display = "block";
+          document.getElementById("uieffective").style.display = "none";
           // document.getElementById("uinominalrate").style.display = "none"
           document.getElementById("btnominal").disabled = true;
           document.getElementById("bteffective").disabled = false;
           document.getElementById("btnominalrate").disabled = false;
         } else if (eid === "bteffective") {
-          document.getElementById("uinominal").style.display = "none"
-          document.getElementById("uieffective").style.display = "block"
+          document.getElementById("uinominal").style.display = "none";
+          document.getElementById("uieffective").style.display = "block";
           // document.getElementById("uinominalrate").style.display = "none"
           document.getElementById("btnominal").disabled = false;
           document.getElementById("bteffective").disabled = true;
           document.getElementById("btnominalrate").disabled = false;
         } else if (eid === "btnominalrate") {
-          document.getElementById("uinominal").style.display = "none"
-          document.getElementById("uieffective").style.display = "none"
-          // document.getElementById("uinominalrate").style.display = "block"
+          document.getElementById("uinominal").style.display = "none";
+          document.getElementById("uieffective").style.display = "none";
+          document.getElementById("uinominalrate").style.display = "block";
           document.getElementById("btnominal").disabled = false;
           document.getElementById("bteffective").disabled = false;
           document.getElementById("btnominalrate").disabled = true;
-        } //else if (bn === "timex") {
-        //   document.getElementById("uiamount").style.display = "none"
-        //   document.getElementById("uiinterest").style.display = "none"
-        //   document.getElementById("amount").disabled = false;
-        //   document.getElementById("interest").disabled = false;
-        //   document.getElementById("principal").disabled = false;
-        //   document.getElementById("time").disabled = true;
-        // }
+        }
       }
     </script>
     <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
@@ -46,25 +39,22 @@
     </div>
     <div class="split-screen">
       <div class="left-side">
-        <!-- <form action="/fin/miscellaneous" method="GET"> -->
         <div class="div-center" style="margin-top: 20px">
-          <button class="button" onclick="disableButton('btnominal')" id="btnominal">
-          <!-- <button class="button" type="submit" id="btnominal" value="uinominal" name="buttons"> -->
+          <button class="button" onclick="disableElements('btnominal')" id="btnominal">
             Nominal Rate to Effective Annual Rate
           </button>
         </div>
+        <!-- </form> -->
         <div class="div-center">
-          <button class="button" onclick="disableButton('bteffective')" id="bteffective">
-          <!-- <button class="button" type="submit" id="bteffective" value="uieffective" name="buttons"> -->
+          <button class="button" onclick="disableElements('bteffective')" id="bteffective">
             Effective Annual Rate to Nominal Rate
           </button>
         </div>
         <div class="div-center">
-          <button class="button" onclick="disableButton('btnominalrate')" id="btnominalrate">
+          <button class="button" onclick="disableElements('btnominalrate')" id="btnominalrate">
             Nominal Rate vs. Real Interest Rate
           </button>
         </div>
-        <!-- </form> -->
         <div class="div-center">
           <a href="/finances" target="_self">
             <button class="button">Back</button>
@@ -134,43 +124,5 @@
       </div>
     </div>
     {{template "footer"}}
-
-
-    <!-- <script type="text/javascript">
-      function disableButton(bt) {
-        if (bn === "nominal") {
-          document.getElementById("uinominal").style.display = "block"
-          document.getElementById("uieffective").style.display = "none"
-          // document.getElementById("uinominalrate").style.display = "none"
-          document.getElementById("nominal").disabled = true;
-          document.getElementById("effective").disabled = false;
-          document.getElementById("nominalrate").disabled = false;
-        } else if (bn === "effective") {
-          document.getElementById("uinominal").style.display = "none"
-          document.getElementById("uieffective").style.display = "block"
-          // document.getElementById("uinominalrate").style.display = "none"
-          document.getElementById("nominal").disabled = false;
-          document.getElementById("effective").disabled = true;
-          document.getElementById("nominalrate").disabled = false;
-        } else if (bn === "nominalrate") {
-          document.getElementById("uinominal").style.display = "none"
-          document.getElementById("uieffective").style.display = "none"
-          // document.getElementById("uinominalrate").style.display = "block"
-          document.getElementById("nominal").disabled = false;
-          document.getElementById("effective").disabled = false;
-          document.getElementById("nominalrate").disabled = true;
-        } //else if (bn === "timex") {
-        //   document.getElementById("uiamount").style.display = "none"
-        //   document.getElementById("uiinterest").style.display = "none"
-        //   document.getElementById("amount").disabled = false;
-        //   document.getElementById("interest").disabled = false;
-        //   document.getElementById("principal").disabled = false;
-        //   document.getElementById("time").disabled = true;
-        // }
-      }
-    </script> -->
-
-
-
   </body>
 </html>
