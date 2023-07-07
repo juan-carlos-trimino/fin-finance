@@ -7,6 +7,7 @@ import (
   "html/template"
   "net/http"
   "strconv"
+  "strings"
 )
 
 var m = misc.Misc{}
@@ -90,90 +91,76 @@ func (p *WebFinancesPages) SimpleInterestOrdinaryPage(res http.ResponseWriter, r
       Answer string
     } { false, "Ordinary Interest", m.DTF(), "30", "day", "2.5", "monthly", "1000.00", "" })
   } else if req.Method == http.MethodPost {
-    sn := req.FormValue("n")
-    stp := req.FormValue("tp")
-    si := req.FormValue("i")
-    scp := req.FormValue("cp")
-    spv := req.FormValue("pv")
-    var n float64
-    var i float64
-    var pv float64
-    var answer string
-    var err error
-    if n, err = strconv.ParseFloat(sn, 64); err != nil {
-      answer = fmt.Sprintf("Time: %s -- %+v", sn, err)
-    } else if i, err = strconv.ParseFloat(si, 64); err != nil {
-      answer = fmt.Sprintf("Interest: %s -- %+v", sn, err)
-    } else if pv, err = strconv.ParseFloat(spv, 64); err != nil {
-      answer = fmt.Sprintf("Present Value: %s -- %+v", sn, err)
-    } else {
-      var si finances.SimpleInterest
-      var periods finances.Periods
-      answer = fmt.Sprintf("Amount of Interest: $%.5f", si.OrdinaryInterest(pv, i / 100.0,
-                           periods.GetCompoundingPeriod(scp[0], false), n,
-                           periods.GetTimePeriod(stp[0], false)))
+    if strings.EqualFold(req.FormValue("compute"), "compute amount") {
+      sn := req.FormValue("n")
+      stp := req.FormValue("tp")
+      si := req.FormValue("i")
+      scp := req.FormValue("cp")
+      spv := req.FormValue("pv")
+      var n float64
+      var i float64
+      var pv float64
+      var answer string
+      var err error
+      if n, err = strconv.ParseFloat(sn, 64); err != nil {
+        answer = fmt.Sprintf("Time: %s -- %+v", sn, err)
+      } else if i, err = strconv.ParseFloat(si, 64); err != nil {
+        answer = fmt.Sprintf("Interest: %s -- %+v", sn, err)
+      } else if pv, err = strconv.ParseFloat(spv, 64); err != nil {
+        answer = fmt.Sprintf("Present Value: %s -- %+v", sn, err)
+      } else {
+        var si finances.SimpleInterest
+        var periods finances.Periods
+        answer = fmt.Sprintf("Amount of Interest: $%.5f", si.OrdinaryInterest(pv, i / 100.0,
+                            periods.GetCompoundingPeriod(scp[0], false), n,
+                            periods.GetTimePeriod(stp[0], false)))
+      }
+      fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, pv = %s\n", m.DTF(), sn, stp, si, scp, spv)
+      tmpl.ExecuteTemplate(res, "simpleinterestordinary.html", struct {
+        Result bool
+        Header string
+        Datetime string
+        Time string
+        TimePeriod string
+        Interest string
+        CompoundingPeriod string
+        PresentValue string
+        Answer string
+      } { true, "Ordinary Interest", m.DTF(), sn, stp, si, scp, spv, answer })
+    } else if (strings.EqualFold(req.FormValue("compute"), "compute rate")) {
+      // sn := req.FormValue("n")
+      // stp := req.FormValue("tp")
+      // sai := req.FormValue("ai")
+      // spv := req.FormValue("pv")
+      // var n float64
+      // var ai float64
+      // var pv float64
+      // var answer string
+      // var err error
+      // if n, err = strconv.ParseFloat(sn, 64); err != nil {
+      //   answer = fmt.Sprintf("Time: %s -- %+v", sn, err)
+      // } else if ai, err = strconv.ParseFloat(sai, 64); err != nil {
+      //   answer = fmt.Sprintf("Amount of interest: %s -- %+v", sn, err)
+      // } else if pv, err = strconv.ParseFloat(spv, 64); err != nil {
+      //   answer = fmt.Sprintf("Present Value: %s -- %+v", sn, err)
+      // } else {
+      //   var si finances.SimpleInterest
+        //var periods finances.Periods
+        // answer = fmt.Sprintf("Interest Rate: %.5f", si.OrdinaryRate(pv, i / 100.0,
+        //                     periods.GetCompoundingPeriod("Y", false), n,
+        //                     periods.GetTimePeriod(stp[0], false)))
+      // }
+      // fmt.Printf("%s - n = %s, tp = %s, ai = %s, pv = %s\n", m.DTF(), sn, stp, sai, spv)
+      // tmpl.ExecuteTemplate(res, "simpleinterestordinary.html", struct {
+      //   Result bool
+      //   Header string
+      //   Datetime string
+      //   Time string
+      //   TimePeriod string
+      //   Amount string
+      //   PresentValue string
+      //   Answer string
+      // } { true, "Ordinary Interest", m.DTF(), sn, stp, sai, spv, answer })
     }
-    fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, pv = %s\n", m.DTF(), sn, stp, si, scp, spv)
-    tmpl.ExecuteTemplate(res, "simpleinterestordinary.html", struct {
-      Result bool
-      Header string
-      Datetime string
-      Time string
-      TimePeriod string
-      Interest string
-      CompoundingPeriod string
-      PresentValue string
-      Answer string
-    } { true, "Ordinary Interest", m.DTF(), sn, stp, si, scp, spv, answer })
   }
 }
-/*
-func (p *WebFinancesPages) SimpleInterestOrdinaryCompute(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Calling SimpleInterestOrdinaryCompute/webfinances.\n", m.DTF())
-  if req.Method != http.MethodPost {
-    //tmpl.Execute(res, nil)
-    http.Redirect(res, req, "/fin/simpleinterest/ordinary", http.StatusSeeOther)
-    return
-  }
-  sn := req.FormValue("n")
-  stp := req.FormValue("tp")
-  // tp := req.FormValue("tp")[0]
-  si := req.FormValue("i")
-  scp := req.FormValue("cp")
-  spv := req.FormValue("pv")
-  var n float64
-  var i float64
-  var pv float64
-  var answer string
-  var err error
-  if n, err = strconv.ParseFloat(sn, 64); err != nil {
-    answer = fmt.Sprintf("Time: %s -- %+v", sn, err)
-  } else if i, err = strconv.ParseFloat(si, 64); err != nil {
-    answer = fmt.Sprintf("Interest: %s -- %+v", sn, err)
-  } else if pv, err = strconv.ParseFloat(spv, 64); err != nil {
-    answer = fmt.Sprintf("Present Value: %s -- %+v", sn, err)
-  } else {
-    var si finances.SimpleInterest
-    var periods finances.Periods
-
-    cp1 := periods.GetCompoundingPeriod(scp[0], false)
-    tp1 := periods.GetTimePeriod(stp[0], false)
-    fmt.Printf("%s - n = %.5f, tp = %d, i = %.5f, cp = %d, pv = %.5f\n", m.DTF(), n, tp1, i, cp1, pv)
-
-    c := si.OrdinaryInterest(pv, i / 100.0, periods.GetCompoundingPeriod(scp[0], false), n, periods.GetTimePeriod(stp[0], false))
-    answer = fmt.Sprintf("Amount of Interest: $%.5f", c)
-  }
-  fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, pv = %s\n", m.DTF(), sn, stp, si, scp, spv)
-  tmpl.ExecuteTemplate(res, "simpleinterestordinary.html", struct {
-    Result bool
-    Header string
-    Datetime string
-    Time string
-    TimePeriod string
-    Interest string
-    CompoundingPeriod string
-    PresentValue string
-    Answer string
-  } { true, "Ordinary Interest", m.DTF(), sn, stp, si, scp, spv, answer })
-}
-*/

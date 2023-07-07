@@ -5,6 +5,39 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Simple Interest</title>
+    <script type="text/javascript">
+      function disableElements(eid) {
+        if (eid === "amount") {
+          document.getElementById("uiamount").style.display = "block"
+          document.getElementById("uiinterest").style.display = "none"
+          document.getElementById("amount").disabled = true;
+          document.getElementById("interest").disabled = false;
+          document.getElementById("principal").disabled = false;
+          document.getElementById("time").disabled = false;
+        } else if (eid === "interest") {
+          document.getElementById("uiamount").style.display = "none"
+          document.getElementById("uiinterest").style.display = "block"
+          document.getElementById("amount").disabled = false;
+          document.getElementById("interest").disabled = true;
+          document.getElementById("principal").disabled = false;
+          document.getElementById("time").disabled = false;
+        } else if (eid === "principal") {
+          document.getElementById("uiamount").style.display = "none"
+          document.getElementById("uiinterest").style.display = "none"
+          document.getElementById("amount").disabled = false;
+          document.getElementById("interest").disabled = false;
+          document.getElementById("principal").disabled = true;
+          document.getElementById("time").disabled = false;
+        } else if (eid === "time") {
+          document.getElementById("uiamount").style.display = "none"
+          document.getElementById("uiinterest").style.display = "none"
+          document.getElementById("amount").disabled = false;
+          document.getElementById("interest").disabled = false;
+          document.getElementById("principal").disabled = false;
+          document.getElementById("time").disabled = true;
+        }
+      }
+    </script>
     <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
   </head>
   <body>
@@ -15,33 +48,22 @@
       <div class="left-side">
         <div class="div-center" style="margin-top: 20px">
           <button
-            class="button"
-            onclick="disableButton('amount')"
-            id="amount">
+            class="button" onclick="disableElements('amount')" id="amount">
             Amount of Interest
           </button>
         </div>
         <div class="div-center">
-          <button
-            class="button"
-            onclick="disableButton('interest')"
-            id="interest">
+          <button class="button" onclick="disableElements('interest')" id="interest">
             Interest Rate
           </button>
         </div>
         <div class="div-center">
-          <button
-            class="button"
-            onclick="disableButton('principal')"
-            id="principal">
+          <button class="button" onclick="disableElements('principal')" id="principal">
             Principal
           </button>
         </div>
         <div class="div-center">
-          <button
-            class="button"
-            onclick="disableButton('time')"
-            id="time">
+          <button class="button" onclick="disableElements('time')" id="time">
             Time
           </button>
         </div>
@@ -50,44 +72,13 @@
             <button class="button">Back</button>
           </a>
         </div>
-        <script type="text/javascript">
-          function disableButton(bn) {
-            if (bn === "amount") {
-              document.getElementById("uiamount").style.display = "block"
-              document.getElementById("uiinterest").style.display = "none"
-              document.getElementById("amount").disabled = true;
-              document.getElementById("interest").disabled = false;
-              document.getElementById("pricipal").disabled = false;
-              document.getElementById("time").disabled = false;
-            } else if (bn === "interest") {
-              document.getElementById("uiamount").style.display = "none"
-              document.getElementById("uiinterest").style.display = "block"
-              document.getElementById("amount").disabled = false;
-              document.getElementById("interest").disabled = true;
-              document.getElementById("pricipal").disabled = false;
-              document.getElementById("time").disabled = false;
-            } else if (bn === "principal") {
-              document.getElementById("uiamount").style.display = "none"
-              document.getElementById("uiinterest").style.display = "none"
-              document.getElementById("amount").disabled = false;
-              document.getElementById("interest").disabled = false;
-              document.getElementById("principal").disabled = true;
-              document.getElementById("time").disabled = false;
-            } else if (bn === "time") {
-              document.getElementById("uiamount").style.display = "none"
-              document.getElementById("uiinterest").style.display = "none"
-              document.getElementById("amount").disabled = false;
-              document.getElementById("interest").disabled = false;
-              document.getElementById("principal").disabled = false;
-              document.getElementById("time").disabled = true;
-            }
-          }
-        </script>
       </div>
       <!---->
       <div class="right-side">
+        <!-- <iframe name="no-reload" id="no-reload" style="display: none;"></iframe> -->
         <div id="uiamount" style="display: none">
           <form action="/fin/simpleinterest/ordinary" method="POST">
+            <!-- <form action="/fin/simpleinterest/ordinary" method="POST" target="no-reload"> -->
             <div style="margin-top: 20px">
               <label class="text-box" for="tbtime">Time (n).........................</label>
               <input class="text-combo" name="n" type="number" id="tbtime" value="{{.Time}}" step="any" min="1" maxlength="7"/>
@@ -126,7 +117,7 @@
               <input class="text-combo" name="pv" type="number" id="tbpv" value="{{.PresentValue}}" step="any" min="1" maxlength="7"/>
             </div>
             <div class="div-center" style="margin-top: 45px;">
-              <input class="button" type="submit" id="btcompute" value="Compute"/>
+              <input class="button" type="submit" id="btcompute" value="Compute Amount" name="compute">
             </div>
           </form>
           {{if .Result}}
@@ -137,7 +128,7 @@
         <div id="uiinterest" style="display: none">
           <form action="/fin/simpleinterest/ordinary" method="POST">
             <div style="margin-top: 20px">
-              <label class="text-box" for="tbtime">xxxxxxxxTime (n).........................</label>
+              <label class="text-box" for="tbtime">Time (n).........................</label>
               <input class="text-combo" name="n" type="number" id="tbtime" value="{{.Time}}" step="any" min="1" maxlength="7"/>
             </div>
             <div style="margin-top: 20px">
@@ -153,38 +144,22 @@
               </select>
             </div>
             <div style="margin-top: 20px;">
-              <label class="text-box" for="tbinterest">Interest (i %)................</label>
-              <input class="text-combo" name="i" type="number" id="tbinterest" value="{{.Interest}}" step="any" maxlength="7"/>
-            </div>
-            <div style="margin-top: 20px;">
-              <label class="text-box" for="cp">Compounding Period...</label>
-              <select class="text-combo" name="cp" id="cp" value="daily">
-                {{$selection := .CompoundingPeriod}}
-                <option class="text-combo" value="annually" {{if eq $selection "annually"}} selected {{end}}>Annually</option>
-                <option class="text-combo" value="semiannually" {{if eq $selection "semiannually"}} selected {{end}}>Semiannually</option>
-                <option class="text-combo" value="quarterly" {{if eq $selection "quarterly"}} selected {{end}}>Quarterly</option>
-                <option class="text-combo" value="monthly" {{if eq $selection "monthly"}} selected {{end}}>Monthly</option>
-                <option class="text-combo" value="weekly" {{if eq $selection "weekly"}} selected {{end}}>Weekly</option>
-                <option class="text-combo" value="daily" {{if eq $selection "daily"}} selected {{end}}>Daily</option>
-                <option class="text-combo" value="continuously" {{if eq $selection "continuously"}} selected {{end}}>Continuously</option>
-              </select>
+              <label class="text-box" for="tbamount">Amount of Interest.......</label>
+              <input class="text-combo" name="ai" type="number" id="tbamount" value="{{.Amount}}" step="any" maxlength="7"/>
             </div>
             <div style="margin-top: 20px;">
               <label class="text-box" for="tbpv">Present Value (PV).......</label>
               <input class="text-combo" name="pv" type="number" id="tbpv" value="{{.PresentValue}}" step="any" min="1" maxlength="7"/>
             </div>
             <div class="div-center" style="margin-top: 45px;">
-              <input class="button" type="submit" id="btcompute" value="Compute"/>
+              <input class="button" type="submit" id="btcompute" value="Compute Rate" name="compute"/>
             </div>
           </form>
           {{if .Result}}
-          <p class="font-color">{{.Answer}}</p>
+            <p class="font-color">{{.Answer}}</p>
           {{ end }}
         </div>  <!-- uiinterest -->
         <!---->
-
-
-
       </div>
     </div>
     {{template "footer"}}
