@@ -73,14 +73,13 @@
             <div style="margin-top: 20px;">
               <label class="text-box" for="cp">Compounding Period...</label>
               <select class="text-combo" name="cp" id="cp" value="daily">
-                {{$selection := .CompoundPeriod1}}
-                <option class="text-combo" value="annually" {{if eq $selection "annually"}} selected {{end}}>Annually</option>
-                <option class="text-combo" value="semiannually" {{if eq $selection "semiannually"}} selected {{end}}>Semiannually</option>
-                <option class="text-combo" value="quarterly" {{if eq $selection "quarterly"}} selected {{end}}>Quarterly</option>
-                <option class="text-combo" value="monthly" {{if eq $selection "monthly"}} selected {{end}}>Monthly</option>
-                <option class="text-combo" value="weekly" {{if eq $selection "weekly"}} selected {{end}}>Weekly</option>
-                <option class="text-combo" value="daily" {{if eq $selection "daily"}} selected {{end}}>Daily</option>
-                <option class="text-combo" value="continuously" {{if eq $selection "continuously"}} selected {{end}}>Continuously</option>
+                <option class="text-combo" value="annually" {{if eq .CompoundPeriod1 "annually"}} selected {{end}}>Annually</option>
+                <option class="text-combo" value="semiannually" {{if eq .CompoundPeriod1 "semiannually"}} selected {{end}}>Semiannually</option>
+                <option class="text-combo" value="quarterly" {{if eq .CompoundPeriod1 "quarterly"}} selected {{end}}>Quarterly</option>
+                <option class="text-combo" value="monthly" {{if eq .CompoundPeriod1 "monthly"}} selected {{end}}>Monthly</option>
+                <option class="text-combo" value="weekly" {{if eq .CompoundPeriod1 "weekly"}} selected {{end}}>Weekly</option>
+                <option class="text-combo" value="daily" {{if eq .CompoundPeriod1 "daily"}} selected {{end}}>Daily</option>
+                <option class="text-combo" value="continuously" {{if eq .CompoundPeriod1 "continuously"}} selected {{end}}>Continuously</option>
               </select>
             </div>
             <div class="div-center" style="margin-top: 45px;">
