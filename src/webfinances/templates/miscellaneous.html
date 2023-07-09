@@ -7,29 +7,32 @@
     <title>Miscellaneous</title>
     <script>
       function disableElements(eid) {
-        if (eid === "btnominal") {
-          document.getElementById("uinominal").style.display = "block";
-          document.getElementById("uieffective").style.display = "none";
-          // document.getElementById("uinominalrate").style.display = "none"
-          document.getElementById("btnominal").disabled = true;
-          document.getElementById("bteffective").disabled = false;
-          document.getElementById("btnominalrate").disabled = false;
-        } else if (eid === "bteffective") {
-          document.getElementById("uinominal").style.display = "none";
-          document.getElementById("uieffective").style.display = "block";
-          // document.getElementById("uinominalrate").style.display = "none"
-          document.getElementById("btnominal").disabled = false;
-          document.getElementById("bteffective").disabled = true;
-          document.getElementById("btnominalrate").disabled = false;
-        } else if (eid === "btnominalrate") {
-          document.getElementById("uinominal").style.display = "none";
-          document.getElementById("uieffective").style.display = "none";
-          document.getElementById("uinominalrate").style.display = "block";
-          document.getElementById("btnominal").disabled = false;
-          document.getElementById("bteffective").disabled = false;
-          document.getElementById("btnominalrate").disabled = true;
+        if (eid === "lhs-button1") {
+          document.getElementById("rhs-ui1").style.display = "block";
+          document.getElementById("rhs-ui2").style.display = "none";
+          document.getElementById("rhs-ui3").style.display = "none"
+          document.getElementById("lhs-button1").disabled = true;
+          document.getElementById("lhs-button2").disabled = false;
+          document.getElementById("lhs-button3").disabled = false;
+        } else if (eid === "lhs-button2") {
+          document.getElementById("rhs-ui1").style.display = "none";
+          document.getElementById("rhs-ui2").style.display = "block";
+          document.getElementById("rhs-ui3").style.display = "none"
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = true;
+          document.getElementById("lhs-button3").disabled = false;
+        } else if (eid === "lhs-button3") {
+          document.getElementById("rhs-ui1").style.display = "none";
+          document.getElementById("rhs-ui2").style.display = "none";
+          document.getElementById("rhs-ui3").style.display = "block";
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = false;
+          document.getElementById("lhs-button3").disabled = true;
         }
       }
+
+      document.addEventListener('DOMContentLoaded', (event) => {
+        disableElements('{{.CurrentButton}}')});
     </script>
     <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
   </head>
@@ -40,18 +43,17 @@
     <div class="split-screen">
       <div class="left-side">
         <div class="div-center" style="margin-top: 20px">
-          <button class="button" onclick="disableElements('btnominal')" id="btnominal">
+          <button class="button" onclick="disableElements('lhs-button1')" id="lhs-button1">
             Nominal Rate to Effective Annual Rate
           </button>
         </div>
-        <!-- </form> -->
         <div class="div-center">
-          <button class="button" onclick="disableElements('bteffective')" id="bteffective">
+          <button class="button" onclick="disableElements('lhs-button2')" id="lhs-button2">
             Effective Annual Rate to Nominal Rate
           </button>
         </div>
         <div class="div-center">
-          <button class="button" onclick="disableElements('btnominalrate')" id="btnominalrate">
+          <button class="button" onclick="disableElements('lhs-button3')" id="lhs-button3">
             Nominal Rate vs. Real Interest Rate
           </button>
         </div>
@@ -63,61 +65,83 @@
       </div>
       <!---->
       <div class="right-side">
-        <!-- uinominal -->
-        <div id="uinominal" style="display: none">
+        <!-- rhs-ui1 -->
+        <div id="rhs-ui1">
           <form action="/fin/miscellaneous" method="POST">
             <div style="margin-top: 20px">
-              <label class="text-box" for="tbnominal">Nominal Rate (%)........</label>
-              <input class="text-combo" name="nominal" type="number" id="tbnominal" value="{{.NominalRate1}}" step="any" maxlength="7"/>
+              <label class="text-box" for="fd1-nominal">Nominal Rate (%)........</label>
+              <input class="text-combo" id="fd1-nominal" name="fd1-nominal" value="{{.Fd1Nominal}}" type="number" step="any" maxlength="7" required/>
             </div>
             <div style="margin-top: 20px;">
-              <label class="text-box" for="cp">Compounding Period...</label>
-              <select class="text-combo" name="cp" id="cp" value="daily">
-                <option class="text-combo" value="annually" {{if eq .CompoundPeriod1 "annually"}} selected {{end}}>Annually</option>
-                <option class="text-combo" value="semiannually" {{if eq .CompoundPeriod1 "semiannually"}} selected {{end}}>Semiannually</option>
-                <option class="text-combo" value="quarterly" {{if eq .CompoundPeriod1 "quarterly"}} selected {{end}}>Quarterly</option>
-                <option class="text-combo" value="monthly" {{if eq .CompoundPeriod1 "monthly"}} selected {{end}}>Monthly</option>
-                <option class="text-combo" value="weekly" {{if eq .CompoundPeriod1 "weekly"}} selected {{end}}>Weekly</option>
-                <option class="text-combo" value="daily" {{if eq .CompoundPeriod1 "daily"}} selected {{end}}>Daily</option>
-                <option class="text-combo" value="continuously" {{if eq .CompoundPeriod1 "continuously"}} selected {{end}}>Continuously</option>
+              <label class="text-box" for="fd1-compound">Compounding Period...</label>
+              <select class="text-combo" id="fd1-compound" name="fd1-compound">
+                <option class="text-combo" value="annually" {{if eq .Fd1Compound "annually"}} selected {{end}}>Annually</option>
+                <option class="text-combo" value="semiannually" {{if eq .Fd1Compound "semiannually"}} selected {{end}}>Semiannually</option>
+                <option class="text-combo" value="quarterly" {{if eq .Fd1Compound "quarterly"}} selected {{end}}>Quarterly</option>
+                <option class="text-combo" value="monthly" {{if eq .Fd1Compound "monthly"}} selected {{end}}>Monthly</option>
+                <option class="text-combo" value="weekly" {{if eq .Fd1Compound "weekly"}} selected {{end}}>Weekly</option>
+                <option class="text-combo" value="daily" {{if eq .Fd1Compound "daily"}} selected {{end}}>Daily</option>
+                <option class="text-combo" value="continuously" {{if eq .Fd1Compound "continuously"}} selected {{end}}>Continuously</option>
               </select>
             </div>
             <div class="div-center" style="margin-top: 45px;">
-              <button class="button" type="submit" id="btcompute" value="uinominal" name="compute">
+              <button class="button" id="btcompute" value="rhs-ui1" name="compute" type="submit">
                 Compute
               </button>
             </div>
           </form>
-          {{if .Result1}}
-            <p class="font-color">{{.Answer1}}</p>
+          {{if .Fd1Compute}}
+            <p class="font-color">{{.Fd1Result}}</p>
           {{end}}
         </div>
-        <!-- uieffective -->
-        <div id="uieffective" style="display: none">
+        <!-- rhs-ui2 -->
+        <div id="rhs-ui2">
           <form action="/fin/miscellaneous" method="POST">
             <div style="margin-top: 20px">
-              <label class="text-box" for="tbeffective">Effective Annual Rate (%)...</label>
-              <input class="text-combo" name="effective" type="number" id="tbeffective" value="{{.EffectiveRate2}}" step="any" maxlength="7"/>
+              <label class="text-box" for="fd2-effective">Effective Annual Rate (%)...</label>
+              <input class="text-combo" id="fd2-effective" name="fd2-effective" value="{{.Fd2Effective}}" type="number" step="any" maxlength="7" required/>
             </div>
             <div style="margin-top: 20px;">
-              <label class="text-box" for="cp">Compounding Period............</label>
-              <select class="text-combo" name="cp" id="cp" value="daily">
-                {{$selection := .CompoundPeriod2}}
-                <option class="text-combo" value="annually" {{if eq $selection "annually"}} selected {{end}}>Annually</option>
-                <option class="text-combo" value="semiannually" {{if eq $selection "semiannually"}} selected {{end}}>Semiannually</option>
-                <option class="text-combo" value="quarterly" {{if eq $selection "quarterly"}} selected {{end}}>Quarterly</option>
-                <option class="text-combo" value="monthly" {{if eq $selection "monthly"}} selected {{end}}>Monthly</option>
-                <option class="text-combo" value="weekly" {{if eq $selection "weekly"}} selected {{end}}>Weekly</option>
-                <option class="text-combo" value="daily" {{if eq $selection "daily"}} selected {{end}}>Daily</option>
-                <option class="text-combo" value="continuously" {{if eq $selection "continuously"}} selected {{end}}>Continuously</option>
+              <label class="text-box" for="fd2-compound">Compounding Period............</label>
+              <select class="text-combo" id="fd2-compound" name="fd2-compound">
+                <option class="text-combo" value="annually" {{if eq .Fd2Compound "annually"}} selected {{end}}>Annually</option>
+                <option class="text-combo" value="semiannually" {{if eq .Fd2Compound "semiannually"}} selected {{end}}>Semiannually</option>
+                <option class="text-combo" value="quarterly" {{if eq .Fd2Compound "quarterly"}} selected {{end}}>Quarterly</option>
+                <option class="text-combo" value="monthly" {{if eq .Fd2Compound "monthly"}} selected {{end}}>Monthly</option>
+                <option class="text-combo" value="weekly" {{if eq .Fd2Compound "weekly"}} selected {{end}}>Weekly</option>
+                <option class="text-combo" value="daily" {{if eq .Fd2Compound "daily"}} selected {{end}}>Daily</option>
+                <option class="text-combo" value="continuously" {{if eq .Fd2Compound "continuously"}} selected {{end}}>Continuously</option>
               </select>
             </div>
             <div class="div-center" style="margin-top: 45px;">
-              <button class="button" type="submit" id="btcompute" value="uieffective" name="compute">Compute</button>
+              <button class="button" id="btcompute" name="compute" value="rhs-ui2" type="submit">Compute</button>
             </div>
           </form>
-          {{if .Result2}}
-            <p class="font-color">{{.Answer2}}</p>
+          {{if .Fd2Result}}
+            <p class="font-color">{{.Fd2Result}}</p>
+          {{end}}
+        </div>
+        <!-- rhs-ui3 -->
+        <div id="rhs-ui3">
+          <form action="/fin/miscellaneous" method="POST">
+            <!-- margin: top, right, bottom, left -->
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd3-nominal">Nominal Rate (%)...</label>
+              <input class="text-combo" id="fd3-nominal" name="fd3-nominal" value="{{.Fd3Nominal}}" type="number" step="any" maxlength="7" required/>
+            </div>
+            <div style="margin: -10px 0px 0px 5px">
+              <p>Nominal rate is not adjusted for inflation.</p>
+            </div>
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd3-inflation">Inflation Rate (%)...</label>
+              <input class="text-combo" id="fd3-inflation" name="fd3-inflation" value="{{.Fd3Inflation}}" type="number" step="any" maxlength="7" required/>
+            </div>
+            <div class="div-center" style="margin-top: 45px;">
+              <button class="button" id="btcompute" name="compute" value="rhs-ui3" type="submit">Compute</button>
+            </div>
+          </form>
+          {{if .Fd3Result}}
+            <p class="font-color">{{.Fd3Result}}</p>
           {{end}}
         </div>
       </div>
