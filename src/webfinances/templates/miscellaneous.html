@@ -11,23 +11,38 @@
           document.getElementById("rhs-ui1").style.display = "block";
           document.getElementById("rhs-ui2").style.display = "none";
           document.getElementById("rhs-ui3").style.display = "none"
+          document.getElementById("rhs-ui4").style.display = "none"
           document.getElementById("lhs-button1").disabled = true;
           document.getElementById("lhs-button2").disabled = false;
           document.getElementById("lhs-button3").disabled = false;
+          document.getElementById("lhs-button4").disabled = false;
         } else if (eid === "lhs-button2") {
           document.getElementById("rhs-ui1").style.display = "none";
           document.getElementById("rhs-ui2").style.display = "block";
           document.getElementById("rhs-ui3").style.display = "none"
+          document.getElementById("rhs-ui4").style.display = "none"
           document.getElementById("lhs-button1").disabled = false;
           document.getElementById("lhs-button2").disabled = true;
           document.getElementById("lhs-button3").disabled = false;
+          document.getElementById("lhs-button4").disabled = false;
         } else if (eid === "lhs-button3") {
           document.getElementById("rhs-ui1").style.display = "none";
           document.getElementById("rhs-ui2").style.display = "none";
           document.getElementById("rhs-ui3").style.display = "block";
+          document.getElementById("rhs-ui4").style.display = "none";
           document.getElementById("lhs-button1").disabled = false;
           document.getElementById("lhs-button2").disabled = false;
           document.getElementById("lhs-button3").disabled = true;
+          document.getElementById("lhs-button4").disabled = false;
+        } else if (eid === "lhs-button4") {
+          document.getElementById("rhs-ui1").style.display = "none";
+          document.getElementById("rhs-ui2").style.display = "none";
+          document.getElementById("rhs-ui3").style.display = "none";
+          document.getElementById("rhs-ui4").style.display = "block";
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = false;
+          document.getElementById("lhs-button3").disabled = false;
+          document.getElementById("lhs-button4").disabled = true;
         }
       }
 
@@ -55,6 +70,11 @@
         <div class="div-center">
           <button class="button" onclick="disableElements('lhs-button3')" id="lhs-button3">
             Nominal Rate vs. Real Interest Rate
+          </button>
+        </div>
+        <div class="div-center">
+          <button class="button" onclick="disableElements('lhs-button4')" id="lhs-button4">
+            Growth/Decay of Funds
           </button>
         </div>
         <div class="div-center">
@@ -146,6 +166,37 @@
             <p class="p-note">{{index .Fd3Result 1}}</p>
             <p class="p-result">{{index .Fd3Result 3}}</p>
             <p class="p-note">{{index .Fd3Result 2}}</p>
+          </div>
+        </div>
+        <!-- rhs-ui4 -->
+        <div id="rhs-ui4">
+          <form action="/fin/miscellaneous" method="POST">
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd4-interest">Interest (%)...................</label>
+              <input class="text-combo" id="fd4-interest" name="fd4-interest" value="{{.Fd4Interest}}" type="number" step="any" maxlength="7" required/>
+            </div>
+            <div style="margin-top: 20px;">
+              <label class="text-box" for="fd4-compound">Compounding Period...</label>
+              <select class="text-combo" id="fd4-compound" name="fd4-compound">
+                <option class="text-combo" value="annually" {{if eq .Fd4Compound "annually"}} selected {{end}}>Annually</option>
+                <option class="text-combo" value="semiannually" {{if eq .Fd4Compound "semiannually"}} selected {{end}}>Semiannually</option>
+                <option class="text-combo" value="quarterly" {{if eq .Fd4Compound "quarterly"}} selected {{end}}>Quarterly</option>
+                <option class="text-combo" value="monthly" {{if eq .Fd4Compound "monthly"}} selected {{end}}>Monthly</option>
+                <option class="text-combo" value="weekly" {{if eq .Fd4Compound "weekly"}} selected {{end}}>Weekly</option>
+                <option class="text-combo" value="daily" {{if eq .Fd4Compound "daily"}} selected {{end}}>Daily</option>
+                <option class="text-combo" value="continuously" {{if eq .Fd4Compound "continuously"}} selected {{end}}>Continuously</option>
+              </select>
+            </div>
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd4-factor">Factor.............................</label>
+              <input class="text-combo" id="fd4-factor" name="fd4-factor" value="{{.Fd4Factor}}" type="number" step="any" maxlength="7" required/>
+            </div>
+            <div class="div-center" style="margin-top: 45px;">
+              <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">Compute</button>
+            </div>
+          </form>
+          <div>
+            <p class="p-result">{{.Fd4Result}}</p>
           </div>
         </div>
       </div>

@@ -2,9 +2,7 @@ package webfinances
 
 import (
   "finance/finances"
-  // "finance/misc"
   "fmt"
-  // "html/template"
   "net/http"
   "strconv"
   "strings"
@@ -25,6 +23,10 @@ type wfMiscellaneousPages struct {
   fd3Nominal string
   fd3Inflation string
   fd3Result [4]string
+  fd4Interest string
+  fd4Compound string
+  fd4Factor string
+  fd4Result string
 }
 
 var notes1 = [...]string {
@@ -48,6 +50,10 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
     fd3Nominal: "2.0",
     fd3Inflation: "2.0",
     fd3Result: [4]string { notes3[0], "", "", "" },
+    fd4Interest: "14.87",
+    fd4Compound: "annually",
+    fd4Factor: "2.0",
+    fd4Result: "",
   }
 }
 
@@ -67,10 +73,15 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       Fd3Nominal string
       Fd3Inflation string
       Fd3Result [4]string
+      Fd4Interest string
+      Fd4Compound string
+      Fd4Factor string
+      Fd4Result string
     } { "Miscellaneous", m.DTF(), p.currentButton,
         p.fd1Nominal, p.fd1Compound, p.fd1Result,
         p.fd2Effective, p.fd2Compound, p.fd2Result,
-        p.fd3Nominal, p.fd3Inflation, p.fd3Result })
+        p.fd3Nominal, p.fd3Inflation, p.fd3Result,
+        p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result })
   } else if req.Method == http.MethodPost {
     ui := req.FormValue("compute")
     if strings.EqualFold(ui, "rhs-ui1") {
@@ -81,7 +92,7 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       var err error
       if nr, err = strconv.ParseFloat(p.fd1Nominal, 64); err != nil {
         p.fd1Result[0] = ""
-        p.fd1Result[1] = fmt.Sprintf("Nominal Rate: %s -- %+v", p.fd1Nominal, err)
+        p.fd1Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd1Nominal, err)
       } else {
         var a finances.Annuities
         p.fd1Result[0] = notes1[0]
@@ -98,7 +109,7 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       var err error
       if ear, err = strconv.ParseFloat(p.fd2Effective, 64); err != nil {
         p.fd2Result[0] = ""
-        p.fd2Result[1] = fmt.Sprintf("Effective Rate: %s -- %+v", p.fd2Effective, err)
+        p.fd2Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd2Effective, err)
       } else {
         var a finances.Annuities
         p.fd2Result[0] = notes1[0]
@@ -117,11 +128,11 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       if nr, err = strconv.ParseFloat(p.fd3Nominal, 64); err != nil {
         p.fd3Result[1] = ""
         p.fd3Result[2] = ""
-        p.fd3Result[3] = fmt.Sprintf("Nominal Rate: %s -- %+v", p.fd3Nominal, err)
+        p.fd3Result[3] = fmt.Sprintf("Error: %s -- %+v", p.fd3Nominal, err)
       } else if ir, err = strconv.ParseFloat(p.fd3Inflation, 64); err != nil {
         p.fd3Result[1] = ""
         p.fd3Result[2] = ""
-        p.fd3Result[3] = fmt.Sprintf("Inflation Rate: %s -- %+v", p.fd3Inflation, err)
+        p.fd3Result[3] = fmt.Sprintf("Error: %s -- %+v", p.fd3Inflation, err)
       } else {
         var a finances.Annuities
         p.fd3Result[1] = notes3[1]
@@ -130,6 +141,29 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
                                       ir / 100.0) * 100.0)
       }
       fmt.Printf("%s - nominal rate = %s, inflation rate = %s, %s\n", m.DTF(), p.fd3Nominal, p.fd3Inflation, p.fd3Result[3])
+    } else if strings.EqualFold(ui, "rhs-ui4") {
+      p.fd4Interest = req.FormValue("fd4-interest")
+      p.fd4Compound = req.FormValue("fd4-compound")
+      p.fd4Factor = req.FormValue("fd4-factor")
+      p.currentButton = "lhs-button4"
+      var ir float64
+      var factor float64
+      var err error
+      if ir, err = strconv.ParseFloat(p.fd4Interest, 64); err != nil {
+        p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4Interest, err)
+      } else if factor, err = strconv.ParseFloat(p.fd4Factor, 64); err != nil {
+        p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4Factor, err)
+      } else {
+        var a finances.Annuities
+        p.fd4Result = fmt.Sprintf("Growth/Decay: %.3f %s", a.GrowthDecayOfFunds(factor, ir / 100.0,
+          a.GetCompoundingPeriod(p.fd4Compound[0], false)), a.TimePeriods(p.fd4Compound))
+      }
+      fmt.Printf("%s - interest rate = %s, cp = %s, factor = %s, %s\n", m.DTF(), p.fd4Interest,
+                  p.fd4Compound, p.fd4Factor, p.fd4Result)
+    } else {
+      errString := fmt.Sprintf("Unsupported page: %s", ui)
+      fmt.Printf("%s - %s\n", m.DTF(), errString)
+      panic(errString)
     }
     tmpl.ExecuteTemplate(res, "miscellaneous.html", struct {
       Header string
@@ -144,11 +178,18 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       Fd3Nominal string
       Fd3Inflation string
       Fd3Result [4]string
+      Fd4Interest string
+      Fd4Compound string
+      Fd4Factor string
+      Fd4Result string
     } { "Miscellaneous", m.DTF(), p.currentButton,
         p.fd1Nominal, p.fd1Compound, p.fd1Result,
         p.fd2Effective, p.fd2Compound, p.fd2Result,
-        p.fd3Nominal, p.fd3Inflation, p.fd3Result })
+        p.fd3Nominal, p.fd3Inflation, p.fd3Result,
+        p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result })
   } else {
-    fmt.Printf("zzzzzzzzzzzzxxxxxxxxxxxxxx\n")
+    errString := fmt.Sprintf("Unsupported method: %s", req.Method)
+    fmt.Printf("%s - %s\n", m.DTF(), errString)
+    panic(errString)
   }
 }

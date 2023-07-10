@@ -3,6 +3,7 @@ package finances
 
 import (
   "math"
+  "strings"
 )
 
 const (
@@ -202,5 +203,25 @@ func (p Periods) GetTimePeriod(timePeriod byte, isDaily365 bool) int {
       }
     default:
       return Invalid
+  }
+}
+
+func (p Periods) TimePeriods(period string) string {
+  if strings.EqualFold(period, "annually") {
+    return "year(s)"
+  } else if strings.EqualFold(period, "semiannually") {
+    return "semiyear(s)"
+  } else if strings.EqualFold(period, "quarterly") {
+    return "quarter(s)"
+  } else if strings.EqualFold(period, "monthly") {
+    return "month(s)"
+  } else if strings.EqualFold(period, "weekly") {
+    return "week(s)"
+  } else if strings.EqualFold(period, "daily") {
+    return "day(s)"
+  } else if strings.EqualFold(period, "continuosly") {
+    return "continous"
+  } else {
+    return "unknown"
   }
 }
