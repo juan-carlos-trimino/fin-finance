@@ -90,9 +90,10 @@
               </button>
             </div>
           </form>
-          {{if .Fd1Compute}}
-            <p class="font-color">{{.Fd1Result}}</p>
-          {{end}}
+          <div>
+            <p class="p-note">{{index .Fd1Result 0}}</p>
+            <p class="p-result">{{index .Fd1Result 1}}</p>
+          </div>
         </div>
         <!-- rhs-ui2 -->
         <div id="rhs-ui2">
@@ -117,9 +118,10 @@
               <button class="button" id="btcompute" name="compute" value="rhs-ui2" type="submit">Compute</button>
             </div>
           </form>
-          {{if .Fd2Result}}
-            <p class="font-color">{{.Fd2Result}}</p>
-          {{end}}
+          <div>
+            <p class="p-note">{{index .Fd2Result 0}}</p>
+            <p class="p-result">{{index .Fd2Result 1}}</p>
+          </div>
         </div>
         <!-- rhs-ui3 -->
         <div id="rhs-ui3">
@@ -129,8 +131,8 @@
               <label class="text-box" for="fd3-nominal">Nominal Rate (%)...</label>
               <input class="text-combo" id="fd3-nominal" name="fd3-nominal" value="{{.Fd3Nominal}}" type="number" step="any" maxlength="7" required/>
             </div>
-            <div style="margin: -10px 0px 0px 5px">
-              <p>Nominal rate is not adjusted for inflation.</p>
+            <div>
+              <p class="p-note">{{index .Fd3Result 0}}</p>
             </div>
             <div style="margin-top: 20px">
               <label class="text-box" for="fd3-inflation">Inflation Rate (%)...</label>
@@ -140,9 +142,11 @@
               <button class="button" id="btcompute" name="compute" value="rhs-ui3" type="submit">Compute</button>
             </div>
           </form>
-          {{if .Fd3Result}}
-            <p class="font-color">{{.Fd3Result}}</p>
-          {{end}}
+          <div>
+            <p class="p-note">{{index .Fd3Result 1}}</p>
+            <p class="p-result">{{index .Fd3Result 3}}</p>
+            <p class="p-note">{{index .Fd3Result 2}}</p>
+          </div>
         </div>
       </div>
     </div>
