@@ -29,6 +29,12 @@ type wfMiscellaneousPages struct {
   fd4Result string
   fd5Values string
   fd5Result [2]string
+  fd6Time string
+  fd6TimePeriod string
+  fd6Rate string
+  fd6Compound string
+  fd6PV string
+  fd6Result string
 }
 
 var notes1 = [...]string {
@@ -61,6 +67,12 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
     fd4Result: "",
     fd5Values: "2.0;1.5",
     fd5Result: [2]string { notes5[0], "" },
+    fd6Time: "",
+    fd6TimePeriod: "",
+    fd6Rate: "",
+    fd6Compound: "monthly",
+    fd6PV: "",
+    fd6Result: "",
   }
 }
 
@@ -86,12 +98,19 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       Fd4Result string
       Fd5Values string
       Fd5Result [2]string
+      Fd6Time string
+      Fd6TimePeriod string
+      Fd6Rate string
+      Fd6Compound string
+      Fd6PV string
+      Fd6Result string
     } { "Miscellaneous", m.DTF(), p.currentButton,
         p.fd1Nominal, p.fd1Compound, p.fd1Result,
         p.fd2Effective, p.fd2Compound, p.fd2Result,
         p.fd3Nominal, p.fd3Inflation, p.fd3Result,
         p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result,
-        p.fd5Values, p.fd5Result })
+        p.fd5Values, p.fd5Result,
+        p.fd6Time, p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result })
   } else if req.Method == http.MethodPost {
     ui := req.FormValue("compute")
     if strings.EqualFold(ui, "rhs-ui1") {
@@ -188,6 +207,26 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
         p.fd5Result[1] = fmt.Sprintf("Avg: %.3f%%", a.AverageRateOfReturn(values) * 100.0)
       }
       fmt.Printf("%s - values = [%s], %s\n", m.DTF(), p.fd5Values, p.fd5Result[1])
+
+    } else if strings.EqualFold(ui, "rhs-ui6") {
+        // p.fd5Values = req.FormValue("fd5-values")
+      p.currentButton = "lhs-button6"
+        // split := strings.Split(p.fd5Values, ";")
+        // values := make([]float64, len(split))
+        // var err error
+        // for i, s := range split {
+        //   if values[i], err = strconv.ParseFloat(s, 64); err != nil {
+        //     p.fd5Result[1] = fmt.Sprintf("Error: %s -- %+v", s, err)
+        //     break;
+        //   }
+        // }
+        // //
+        // if err == nil {
+        //   var a finances.Annuities
+        //   p.fd5Result[1] = fmt.Sprintf("Avg: %.3f%%", a.AverageRateOfReturn(values) * 100.0)
+        // }
+        // fmt.Printf("%s - values = [%s], %s\n", m.DTF(), p.fd5Values, p.fd5Result[1])
+
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", ui)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
@@ -212,12 +251,19 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       Fd4Result string
       Fd5Values string
       Fd5Result [2]string
+      Fd6Time string
+      Fd6TimePeriod string
+      Fd6Rate string
+      Fd6Compound string
+      Fd6PV string
+      Fd6Result string
     } { "Miscellaneous", m.DTF(), p.currentButton,
         p.fd1Nominal, p.fd1Compound, p.fd1Result,
         p.fd2Effective, p.fd2Compound, p.fd2Result,
         p.fd3Nominal, p.fd3Inflation, p.fd3Result,
         p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result,
-        p.fd5Values, p.fd5Result })
+        p.fd5Values, p.fd5Result,
+        p.fd6Time, p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result })
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
     fmt.Printf("%s - %s\n", m.DTF(), errString)
