@@ -67,11 +67,11 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
     fd4Result: "",
     fd5Values: "2.0;1.5",
     fd5Result: [2]string { notes5[0], "" },
-    fd6Time: "",
-    fd6TimePeriod: "",
-    fd6Rate: "",
-    fd6Compound: "monthly",
-    fd6PV: "",
+    fd6Time: "1.0",
+    fd6TimePeriod: "year",
+    fd6Rate: "15.0",
+    fd6Compound: "annually",
+    fd6PV: "1.00",
     fd6Result: "",
   }
 }
@@ -207,26 +207,31 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
         p.fd5Result[1] = fmt.Sprintf("Avg: %.3f%%", a.AverageRateOfReturn(values) * 100.0)
       }
       fmt.Printf("%s - values = [%s], %s\n", m.DTF(), p.fd5Values, p.fd5Result[1])
-
     } else if strings.EqualFold(ui, "rhs-ui6") {
-        // p.fd5Values = req.FormValue("fd5-values")
+      p.fd6Time = req.FormValue("fd6-time")
+      p.fd6TimePeriod = req.FormValue("fd6-tp")
+      p.fd6Rate = req.FormValue("fd6-rate")
+      p.fd6Compound = req.FormValue("fd6-compound")
+      p.fd6PV = req.FormValue("fd6-pv")
       p.currentButton = "lhs-button6"
-        // split := strings.Split(p.fd5Values, ";")
-        // values := make([]float64, len(split))
-        // var err error
-        // for i, s := range split {
-        //   if values[i], err = strconv.ParseFloat(s, 64); err != nil {
-        //     p.fd5Result[1] = fmt.Sprintf("Error: %s -- %+v", s, err)
-        //     break;
-        //   }
-        // }
-        // //
-        // if err == nil {
-        //   var a finances.Annuities
-        //   p.fd5Result[1] = fmt.Sprintf("Avg: %.3f%%", a.AverageRateOfReturn(values) * 100.0)
-        // }
-        // fmt.Printf("%s - values = [%s], %s\n", m.DTF(), p.fd5Values, p.fd5Result[1])
-
+      var time float64
+      var rate float64
+      var pv float64
+      var err error
+      if time, err = strconv.ParseFloat(p.fd6Time, 64); err != nil {
+        p.fd6Result = fmt.Sprintf("Error: %s -- %+v", p.fd6Time, err)
+      } else if rate, err = strconv.ParseFloat(p.fd6Rate, 64); err != nil {
+        p.fd6Result = fmt.Sprintf("Error: %s -- %+v", p.fd6Rate, err)
+      } else if pv, err = strconv.ParseFloat(p.fd6PV, 64); err != nil {
+        p.fd6Result = fmt.Sprintf("Error: %s -- %+v", p.fd6PV, err)
+      } else {
+        var a finances.Annuities
+        p.fd6Result = fmt.Sprintf("Future Value: %.2f", a.Depreciation(pv, rate / 100.0,
+                                   a.GetCompoundingPeriod(p.fd6Compound[0], false),
+                                   time, a.GetTimePeriod(p.fd6TimePeriod[0], false)))
+      }
+      fmt.Printf("%s - time = %s, tp = %s, rate = %s, cp = %s, pv = %s, %s\n", m.DTF(), p.fd6Time,
+                  p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result)
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", ui)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
