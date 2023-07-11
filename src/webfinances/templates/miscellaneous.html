@@ -12,37 +12,56 @@
           document.getElementById("rhs-ui2").style.display = "none";
           document.getElementById("rhs-ui3").style.display = "none"
           document.getElementById("rhs-ui4").style.display = "none"
+          document.getElementById("rhs-ui5").style.display = "none"
           document.getElementById("lhs-button1").disabled = true;
           document.getElementById("lhs-button2").disabled = false;
           document.getElementById("lhs-button3").disabled = false;
           document.getElementById("lhs-button4").disabled = false;
+          document.getElementById("lhs-button5").disabled = false;
         } else if (eid === "lhs-button2") {
           document.getElementById("rhs-ui1").style.display = "none";
           document.getElementById("rhs-ui2").style.display = "block";
           document.getElementById("rhs-ui3").style.display = "none"
+          document.getElementById("rhs-ui5").style.display = "none"
           document.getElementById("rhs-ui4").style.display = "none"
           document.getElementById("lhs-button1").disabled = false;
           document.getElementById("lhs-button2").disabled = true;
           document.getElementById("lhs-button3").disabled = false;
           document.getElementById("lhs-button4").disabled = false;
+          document.getElementById("lhs-button5").disabled = false;
         } else if (eid === "lhs-button3") {
           document.getElementById("rhs-ui1").style.display = "none";
           document.getElementById("rhs-ui2").style.display = "none";
           document.getElementById("rhs-ui3").style.display = "block";
           document.getElementById("rhs-ui4").style.display = "none";
+          document.getElementById("rhs-ui5").style.display = "none"
           document.getElementById("lhs-button1").disabled = false;
           document.getElementById("lhs-button2").disabled = false;
           document.getElementById("lhs-button3").disabled = true;
           document.getElementById("lhs-button4").disabled = false;
+          document.getElementById("lhs-button5").disabled = false;
         } else if (eid === "lhs-button4") {
           document.getElementById("rhs-ui1").style.display = "none";
           document.getElementById("rhs-ui2").style.display = "none";
           document.getElementById("rhs-ui3").style.display = "none";
           document.getElementById("rhs-ui4").style.display = "block";
+          document.getElementById("rhs-ui5").style.display = "none"
           document.getElementById("lhs-button1").disabled = false;
           document.getElementById("lhs-button2").disabled = false;
           document.getElementById("lhs-button3").disabled = false;
           document.getElementById("lhs-button4").disabled = true;
+          document.getElementById("lhs-button5").disabled = false;
+        } else if (eid === "lhs-button5") {
+          document.getElementById("rhs-ui1").style.display = "none";
+          document.getElementById("rhs-ui2").style.display = "none";
+          document.getElementById("rhs-ui3").style.display = "none";
+          document.getElementById("rhs-ui4").style.display = "none";
+          document.getElementById("rhs-ui5").style.display = "block";
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = false;
+          document.getElementById("lhs-button3").disabled = false;
+          document.getElementById("lhs-button4").disabled = false;
+          document.getElementById("lhs-button5").disabled = true;
         }
       }
 
@@ -75,6 +94,11 @@
         <div class="div-center">
           <button class="button" onclick="disableElements('lhs-button4')" id="lhs-button4">
             Growth/Decay of Funds
+          </button>
+        </div>
+        <div class="div-center">
+          <button class="button" onclick="disableElements('lhs-button5')" id="lhs-button5">
+            Average Rate of Return
           </button>
         </div>
         <div class="div-center">
@@ -197,6 +221,24 @@
           </form>
           <div>
             <p class="p-result">{{.Fd4Result}}</p>
+          </div>
+        </div>
+        <!-- rhs-ui5 -->
+        <div id="rhs-ui5">
+          <form action="/fin/miscellaneous" method="POST">
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd5-values">Values...</label>
+              <input class="text-combo" id="fd5-values" name="fd5-values" value="{{.Fd5Values}}" type="string" required/>
+            </div>
+            <div>
+              <p class="p-note">{{index .Fd5Result 0}}</p>
+            </div>
+            <div class="div-center" style="margin-top: 45px;">
+              <button class="button" id="btcompute" name="compute" value="rhs-ui5" type="submit">Compute</button>
+            </div>
+          </form>
+          <div>
+            <p class="p-result">{{index .Fd5Result 1}}</p>
           </div>
         </div>
       </div>

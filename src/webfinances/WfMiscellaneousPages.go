@@ -27,6 +27,8 @@ type wfMiscellaneousPages struct {
   fd4Compound string
   fd4Factor string
   fd4Result string
+  fd5Values string
+  fd5Result [2]string
 }
 
 var notes1 = [...]string {
@@ -36,6 +38,9 @@ var notes3 = [...]string {
   "Nominal returns are not adjusted for inflation.",
   "Real returns are useful while comparing returns over different time periods because of the differences in inflation rates.",
   "Real returns are adjusted for inflation.",
+}
+var notes5 = [...]string {
+  "Values are semicolon (;) separated; e.g., 3;3.1;3.2;-1.01",
 }
 
 func NewWfMiscellaneousPages() WfMiscellaneousPages {
@@ -54,6 +59,8 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
     fd4Compound: "annually",
     fd4Factor: "2.0",
     fd4Result: "",
+    fd5Values: "2.0;1.5",
+    fd5Result: [2]string { notes5[0], "" },
   }
 }
 
@@ -77,11 +84,14 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       Fd4Compound string
       Fd4Factor string
       Fd4Result string
+      Fd5Values string
+      Fd5Result [2]string
     } { "Miscellaneous", m.DTF(), p.currentButton,
         p.fd1Nominal, p.fd1Compound, p.fd1Result,
         p.fd2Effective, p.fd2Compound, p.fd2Result,
         p.fd3Nominal, p.fd3Inflation, p.fd3Result,
-        p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result })
+        p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result,
+        p.fd5Values, p.fd5Result })
   } else if req.Method == http.MethodPost {
     ui := req.FormValue("compute")
     if strings.EqualFold(ui, "rhs-ui1") {
@@ -160,6 +170,24 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       }
       fmt.Printf("%s - interest rate = %s, cp = %s, factor = %s, %s\n", m.DTF(), p.fd4Interest,
                   p.fd4Compound, p.fd4Factor, p.fd4Result)
+    } else if strings.EqualFold(ui, "rhs-ui5") {
+      p.fd5Values = req.FormValue("fd5-values")
+      p.currentButton = "lhs-button5"
+      split := strings.Split(p.fd5Values, ";")
+      values := make([]float64, len(split))
+      var err error
+      for i, s := range split {
+        if values[i], err = strconv.ParseFloat(s, 64); err != nil {
+          p.fd5Result[1] = fmt.Sprintf("Error: %s -- %+v", s, err)
+          break;
+        }
+      }
+      //
+      if err == nil {
+        var a finances.Annuities
+        p.fd5Result[1] = fmt.Sprintf("Avg: %.3f%%", a.AverageRateOfReturn(values) * 100.0)
+      }
+      fmt.Printf("%s - values = [%s], %s\n", m.DTF(), p.fd5Values, p.fd5Result[1])
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", ui)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
@@ -182,11 +210,14 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       Fd4Compound string
       Fd4Factor string
       Fd4Result string
+      Fd5Values string
+      Fd5Result [2]string
     } { "Miscellaneous", m.DTF(), p.currentButton,
         p.fd1Nominal, p.fd1Compound, p.fd1Result,
         p.fd2Effective, p.fd2Compound, p.fd2Result,
         p.fd3Nominal, p.fd3Inflation, p.fd3Result,
-        p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result })
+        p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result,
+        p.fd5Values, p.fd5Result })
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
     fmt.Printf("%s - %s\n", m.DTF(), errString)
