@@ -8,6 +8,18 @@ import (
   "strings"
 )
 
+var notes1 = [...]string {
+  "When comparing interest rates, use effective annual rates.",
+}
+var notes3 = [...]string {
+  "Nominal returns are not adjusted for inflation.",
+  "Real returns are useful while comparing returns over different time periods because of the differences in inflation rates.",
+  "Real returns are adjusted for inflation.",
+}
+var notes5 = [...]string {
+  "Values are semicolon (;) separated; e.g., 3;3.1;3.2;-1.01",
+}
+
 type WfMiscellaneousPages interface {
   MiscellaneousPage(http.ResponseWriter, *http.Request)
 }
@@ -35,18 +47,6 @@ type wfMiscellaneousPages struct {
   fd6Compound string
   fd6PV string
   fd6Result string
-}
-
-var notes1 = [...]string {
-  "When comparing interest rates, use effective annual rates.",
-}
-var notes3 = [...]string {
-  "Nominal returns are not adjusted for inflation.",
-  "Real returns are useful while comparing returns over different time periods because of the differences in inflation rates.",
-  "Real returns are adjusted for inflation.",
-}
-var notes5 = [...]string {
-  "Values are semicolon (;) separated; e.g., 3;3.1;3.2;-1.01",
 }
 
 func NewWfMiscellaneousPages() WfMiscellaneousPages {
