@@ -69,7 +69,7 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
         if tp == Months {
           return (n / monthsPerYear)
         } else if tp == SemiAnnually {
-          return ()
+          return (0)
         } else if tp == Quarters {
           return (n / quartersPerYear)
         } else if tp == Weeks {
