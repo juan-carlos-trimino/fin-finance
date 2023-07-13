@@ -7,36 +7,39 @@
     <title>Simple Interest</title>
     <script type="text/javascript">
       function disableElements(eid) {
-        if (eid === "amount") {
-          document.getElementById("uiamount").style.display = "block";
-          document.getElementById("uiinterest").style.display = "none";
-          document.getElementById("amount").disabled = true;
-          document.getElementById("interest").disabled = false;
-          document.getElementById("principal").disabled = false;
-          document.getElementById("time").disabled = false;
-        } else if (eid === "interest") {
-          document.getElementById("uiamount").style.display = "none";
-          document.getElementById("uiinterest").style.display = "block";
-          document.getElementById("amount").disabled = false;
-          document.getElementById("interest").disabled = true;
-          document.getElementById("principal").disabled = false;
-          document.getElementById("time").disabled = false;
-        } else if (eid === "principal") {
-          document.getElementById("uiamount").style.display = "none";
-          document.getElementById("uiinterest").style.display = "none";
-          document.getElementById("amount").disabled = false;
-          document.getElementById("interest").disabled = false;
-          document.getElementById("principal").disabled = true;
-          document.getElementById("time").disabled = false;
-        } else if (eid === "time") {
-          document.getElementById("uiamount").style.display = "none";
-          document.getElementById("uiinterest").style.display = "none";
-          document.getElementById("amount").disabled = false;
-          document.getElementById("interest").disabled = false;
-          document.getElementById("principal").disabled = false;
-          document.getElementById("time").disabled = true;
+        if (eid === "lhs-button1") {
+          document.getElementById("rhs-ui1").style.display = "block";
+          document.getElementById("rhs-ui2").style.display = "none";
+          document.getElementById("lhs-button1").disabled = true;
+          document.getElementById("lhs-button2").disabled = false;
+          document.getElementById("lhs-button3").disabled = false;
+          document.getElementById("lhs-button4").disabled = false;
+        } else if (eid === "lhs-button2") {
+          document.getElementById("rhs-ui1").style.display = "none";
+          document.getElementById("rhs-ui2").style.display = "block";
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = true;
+          document.getElementById("lhs-button3").disabled = false;
+          document.getElementById("lhs-button4").disabled = false;
+        } else if (eid === "lhs-button3") {
+          document.getElementById("rhs-ui1").style.display = "none";
+          document.getElementById("rhs-ui2").style.display = "none";
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = false;
+          document.getElementById("lhs-button3").disabled = true;
+          document.getElementById("lhs-button4").disabled = false;
+        } else if (eid === "lhs-button4") {
+          document.getElementById("rhs-ui1").style.display = "none";
+          document.getElementById("rhs-ui2").style.display = "none";
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = false;
+          document.getElementById("lhs-button3").disabled = false;
+          document.getElementById("lhs-button4").disabled = true;
         }
       }
+
+      document.addEventListener('DOMContentLoaded', (event) => {
+        disableElements('{{.CurrentButton}}')});
     </script>
     <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
   </head>
@@ -47,22 +50,22 @@
     <div class="split-screen">
       <div class="left-side">
         <div class="div-center" style="margin-top: 20px">
-          <button class="button" onclick="disableElements('amount')" id="amount">
+          <button class="button" onclick="disableElements('lhs-button1')" id="lhs-button1">
             Amount of Interest
           </button>
         </div>
         <div class="div-center">
-          <button class="button" onclick="disableElements('interest')" id="interest">
+          <button class="button" onclick="disableElements('lhs-button2')" id="lhs-button2">
             Interest Rate
           </button>
         </div>
         <div class="div-center">
-          <button class="button" onclick="disableElements('principal')" id="principal">
+          <button class="button" onclick="disableElements('lhs-button3')" id="lhs-button3">
             Principal
           </button>
         </div>
         <div class="div-center">
-          <button class="button" onclick="disableElements('time')" id="time">
+          <button class="button" onclick="disableElements('lhs-button4')" id="lhs-button4">
             Time
           </button>
         </div>
@@ -74,91 +77,92 @@
       </div>
       <!---->
       <div class="right-side">
-        <!-- <iframe name="no-reload" id="no-reload" style="display: none;"></iframe> -->
-        <div id="uiamount" style="display: none">
-          <form action="/fin/simpleinterest/ordinary" method="POST">
-            <!-- <form action="/fin/simpleinterest/ordinary" method="POST" target="no-reload"> -->
-            <div style="margin-top: 20px">
-              <label class="text-box" for="tbtime">Time (n).........................</label>
-              <input class="text-combo" name="n" type="number" id="tbtime" value="{{.Time}}" step="any" min="1" maxlength="7"/>
-            </div>
-            <div style="margin-top: 20px">
-              <label class="text-box" for="tp">Time Period..................</label>
-              <select class="text-combo" name="tp" id="tp">
-                {{$selection := .TimePeriod}}
-                <option class="text-combo" value="year" {{if eq $selection "year"}} selected {{end}}>Year(s)</option>
-                <option class="text-combo" value="semiyear" {{if eq $selection "semiyear"}} selected {{end}}>Semiyear(s)</option>
-                <option class="text-combo" value="quarter" {{if eq $selection "quarter"}} selected {{end}}>Quarter(s)</option>
-                <option class="text-combo" value="month" {{if eq $selection "month"}} selected {{end}}>Month(s)</option>
-                <option class="text-combo" value="week" {{if eq $selection "week"}} selected {{end}}>Week(s)</option>
-                <option class="text-combo" value="day" {{if eq $selection "day"}} selected {{end}}>Day(s)</option>
-              </select>
-            </div>
-            <div style="margin-top: 20px;">
-              <label class="text-box" for="tbinterest">Interest (i %)................</label>
-              <input class="text-combo" name="i" type="number" id="tbinterest" value="{{.Interest}}" step="any" maxlength="7"/>
-            </div>
-            <div style="margin-top: 20px;">
-              <label class="text-box" for="cp">Compounding Period...</label>
-              <select class="text-combo" name="cp" id="cp" value="daily">
-                {{$selection := .CompoundingPeriod}}
-                <option class="text-combo" value="annually" {{if eq $selection "annually"}} selected {{end}}>Annually</option>
-                <option class="text-combo" value="semiannually" {{if eq $selection "semiannually"}} selected {{end}}>Semiannually</option>
-                <option class="text-combo" value="quarterly" {{if eq $selection "quarterly"}} selected {{end}}>Quarterly</option>
-                <option class="text-combo" value="monthly" {{if eq $selection "monthly"}} selected {{end}}>Monthly</option>
-                <option class="text-combo" value="weekly" {{if eq $selection "weekly"}} selected {{end}}>Weekly</option>
-                <option class="text-combo" value="daily" {{if eq $selection "daily"}} selected {{end}}>Daily</option>
-                <option class="text-combo" value="continuously" {{if eq $selection "continuously"}} selected {{end}}>Continuously</option>
-              </select>
-            </div>
-            <div style="margin-top: 20px;">
-              <label class="text-box" for="tbpv">Present Value (PV).......</label>
-              <input class="text-combo" name="pv" type="number" id="tbpv" value="{{.PresentValue}}" step="any" min="1" maxlength="7"/>
-            </div>
-            <div class="div-center" style="margin-top: 45px;">
-              <input class="button" type="submit" id="btcompute" value="Compute Amount" name="compute">
-            </div>
-          </form>
-          {{if .Result}}
-          <p class="font-color">{{.Answer}}</p>
-          {{ end }}
-        </div>  <!-- uiamount -->
-        <!---->
-        <div id="uiinterest" style="display: none">
+        <!-- rhs-ui1 -->
+        <div id="rhs-ui1">
           <form action="/fin/simpleinterest/ordinary" method="POST">
             <div style="margin-top: 20px">
-              <label class="text-box" for="tbtime">Time (n).........................</label>
-              <input class="text-combo" name="n" type="number" id="tbtime" value="{{.Time}}" step="any" min="1" maxlength="7"/>
+              <label class="text-box" for="fd1-time">Time (n).........................</label>
+              <input class="text-combo" id="fd1-time" name="fd1-time" value="{{.Fd1Time}}" type="number" step="any" maxlength="7" required/>
             </div>
             <div style="margin-top: 20px">
-              <label class="text-box" for="tp">Time Period..................</label>
-              <select class="text-combo" name="tp" id="tp">
-                {{$selection := .TimePeriod}}
-                <option class="text-combo" value="year" {{if eq $selection "year"}} selected {{end}}>Year(s)</option>
-                <option class="text-combo" value="semiyear" {{if eq $selection "semiyear"}} selected {{end}}>Semiyear(s)</option>
-                <option class="text-combo" value="quarter" {{if eq $selection "quarter"}} selected {{end}}>Quarter(s)</option>
-                <option class="text-combo" value="month" {{if eq $selection "month"}} selected {{end}}>Month(s)</option>
-                <option class="text-combo" value="week" {{if eq $selection "week"}} selected {{end}}>Week(s)</option>
-                <option class="text-combo" value="day" {{if eq $selection "day"}} selected {{end}}>Day(s)</option>
+              <label class="text-box" for="fd1-tp">Time Period..................</label>
+              <select class="text-combo" id="fd1-tp" name="fd1-tp">
+                <option class="text-combo" value="year" {{if eq .Fd1TimePeriod "year"}} selected {{end}}>Year(s)</option>
+                <option class="text-combo" value="semiyear" {{if eq .Fd1TimePeriod "semiyear"}} selected {{end}}>Semiyear(s)</option>
+                <option class="text-combo" value="quarter" {{if eq .Fd1TimePeriod "quarter"}} selected {{end}}>Quarter(s)</option>
+                <option class="text-combo" value="month" {{if eq .Fd1TimePeriod "month"}} selected {{end}}>Month(s)</option>
+                <option class="text-combo" value="week" {{if eq .Fd1TimePeriod "week"}} selected {{end}}>Week(s)</option>
+                <option class="text-combo" value="day" {{if eq .Fd1TimePeriod "day"}} selected {{end}}>Day(s)</option>
               </select>
             </div>
             <div style="margin-top: 20px;">
-              <label class="text-box" for="tbamount">Amount of Interest.......</label>
-              <input class="text-combo" name="ai" type="number" id="tbamount" value="{{.Amount}}" step="any" maxlength="7"/>
+              <label class="text-box" for="fd1-interest">Interest (i %)................</label>
+              <input class="text-combo" id="fd1-interest" name="fd1-interest" value="{{.Fd1Interest}}" type="number" step="any" maxlength="7" required/>
             </div>
             <div style="margin-top: 20px;">
-              <label class="text-box" for="tbpv">Present Value (PV).......</label>
-              <input class="text-combo" name="pv" type="number" id="tbpv" value="{{.PresentValue}}" step="any" min="1" maxlength="7"/>
+              <label class="text-box" for="fd1-compound">Compounding Period...</label>
+              <select class="text-combo" id="fd1-compound" name="fd1-compound">
+                <option class="text-combo" value="annually" {{if eq .Fd1Compound "annually"}} selected {{end}}>Annually</option>
+                <option class="text-combo" value="semiannually" {{if eq .Fd1Compound "semiannually"}} selected {{end}}>Semiannually</option>
+                <option class="text-combo" value="quarterly" {{if eq .Fd1Compound "quarterly"}} selected {{end}}>Quarterly</option>
+                <option class="text-combo" value="monthly" {{if eq .Fd1Compound "monthly"}} selected {{end}}>Monthly</option>
+                <option class="text-combo" value="weekly" {{if eq .Fd1Compound "weekly"}} selected {{end}}>Weekly</option>
+                <option class="text-combo" value="daily" {{if eq .Fd1Compound "daily"}} selected {{end}}>Daily</option>
+                <option class="text-combo" value="continuously" {{if eq .Fd1Compound "continuously"}} selected {{end}}>Continuously</option>
+              </select>
+            </div>
+            <div style="margin-top: 20px;">
+              <label class="text-box" for="fd1-pv">Present Value (PV).......</label>
+              <input class="text-combo" id="fd1-pv" name="fd1-pv" value="{{.Fd1PV}}" type="number" step="any" min="1" maxlength="7"/>
             </div>
             <div class="div-center" style="margin-top: 45px;">
-              <input class="button" type="submit" id="btcompute" value="Compute Rate" name="compute"/>
+              <button class="button" id="btcompute" name="compute" value="rhs-ui1" type="submit">
+                Compute Amount
+              </button>
             </div>
           </form>
-          {{if .Result}}
-            <p class="font-color">{{.Answer}}</p>
-          {{ end }}
-        </div>  <!-- uiinterest -->
-        <!---->
+          <div>
+            <p class="p-result">{{.Fd1Result}}</p>
+          </div>
+        </div>
+        <!-- rhs-ui2 -->
+        <div id="rhs-ui2">
+          <form action="/fin/simpleinterest/ordinary" method="POST">
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd2-time">Time (n).........................</label>
+              <input class="text-combo" id="fd2-time" name="fd2-time" value="{{.Fd2Time}}" type="number" step="any" min="1" maxlength="7" required/>
+            </div>
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd2-tp">Time Period..................</label>
+              <select class="text-combo" id="fd2-tp" name="fd2-tp">
+                <option class="text-combo" value="year" {{if eq .Fd2TimePeriod "year"}} selected {{end}}>Year(s)</option>
+                <option class="text-combo" value="semiyear" {{if eq .Fd2TimePeriod "semiyear"}} selected {{end}}>Semiyear(s)</option>
+                <option class="text-combo" value="quarter" {{if eq .Fd2TimePeriod "quarter"}} selected {{end}}>Quarter(s)</option>
+                <option class="text-combo" value="month" {{if eq .Fd2TimePeriod "month"}} selected {{end}}>Month(s)</option>
+                <option class="text-combo" value="week" {{if eq .Fd2TimePeriod "week"}} selected {{end}}>Week(s)</option>
+                <option class="text-combo" value="day" {{if eq .Fd2TimePeriod "day"}} selected {{end}}>Day(s)</option>
+              </select>
+            </div>
+            <div style="margin-top: 20px;">
+              <label class="text-box" for="fd2-amount">Amount of Interest.......</label>
+              <input class="text-combo" id="fd2-amount" name="fd2-amount" value="{{.Fd2Amount}}" type="number" step="any" maxlength="7" required/>
+            </div>
+            <div style="margin-top: 20px;">
+              <label class="text-box" for="fd2-pv">Present Value (PV).......</label>
+              <input class="text-combo" id="fd2-pv" name="fd2-pv" value="{{.Fd2PV}}" type="number" step="any" min="1" maxlength="7" required/>
+            </div>
+            <div class="div-center" style="margin-top: 45px;">
+              <input class="button" id="btcompute" name="compute" value="Compute Rate" type="submit"/>
+            </div>
+          </form>
+          <div>
+            <p class="p-result">{{.Fd2Result}}</p>
+          </div>
+        </div>
+        <!-- rhs-ui3 -->
+
+
+        
       </div>
     </div>
     {{template "footer"}}

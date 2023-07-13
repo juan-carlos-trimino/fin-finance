@@ -2,7 +2,6 @@
 package finances
 
 import (
-  "math"
   "strings"
 )
 
@@ -55,6 +54,8 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
       case Monthly:
         if tp == Years {
           return (n * monthsPerYear)
+        } else if tp == SemiAnnually {
+          return (n * monthsPerSemiYearly)
         } else if tp == Quarters {
           return (n * monthsPerQuarter)
         } else if tp == Weeks {
@@ -62,11 +63,13 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
         } else if tp == Days {
           return (n / daysPerMonth)
         } else {
-          return (math.NaN())
+          return (n)
         }
       case Annually:
         if tp == Months {
           return (n / monthsPerYear)
+        } else if tp == SemiAnnually {
+          return ()
         } else if tp == Quarters {
           return (n / quartersPerYear)
         } else if tp == Weeks {
@@ -74,7 +77,7 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
         } else if tp == Days {
           return (n / forDaysOnly)
         } else {
-          return (math.NaN())
+          return (n)
         }
       case SemiAnnually:
         if tp == Months {
@@ -88,7 +91,7 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
         } else if tp == Days {
           return (n / daysPerSemiYearly)
         } else {
-          return (math.NaN())
+          return (n)
         }
       case Quarterly:
         if tp == Years {
@@ -100,7 +103,7 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
         } else if tp == Days {
           return (n / daysPerQuarter)
         } else {
-          return (math.NaN())
+          return (n)
         }
       case Weekly:
         if tp == Months {
@@ -112,7 +115,7 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
         } else if tp == Days {
           return (n / daysPerWeek)
         } else {
-          return (math.NaN())
+          return (n)
         }
       case Daily, Daily360, Daily365:
         if tp == Months {
@@ -124,7 +127,7 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
         } else if tp == Weeks {
           return (n * daysPerWeek)
         } else {
-          return (math.NaN())
+          return (n)
         }
     }
   } else {
