@@ -71,7 +71,7 @@ func NewWfSiOrdinaryPages() WfSiOrdinaryPages {
 }
 
 func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering SimpleInterestOrdinaryPage/webfinances.\n", m.DTF())
+  fmt.Printf("%s - Entering SimpleInterestOrdinaryPages/webfinances.\n", m.DTF())
   if req.Method == http.MethodPost {
     ui := req.FormValue("compute")
     if strings.EqualFold(ui, "rhs-ui1") {

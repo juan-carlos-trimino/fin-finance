@@ -71,7 +71,7 @@ func NewWfSiBankersPages() WfSiBankersPages {
 }
 
 func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering SimpleInterestBankersPage/webfinances.\n", m.DTF())
+  fmt.Printf("%s - Entering SimpleInterestBankersPages/webfinances.\n", m.DTF())
   if req.Method == http.MethodPost {
     ui := req.FormValue("compute")
     if strings.EqualFold(ui, "rhs-ui1") {
