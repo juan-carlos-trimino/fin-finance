@@ -68,45 +68,54 @@ type SimpleInterest struct {
 }
 
 func (si *SimpleInterest) OrdinaryInterest(p, i float64, cp int, n float64, tp int) float64 {
-  if tp == Daily360 {
+  if cp == Continuously {
+    return (math.NaN())
+  } else if tp == Days {
     m, _ := math.Modf(n / 30.0) //Break n into its fractional (ignore) and integer (m) parts.
     n = m * 30                  //30-day months.
   }
   n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
-  return (p * i * n) //INT
+  return (p * i * n) //Amount of interest
 }
 
-func (si *SimpleInterest) OrdinaryRate(p, INT float64, cp int, n float64, tp int) float64 {
-	if tp == Days {
-		m, _ := math.Modf(n / 30.0) //Break n into its fractional (ignore) and integer (m) parts.
-		n = m * 30                  //30-day months.
-	}
-	n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
-	return (INT / (p * n)) //rate.
+func (si *SimpleInterest) OrdinaryRate(p, a float64, cp int, n float64, tp int) float64 {
+  if cp == Continuously {
+    return (math.NaN())
+  } else if tp == Days {
+    m, _ := math.Modf(n / 30.0) //Break n into its fractional (ignore) and integer (m) parts.
+    n = m * 30                  //30-day months.
+  }
+  n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
+  return (a / (p * n)) //rate.
 }
 
 func (si *SimpleInterest) OrdinaryPrincipal(INT, rate float64, cp int, n float64, tp int) float64 {
-	if tp == Days {
-		m, _ := math.Modf(n / 30.0) //Divide n into its fractional (ignore) and integer (m) parts.
-		n = m * 30                  //30-day months.
-	}
-	n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
-	return (INT / (rate * n)) //p
+  if cp == Continuously {
+    return (math.NaN())
+  } else if tp == Days {
+    m, _ := math.Modf(n / 30.0) //Divide n into its fractional (ignore) and integer (m) parts.
+    n = m * 30                  //30-day months.
+  }
+  n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
+  return (INT / (rate * n)) //p
 }
 
 func (si *SimpleInterest) OrdinaryTime(p, INT, rate float64, cp, tp int) float64 {
-	rate /= float64(cp)
-	var time float64 = INT / (rate * p)
-	if tp == Days {
-		tp = Daily360
-	}
-	//
-	if cp == tp {
-		time /= float64(tp)
-	} else {
-		time *= float64(tp)
-	}
-	return time
+  if cp == Continuously {
+    return (math.NaN())
+  }
+  rate /= float64(cp)
+  var time float64 = INT / (rate * p)
+  if tp == Days {
+    tp = Daily360
+  }
+  //
+  if cp == tp {
+    time /= float64(tp)
+  } else {
+    time *= float64(tp)
+  }
+  return time
 }
 
 func (si *SimpleInterest) BankersInterest(p, i float64, cp int, n float64, tp int) float64 {

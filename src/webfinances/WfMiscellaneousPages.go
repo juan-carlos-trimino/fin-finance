@@ -78,40 +78,7 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
 
 func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering MiscellaneousPage/webfinances.\n", m.DTF())
-  if req.Method == http.MethodGet {
-    tmpl.ExecuteTemplate(res, "miscellaneous.html", struct {
-      Header string
-      Datetime string
-      CurrentButton string
-      Fd1Nominal string
-      Fd1Compound string
-      Fd1Result [2]string
-      Fd2Effective string
-      Fd2Compound string
-      Fd2Result [2]string
-      Fd3Nominal string
-      Fd3Inflation string
-      Fd3Result [4]string
-      Fd4Interest string
-      Fd4Compound string
-      Fd4Factor string
-      Fd4Result string
-      Fd5Values string
-      Fd5Result [2]string
-      Fd6Time string
-      Fd6TimePeriod string
-      Fd6Rate string
-      Fd6Compound string
-      Fd6PV string
-      Fd6Result string
-    } { "Miscellaneous", m.DTF(), p.currentButton,
-        p.fd1Nominal, p.fd1Compound, p.fd1Result,
-        p.fd2Effective, p.fd2Compound, p.fd2Result,
-        p.fd3Nominal, p.fd3Inflation, p.fd3Result,
-        p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result,
-        p.fd5Values, p.fd5Result,
-        p.fd6Time, p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result })
-  } else if req.Method == http.MethodPost {
+  if req.Method == http.MethodPost {
     ui := req.FormValue("compute")
     if strings.EqualFold(ui, "rhs-ui1") {
       p.fd1Nominal = req.FormValue("fd1-nominal")
@@ -237,41 +204,41 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
-    tmpl.ExecuteTemplate(res, "miscellaneous.html", struct {
-      Header string
-      Datetime string
-      CurrentButton string
-      Fd1Nominal string
-      Fd1Compound string
-      Fd1Result [2]string
-      Fd2Effective string
-      Fd2Compound string
-      Fd2Result [2]string
-      Fd3Nominal string
-      Fd3Inflation string
-      Fd3Result [4]string
-      Fd4Interest string
-      Fd4Compound string
-      Fd4Factor string
-      Fd4Result string
-      Fd5Values string
-      Fd5Result [2]string
-      Fd6Time string
-      Fd6TimePeriod string
-      Fd6Rate string
-      Fd6Compound string
-      Fd6PV string
-      Fd6Result string
-    } { "Miscellaneous", m.DTF(), p.currentButton,
-        p.fd1Nominal, p.fd1Compound, p.fd1Result,
-        p.fd2Effective, p.fd2Compound, p.fd2Result,
-        p.fd3Nominal, p.fd3Inflation, p.fd3Result,
-        p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result,
-        p.fd5Values, p.fd5Result,
-        p.fd6Time, p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result })
-  } else {
+  } else if req.Method != http.MethodGet {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
     fmt.Printf("%s - %s\n", m.DTF(), errString)
     panic(errString)
   }
+  tmpl.ExecuteTemplate(res, "miscellaneous.html", struct {
+    Header string
+    Datetime string
+    CurrentButton string
+    Fd1Nominal string
+    Fd1Compound string
+    Fd1Result [2]string
+    Fd2Effective string
+    Fd2Compound string
+    Fd2Result [2]string
+    Fd3Nominal string
+    Fd3Inflation string
+    Fd3Result [4]string
+    Fd4Interest string
+    Fd4Compound string
+    Fd4Factor string
+    Fd4Result string
+    Fd5Values string
+    Fd5Result [2]string
+    Fd6Time string
+    Fd6TimePeriod string
+    Fd6Rate string
+    Fd6Compound string
+    Fd6PV string
+    Fd6Result string
+  } { "Miscellaneous", m.DTF(), p.currentButton,
+      p.fd1Nominal, p.fd1Compound, p.fd1Result,
+      p.fd2Effective, p.fd2Compound, p.fd2Result,
+      p.fd3Nominal, p.fd3Inflation, p.fd3Result,
+      p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result,
+      p.fd5Values, p.fd5Result,
+      p.fd6Time, p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result })
 }

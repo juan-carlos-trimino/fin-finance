@@ -69,7 +69,7 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
         if tp == Months {
           return (n / monthsPerYear)
         } else if tp == SemiAnnually {
-          return (0)
+          return (n / semiYearlyPerYear)
         } else if tp == Quarters {
           return (n / quartersPerYear)
         } else if tp == Weeks {
@@ -98,6 +98,8 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
           return (n * quartersPerYear)
         } else if tp == Months {
           return (n / monthsPerQuarter)
+        } else if tp == Semiyears {
+          return (n * quartersPerSemiYearly)
         } else if tp == Weeks {
           return (n / weeksPerQuarter)
         } else if tp == Days {
@@ -112,6 +114,8 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
           return (n * weeksPerYear)
         } else if tp == Quarters {
           return (n * weeksPerQuarter)
+        } else if tp == Semiyears {
+          return (n * weeksPerSemiYearly)
         } else if tp == Days {
           return (n / daysPerWeek)
         } else {
@@ -122,6 +126,8 @@ func (p Periods) numberOfPeriods(n float64, tp int, forDaysOnly float64, cp int)
           return (n * daysPerMonth)
         } else if tp == Years {
           return (n * forDaysOnly)
+        } else if tp == Semiyears {
+          return (n * daysPerSemiYearly)
         } else if tp == Quarters {
           return (n * daysPerQuarter)
         } else if tp == Weeks {
