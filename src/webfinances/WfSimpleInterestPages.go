@@ -73,9 +73,9 @@ func NewWfSimpleInterestPages() WfSimpleInterestPages {
     fd2Result: "",
     fd3Time: "1",
     fd3TimePeriod: "year",
-    fd3Interest: "2.5",
+    fd3Interest: "1.0",
     fd3Compound: "annually",
-    fd3Amount: "3.00",
+    fd3Amount: "1.00",
     fd3Result: "",
     fd4TimePeriod: "year",
     fd4Interest: "1.00",
@@ -236,9 +236,10 @@ func (p *wfSimpleInterestPages) SimpleInterestOrdinaryPage(res http.ResponseWrit
       } else {
         var si finances.SimpleInterest
         var periods finances.Periods
-        p.fd4Result = fmt.Sprintf("Principal: $%.2f", si.OrdinaryTime(pv, a, i / 100.0,
+        p.fd4Result = fmt.Sprintf("Time: %.2f %s(s)", si.OrdinaryTime(pv, a, i / 100.0,
                                    periods.GetCompoundingPeriod(p.fd4Compound[0], false),
-                                   periods.GetTimePeriod(p.fd4TimePeriod[0], false)))
+                                   periods.GetTimePeriod(p.fd4TimePeriod[0], false)),
+                                   p.fd4TimePeriod)
       }
       fmt.Printf("%s - tp = %s, i = %s, cp = %s, a = %s, i = %s, pv = %s, %s\n", m.DTF(), p.fd3Time,
                   p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result)
