@@ -2,30 +2,14 @@ package webfinances
 
 import (
   "finance/finances"
-  "finance/misc"
   "fmt"
-  "html/template"
   "net/http"
   "strconv"
   "strings"
 )
 
-var m = misc.Misc{}
-var tmpl *template.Template
-
-func init() {
-  fmt.Printf("%s - Entering init/webfinances.\n", m.DTF())
-  tmpl = template.Must(template.ParseGlob("webfinances/templates/*.html"))
-}
-
 type WfSimpleInterestPages interface {
-  SimpleInterestPage(http.ResponseWriter, *http.Request)
   SimpleInterestOrdinaryPage(http.ResponseWriter, *http.Request)
-  HomePage(http.ResponseWriter, *http.Request)
-  PublicHomeFile(http.ResponseWriter, *http.Request)
-  ContactPage(http.ResponseWriter, *http.Request)
-  AboutPage(http.ResponseWriter, *http.Request)
-  FinancesPage(http.ResponseWriter, *http.Request)
 }
 
 type wfSimpleInterestPages struct {
@@ -84,54 +68,6 @@ func NewWfSimpleInterestPages() WfSimpleInterestPages {
     fd4PV: "1.00",
     fd4Result: "",
   }
-}
-
-/***
-PS> curl.exe "http://localhost:8080"
-***/
-func (p *wfSimpleInterestPages) HomePage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering HomePage/webfinances.\n", m.DTF())
-  tmpl.ExecuteTemplate(res, "index.html", struct {
-    Header string
-    Datetime string
-  } { "Investments", m.DTF() })
-}
-
-func (p *wfSimpleInterestPages) PublicHomeFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicHomeFile/webfinances.\n", m.DTF())
-  http.ServeFile(res, req, "./webfinances/public/css/home.css")
-}
-
-func (p *wfSimpleInterestPages) ContactPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering ContactPage/webfinances.\n", m.DTF())
-  tmpl.ExecuteTemplate(res, "contact.html", struct {
-    Header string
-    Datetime string
-  } { "Investments", m.DTF() })
-}
-
-func (p *wfSimpleInterestPages) AboutPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering AboutPage/webfinances.\n", m.DTF())
-  tmpl.ExecuteTemplate(res, "about.html", struct {
-    Header string
-    Datetime string
-  } { "Investments", m.DTF() })
-}
-
-func (p *wfSimpleInterestPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering FinancesPage/webfinances.\n", m.DTF())
-  tmpl.ExecuteTemplate(res, "finances.html", struct {
-    Header string
-    Datetime string
-  } { "Finances", m.DTF() })
-}
-
-func (p *wfSimpleInterestPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering SimpleInterestPage/webfinances.\n", m.DTF())
-  tmpl.ExecuteTemplate(res, "simpleinterest.html", struct {
-    Header string
-    Datetime string
-  } { "Simple Interest", m.DTF() })
 }
 
 func (p *wfSimpleInterestPages) SimpleInterestOrdinaryPage(res http.ResponseWriter, req *http.Request) {

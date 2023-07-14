@@ -59,6 +59,8 @@ C:\> npx kill-port <port>
 
 To display the headers:
 $ curl.exe -IL "http://localhost:8080"
+
+PS> curl.exe "http://localhost:8080"
 ***/
 func main() {
   var exists bool = false
@@ -96,7 +98,8 @@ func main() {
     }
   }
   fmt.Printf("%s - Using SHUTDOWN_TIMEOUT: %d\n", m.DTF(), SHUTDOWN_TIMEOUT)
-  var wfp = webfinances.NewWfSimpleInterestPages()
+  var wfpages = webfinances.WfPages{}
+var wfp = webfinances.NewWfSimpleInterestPages()
   var wfmisc = webfinances.NewWfMiscellaneousPages()
   var wfa webfinances.Annuities
   var h handlers = handlers{}
@@ -121,12 +124,12 @@ func main() {
     // //https://go.dev/src/net/http/status.go
     res.WriteHeader(http.StatusOK)
   }
-  h.mux["/"] = wfp.HomePage
-  h.mux["/public/css/home.css"] = wfp.PublicHomeFile
-  h.mux["/contact"] = wfp.ContactPage
-  h.mux["/about"] = wfp.AboutPage
-  h.mux["/finances"] = wfp.FinancesPage
-  h.mux["/fin/simpleinterest"] = wfp.SimpleInterestPage
+  h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
+  h.mux["/"] = wfpages.HomePage
+  h.mux["/contact"] = wfpages.ContactPage
+  h.mux["/about"] = wfpages.AboutPage
+  h.mux["/finances"] = wfpages.FinancesPage
+  h.mux["/fin/simpleinterest"] = wfpages.SimpleInterestPage
   h.mux["/fin/simpleinterest/ordinary"] = wfp.SimpleInterestOrdinaryPage
   h.mux["/fin/miscellaneous"] = wfmisc.MiscellaneousPage
   // h.mux["/fin/simpleinterest/ordinarycompute"] = wfp.SimpleInterestOrdinaryCompute
