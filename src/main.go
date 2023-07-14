@@ -100,6 +100,7 @@ func main() {
   fmt.Printf("%s - Using SHUTDOWN_TIMEOUT: %d\n", m.DTF(), SHUTDOWN_TIMEOUT)
   var wfpages = webfinances.WfPages{}
   var wfsio = webfinances.NewWfSiOrdinaryPages()
+  var wfsib = webfinances.NewWfSiBankersPages()
   var wfmisc = webfinances.NewWfMiscellaneousPages()
   var wfa webfinances.Annuities
   var h handlers = handlers{}
@@ -131,6 +132,7 @@ func main() {
   h.mux["/finances"] = wfpages.FinancesPage
   h.mux["/fin/simpleinterest"] = wfpages.SimpleInterestPage
   h.mux["/fin/simpleinterest/ordinary"] = wfsio.SimpleInterestOrdinaryPages
+  h.mux["/fin/simpleinterest/bankers"] = wfsib.SimpleInterestBankersPages
   h.mux["/fin/miscellaneous"] = wfmisc.MiscellaneousPage
   h.mux["/fin/annuities/AverageRateOfReturn"] = wfa.AverageRateOfReturn
   h.mux["/fin/annuities/GrowthDecayOfFunds"] = wfa.GrowthDecayOfFunds

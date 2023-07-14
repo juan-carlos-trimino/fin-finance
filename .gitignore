@@ -37,6 +37,7 @@ src/webfinances/*
 !src/webfinances/annuities.go
 !src/webfinances/WfMiscellaneousPages.go
 !src/webfinances/WfPages.go
+!src/webfinances/WfSiBankersPages.go
 !src/webfinances/WfSiOrdinaryPages.go
 !src/webfinances/public/
 src/webfinances/public/*
@@ -53,4 +54,5 @@ src/webfinances/templates/*
 !src/webfinances/templates/index.html
 !src/webfinances/templates/miscellaneous.html
 !src/webfinances/templates/simpleinterest.html
+!src/webfinances/templates/simpleinterestbankers.html
 !src/webfinances/templates/simpleinterestordinary.html

@@ -119,21 +119,33 @@ func (si *SimpleInterest) OrdinaryTime(p, INT, rate float64, cp, tp int) float64
 }
 
 func (si *SimpleInterest) BankersInterest(p, i float64, cp int, n float64, tp int) float64 {
+  if cp == Continuously {
+    return (math.NaN())
+  }
   n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
   return (p * i * n) //INT
 }
 
 func (si *SimpleInterest) BankersRate(p, INT float64, cp int, n float64, tp int) float64 {
+  if cp == Continuously {
+    return (math.NaN())
+  }
   n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
   return (INT / (p * n)) //rate.
 }
 
 func (si *SimpleInterest) BankersPrincipal(INT, rate float64, cp int, n float64, tp int) float64 {
+  if cp == Continuously {
+    return (math.NaN())
+  }
   n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
   return (INT / (rate * n)) //p
 }
 
 func (si *SimpleInterest) BankersTime(p, INT, rate float64, cp, tp int) (time float64) {
+  if cp == Continuously {
+    return (math.NaN())
+  }
   rate /= float64(cp)
   time = INT / (rate * p)
   if tp == Days {
@@ -145,7 +157,7 @@ func (si *SimpleInterest) BankersTime(p, INT, rate float64, cp, tp int) (time fl
   } else {
     time *= float64(tp)
   }
-  return time
+  return
 }
 
 func (si *SimpleInterest) AccurateInterest(p, i float64, cp int, n float64, tp int) float64 {
