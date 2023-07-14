@@ -37,7 +37,7 @@ src/webfinances/*
 !src/webfinances/annuities.go
 !src/webfinances/WfMiscellaneousPages.go
 !src/webfinances/WfPages.go
-!src/webfinances/WfSimpleInterestPages.go
+!src/webfinances/WfSiOrdinaryPage.go
 !src/webfinances/public/
 src/webfinances/public/*
 !src/webfinances/public/.gitkeep
