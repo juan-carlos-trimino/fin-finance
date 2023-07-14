@@ -94,7 +94,7 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
       } else {
         var si finances.SimpleInterest
         var periods finances.Periods
-        p.fd1Result = fmt.Sprintf("Amount of Interest: $%.2f", si.OrdinaryInterest(pv, i / 100.0,
+        p.fd1Result = fmt.Sprintf("Amount of Interest: $%.2f", si.AccurateInterest(pv, i / 100.0,
                                    periods.GetCompoundingPeriod(p.fd1Compound[0], false), n,
                                    periods.GetTimePeriod(p.fd1TimePeriod[0], false)))
       }
@@ -120,7 +120,7 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
       } else {
         var si finances.SimpleInterest
         var periods finances.Periods
-        p.fd2Result = fmt.Sprintf("Interest Rate: %.3f%%", si.OrdinaryRate(pv, a,
+        p.fd2Result = fmt.Sprintf("Interest Rate: %.3f%%", si.AccurateRate(pv, a,
                                    periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
                                    periods.GetTimePeriod(p.fd2TimePeriod[0], false)))
       }
@@ -146,7 +146,7 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
       } else {
         var si finances.SimpleInterest
         var periods finances.Periods
-        p.fd3Result = fmt.Sprintf("Principal: $%.2f", si.OrdinaryPrincipal(a, i / 100.0,
+        p.fd3Result = fmt.Sprintf("Principal: $%.2f", si.AccuratePrincipal(a, i / 100.0,
                                    periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
                                    periods.GetTimePeriod(p.fd2TimePeriod[0], false)))
       }
@@ -172,7 +172,7 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
       } else {
         var si finances.SimpleInterest
         var periods finances.Periods
-        p.fd4Result = fmt.Sprintf("Time: %.2f %s(s)", si.OrdinaryTime(pv, a, i / 100.0,
+        p.fd4Result = fmt.Sprintf("Time: %.2f %s(s)", si.AccurateTime(pv, a, i / 100.0,
                                    periods.GetCompoundingPeriod(p.fd4Compound[0], false),
                                    periods.GetTimePeriod(p.fd4TimePeriod[0], false)),
                                    p.fd4TimePeriod)
