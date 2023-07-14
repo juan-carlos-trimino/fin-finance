@@ -8,11 +8,11 @@ import (
   "strings"
 )
 
-type WfSiOrdinaryPage interface {
-  SimpleInterestOrdinaryPage(http.ResponseWriter, *http.Request)
+type WfSiOrdinaryPages interface {
+  SimpleInterestOrdinaryPages(http.ResponseWriter, *http.Request)
 }
 
-type wfSiOrdinaryPage struct {
+type wfSiOrdinaryPages struct {
   currentButton string
   fd1Time string
   fd1TimePeriod string
@@ -40,8 +40,8 @@ type wfSiOrdinaryPage struct {
   fd4Result string
 }
 
-func NewWfSiOrdinaryPage() WfSiOrdinaryPage {
-  return &wfSiOrdinaryPage {
+func NewWfSiOrdinaryPages() WfSiOrdinaryPages {
+  return &wfSiOrdinaryPages {
     currentButton: "lhs-button1",
     fd1Time: "1",
     fd1TimePeriod: "year",
@@ -70,7 +70,7 @@ func NewWfSiOrdinaryPage() WfSiOrdinaryPage {
   }
 }
 
-func (p *wfSiOrdinaryPage) SimpleInterestOrdinaryPage(res http.ResponseWriter, req *http.Request) {
+func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering SimpleInterestOrdinaryPage/webfinances.\n", m.DTF())
   if req.Method == http.MethodPost {
     ui := req.FormValue("compute")
