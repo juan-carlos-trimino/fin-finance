@@ -21,7 +21,7 @@ var notes5 = [...]string {
 }
 
 type WfMiscellaneousPages interface {
-  MiscellaneousPage(http.ResponseWriter, *http.Request)
+  MiscellaneousPages(http.ResponseWriter, *http.Request)
 }
 
 type wfMiscellaneousPages struct {
@@ -76,8 +76,8 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
   }
 }
 
-func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering MiscellaneousPage/webfinances.\n", m.DTF())
+func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering MiscellaneousPages/webfinances.\n", m.DTF())
   if req.Method == http.MethodPost {
     ui := req.FormValue("compute")
     if strings.EqualFold(ui, "rhs-ui1") {
@@ -152,7 +152,7 @@ func (p *wfMiscellaneousPages) MiscellaneousPage(res http.ResponseWriter, req *h
       } else {
         var a finances.Annuities
         p.fd4Result = fmt.Sprintf("Growth/Decay: %.3f %s", a.GrowthDecayOfFunds(factor, ir / 100.0,
-          a.GetCompoundingPeriod(p.fd4Compound[0], false)), a.TimePeriods(p.fd4Compound))
+          a.GetCompoundingPeriod(p.fd4Compound[0], true)), a.TimePeriods(p.fd4Compound))
       }
       fmt.Printf("%s - interest rate = %s, cp = %s, factor = %s, %s\n", m.DTF(), p.fd4Interest,
                   p.fd4Compound, p.fd4Factor, p.fd4Result)
