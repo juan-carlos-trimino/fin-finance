@@ -35,6 +35,7 @@ src/misc/*
 !src/webfinances/
 src/webfinances/*
 !src/webfinances/annuities.go
+!src/webfinances/WfBondsPages.go
 !src/webfinances/WfMiscellaneousPages.go
 !src/webfinances/WfPages.go
 !src/webfinances/WfSiAccuratePages.go
@@ -49,6 +50,7 @@ src/webfinances/public/css/*
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
+!src/webfinances/templates/bonds.html
 !src/webfinances/templates/contact.html
 !src/webfinances/templates/finances.html
 !src/webfinances/templates/headerfooter.html

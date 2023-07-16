@@ -99,13 +99,17 @@ func main() {
   }
   fmt.Printf("%s - Using SHUTDOWN_TIMEOUT: %d\n", m.DTF(), SHUTDOWN_TIMEOUT)
   var wfpages = webfinances.WfPages{}
+  var wfbonds = webfinances.NewWfBondsPages()
   var wfsia = webfinances.NewWfSiAccuratePages()
   var wfsio = webfinances.NewWfSiOrdinaryPages()
   var wfsib = webfinances.NewWfSiBankersPages()
   var wfmisc = webfinances.NewWfMiscellaneousPages()
   var wfa webfinances.Annuities
+  /***
+  The Go web server will route requests to different functions depending on the requested URL.
+  ***/
   var h handlers = handlers{}
-  h.mux = make(map[string]func(http.ResponseWriter, *http.Request), 16)
+  h.mux = make(map[string]func(http.ResponseWriter, *http.Request), 32)
   h.mux["/readiness"] =
   func (res http.ResponseWriter, req *http.Request) {
     fmt.Printf("\naaaaaaServer not ready. %s\n", SERVER)
@@ -131,11 +135,12 @@ func main() {
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
   h.mux["/finances"] = wfpages.FinancesPage
+  h.mux["/fin/bonds"] = wfbonds.BondsPages
   h.mux["/fin/simpleinterest"] = wfpages.SimpleInterestPage
   h.mux["/fin/simpleinterest/accurate"] = wfsia.SimpleInterestAccuratePages
   h.mux["/fin/simpleinterest/bankers"] = wfsib.SimpleInterestBankersPages
   h.mux["/fin/simpleinterest/ordinary"] = wfsio.SimpleInterestOrdinaryPages
-  h.mux["/fin/miscellaneous"] = wfmisc.MiscellaneousPage
+  h.mux["/fin/miscellaneous"] = wfmisc.MiscellaneousPages
   h.mux["/fin/annuities/AverageRateOfReturn"] = wfa.AverageRateOfReturn
   h.mux["/fin/annuities/GrowthDecayOfFunds"] = wfa.GrowthDecayOfFunds
   server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
