@@ -8,7 +8,7 @@ import (
   "fmt"
   "net/http"
   "finance/misc"
-  // "mime"
+  "finance/middlewares"
   "os"
   "os/signal"
   "strconv"
@@ -35,9 +35,21 @@ var SERVER string = "localhost"
 var m = misc.Misc{}
 
 type handlers struct {
-  mux map[string]func(http.ResponseWriter, *http.Request)
+  /***
+  The 'type HandlerFunc func(ResponseWriter, *Request)' is an adapter that allows the use of
+  ordinary functions as HTTP handlers. If f is a function with the appropriate signature,
+  HandlerFunc(f) is a Handler that calls f.
+  The method 'func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request)' is attached to the type
+  HandlerFunc; i.e., the type HandlerFunc implements the 'type Handler interface'.
+  ***/
+  mux map[string]http.HandlerFunc
 }
 
+/***
+A Handler responds to an HTTP request.
+'ServeHTTP' is the only method of the 'type Handler interface'.
+The method 
+***/
 func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering ServeHTTP/main.\n", m.DTF())
   fmt.Printf("%s - Method: %s, Request URI: %s\n", m.DTF(), req.Method, req.RequestURI)
@@ -109,7 +121,7 @@ func main() {
   The Go web server will route requests to different functions depending on the requested URL.
   ***/
   var h handlers = handlers{}
-  h.mux = make(map[string]func(http.ResponseWriter, *http.Request), 32)
+  h.mux = make(map[string]http.HandlerFunc, 32)
   h.mux["/readiness"] =
   func (res http.ResponseWriter, req *http.Request) {
     fmt.Printf("\naaaaaaServer not ready. %s\n", SERVER)
@@ -143,6 +155,12 @@ func main() {
   h.mux["/fin/miscellaneous"] = wfmisc.MiscellaneousPages
   h.mux["/fin/annuities/AverageRateOfReturn"] = wfa.AverageRateOfReturn
   h.mux["/fin/annuities/GrowthDecayOfFunds"] = wfa.GrowthDecayOfFunds
+  commonMiddlewares := []middlewares.Middleware {
+    middlewares.CorrelationId,
+  }
+  for idx, f := range h.mux {
+    h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
+  }
   server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
