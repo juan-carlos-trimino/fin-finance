@@ -10,6 +10,7 @@
 !src/
 src/*
 !src/go.mod
+!src/go.sum
 !src/main.go
 # ... and these files under the 'finances' directory...
 !src/finances/
