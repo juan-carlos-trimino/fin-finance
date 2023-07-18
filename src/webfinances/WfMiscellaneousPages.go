@@ -8,6 +8,8 @@ import (
   "strings"
 )
 
+const correlationIdKey string = "correlationIdKey"
+
 var notes1 = [...]string {
   "When comparing interest rates, use effective annual rates.",
 }
@@ -78,6 +80,8 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
 
 func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering MiscellaneousPages/webfinances.\n", m.DTF())
+  correlationId := req.Context().Value(correlationIdKey).(string)
+  fmt.Printf("CorrelationId: %s\n", correlationId)
   if req.Method == http.MethodPost {
     ui := req.FormValue("compute")
     if strings.EqualFold(ui, "rhs-ui1") {
