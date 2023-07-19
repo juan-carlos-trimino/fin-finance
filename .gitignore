@@ -66,3 +66,4 @@ src/webfinances/templates/*
 src/middlewares/*
 !src/middlewares/ChainMiddlewares.go
 !src/middlewares/MwCorrelationId.go
+!src/middlewares/MwContextKey.go
