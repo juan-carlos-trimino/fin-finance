@@ -13,22 +13,22 @@ const (
   FATAL uint = 4
 )
 
-type LogEntry struct {  //INFO, WARN, ERROR, and FATAL.
+type LogEntry struct {
   DateTime string `json:"date_time"`
   CorrelationId string `json:"correlation_id"`
-  level string `json:"level"`
+  Level string `json:"level"`
   Message []string `json:"msg"`
 }
 
 func (le *LogEntry) Print(level uint, cid string, msg []string) {
   if level == INFO {
-    le.level = "INFO"
+    le.Level = "INFO"
   } else if level == WARN {
-    le.level = "WARN"
+    le.Level = "WARN"
   } else if level == ERROR {
-    le.level = "ERROR"
+    le.Level = "ERROR"
   } else {
-    le.level = "FATAL"
+    le.Level = "FATAL"
   }
   le.DateTime = time.Now().UTC().Format(time.RFC3339Nano)
   le.CorrelationId = cid
