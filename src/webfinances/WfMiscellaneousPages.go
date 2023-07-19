@@ -2,13 +2,14 @@ package webfinances
 
 import (
   "finance/finances"
+  "finance/middlewares"
   "fmt"
   "net/http"
   "strconv"
   "strings"
 )
 
-const correlationIdKey string = "correlationIdKey"
+//const correlationIdKey string = "correlationIdKey"
 
 var notes1 = [...]string {
   "When comparing interest rates, use effective annual rates.",
@@ -79,9 +80,12 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
 }
 
 func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering MiscellaneousPages/webfinances.\n", m.DTF())
-  correlationId := req.Context().Value(correlationIdKey).(string)
-  fmt.Printf("CorrelationId: %s\n", correlationId)
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  logEntry := LogEntry{}
+  logEntry.Print(INFO, correlationId, []string {
+    "Entering MiscellaneousPages/webfinances.",
+  })
   if req.Method == http.MethodPost {
     ui := req.FormValue("compute")
     if strings.EqualFold(ui, "rhs-ui1") {
@@ -99,8 +103,9 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         p.fd1Result[1] = fmt.Sprintf("Effective Annual Rate: %.3f%%", a.NominalRateToEAR(nr / 100.0,
                                       a.GetCompoundingPeriod(p.fd1Compound[0], false)) * 100.0)
       }
-      fmt.Printf("%s - nominal rate = %s, cp = %s, %s\n", m.DTF(), p.fd1Nominal, p.fd1Compound,
-                 p.fd1Result[1])
+      logEntry.Print(INFO, correlationId, []string {
+        fmt.Sprintf("nominal rate = %s, cp = %s, %s", p.fd1Nominal, p.fd1Compound, p.fd1Result[1]),
+      })
     } else if strings.EqualFold(ui, "rhs-ui2") {
       p.fd2Effective = req.FormValue("fd2-effective")
       p.fd2Compound = req.FormValue("fd2-compound")
@@ -117,7 +122,10 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
                                       a.GetCompoundingPeriod(p.fd2Compound[0], false)) * 100.0,
                                       p.fd2Compound)
       }
-      fmt.Printf("%s - effective rate = %s, cp = %s, %s\n", m.DTF(), p.fd2Effective, p.fd2Compound, p.fd2Result[1])
+      logEntry.Print(INFO, correlationId, []string {
+        fmt.Sprintf("effective rate = %s, cp = %s, %s", p.fd2Effective, p.fd2Compound,
+                     p.fd2Result[1]),
+      })
     } else if strings.EqualFold(ui, "rhs-ui3") {
       p.fd3Nominal = req.FormValue("fd3-nominal")
       p.fd3Inflation = req.FormValue("fd3-inflation")
@@ -140,7 +148,10 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         p.fd3Result[3] = fmt.Sprintf("Real Interest Rate: %.3f%%", a.RealInterestRate(nr / 100.0,
                                       ir / 100.0) * 100.0)
       }
-      fmt.Printf("%s - nominal rate = %s, inflation rate = %s, %s\n", m.DTF(), p.fd3Nominal, p.fd3Inflation, p.fd3Result[3])
+      logEntry.Print(INFO, correlationId, []string {
+        fmt.Sprintf("nominal rate = %s, inflation rate = %s, %s", p.fd3Nominal, p.fd3Inflation,
+                     p.fd3Result[3]),
+      })
     } else if strings.EqualFold(ui, "rhs-ui4") {
       p.fd4Interest = req.FormValue("fd4-interest")
       p.fd4Compound = req.FormValue("fd4-compound")
@@ -156,10 +167,12 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       } else {
         var a finances.Annuities
         p.fd4Result = fmt.Sprintf("Growth/Decay: %.3f %s", a.GrowthDecayOfFunds(factor, ir / 100.0,
-          a.GetCompoundingPeriod(p.fd4Compound[0], true)), a.TimePeriods(p.fd4Compound))
+                     a.GetCompoundingPeriod(p.fd4Compound[0], true)), a.TimePeriods(p.fd4Compound))
       }
-      fmt.Printf("%s - interest rate = %s, cp = %s, factor = %s, %s\n", m.DTF(), p.fd4Interest,
-                  p.fd4Compound, p.fd4Factor, p.fd4Result)
+      logEntry.Print(INFO, correlationId, []string {
+        fmt.Sprintf("interest rate = %s, cp = %s, factor = %s, %s\n", p.fd4Interest, p.fd4Compound,
+                     p.fd4Factor, p.fd4Result),
+      })
     } else if strings.EqualFold(ui, "rhs-ui5") {
       p.fd5Values = req.FormValue("fd5-values")
       p.currentButton = "lhs-button5"
@@ -177,7 +190,9 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         var a finances.Annuities
         p.fd5Result[1] = fmt.Sprintf("Avg: %.3f%%", a.AverageRateOfReturn(values) * 100.0)
       }
-      fmt.Printf("%s - values = [%s], %s\n", m.DTF(), p.fd5Values, p.fd5Result[1])
+      logEntry.Print(INFO, correlationId, []string {
+        fmt.Sprintf("values = [%s], %s\n", p.fd5Values, p.fd5Result[1]),
+      })
     } else if strings.EqualFold(ui, "rhs-ui6") {
       p.fd6Time = req.FormValue("fd6-time")
       p.fd6TimePeriod = req.FormValue("fd6-tp")
@@ -201,8 +216,10 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
                                    a.GetCompoundingPeriod(p.fd6Compound[0], false),
                                    time, a.GetTimePeriod(p.fd6TimePeriod[0], false)))
       }
-      fmt.Printf("%s - time = %s, tp = %s, rate = %s, cp = %s, pv = %s, %s\n", m.DTF(), p.fd6Time,
-                  p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result)
+      logEntry.Print(INFO, correlationId, []string {
+        fmt.Sprintf("time = %s, tp = %s, rate = %s, cp = %s, pv = %s, %s\n", p.fd6Time,
+                    p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result),
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", ui)
       fmt.Printf("%s - %s\n", m.DTF(), errString)

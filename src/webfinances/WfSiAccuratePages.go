@@ -2,6 +2,7 @@ package webfinances
 
 import (
   "finance/finances"
+  "finance/middlewares"
   "fmt"
   "net/http"
   "strconv"
@@ -71,7 +72,12 @@ func NewWfSiAccuratePages() WfSiAccuratePages {
 }
 
 func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering SimpleInterestAccuratePages/webfinances.\n", m.DTF())
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  logEntry := LogEntry{}
+  logEntry.Print(INFO, correlationId, []string {
+    "Entering SimpleInterestAccuratePages/webfinances.",
+  })
   if req.Method == http.MethodPost {
     ui := req.FormValue("compute")
     if strings.EqualFold(ui, "rhs-ui1") {
@@ -98,8 +104,10 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
                                    periods.GetCompoundingPeriod(p.fd1Compound[0], false), n,
                                    periods.GetTimePeriod(p.fd1TimePeriod[0], false)))
       }
-      fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s\n", m.DTF(), p.fd1Time,
-                  p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1Result)
+      logEntry.Print(INFO, correlationId, []string {
+        fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", p.fd1Time, p.fd1TimePeriod,
+                     p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1Result),
+      })
     } else if strings.EqualFold(ui, "rhs-ui2") {
       p.fd2Time = req.FormValue("fd2-time")
       p.fd2TimePeriod = req.FormValue("fd2-tp")
@@ -124,8 +132,10 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
                                    periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
                                    periods.GetTimePeriod(p.fd2TimePeriod[0], false)))
       }
-      fmt.Printf("%s - n = %s, tp = %s, a = %s, cp = %s, pv = %s, %s\n", m.DTF(), p.fd2Time,
-                  p.fd2TimePeriod, p.fd2Amount, p.fd2Compound, p.fd2PV, p.fd2Result)
+      logEntry.Print(INFO, correlationId, []string {
+        fmt.Sprintf("n = %s, tp = %s, a = %s, cp = %s, pv = %s, %s", p.fd2Time, p.fd2TimePeriod,
+                     p.fd2Amount, p.fd2Compound, p.fd2PV, p.fd2Result),
+      })
     } else if strings.EqualFold(ui, "rhs-ui3") {
       p.fd3Time = req.FormValue("fd3-time")
       p.fd3TimePeriod = req.FormValue("fd3-tp")
@@ -150,8 +160,10 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
                                    periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
                                    periods.GetTimePeriod(p.fd2TimePeriod[0], false)))
       }
-      fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, a = %s, %s\n", m.DTF(), p.fd3Time,
-                  p.fd3TimePeriod, p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result)
+      logEntry.Print(INFO, correlationId, []string {
+        fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s\n", p.fd3Time, p.fd3TimePeriod,
+                     p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result),
+      })
     } else if strings.EqualFold(ui, "rhs-ui4") {
       p.fd4TimePeriod = req.FormValue("fd4-tp")
       p.fd4Interest = req.FormValue("fd4-interest")
@@ -177,8 +189,11 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
                                    periods.GetTimePeriod(p.fd4TimePeriod[0], false)),
                                    p.fd4TimePeriod)
       }
-      fmt.Printf("%s - tp = %s, i = %s, cp = %s, a = %s, i = %s, pv = %s, %s\n", m.DTF(), p.fd3Time,
-                  p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result)
+      logEntry.Print(INFO, correlationId, []string {
+        fmt.Sprintf("tp = %s, i = %s, cp = %s, a = %s, i = %s, pv = %s, %s\n", p.fd3Time,
+                     p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV,
+                     p.fd4Result),
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", ui)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
