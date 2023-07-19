@@ -36,6 +36,7 @@ src/misc/*
 !src/webfinances/
 src/webfinances/*
 !src/webfinances/annuities.go
+!src/webfinances/Messages.go
 !src/webfinances/WfBondsPages.go
 !src/webfinances/WfMiscellaneousPages.go
 !src/webfinances/WfPages.go
