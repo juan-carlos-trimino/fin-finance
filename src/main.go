@@ -5,10 +5,10 @@ import (
   "context"
   "errors"
   "finance/webfinances"
+  "finance/middlewares"
+  "finance/misc"
   "fmt"
   "net/http"
-  "finance/misc"
-  "finance/middlewares"
   "os"
   "os/signal"
   "strconv"
@@ -36,19 +36,18 @@ var m = misc.Misc{}
 
 type handlers struct {
   /***
-  The 'type HandlerFunc func(ResponseWriter, *Request)' is an adapter that allows the use of
-  ordinary functions as HTTP handlers. If f is a function with the appropriate signature,
-  HandlerFunc(f) is a Handler that calls f.
-  The method 'func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request)' is attached to the type
-  HandlerFunc; i.e., the type HandlerFunc implements the 'type Handler interface'.
+  The 'type HandlerFunc func(ResponseWriter, *Request)' is a function type that has methods
+  ('func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request)') and satisfies an interface,
+  http.Handler. The behavior of its ServeHTTP method is to call the underlying function.
+  HandlerFunc is thus an adapter that lets a function value satisfy an interface, where the
+  function and the interface's sole method have the same signature.
   ***/
-  mux map[string]http.HandlerFunc
+  mux map[string]http.HandlerFunc  //Multiplexer.
 }
 
 /***
 A Handler responds to an HTTP request.
 'ServeHTTP' is the only method of the 'type Handler interface'.
-The method 
 ***/
 func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering ServeHTTP/main.\n", m.DTF())
@@ -68,6 +67,9 @@ C:\> netstat -ano | findstr :<port>
 C:\> taskkill /PID <PID> /F
 or
 C:\> npx kill-port <port>
+Linux
+$ ps -a
+$ kill <process-id>
 
 To display the headers:
 $ curl.exe -IL "http://localhost:8080"

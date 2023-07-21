@@ -22,6 +22,7 @@ Packages that define a Context key should provide type-safe accessors for the va
 that key.
 ***/
 func (ck MwContextKey) GetCorrelationId(ctx context.Context) (cid string, ok bool) {
+  //A type assertion is an operation applied to an interface value.
   cid, ok = ctx.Value(correlationIdKey).(string)
   return
 }

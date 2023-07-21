@@ -12,8 +12,8 @@
           document.getElementById("rhs-ui2").style.display = "none";
           document.getElementById("rhs-ui3").style.display = "none";
           document.getElementById("rhs-ui4").style.display = "none";
-          document.getElementById("rhs-ui5").style.display = "none";
-          document.getElementById("rhs-ui6").style.display = "none";
+          // document.getElementById("rhs-ui5").style.display = "none";
+          // document.getElementById("rhs-ui6").style.display = "none";
           document.getElementById("lhs-button1").disabled = true;
           document.getElementById("lhs-button2").disabled = false;
           document.getElementById("lhs-button3").disabled = false;
@@ -25,8 +25,8 @@
           document.getElementById("rhs-ui2").style.display = "block";
           document.getElementById("rhs-ui3").style.display = "none";
           document.getElementById("rhs-ui4").style.display = "none";
-          document.getElementById("rhs-ui5").style.display = "none";
-          document.getElementById("rhs-ui6").style.display = "none";
+          // document.getElementById("rhs-ui5").style.display = "none";
+          // document.getElementById("rhs-ui6").style.display = "none";
           document.getElementById("lhs-button1").disabled = false;
           document.getElementById("lhs-button2").disabled = true;
           document.getElementById("lhs-button3").disabled = false;
@@ -38,8 +38,8 @@
           document.getElementById("rhs-ui2").style.display = "none";
           document.getElementById("rhs-ui3").style.display = "block";
           document.getElementById("rhs-ui4").style.display = "none";
-          document.getElementById("rhs-ui5").style.display = "none";
-          document.getElementById("rhs-ui6").style.display = "none";
+          // document.getElementById("rhs-ui5").style.display = "none";
+          // document.getElementById("rhs-ui6").style.display = "none";
           document.getElementById("lhs-button1").disabled = false;
           document.getElementById("lhs-button2").disabled = false;
           document.getElementById("lhs-button3").disabled = true;
@@ -51,41 +51,41 @@
           document.getElementById("rhs-ui2").style.display = "none";
           document.getElementById("rhs-ui3").style.display = "none";
           document.getElementById("rhs-ui4").style.display = "block";
-          document.getElementById("rhs-ui5").style.display = "none";
-          document.getElementById("rhs-ui6").style.display = "none";
+        //   document.getElementById("rhs-ui5").style.display = "none";
+        //   document.getElementById("rhs-ui6").style.display = "none";
           document.getElementById("lhs-button1").disabled = false;
           document.getElementById("lhs-button2").disabled = false;
           document.getElementById("lhs-button3").disabled = false;
           document.getElementById("lhs-button4").disabled = true;
           document.getElementById("lhs-button5").disabled = false;
           document.getElementById("lhs-button6").disabled = false;
-        } else if (eid === "lhs-button5") {
-          document.getElementById("rhs-ui1").style.display = "none";
-          document.getElementById("rhs-ui2").style.display = "none";
-          document.getElementById("rhs-ui3").style.display = "none";
-          document.getElementById("rhs-ui4").style.display = "none";
-          document.getElementById("rhs-ui5").style.display = "block";
-          document.getElementById("rhs-ui6").style.display = "none";
-          document.getElementById("lhs-button1").disabled = false;
-          document.getElementById("lhs-button2").disabled = false;
-          document.getElementById("lhs-button3").disabled = false;
-          document.getElementById("lhs-button4").disabled = false;
-          document.getElementById("lhs-button5").disabled = true;
-          document.getElementById("lhs-button6").disabled = false;
-        } else if (eid === "lhs-button6") {
-          document.getElementById("rhs-ui1").style.display = "none";
-          document.getElementById("rhs-ui2").style.display = "none";
-          document.getElementById("rhs-ui3").style.display = "none";
-          document.getElementById("rhs-ui4").style.display = "none";
-          document.getElementById("rhs-ui5").style.display = "none";
-          document.getElementById("rhs-ui6").style.display = "block";
-          document.getElementById("lhs-button1").disabled = false;
-          document.getElementById("lhs-button2").disabled = false;
-          document.getElementById("lhs-button3").disabled = false;
-          document.getElementById("lhs-button4").disabled = false;
-          document.getElementById("lhs-button5").disabled = false;
-          document.getElementById("lhs-button6").disabled = true;
-        }
+        } //else if (eid === "lhs-button5") {
+        //   document.getElementById("rhs-ui1").style.display = "none";
+        //   document.getElementById("rhs-ui2").style.display = "none";
+        //   document.getElementById("rhs-ui3").style.display = "none";
+        //   document.getElementById("rhs-ui4").style.display = "none";
+        //   document.getElementById("rhs-ui5").style.display = "block";
+        //   document.getElementById("rhs-ui6").style.display = "none";
+        //   document.getElementById("lhs-button1").disabled = false;
+        //   document.getElementById("lhs-button2").disabled = false;
+        //   document.getElementById("lhs-button3").disabled = false;
+        //   document.getElementById("lhs-button4").disabled = false;
+        //   document.getElementById("lhs-button5").disabled = true;
+        //   document.getElementById("lhs-button6").disabled = false;
+        // } else if (eid === "lhs-button6") {
+        //   document.getElementById("rhs-ui1").style.display = "none";
+        //   document.getElementById("rhs-ui2").style.display = "none";
+        //   document.getElementById("rhs-ui3").style.display = "none";
+        //   document.getElementById("rhs-ui4").style.display = "none";
+        //   document.getElementById("rhs-ui5").style.display = "none";
+        //   document.getElementById("rhs-ui6").style.display = "block";
+        //   document.getElementById("lhs-button1").disabled = false;
+        //   document.getElementById("lhs-button2").disabled = false;
+        //   document.getElementById("lhs-button3").disabled = false;
+        //   document.getElementById("lhs-button4").disabled = false;
+        //   document.getElementById("lhs-button5").disabled = false;
+        //   document.getElementById("lhs-button6").disabled = true;
+        // }
       }
 
       document.addEventListener('DOMContentLoaded', (event) => {
@@ -111,12 +111,12 @@
         </div>
         <div class="div-center">
           <button class="button" onclick="disableElements('lhs-button3')" id="lhs-button3">
-            Nominal Rate vs. Real Interest Rate
+            Yield to Call
           </button>
         </div>
         <div class="div-center">
           <button class="button" onclick="disableElements('lhs-button4')" id="lhs-button4">
-            Growth/Decay of Funds
+            Yield to Maturity
           </button>
         </div>
         <div class="div-center">
@@ -170,15 +170,15 @@
         <div id="rhs-ui2">
           <form action="/fin/bonds" method="POST">
             <div style="margin-top: 20px">
-              <label class="text-box" for="fd2-facevalue">Face Value...</label>
+              <label class="text-box" for="fd2-facevalue">Face Value.....................</label>
               <input class="text-combo" id="fd2-facevalue" name="fd2-facevalue" value="{{.Fd2FaceValue}}" type="number" step="any" maxlength="7" required/>
             </div>
             <div style="margin-top: 20px">
-              <label class="text-box" for="fd2-time">Time...</label>
+              <label class="text-box" for="fd2-time">Time...............................</label>
               <input class="text-combo" id="fd2-time" name="fd2-time" value="{{.Fd2Time}}" type="number" step="any" maxlength="7" required/>
             </div>
             <div style="margin-top: 20px">
-              <label class="text-box" for="fd2-tp">Time Period.....................</label>
+              <label class="text-box" for="fd2-tp">Time Period...................</label>
               <select class="text-combo" name="fd2-tp" id="fd2-tp">
                 <option class="text-combo" value="year" {{if eq .Fd2TimePeriod "year"}} selected {{end}}>Year(s)</option>
                 <option class="text-combo" value="semiyear" {{if eq .Fd2TimePeriod "semiyear"}} selected {{end}}>Semiyear(s)</option>
@@ -189,11 +189,11 @@
               </select>
             </div>
             <div style="margin-top: 20px">
-              <label class="text-box" for="fd2-coupon">Coupon Rate (%)...</label>
+              <label class="text-box" for="fd2-coupon">Coupon Rate (%)..........</label>
               <input class="text-combo" id="fd2-coupon" name="fd2-coupon" value="{{.Fd2Coupon}}" type="number" step="any" maxlength="7" required/>
             </div>
             <div style="margin-top: 20px">
-              <label class="text-box" for="fd2-current">Current Interest (%)...</label>
+              <label class="text-box" for="fd2-current">Current Interest (%)....</label>
               <input class="text-combo" id="fd2-current" name="fd2-current" value="{{.Fd2Current}}" type="number" step="any" maxlength="7" required/>
             </div>
             <div style="margin-top: 20px;">
@@ -218,35 +218,85 @@
         </div>
         <!-- rhs-ui3 -->
         <div id="rhs-ui3">
-          <form action="/fin/miscellaneous" method="POST">
+          <form action="/fin/bonds" method="POST">
             <!-- margin: top, right, bottom, left -->
             <div style="margin-top: 20px">
-              <label class="text-box" for="fd3-nominal">Nominal Rate (%)...</label>
-              <input class="text-combo" id="fd3-nominal" name="fd3-nominal" value="{{.Fd3Nominal}}" type="number" step="any" maxlength="7" required/>
-            </div>
-            <div>
-              <p class="p-note">{{index .Fd3Result 0}}</p>
+              <label class="text-box" for="fd3-facevalue">Face Value.....................</label>
+              <input class="text-combo" id="fd3-facevalue" name="fd3-facevalue" value="{{.Fd3FaceValue}}" type="number" step="any" maxlength="7" required/>
             </div>
             <div style="margin-top: 20px">
-              <label class="text-box" for="fd3-inflation">Inflation Rate (%)...</label>
-              <input class="text-combo" id="fd3-inflation" name="fd3-inflation" value="{{.Fd3Inflation}}" type="number" step="any" maxlength="7" required/>
+              <label class="text-box" for="fd3-timecall">Time to Call..................</label>
+              <input class="text-combo" id="fd3-timecall" name="fd3-timecall" value="{{.Fd3TimeCall}}" type="number" step="any" maxlength="7" required/>
+            </div>
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd3-tp">Time Period..................</label>
+              <select class="text-combo" name="fd3-tp" id="fd3-tp">
+                <option class="text-combo" value="year" {{if eq .Fd3TimePeriod "year"}} selected {{end}}>Year(s)</option>
+                <option class="text-combo" value="semiyear" {{if eq .Fd3TimePeriod "semiyear"}} selected {{end}}>Semiyear(s)</option>
+                <option class="text-combo" value="quarter" {{if eq .Fd3TimePeriod "quarter"}} selected {{end}}>Quarter(s)</option>
+                <option class="text-combo" value="month" {{if eq .Fd3TimePeriod "month"}} selected {{end}}>Month(s)</option>
+                <option class="text-combo" value="week" {{if eq .Fd3TimePeriod "week"}} selected {{end}}>Week(s)</option>
+                <option class="text-combo" value="day" {{if eq .Fd3TimePeriod "day"}} selected {{end}}>Day(s)</option>
+              </select>
+            </div>
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd3-coupon">Coupon Rate (%).........</label>
+              <input class="text-combo" id="fd3-coupon" name="fd3-coupon" value="{{.Fd3Coupon}}" type="number" step="any" maxlength="7" required/>
+            </div>
+            <div style="margin-top: 20px;">
+              <label class="text-box" for="fd3-compound">Compounding Period...</label>
+              <select class="text-combo" id="fd3-compound" name="fd3-compound">
+                <option class="text-combo" value="annually" {{if eq .Fd3Compound "annually"}} selected {{end}}>Annually</option>
+                <option class="text-combo" value="semiannually" {{if eq .Fd3Compound "semiannually"}} selected {{end}}>Semiannually</option>
+                <option class="text-combo" value="quarterly" {{if eq .Fd3Compound "quarterly"}} selected {{end}}>Quarterly</option>
+                <option class="text-combo" value="monthly" {{if eq .Fd3Compound "monthly"}} selected {{end}}>Monthly</option>
+                <option class="text-combo" value="weekly" {{if eq .Fd3Compound "weekly"}} selected {{end}}>Weekly</option>
+                <option class="text-combo" value="daily" {{if eq .Fd3Compound "daily"}} selected {{end}}>Daily</option>
+                <option class="text-combo" value="continuously" {{if eq .Fd3Compound "continuously"}} selected {{end}}>Continuously</option>
+              </select>
+            </div>
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd3-bondprice">Bond Price.....................</label>
+              <input class="text-combo" id="fd3-bondprice" name="fd3-bondprice" value="{{.Fd3BondPrice}}" type="number" step="any" maxlength="7" required/>
+            </div>
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd3-callprice">Call Price.......................</label>
+              <input class="text-combo" id="fd3-callprice" name="fd3-callprice" value="{{.Fd3CallPrice}}" type="number" step="any" maxlength="7" required/>
             </div>
             <div class="div-center" style="margin-top: 45px;">
               <button class="button" id="btcompute" name="compute" value="rhs-ui3" type="submit">Compute</button>
             </div>
           </form>
           <div>
-            <p class="p-note">{{index .Fd3Result 1}}</p>
-            <p class="p-result">{{index .Fd3Result 3}}</p>
-            <p class="p-note">{{index .Fd3Result 2}}</p>
+            <p class="p-result">{{.Fd3Result}}</p>
           </div>
         </div>
         <!-- rhs-ui4 -->
         <div id="rhs-ui4">
-          <form action="/fin/miscellaneous" method="POST">
+          <form action="/fin/bonds" method="POST">
+            <!-- margin: top, right, bottom, left -->
             <div style="margin-top: 20px">
-              <label class="text-box" for="fd4-interest">Interest (%)...................</label>
-              <input class="text-combo" id="fd4-interest" name="fd4-interest" value="{{.Fd4Interest}}" type="number" step="any" maxlength="7" required/>
+              <label class="text-box" for="fd4-facevalue">Face Value.....................</label>
+              <input class="text-combo" id="fd4-facevalue" name="fd4-facevalue" value="{{.Fd4FaceValue}}" type="number" step="any" maxlength="7" required/>
+            </div>
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd4-time">Time (n).........................</label>
+              <input class="text-combo" id="fd4-time" name="fd4-time" value="{{.Fd4Time}}" type="number" step="any" maxlength="7" required/>
+            </div>
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd4-tp">Time Period..................</label>
+              <select class="text-combo" name="fd4-tp" id="fd4-tp">
+                <option class="text-combo" value="year" {{if eq .Fd4TimePeriod "year"}} selected {{end}}>Year(s)</option>
+                <option class="text-combo" value="semiyear" {{if eq .Fd4TimePeriod "semiyear"}} selected {{end}}>Semiyear(s)</option>
+                <option class="text-combo" value="quarter" {{if eq .Fd4TimePeriod "quarter"}} selected {{end}}>Quarter(s)</option>
+                <option class="text-combo" value="month" {{if eq .Fd4TimePeriod "month"}} selected {{end}}>Month(s)</option>
+                <option class="text-combo" value="week" {{if eq .Fd4TimePeriod "week"}} selected {{end}}>Week(s)</option>
+                <option class="text-combo" value="day" {{if eq .Fd4TimePeriod "day"}} selected {{end}}>Day(s)</option>
+              </select>
+            </div>
+            <div style="margin-top: 20px">
+              <label class="text-box" for="fd4-coupon">Coupon Rate (%).........</label>
+              <input class="text-combo" id="fd4-coupon" name="fd4-coupon" value="{{.Fd4Coupon}}" type="number" step="any" maxlength="7" required/>
             </div>
             <div style="margin-top: 20px;">
               <label class="text-box" for="fd4-compound">Compounding Period...</label>
@@ -260,10 +310,6 @@
                 <option class="text-combo" value="continuously" {{if eq .Fd4Compound "continuously"}} selected {{end}}>Continuously</option>
               </select>
             </div>
-            <div style="margin-top: 20px">
-              <label class="text-box" for="fd4-factor">Factor.............................</label>
-              <input class="text-combo" id="fd4-factor" name="fd4-factor" value="{{.Fd4Factor}}" type="number" step="any" maxlength="7" required/>
-            </div>
             <div class="div-center" style="margin-top: 45px;">
               <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">Compute</button>
             </div>
@@ -272,8 +318,10 @@
             <p class="p-result">{{.Fd4Result}}</p>
           </div>
         </div>
+
+
         <!-- rhs-ui5 -->
-        <div id="rhs-ui5">
+        <!-- <div id="rhs-ui5">
           <form action="/fin/miscellaneous" method="POST">
             <div style="margin-top: 20px">
               <label class="text-box" for="fd5-values">Values...</label>
@@ -289,9 +337,9 @@
           <div>
             <p class="p-result">{{index .Fd5Result 1}}</p>
           </div>
-        </div>
+        </div> -->
         <!-- rhs-ui6 -->
-        <div id="rhs-ui6">
+        <!-- <div id="rhs-ui6">
           <form action="/fin/miscellaneous" method="POST">
             <div style="margin-top: 20px">
               <label class="text-box" for="fd6-time">Time (n)...........................</label>
@@ -336,7 +384,7 @@
             <p class="p-result">{{.Fd6Result}}</p>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
     {{template "footer"}}
   </body>
