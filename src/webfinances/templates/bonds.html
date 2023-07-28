@@ -88,8 +88,21 @@
         // }
       }
 
+      function onchangeRadio(radio, ci, bp) {
+        console.log(ci);
+        console.log(bp);
+        if (radio == 'fd4-curinterest') {
+          document.getElementById("fd4-curinterest").checked = true;
+        } else {
+          document.getElementById("fd4-bondprice").checked = true;
+        }
+        return;
+      }
+
       document.addEventListener('DOMContentLoaded', (event) => {
-        disableElements('{{.CurrentButton}}')});
+        disableElements('{{.CurrentButton}}');
+        onchangeRadio('{{.Fd4CurrentRadio}}');
+      });
     </script>
     <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
   </head>
@@ -310,6 +323,30 @@
                 <option class="text-combo" value="continuously" {{if eq .Fd4Compound "continuously"}} selected {{end}}>Continuously</option>
               </select>
             </div>
+
+
+            <fieldset style="margin-top: 20px; margin-left: 15px; border: 3px solid rgb(2, 71, 31); border-radius: 8px;">
+              <legend style="font-weight: bold; font-size: 18px;">Select Appropriate Choice</legend>
+              <div>
+                <input type="radio" id="fd4-curinterest" name="fd4-choice" value="fd4-curinterest" checked>
+                <label style="color:rgb(2, 71, 31); font-weight: bold; font-size: 18px;" for="fd4-curinterest">
+                  Current Interest (%)
+                </label><br>
+                <label class="text-box" style="margin-left: 30px;" for="fd4-ci">Current Interest (%)...</label>
+                <input class="text-combo" id="fd4-ci" name="fd4-ci" value="{{.Fd4CurInterest}}" type="number" step="any" maxlength="7" required/><br>
+                <input type="radio" id="fd4-bondprice" name="fd4-choice" value="fd4-bondprice">
+                <label style="color:rgb(2, 71, 31); font-weight: bold; font-size: 18px;" for="fd4-bondprice">
+                  Bond Price
+                </label><br>
+                <label class="text-box" style="margin-left: 30px;" for="fd4-bp">Bond Price....................</label>
+                <input class="text-combo" id="fd4-bp" name="fd4-bp" value="{{.Fd4BondPrice}}" type="number" step="any" maxlength="7" required/>
+              </div>
+            </fieldset>
+
+
+
+
+
             <div class="div-center" style="margin-top: 45px;">
               <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">Compute</button>
             </div>

@@ -41,6 +41,9 @@ type wfBondsPages struct {
   fd4TimePeriod string
   fd4Coupon string
   fd4Compound string
+  fd4CurrentRadio string
+  fd4CurInterest string
+  fd4BondPrice string
   fd4Result string
 
 }
@@ -68,11 +71,15 @@ func NewWfBondsPages() WfBondsPages {
     fd3BondPrice: "990.00",
     fd3CallPrice: "1050.00",
     fd3Result: "",
+
     fd4FaceValue: "1000.00",
     fd4Time: "3",
     fd4TimePeriod: "year",
     fd4Coupon: "2.5",
     fd4Compound: "semiannually",
+    fd4CurrentRadio: "fd4-curinterest",
+    fd4CurInterest: "2.3",
+    fd4BondPrice: "1000.00",
     fd4Result: "",
   }
 }
@@ -196,10 +203,32 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       p.fd4TimePeriod = req.FormValue("fd4-tp")
       p.fd4Coupon = req.FormValue("fd4-coupon")
       p.fd4Compound = req.FormValue("fd4-compound")
+      p.fd4CurrentRadio = req.FormValue("fd4-choice")
+
+      p.fd4CurInterest = req.FormValue("fd4-ci")
+      p.fd4BondPrice = req.FormValue("fd4-bp")
+
       p.currentButton = "lhs-button4"
+      
+
+      var currentInterest bool = false
+      if strings.EqualFold(p.fd4CurrentRadio, "fd4-curinterest") {
+        currentInterest = true
+        // fmt.Printf("wwwwwwwwwww %s\n", p.fd4CurInterest)
+        // p.fd4CurInterest = req.FormValue("fd4-ci")
+        // p.fd4BondPrice = req.FormValue("fd4-bp")
+      } //else {
+        // fmt.Printf("########## %s\n", p.fd4BondPrice)
+        // p.fd4CurInterest = req.FormValue("fd4-ci")
+        // p.fd4BondPrice = req.FormValue("fd4-bp")
+      // }
+      // fmt.Printf("sssssssssss %s\n", p.fd4CurInterest)
+      // fmt.Printf("########## %s\n", p.fd4BondPrice)
       var fv float64
       var time float64
       var couponRate float64
+      var curInterest float64
+      var bondPrice float64
       var err error
       if fv, err = strconv.ParseFloat(p.fd4FaceValue, 64); err != nil {
         p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4FaceValue, err)
@@ -207,15 +236,39 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4Time, err)
       } else if couponRate, err = strconv.ParseFloat(p.fd4Coupon, 64); err != nil {
         p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4Coupon, err)
+      } else if curInterest, err = strconv.ParseFloat(p.fd4CurInterest, 64); err != nil {
+        p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4CurInterest, err)
+      } else if bondPrice, err = strconv.ParseFloat(p.fd4BondPrice, 64); err != nil {
+        p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4BondPrice, err)
       } else {
         var b finances.Bonds
-        cf := b.CashFlow(fv, couponRate, b.GetCompoundingPeriod(p.fd4Compound[0], true), time,
-                         b.GetTimePeriod(p.fd4TimePeriod[0], true))
-        p.fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%", b.YieldToMaturity(cf, /*bondPrice*/3,
-                                   b.GetCompoundingPeriod(p.fd4Compound[0], true)))
+        var cp int = b.GetCompoundingPeriod(p.fd4Compound[0], false)
+        var tp = b.GetCompoundingPeriod(p.fd4Compound[0], false)
+        cf := b.CashFlow(fv, couponRate, cp, time, tp)
+        if currentInterest {
+          if cp != finances.Continuously {
+            p.fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%", b.YieldToMaturity(cf,
+                                      b.CurrentPrice(cf, curInterest, cp), tp))
+          } else {
+            p.fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%", b.YieldToMaturityContinuous(cf,
+                                      b.CurrentPriceContinuous(cf, curInterest)))
+          }
+        } else {
+          if cp != finances.Continuously {
+            p.fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%", b.YieldToMaturity(cf, bondPrice,
+                                      cp))
+          } else {
+            fmt.Println(cf)
+            p.fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%", b.YieldToMaturityContinuous(cf,
+                                      bondPrice))
+          }
+        }
       }
-      // fmt.Printf("%s - interest rate = %s, cp = %s, factor = %s, %s\n", m.DTF(), p.fd4Interest,
-      //             p.fd4Compound, p.fd4Factor, p.fd4Result)
+      logEntry.Print(INFO, correlationId, []string {
+        fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur interest = %s, bond price = %s, cur radio = %s, %s",
+                    p.fd4FaceValue, p.fd4Time, p.fd4TimePeriod, p.fd4Coupon, p.fd4Compound,
+                    p.fd4CurrentRadio, p.fd4CurInterest, p.fd4BondPrice, p.fd4Result),
+      })
     } else if strings.EqualFold(ui, "rhs-ui5") {
       // p.fd5Values = req.FormValue("fd5-values")
       // p.currentButton = "lhs-button5"
@@ -269,6 +322,12 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     fmt.Printf("%s - %s\n", m.DTF(), errString)
     panic(errString)
   }
+
+
+  fmt.Printf("fd4CurInterest=%s  fd4BondPrice=%s\n", p.fd4CurInterest, p.fd4BondPrice)
+  fmt.Printf("fd4CurrentRadio=%s\n", p.fd4CurrentRadio)
+
+
   tmpl.ExecuteTemplate(res, "bonds.html", struct {
     Header string
     Datetime string
@@ -293,21 +352,20 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     Fd3BondPrice string
     Fd3CallPrice string
     Fd3Result string
+
     Fd4FaceValue string
     Fd4Time string
     Fd4TimePeriod string
     Fd4Coupon string
     Fd4Compound string
+    Fd4CurrentRadio string
+    Fd4CurInterest string
+    Fd4BondPrice string
     Fd4Result string
   } { "Bonds", m.DTF(), p.currentButton,
       p.fd1TaxFree, p.fd1CityTax, p.fd1StateTax, p.fd1FederalTax, p.fd1Result,
       p.fd2FaceValue, p.fd2Time, p.fd2TimePeriod, p.fd2Coupon, p.fd2Current, p.fd2Compound, p.fd2Result,
       p.fd3FaceValue, p.fd3TimeCall, p.fd3TimePeriod, p.fd3Coupon, p.fd3Compound, p.fd3BondPrice, p.fd3CallPrice, p.fd3Result,
-      p.fd4FaceValue, p.fd4Time, p.fd4TimePeriod, p.fd4Coupon, p.fd4Compound, p.fd4Result,
-    
-  
-      // p.fd3Nominal, p.fd3Inflation, p.fd3Result,
-      // p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result,
-      // p.fd5Values, p.fd5Result,
-      /* p.fd6Time, p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result*/ })
+      p.fd4FaceValue, p.fd4Time, p.fd4TimePeriod, p.fd4Coupon, p.fd4Compound, p.fd4CurrentRadio, p.fd4CurInterest, p.fd4BondPrice, p.fd4Result,
+    })
 }
