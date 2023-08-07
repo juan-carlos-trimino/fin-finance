@@ -3,12 +3,15 @@ package finances
 
 import (
   "math"
-	// "fmt"
 )
 
 type Bonds struct {
+  /***
+  In Go, a struct field is called embedded if it's declared without a name; embedding is about
+  composition, not inheritance. Embedding is used to promote the fields and methods of an embedded
+  type; the promoted fields and methods are accessible from two different paths.
+  ***/
   Periods
-  // mathutil.MathUtil
 }
 
 /***
