@@ -16,7 +16,7 @@ const (
   Daily int = -2
   Daily360 int = 360
   Daily365 int = 365
-  Continuously int = -100
+  Continuously int = 1000
   //Time Periods
   Years int = 1
   Semiyears int = 2
