@@ -35,7 +35,6 @@ type wfBondsPages struct {
   fd3BondPrice string
   fd3CallPrice string
   fd3Result string
-
   fd4FaceValue string
   fd4Time string
   fd4TimePeriod string
@@ -45,7 +44,6 @@ type wfBondsPages struct {
   fd4CurInterest string
   fd4BondPrice string
   fd4Result string
-
 }
 
 func NewWfBondsPages() WfBondsPages {
@@ -71,7 +69,6 @@ func NewWfBondsPages() WfBondsPages {
     fd3BondPrice: "990.00",
     fd3CallPrice: "1050.00",
     fd3Result: "",
-
     fd4FaceValue: "1000.00",
     fd4Time: "3",
     fd4TimePeriod: "year",
@@ -204,26 +201,13 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       p.fd4Coupon = req.FormValue("fd4-coupon")
       p.fd4Compound = req.FormValue("fd4-compound")
       p.fd4CurrentRadio = req.FormValue("fd4-choice")
-
       p.fd4CurInterest = req.FormValue("fd4-ci")
       p.fd4BondPrice = req.FormValue("fd4-bp")
-
       p.currentButton = "lhs-button4"
-      
-
       var currentInterest bool = false
       if strings.EqualFold(p.fd4CurrentRadio, "fd4-curinterest") {
         currentInterest = true
-        // fmt.Printf("wwwwwwwwwww %s\n", p.fd4CurInterest)
-        // p.fd4CurInterest = req.FormValue("fd4-ci")
-        // p.fd4BondPrice = req.FormValue("fd4-bp")
-      } //else {
-        // fmt.Printf("########## %s\n", p.fd4BondPrice)
-        // p.fd4CurInterest = req.FormValue("fd4-ci")
-        // p.fd4BondPrice = req.FormValue("fd4-bp")
-      // }
-      // fmt.Printf("sssssssssss %s\n", p.fd4CurInterest)
-      // fmt.Printf("########## %s\n", p.fd4BondPrice)
+      }
       var fv float64
       var time float64
       var couponRate float64
@@ -243,7 +227,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       } else {
         var b finances.Bonds
         var cp int = b.GetCompoundingPeriod(p.fd4Compound[0], false)
-        var tp = b.GetCompoundingPeriod(p.fd4Compound[0], false)
+        var tp = b.GetTimePeriod(p.fd4TimePeriod[0], false)
         cf := b.CashFlow(fv, couponRate, cp, time, tp)
         if currentInterest {
           if cp != finances.Continuously {
@@ -253,19 +237,18 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
             p.fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%", b.YieldToMaturityContinuous(cf,
                                       b.CurrentPriceContinuous(cf, curInterest)))
           }
-        } else {
+        } else {  //Bond price.
           if cp != finances.Continuously {
             p.fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%", b.YieldToMaturity(cf, bondPrice,
                                       cp))
           } else {
-            fmt.Println(cf)
             p.fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%", b.YieldToMaturityContinuous(cf,
                                       bondPrice))
           }
         }
       }
       logEntry.Print(INFO, correlationId, []string {
-        fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur interest = %s, bond price = %s, cur radio = %s, %s",
+        fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur radio = %s, cur interest = %s, bond price = %s, %s",
                     p.fd4FaceValue, p.fd4Time, p.fd4TimePeriod, p.fd4Coupon, p.fd4Compound,
                     p.fd4CurrentRadio, p.fd4CurInterest, p.fd4BondPrice, p.fd4Result),
       })
@@ -322,12 +305,6 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     fmt.Printf("%s - %s\n", m.DTF(), errString)
     panic(errString)
   }
-
-
-  fmt.Printf("fd4CurInterest=%s  fd4BondPrice=%s\n", p.fd4CurInterest, p.fd4BondPrice)
-  fmt.Printf("fd4CurrentRadio=%s\n", p.fd4CurrentRadio)
-
-
   tmpl.ExecuteTemplate(res, "bonds.html", struct {
     Header string
     Datetime string
@@ -352,7 +329,6 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     Fd3BondPrice string
     Fd3CallPrice string
     Fd3Result string
-
     Fd4FaceValue string
     Fd4Time string
     Fd4TimePeriod string
