@@ -55,7 +55,8 @@ src/webfinances/templates/*
 !src/webfinances/templates/bonds.html
 !src/webfinances/templates/contact.html
 !src/webfinances/templates/finances.html
-!src/webfinances/templates/headerfooter.html
+!src/webfinances/templates/footer.html
+!src/webfinances/templates/header.html
 !src/webfinances/templates/index.html
 !src/webfinances/templates/miscellaneous.html
 !src/webfinances/templates/simpleinterest.html
