@@ -1,3 +1,5 @@
+{{ define "simple_interest_page" }}
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -9,7 +11,7 @@
   </head>
   <body>
     <main>
-      {{template "header" .}}
+      {{ template "header" . }}
       <div class="div-center">
         <a href="/fin/simpleinterest/ordinary" target="_self">
           <button class="button">Ordinary Interest</button>
@@ -31,6 +33,8 @@
         </a>
       </div>
     </main>
-    {{template "footer"}}
+    {{ template "footer" }}
   </body>
 </html>
+
+{{ end }}

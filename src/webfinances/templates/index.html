@@ -1,3 +1,4 @@
+<!-- The define action for the home page -->
 {{ define "home_page" }}
 
 <!DOCTYPE html>
@@ -11,7 +12,8 @@
   </head>
   <body>
     <main>
-      {{template "header" .}}
+      <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
+      {{ template "header" . }}
       <div class="div-center">
         <button class="button" disabled>Securities</button>
       </div>
@@ -21,7 +23,7 @@
         </a>
       </div>
     </main>
-    {{template "footer"}}
+    {{ template "footer" }}
   </body>
 </html>
 
