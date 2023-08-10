@@ -14,7 +14,7 @@ const (
 )
 
 type LogEntry struct {
-  DateTime string `json:"date_time"`
+  DateTime string "json:\"date_time\""
   CorrelationId string `json:"correlation_id"`
   Level string `json:"level"`
   Message []string `json:"msg"`
