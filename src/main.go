@@ -34,6 +34,23 @@ var SERVER string = "localhost"
 
 var m = misc.Misc{}
 
+/***
+In Go, a handler is an interface (type Handler interface) that has a method named ServeHTTP with
+two parameters: an http.ResponseWriter interface and a pointer to an http.Request struct. Hence,
+any type that has a method called ServeHTTP with this method signature is a handler:
+  ServeHTTP(http.ResponseWriter, *http.Request)
+
+ServeMux is an HTTP request multiplexer; it accepts an HTTP request and redirects it to the
+correct handler according to the URL in the request. ServeMux is a struct with a map of entries
+that maps a URL to a handler, and it is also a handler because it implements the ServeHTTP method.
+The ServeHTTP method finds the URL most closely mathing the requested one and calls the
+corresponding handler.
+
+Since ServeMux is a struct, DefaultServeMux is an instance of ServeMux.
+
+Go has a function type named HandlerFunc, which will adapt a function f with the appropriate
+signature into a Handler with a method f.
+***/
 type handlers struct {
   /***
   The 'type HandlerFunc func(ResponseWriter, *Request)' is a function type that has methods
@@ -144,6 +161,11 @@ func main() {
     // //https://go.dev/src/net/http/status.go
     res.WriteHeader(http.StatusOK)
   }
+
+
+  // files := http.FileServer(http.Dir("/public"))
+  // fmt.Println(files)
+
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/"] = wfpages.HomePage
   h.mux["/contact"] = wfpages.ContactPage
@@ -163,7 +185,7 @@ func main() {
   for idx, f := range h.mux {
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
-  server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
+  server := http.Server {  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
     associated with the computer, and it will listen on port PORT.
