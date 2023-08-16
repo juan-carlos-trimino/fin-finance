@@ -65,6 +65,12 @@ type handlers struct {
 /***
 A Handler responds to an HTTP request.
 'ServeHTTP' is the only method of the 'type Handler interface'.
+
+The ServeHTTP function takes two parameters -- the ResponseWriter interface and a pointer to a
+Request struct. Since changes to Request by the handler need to be visible to the server, it is
+passed by reference. But why is ResponseWriter passed by value? ResponseWriter is an interface to a
+nonexported struct response; we're passing the struct by reference (we're passing in a pointer to
+response) and not by value.
 ***/
 func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering ServeHTTP/main.\n", m.DTF())
