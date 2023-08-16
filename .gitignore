@@ -52,7 +52,6 @@ src/webfinances/public/css/*
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
-!src/webfinances/templates/bonds.html
 !src/webfinances/templates/contact.html
 !src/webfinances/templates/finances.html
 !src/webfinances/templates/footer.html
@@ -63,6 +62,14 @@ src/webfinances/templates/*
 !src/webfinances/templates/simpleinterestaccurate.html
 !src/webfinances/templates/simpleinterestbankers.html
 !src/webfinances/templates/simpleinterestordinary.html
+# ... and this directory and its file...
+!src/webfinances/templates/bonds/
+src/webfinances/templates/bonds/*
+!src/webfinances/templates/bonds/bonds.html
+!src/webfinances/templates/bonds/taxfree.html
+!src/webfinances/templates/bonds/currentprice.html
+!src/webfinances/templates/bonds/yieldtocall.html
+!src/webfinances/templates/bonds/yieldtomaturity.html
 # ... and this directory and its file...
 !src/middlewares/
 src/middlewares/*
