@@ -100,20 +100,34 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     "Entering BondsPages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    ui := req.FormValue("compute")
-    if ui == "" {
-      ui = p.currentPage
-    } else {
+    /***
+    The functions in Request that allow to extract data from the URL and/or the body revolve around
+    the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
+
+    If the form and the URL have the same key name, both of them will be placed in a slice, with
+    the form value always prioritized before the URL value.
+
+    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm
+    field provides key-value pairs only for the form and not the URL. The PostForm field supports
+    only application/x-www-form-urlencoded.
+
+    The FormValue method lets you access the key-value pairs just like the Form field, except that
+    it's for a specific key and there is no need to call the ParseForm method beforehand -- the
+    FormValue method does it. The PostFormValue method does the same thing, except that it's for
+    the PostForm field instead of the Form field.
+    ***/
+    ui := req.FormValue("compute")  //Values from form and URL.
+    if ui != "" {
       p.currentPage = ui
     }
     //
-    if strings.EqualFold(ui, "rhs-ui1") {
+    if strings.EqualFold(p.currentPage, "rhs-ui1") {
       p.currentButton = "lhs-button1"
       if req.Method == http.MethodPost {
-        p.fd1TaxFree = req.FormValue("fd1-taxfree")
-        p.fd1CityTax = req.FormValue("fd1-citytax")
-        p.fd1StateTax = req.FormValue("fd1-statetax")
-        p.fd1FederalTax = req.FormValue("fd1-federaltax")
+        p.fd1TaxFree = req.PostFormValue("fd1-taxfree")
+        p.fd1CityTax = req.PostFormValue("fd1-citytax")
+        p.fd1StateTax = req.PostFormValue("fd1-statetax")
+        p.fd1FederalTax = req.PostFormValue("fd1-federaltax")
         var taxFree float64
         var cityTax float64
         var stateTax float64
@@ -137,6 +151,10 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
                       p.fd1TaxFree, p.fd1CityTax, p.fd1StateTax, p.fd1FederalTax, p.fd1Result),
         })
       }
+      /***
+      The Must function wraps around the ParseGlob function that returns a pointer to a template
+      and an error, and it panics if the error is not nil.
+      ***/
       t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/bonds/taxfree.html",
@@ -153,15 +171,15 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       } { "Bonds", m.DTF(), p.currentButton,
           p.fd1TaxFree, p.fd1CityTax, p.fd1StateTax, p.fd1FederalTax, p.fd1Result,
         })
-    } else if strings.EqualFold(ui, "rhs-ui2") {
+    } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
       p.currentButton = "lhs-button2"
       if req.Method == http.MethodPost {
         p.fd2FaceValue = req.FormValue("fd2-facevalue")
-        p.fd2Time = req.FormValue("fd2-time")
-        p.fd2TimePeriod = req.FormValue("fd2-tp")
-        p.fd2Coupon = req.FormValue("fd2-coupon")
-        p.fd2Current = req.FormValue("fd2-current")
-        p.fd2Compound = req.FormValue("fd2-compound")
+        p.fd2Time = req.PostFormValue("fd2-time")
+        p.fd2TimePeriod = req.PostFormValue("fd2-tp")
+        p.fd2Coupon = req.PostFormValue("fd2-coupon")
+        p.fd2Current = req.PostFormValue("fd2-current")
+        p.fd2Compound = req.PostFormValue("fd2-compound")
         var fv float64
         var time float64
         var coupon float64
@@ -212,16 +230,16 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       } { "Bonds", m.DTF(), p.currentButton,
           p.fd2FaceValue, p.fd2Time, p.fd2TimePeriod, p.fd2Coupon, p.fd2Current, p.fd2Compound, p.fd2Result,
         })
-    } else if strings.EqualFold(ui, "rhs-ui3") {
+    } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
       p.currentButton = "lhs-button3"
       if req.Method == http.MethodPost {
-        p.fd3FaceValue = req.FormValue("fd3-facevalue")
-        p.fd3TimeCall = req.FormValue("fd3-timecall")
-        p.fd3TimePeriod = req.FormValue("fd3-tp")
-        p.fd3Coupon = req.FormValue("fd3-coupon")
-        p.fd3BondPrice = req.FormValue("fd3-bondprice")
-        p.fd3CallPrice = req.FormValue("fd3-callprice")
-        p.fd3Compound = req.FormValue("fd3-compound")
+        p.fd3FaceValue = req.PostFormValue("fd3-facevalue")
+        p.fd3TimeCall = req.PostFormValue("fd3-timecall")
+        p.fd3TimePeriod = req.PostFormValue("fd3-tp")
+        p.fd3Coupon = req.PostFormValue("fd3-coupon")
+        p.fd3BondPrice = req.PostFormValue("fd3-bondprice")
+        p.fd3CallPrice = req.PostFormValue("fd3-callprice")
+        p.fd3Compound = req.PostFormValue("fd3-compound")
         var fv float64
         var timeToCall float64
         var couponRate float64
@@ -270,17 +288,17 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       } { "Bonds", m.DTF(), p.currentButton,
           p.fd3FaceValue, p.fd3TimeCall, p.fd3TimePeriod, p.fd3Coupon, p.fd3Compound, p.fd3BondPrice, p.fd3CallPrice, p.fd3Result,
         })
-    } else if strings.EqualFold(ui, "rhs-ui4") {
+    } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
       p.currentButton = "lhs-button4"
       if req.Method == http.MethodPost {
-        p.fd4FaceValue = req.FormValue("fd4-facevalue")
-        p.fd4Time = req.FormValue("fd4-time")
-        p.fd4TimePeriod = req.FormValue("fd4-tp")
-        p.fd4Coupon = req.FormValue("fd4-coupon")
-        p.fd4Compound = req.FormValue("fd4-compound")
-        p.fd4CurrentRadio = req.FormValue("fd4-choice")
-        p.fd4CurInterest = req.FormValue("fd4-ci")
-        p.fd4BondPrice = req.FormValue("fd4-bp")
+        p.fd4FaceValue = req.PostFormValue("fd4-facevalue")
+        p.fd4Time = req.PostFormValue("fd4-time")
+        p.fd4TimePeriod = req.PostFormValue("fd4-tp")
+        p.fd4Coupon = req.PostFormValue("fd4-coupon")
+        p.fd4Compound = req.PostFormValue("fd4-compound")
+        p.fd4CurrentRadio = req.PostFormValue("fd4-choice")
+        p.fd4CurInterest = req.PostFormValue("fd4-ci")
+        p.fd4BondPrice = req.PostFormValue("fd4-bp")
         var currentInterest bool = false
         if strings.EqualFold(p.fd4CurrentRadio, "fd4-curinterest") {
           currentInterest = true
@@ -395,70 +413,13 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       //             p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result)
     **/ 
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", ui)
+      errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
-  } else {// if req.Method != http.MethodGet {
+  } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
     fmt.Printf("%s - %s\n", m.DTF(), errString)
     panic(errString)
-  }// else {
-  //   t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
-  //                                          "webfinances/templates/header.html",
-  //                                          "webfinances/templates/bonds/taxfree.html",
-  //                                          "webfinances/templates/footer.html"))
-  //   t.ExecuteTemplate(res, "bonds", struct {
-  //     Header string
-  //     Datetime string
-  //     CurrentButton string
-  //     Fd1TaxFree string
-  //     Fd1CityTax string
-  //     Fd1StateTax string
-  //     Fd1FederalTax string
-  //     Fd1Result string
-  //   } { "Bonds", m.DTF(), p.currentButton,
-  //       p.fd1TaxFree, p.fd1CityTax, p.fd1StateTax, p.fd1FederalTax, p.fd1Result,
-  //     })
-  // }
-
-  // tmpl.ExecuteTemplate(res, "bonds", struct {
-  //   Header string
-  //   Datetime string
-  //   CurrentButton string
-  //   Fd1TaxFree string
-  //   Fd1CityTax string
-  //   Fd1StateTax string
-  //   Fd1FederalTax string
-  //   Fd1Result string
-  //   Fd2FaceValue string
-  //   Fd2Time string
-  //   Fd2TimePeriod string
-  //   Fd2Coupon string
-  //   Fd2Current string
-  //   Fd2Compound string
-  //   Fd2Result string
-  //   Fd3FaceValue string
-  //   Fd3TimeCall string
-  //   Fd3TimePeriod string
-  //   Fd3Coupon string
-  //   Fd3Compound string
-  //   Fd3BondPrice string
-  //   Fd3CallPrice string
-  //   Fd3Result string
-  //   Fd4FaceValue string
-  //   Fd4Time string
-  //   Fd4TimePeriod string
-  //   Fd4Coupon string
-  //   Fd4Compound string
-  //   Fd4CurrentRadio string
-  //   Fd4CurInterest string
-  //   Fd4BondPrice string
-  //   Fd4Result string
-  // } { "Bonds", m.DTF(), p.currentButton,
-  //     p.fd1TaxFree, p.fd1CityTax, p.fd1StateTax, p.fd1FederalTax, p.fd1Result,
-  //     p.fd2FaceValue, p.fd2Time, p.fd2TimePeriod, p.fd2Coupon, p.fd2Current, p.fd2Compound, p.fd2Result,
-  //     p.fd3FaceValue, p.fd3TimeCall, p.fd3TimePeriod, p.fd3Coupon, p.fd3Compound, p.fd3BondPrice, p.fd3CallPrice, p.fd3Result,
-  //     p.fd4FaceValue, p.fd4Time, p.fd4TimePeriod, p.fd4Coupon, p.fd4Compound, p.fd4CurrentRadio, p.fd4CurInterest, p.fd4BondPrice, p.fd4Result,
-  //   })
+  }
 }
