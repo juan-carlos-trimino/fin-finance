@@ -2,7 +2,17 @@
 
 <!-- rhs-ui4 -->
 <div id="rhs-ui4">
-  <form action="/fin/bonds" method="POST">
+  <!--
+  The HTML form data is always sent as name-value pairs. The format of the name-value pairs sent
+  through a POST request is specified by the content type of the HTML form. This is defined using
+  the enctype attribute. The default value for enctype is application/x-www-form-urlencoded.
+  Browsers are required to support at least application/x-www-form-urlencoded and multipart/form-data.
+
+  HTML form allows the method attribute to be either POST or GET. For POST, the data are placed in
+  the body of the request, but the GET method attribute does not have a request body, and the data
+  are set in the URL as name-value pairs.
+  -->
+  <form action="/fin/bonds" method="POST" enctype="application/x-www-form-urlencoded">
     <!-- margin: top, right, bottom, left -->
     <div style="margin-top: 20px">
       <label class="text-box" for="fd4-facevalue">Face Value.....................</label>
@@ -39,8 +49,6 @@
         <option class="text-combo" value="continuously" {{ if eq .Fd4Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
     </div>
-
-
     <fieldset style="margin-top: 20px; margin-left: 15px; border: 3px solid rgb(2, 71, 31); border-radius: 8px;">
       <legend style="font-weight: bold; font-size: 18px;">Select Appropriate Choice</legend>
       <div>
@@ -58,16 +66,13 @@
         <input class="text-combo" id="fd4-bp" name="fd4-bp" value="{{ .Fd4BondPrice }}" type="number" step="any" maxlength="7" required/>
       </div>
     </fieldset>
-
     <div class="div-center" style="margin-top: 45px;">
       <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">Compute</button>
     </div>
   </form>
-
-
   <script>
     function onchangeRadio(radio) {
-      if (radio == 'fd4-curinterest') {
+      if (radio === 'fd4-curinterest') {
         document.getElementById("fd4-curinterest").checked = true;
       } else {
         document.getElementById("fd4-bondprice").checked = true;
@@ -76,14 +81,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', (event) => {
-      onchangeRadio('{{.Fd4CurrentRadio}}');
+      onchangeRadio('{{ .Fd4CurrentRadio }}');
     });
   </script>
-
-
-
   <div>
-    <p class="p-result">{{.Fd4Result}}</p>
+    <hr size="4" width="50%" color="darkgreen"/>
+    <p class="p-result">{{ .Fd4Result }}</p>
   </div>
 </div>
 
