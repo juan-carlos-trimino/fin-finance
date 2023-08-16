@@ -1,0 +1,117 @@
+{{ define "bonds" }}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Miscellaneous</title>
+    <script>
+      function disableElements(eid) {
+        // var audio = new Audio('https://media.geeksforgeeks.org/wp-content/uploads/20190531135120/beep.mp3');
+        if (eid === "lhs-button1") {
+          // audio.play();
+          document.getElementById("lhs-button1").disabled = true;
+          document.getElementById("lhs-button2").disabled = false;
+          document.getElementById("lhs-button3").disabled = false;
+          document.getElementById("lhs-button4").disabled = false;
+          document.getElementById("lhs-button5").disabled = true;
+          document.getElementById("lhs-button6").disabled = true;
+        } else if (eid === "lhs-button2") {
+          // audio.play();
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = true;
+          document.getElementById("lhs-button3").disabled = false;
+          document.getElementById("lhs-button4").disabled = false;
+          document.getElementById("lhs-button5").disabled = true;
+          document.getElementById("lhs-button6").disabled = true;
+        } else if (eid === "lhs-button3") {
+          // audio.play();
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = false;
+          document.getElementById("lhs-button3").disabled = true;
+          document.getElementById("lhs-button4").disabled = false;
+          document.getElementById("lhs-button5").disabled = true;
+          document.getElementById("lhs-button6").disabled = true;
+        } else if (eid === "lhs-button4") {
+          // audio.play();
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = false;
+          document.getElementById("lhs-button3").disabled = false;
+          document.getElementById("lhs-button4").disabled = true;
+          document.getElementById("lhs-button5").disabled = true;
+          document.getElementById("lhs-button6").disabled = true;
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', (event) => {
+        disableElements('{{ .CurrentButton }}');
+      });
+    </script>
+    <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
+  </head>
+  <body>
+    <div>
+      {{ template "header" . }}
+    </div>
+    <div class="split-screen">
+      <div class="left-side">
+        <div class="div-center" style="margin-top: 20px">
+          <a href="/fin/bonds?compute=rhs-ui1" target="_self">
+            <button class="button" id="lhs-button1">
+              Tax-Free vs. Taxable Yield
+            </button>
+          </a>
+        </div>
+        <div class="div-center">
+          <a href="/fin/bonds?compute=rhs-ui2" target="_self">
+            <button class="button" id="lhs-button2">
+              Current Price
+            </button>
+          </a>
+        </div>
+        <div class="div-center">
+          <a href="/fin/bonds?compute=rhs-ui3" target="_self">
+            <button class="button" id="lhs-button3">
+              Yield to Call
+            </button>
+          </a>
+        </div>
+        <div class="div-center">
+          <a href="/fin/bonds?compute=rhs-ui4" target="_self">
+            <button class="button" id="lhs-button4">
+              Yield to Maturity
+            </button>
+          </a>
+        </div>
+        <div class="div-center">
+          <a href="/fin/bonds?compute=rhs-ui5" target="_self">
+            <button class="button" id="lhs-button5">
+              Average Rate of Return
+            </button>
+          </a>
+        </div>
+        <div class="div-center">
+          <a href="/fin/bonds?compute=rhs-ui6" target="_self">
+            <button class="button" id="lhs-button6">
+              Depreciation
+            </button>
+          </a>
+        </div>
+        <div class="div-center">
+          <a href="/finances" target="_self">
+            <button class="button">Back</button>
+          </a>
+        </div>
+      </div>
+      <!---->
+      <div class="right-side">
+        {{ template "bonds-layout" . }}
+      </div>
+    </div>
+    {{ template "footer" }}
+  </body>
+</html>
+
+{{ end }}

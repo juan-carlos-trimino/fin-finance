@@ -1,0 +1,90 @@
+{{ define "bonds-layout" }}
+
+<!-- rhs-ui4 -->
+<div id="rhs-ui4">
+  <form action="/fin/bonds" method="POST">
+    <!-- margin: top, right, bottom, left -->
+    <div style="margin-top: 20px">
+      <label class="text-box" for="fd4-facevalue">Face Value.....................</label>
+      <input class="text-combo" id="fd4-facevalue" name="fd4-facevalue" value="{{ .Fd4FaceValue }}" type="number" step="any" maxlength="7" required/>
+    </div>
+    <div style="margin-top: 20px">
+      <label class="text-box" for="fd4-time">Time (n).........................</label>
+      <input class="text-combo" id="fd4-time" name="fd4-time" value="{{ .Fd4Time }}" type="number" step="any" maxlength="7" required/>
+    </div>
+    <div style="margin-top: 20px">
+      <label class="text-box" for="fd4-tp">Time Period..................</label>
+      <select class="text-combo" name="fd4-tp" id="fd4-tp">
+        <option class="text-combo" value="year" {{ if eq .Fd4TimePeriod "year" }} selected {{ end }}>Year(s)</option>
+        <option class="text-combo" value="semiyear" {{ if eq .Fd4TimePeriod "semiyear" }} selected {{ end }}>Semiyear(s)</option>
+        <option class="text-combo" value="quarter" {{ if eq .Fd4TimePeriod "quarter" }} selected {{ end }}>Quarter(s)</option>
+        <option class="text-combo" value="month" {{ if eq .Fd4TimePeriod "month" }} selected {{ end }}>Month(s)</option>
+        <option class="text-combo" value="week" {{ if eq .Fd4TimePeriod "week" }} selected {{ end }}>Week(s)</option>
+        <option class="text-combo" value="day" {{ if eq .Fd4TimePeriod "day" }} selected {{ end }}>Day(s)</option>
+      </select>
+    </div>
+    <div style="margin-top: 20px">
+      <label class="text-box" for="fd4-coupon">Coupon Rate (%).........</label>
+      <input class="text-combo" id="fd4-coupon" name="fd4-coupon" value="{{ .Fd4Coupon }}" type="number" step="any" maxlength="7" required/>
+    </div>
+    <div style="margin-top: 20px;">
+      <label class="text-box" for="fd4-compound">Compounding Period...</label>
+      <select class="text-combo" id="fd4-compound" name="fd4-compound">
+        <option class="text-combo" value="annually" {{ if eq .Fd4Compound "annually" }} selected {{ end }}>Annually</option>
+        <option class="text-combo" value="semiannually" {{ if eq .Fd4Compound "semiannually" }} selected {{ end }}>Semiannually</option>
+        <option class="text-combo" value="quarterly" {{ if eq .Fd4Compound "quarterly" }} selected {{ end }}>Quarterly</option>
+        <option class="text-combo" value="monthly" {{ if eq .Fd4Compound "monthly" }} selected {{ end }}>Monthly</option>
+        <option class="text-combo" value="weekly" {{ if eq .Fd4Compound "weekly" }} selected {{ end }}>Weekly</option>
+        <option class="text-combo" value="daily" {{ if eq .Fd4Compound "daily" }} selected {{ end }}>Daily</option>
+        <option class="text-combo" value="continuously" {{ if eq .Fd4Compound "continuously" }} selected {{ end }}>Continuously</option>
+      </select>
+    </div>
+
+
+    <fieldset style="margin-top: 20px; margin-left: 15px; border: 3px solid rgb(2, 71, 31); border-radius: 8px;">
+      <legend style="font-weight: bold; font-size: 18px;">Select Appropriate Choice</legend>
+      <div>
+        <input type="radio" id="fd4-curinterest" name="fd4-choice" value="fd4-curinterest" checked>
+        <label style="color:rgb(2, 71, 31); font-weight: bold; font-size: 18px;" for="fd4-curinterest">
+          Current Interest (%)
+        </label><br>
+        <label class="text-box" style="margin-left: 30px;" for="fd4-ci">Current Interest (%)...</label>
+        <input class="text-combo" id="fd4-ci" name="fd4-ci" value="{{ .Fd4CurInterest }}" type="number" step="any" maxlength="7" required/><br>
+        <input type="radio" id="fd4-bondprice" name="fd4-choice" value="fd4-bondprice">
+        <label style="color:rgb(2, 71, 31); font-weight: bold; font-size: 18px;" for="fd4-bondprice">
+          Bond Price
+        </label><br>
+        <label class="text-box" style="margin-left: 30px;" for="fd4-bp">Bond Price....................</label>
+        <input class="text-combo" id="fd4-bp" name="fd4-bp" value="{{ .Fd4BondPrice }}" type="number" step="any" maxlength="7" required/>
+      </div>
+    </fieldset>
+
+    <div class="div-center" style="margin-top: 45px;">
+      <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">Compute</button>
+    </div>
+  </form>
+
+
+  <script>
+    function onchangeRadio(radio) {
+      if (radio == 'fd4-curinterest') {
+        document.getElementById("fd4-curinterest").checked = true;
+      } else {
+        document.getElementById("fd4-bondprice").checked = true;
+      }
+      return;
+    }
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+      onchangeRadio('{{.Fd4CurrentRadio}}');
+    });
+  </script>
+
+
+
+  <div>
+    <p class="p-result">{{.Fd4Result}}</p>
+  </div>
+</div>
+
+{{ end }}
