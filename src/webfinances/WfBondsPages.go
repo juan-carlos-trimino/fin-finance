@@ -116,8 +116,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     FormValue method does it. The PostFormValue method does the same thing, except that it's for
     the PostForm field instead of the Form field.
     ***/
-    ui := req.FormValue("compute")  //Values from form and URL.
-    if ui != "" {
+    if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
       p.currentPage = ui
     }
     //
