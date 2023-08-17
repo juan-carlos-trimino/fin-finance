@@ -16,8 +16,8 @@ type WfBondsPages interface {
 
 type wfBondsPages struct {
   currentPage string
-  //
   currentButton string
+  //
   fd1TaxFree string
   fd1CityTax string
   fd1StateTax string
@@ -55,8 +55,8 @@ type wfBondsPages struct {
 func NewWfBondsPages() WfBondsPages {
   return &wfBondsPages {
     currentPage: "rhs-ui1",
-    //
     currentButton: "lhs-button1",
+    //
     fd1TaxFree: "3.5",
     fd1CityTax: "0.0",
     fd1StateTax: "1.0",
