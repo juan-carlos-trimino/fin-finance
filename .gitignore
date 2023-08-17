@@ -59,7 +59,6 @@ src/webfinances/templates/*
 !src/webfinances/templates/index.html
 !src/webfinances/templates/miscellaneous.html
 !src/webfinances/templates/simpleinterest.html
-!src/webfinances/templates/simpleinterestordinary.html
 # ... and this directory and its file...
 !src/webfinances/templates/bonds/
 src/webfinances/templates/bonds/*
@@ -84,6 +83,14 @@ src/webfinances/templates/simpleinterestbankers/*
 !src/webfinances/templates/simpleinterestbankers/interestrate.html
 !src/webfinances/templates/simpleinterestbankers/principal.html
 !src/webfinances/templates/simpleinterestbankers/time.html
+# ... and this directory and its file...
+!src/webfinances/templates/simpleinterestordinary/
+src/webfinances/templates/simpleinterestordinary/*
+!src/webfinances/templates/simpleinterestordinary/ordinary.html
+!src/webfinances/templates/simpleinterestordinary/amountofinterest.html
+!src/webfinances/templates/simpleinterestordinary/interestrate.html
+!src/webfinances/templates/simpleinterestordinary/principal.html
+!src/webfinances/templates/simpleinterestordinary/time.html
 # ... and this directory and its file...
 !src/middlewares/
 src/middlewares/*
