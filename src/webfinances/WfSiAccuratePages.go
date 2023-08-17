@@ -309,7 +309,7 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
-  } else if req.Method != http.MethodGet {
+  } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
     fmt.Printf("%s - %s\n", m.DTF(), errString)
     panic(errString)
