@@ -2,7 +2,7 @@
 
 <!-- rhs-ui2 -->
 <div id="rhs-ui2">
-  <form action="/fin/bonds" method="POST">
+  <form action="/fin/bonds" method="POST" enctype="application/x-www-form-urlencoded">
     <div style="margin-top: 20px">
       <label class="text-box" for="fd2-facevalue">Face Value.....................</label>
       <input class="text-combo" id="fd2-facevalue" name="fd2-facevalue" value="{{ .Fd2FaceValue }}" type="number" step="any" maxlength="7" required/>
@@ -47,6 +47,7 @@
     </div>
   </form>
   <div>
+    <hr size="4" width="50%" color="darkgreen"/>
     <p class="p-result">{{.Fd2Result}}</p>
   </div>
 </div>

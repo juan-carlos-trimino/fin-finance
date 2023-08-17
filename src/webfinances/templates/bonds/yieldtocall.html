@@ -2,7 +2,7 @@
 
 <!-- rhs-ui3 -->
 <div id="rhs-ui3">
-  <form action="/fin/bonds" method="POST">
+  <form action="/fin/bonds" method="POST" enctype="application/x-www-form-urlencoded">
     <!-- margin: top, right, bottom, left -->
     <div style="margin-top: 20px">
       <label class="text-box" for="fd3-facevalue">Face Value.....................</label>
@@ -52,6 +52,7 @@
     </div>
   </form>
   <div>
+    <hr size="4" width="50%" color="darkgreen"/>
     <p class="p-result">{{ .Fd3Result }}</p>
   </div>
 </div>
