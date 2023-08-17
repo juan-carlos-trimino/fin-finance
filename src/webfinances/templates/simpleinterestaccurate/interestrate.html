@@ -1,0 +1,53 @@
+{{ define "simpleinterestaccurate-layout" }}
+
+<!-- rhs-ui2 -->
+<div id="rhs-ui2">
+  <form action="/fin/simpleinterest/accurate" method="POST">
+    <div style="margin-top: 20px">
+      <label class="text-box" for="fd2-time">Time (n).........................</label>
+      <input class="text-combo" id="fd2-time" name="fd2-time" value="{{ .Fd2Time }}" type="number" step="any" min="1" maxlength="7" required/>
+    </div>
+    <div style="margin-top: 20px">
+      <label class="text-box" for="fd2-tp">Time Period..................</label>
+      <select class="text-combo" id="fd2-tp" name="fd2-tp">
+        <option class="text-combo" value="year" {{ if eq .Fd2TimePeriod "year" }} selected {{ end }}>Year(s)</option>
+        <option class="text-combo" value="semiyear" {{ if eq .Fd2TimePeriod "semiyear" }} selected {{ end }}>Semiyear(s)</option>
+        <option class="text-combo" value="quarter" {{ if eq .Fd2TimePeriod "quarter" }} selected {{ end }}>Quarter(s)</option>
+        <option class="text-combo" value="month" {{ if eq .Fd2TimePeriod "month" }} selected {{ end }}>Month(s)</option>
+        <option class="text-combo" value="week" {{ if eq .Fd2TimePeriod "week" }} selected {{ end }}>Week(s)</option>
+        <option class="text-combo" value="day" {{ if eq .Fd2TimePeriod "day" }} selected {{ end }}>Day(s)</option>
+      </select>
+    </div>
+    <div style="margin-top: 20px;">
+      <label class="text-box" for="fd2-amount">Amount of Interest.......</label>
+      <input class="text-combo" id="fd2-amount" name="fd2-amount" value="{{ .Fd2Amount }}" type="number" step="any" maxlength="7" required/>
+    </div>
+    <div style="margin-top: 20px;">
+      <label class="text-box" for="fd2-compound">Compounding Period...</label>
+      <select class="text-combo" id="fd2-compound" name="fd2-compound">
+        <option class="text-combo" value="annually" {{ if eq .Fd2Compound "annually" }} selected {{ end }}>Annually</option>
+        <option class="text-combo" value="semiannually" {{ if eq .Fd2Compound "semiannually" }} selected {{ end }}>Semiannually</option>
+        <option class="text-combo" value="quarterly" {{ if eq .Fd2Compound "quarterly" }} selected {{ end }}>Quarterly</option>
+        <option class="text-combo" value="monthly" {{ if eq .Fd2Compound "monthly" }} selected {{ end }}>Monthly</option>
+        <option class="text-combo" value="weekly" {{ if eq .Fd2Compound "weekly" }} selected {{ end }}>Weekly</option>
+        <option class="text-combo" value="daily" {{ if eq .Fd2Compound "daily" }} selected {{ end }}>Daily</option>
+        <!-- <option class="text-combo" value="continuously" {{if eq .Fd2Compound "continuously"}} selected {{end}}>Continuously</option> -->
+      </select>
+    </div>
+    <div style="margin-top: 20px;">
+      <label class="text-box" for="fd2-pv">Present Value (PV).......</label>
+      <input class="text-combo" id="fd2-pv" name="fd2-pv" value="{{ .Fd2PV }}" type="number" step="any" min="1" maxlength="7" required/>
+    </div>
+    <div class="div-center" style="margin-top: 45px;">
+      <button class="button" id="btcompute" name="compute" value="rhs-ui2" type="submit">
+        Compute
+      </button>
+    </div>
+  </form>
+  <div>
+    <hr size="4" width="50%" color="darkgreen"/>
+    <p class="p-result">{{ .Fd2Result }}</p>
+  </div>
+</div>
+
+{{ end }}
