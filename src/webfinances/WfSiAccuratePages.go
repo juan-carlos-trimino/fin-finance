@@ -106,8 +106,7 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
     FormValue method does it. The PostFormValue method does the same thing, except that it's for
     the PostForm field instead of the Form field.
     ***/
-    ui := req.FormValue("compute")  //Values from form and URL.
-    if ui != "" {
+    if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
       p.currentPage = ui
     }
     //
@@ -209,66 +208,104 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
       } { "Accurate (Exact) Interest", m.DTF(), p.currentButton,
           p.fd2Time, p.fd2TimePeriod, p.fd2Amount, p.fd2Compound, p.fd2PV, p.fd2Result,
         })
-    } else if strings.EqualFold(ui, "rhs-ui3") {
-      p.fd3Time = req.FormValue("fd3-time")
-      p.fd3TimePeriod = req.FormValue("fd3-tp")
-      p.fd3Interest = req.FormValue("fd3-interest")
-      p.fd3Compound = req.FormValue("fd3-compound")
-      p.fd3Amount = req.FormValue("fd3-amount")
+    } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
       p.currentButton = "lhs-button3"
-      var n float64
-      var i float64
-      var a float64
-      var err error
-      if n, err = strconv.ParseFloat(p.fd3Time, 64); err != nil {
-        p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Time, err)
-      } else if i, err = strconv.ParseFloat(p.fd3Interest, 64); err != nil {
-        p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Interest, err)
-      } else if a, err = strconv.ParseFloat(p.fd3Amount, 64); err != nil {
-        p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Amount, err)
-      } else {
-        var si finances.SimpleInterest
-        var periods finances.Periods
-        p.fd3Result = fmt.Sprintf("Principal: $%.2f", si.AccuratePrincipal(a, i / 100.0,
-                                   periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
-                                   periods.GetTimePeriod(p.fd2TimePeriod[0], false)))
+      if req.Method == http.MethodPost {
+        p.fd3Time = req.PostFormValue("fd3-time")
+        p.fd3TimePeriod = req.PostFormValue("fd3-tp")
+        p.fd3Interest = req.PostFormValue("fd3-interest")
+        p.fd3Compound = req.PostFormValue("fd3-compound")
+        p.fd3Amount = req.PostFormValue("fd3-amount")
+        var n float64
+        var i float64
+        var a float64
+        var err error
+        if n, err = strconv.ParseFloat(p.fd3Time, 64); err != nil {
+          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Time, err)
+        } else if i, err = strconv.ParseFloat(p.fd3Interest, 64); err != nil {
+          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Interest, err)
+        } else if a, err = strconv.ParseFloat(p.fd3Amount, 64); err != nil {
+          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Amount, err)
+        } else {
+          var si finances.SimpleInterest
+          var periods finances.Periods
+          p.fd3Result = fmt.Sprintf("Principal: $%.2f", si.AccuratePrincipal(a, i / 100.0,
+                                     periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
+                                     periods.GetTimePeriod(p.fd2TimePeriod[0], false)))
+        }
+        logEntry.Print(INFO, correlationId, []string {
+          fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s\n", p.fd3Time, p.fd3TimePeriod,
+                       p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result),
+        })
       }
-      logEntry.Print(INFO, correlationId, []string {
-        fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s\n", p.fd3Time, p.fd3TimePeriod,
-                     p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result),
-      })
-    } else if strings.EqualFold(ui, "rhs-ui4") {
-      p.fd4TimePeriod = req.FormValue("fd4-tp")
-      p.fd4Interest = req.FormValue("fd4-interest")
-      p.fd4Compound = req.FormValue("fd4-compound")
-      p.fd4Amount = req.FormValue("fd4-amount")
-      p.fd4PV = req.FormValue("fd4-pv")
+      t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestaccurate/accurate.html",
+                                             "webfinances/templates/header.html",
+                                             "webfinances/templates/simpleinterestaccurate/principal.html",
+                                             "webfinances/templates/footer.html"))
+      t.ExecuteTemplate(res, "simpleinterestaccurate", struct {
+        Header string
+        Datetime string
+        CurrentButton string
+        Fd3Time string
+        Fd3TimePeriod string
+        Fd3Interest string
+        Fd3Compound string
+        Fd3Amount string
+        Fd3Result string
+      } { "Accurate (Exact) Interest", m.DTF(), p.currentButton,
+          p.fd3Time, p.fd3TimePeriod, p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result,
+        })
+    } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
       p.currentButton = "lhs-button4"
-      var i float64
-      var a float64
-      var pv float64
-      var err error
-      if i, err = strconv.ParseFloat(p.fd4Interest, 64); err != nil {
-        p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4Interest, err)
-      } else if a, err = strconv.ParseFloat(p.fd4Amount, 64); err != nil {
-        p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4Amount, err)
-      } else if pv, err = strconv.ParseFloat(p.fd4PV, 64); err != nil {
-        p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4PV, err)
-      } else {
-        var si finances.SimpleInterest
-        var periods finances.Periods
-        p.fd4Result = fmt.Sprintf("Time: %.2f %s(s)", si.AccurateTime(pv, a, i / 100.0,
-                                   periods.GetCompoundingPeriod(p.fd4Compound[0], false),
-                                   periods.GetTimePeriod(p.fd4TimePeriod[0], false)),
-                                   p.fd4TimePeriod)
+      if req.Method == http.MethodPost {
+        p.fd4TimePeriod = req.FormValue("fd4-tp")
+        p.fd4Interest = req.FormValue("fd4-interest")
+        p.fd4Compound = req.FormValue("fd4-compound")
+        p.fd4Amount = req.FormValue("fd4-amount")
+        p.fd4PV = req.FormValue("fd4-pv")
+        var i float64
+        var a float64
+        var pv float64
+        var err error
+        if i, err = strconv.ParseFloat(p.fd4Interest, 64); err != nil {
+          p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4Interest, err)
+        } else if a, err = strconv.ParseFloat(p.fd4Amount, 64); err != nil {
+          p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4Amount, err)
+        } else if pv, err = strconv.ParseFloat(p.fd4PV, 64); err != nil {
+          p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4PV, err)
+        } else {
+          var si finances.SimpleInterest
+          var periods finances.Periods
+          p.fd4Result = fmt.Sprintf("Time: %.2f %s(s)", si.AccurateTime(pv, a, i / 100.0,
+                                     periods.GetCompoundingPeriod(p.fd4Compound[0], false),
+                                     periods.GetTimePeriod(p.fd4TimePeriod[0], false)),
+                                     p.fd4TimePeriod)
+        }
+        logEntry.Print(INFO, correlationId, []string {
+          fmt.Sprintf("tp = %s, i = %s, cp = %s, a = %s, i = %s, pv = %s, %s\n", p.fd3Time,
+                       p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV,
+                       p.fd4Result),
+        })
       }
-      logEntry.Print(INFO, correlationId, []string {
-        fmt.Sprintf("tp = %s, i = %s, cp = %s, a = %s, i = %s, pv = %s, %s\n", p.fd3Time,
-                     p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV,
-                     p.fd4Result),
-      })
+      t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestaccurate/accurate.html",
+                                             "webfinances/templates/header.html",
+                                             "webfinances/templates/simpleinterestaccurate/time.html",
+                                             "webfinances/templates/footer.html"))
+      t.ExecuteTemplate(res, "simpleinterestaccurate", struct {
+        Header string
+        Datetime string
+        CurrentButton string
+        Fd4TimePeriod string
+        Fd4Interest string
+        Fd4Compound string
+        Fd4Amount string
+        Fd4PV string
+        Fd4Result string
+      } { "Accurate (Exact) Interest", m.DTF(), p.currentButton,
+          p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result,
+        })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", ui)
+      errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
@@ -277,39 +314,4 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
     fmt.Printf("%s - %s\n", m.DTF(), errString)
     panic(errString)
   }
-  /***
-  tmpl.ExecuteTemplate(res, "simpleinterestordinary.html", struct {
-    Header string
-    Datetime string
-    CurrentButton string
-    Fd1Time string
-    Fd1TimePeriod string
-    Fd1Interest string
-    Fd1Compound string
-    Fd1PV string
-    Fd1Result string
-    Fd2Time string
-    Fd2TimePeriod string
-    Fd2Amount string
-    Fd2Compound string
-    Fd2PV string
-    Fd2Result string
-    Fd3Time string
-    Fd3TimePeriod string
-    Fd3Interest string
-    Fd3Compound string
-    Fd3Amount string
-    Fd3Result string
-    Fd4TimePeriod string
-    Fd4Interest string
-    Fd4Compound string
-    Fd4Amount string
-    Fd4PV string
-    Fd4Result string
-  } { "Ordinary Interest", m.DTF(), p.currentButton,
-      p.fd1Time, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1Result,
-      p.fd2Time, p.fd2TimePeriod, p.fd2Amount, p.fd2Compound, p.fd2PV, p.fd2Result,
-      p.fd3Time, p.fd3TimePeriod, p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result,
-      p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result })
-  ***/
 }
