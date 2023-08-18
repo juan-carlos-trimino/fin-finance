@@ -57,7 +57,6 @@ src/webfinances/templates/*
 !src/webfinances/templates/footer.html
 !src/webfinances/templates/header.html
 !src/webfinances/templates/index.html
-!src/webfinances/templates/miscellaneous.html
 !src/webfinances/templates/simpleinterest.html
 # ... and this directory and its file...
 !src/webfinances/templates/bonds/
@@ -67,6 +66,16 @@ src/webfinances/templates/bonds/*
 !src/webfinances/templates/bonds/currentprice.html
 !src/webfinances/templates/bonds/yieldtocall.html
 !src/webfinances/templates/bonds/yieldtomaturity.html
+# ... and this directory and its file...
+!src/webfinances/templates/miscellaneous/
+src/webfinances/templates/miscellaneous/*
+!src/webfinances/templates/miscellaneous/averagerate.html
+!src/webfinances/templates/miscellaneous/depreciation.html
+!src/webfinances/templates/miscellaneous/effectiveannualrate.html
+!src/webfinances/templates/miscellaneous/growthdecay.html
+!src/webfinances/templates/miscellaneous/miscellaneous.html
+!src/webfinances/templates/miscellaneous/nominalrate.html
+!src/webfinances/templates/miscellaneous/nominalratevs.html
 # ... and this directory and its file...
 !src/webfinances/templates/simpleinterestaccurate/
 src/webfinances/templates/simpleinterestaccurate/*
