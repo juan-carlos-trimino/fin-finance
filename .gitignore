@@ -7,6 +7,10 @@
 !LICENSE
 !README.md
 # ... and these files under the 'src' directory...
+!.vscode/
+.vscode/*
+!launch.json
+# ... and these files under the 'src' directory...
 !src/
 src/*
 !src/go.mod
