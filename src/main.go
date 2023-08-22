@@ -16,21 +16,14 @@ import (
   "time"
 )
 
-//Environment variables.
-var MAX_RETRIES int = 10
-var SHUTDOWN_TIMEOUT int = 15
-var PORT string = "8080"
-var SVC_NAME string
-var APP_NAME_VER string
-var SERVER string = "localhost"
-
-// func init() {
-//   fmt.Printf("%s - Entering init/main.\n", time.Now().UTC().Format(time.RFC3339Nano))
-//   // mime.AddExtensionType(".js", "application/javascript; charset=utf-8")
-//   ct := mime.TypeByExtension(".css")
-//   fmt.Printf("ct: %s\n", ct)
-//   // mime.AddExtensionType(".css", "text/css; charset=utf-8")
-// }
+var (  //Environment variables.
+  MAX_RETRIES int = 10
+  SHUTDOWN_TIMEOUT int = 15
+  PORT string = "8080"
+  SVC_NAME string
+  APP_NAME_VER string
+  SERVER string = "localhost"
+)
 
 var m = misc.Misc{}
 
@@ -92,7 +85,7 @@ or
 C:\> npx kill-port <port>
 Linux
 $ ps -a
-$ kill <process-id>
+$ kill <PID>
 
 To display the headers:
 $ curl.exe -IL "http://localhost:8080"
@@ -101,37 +94,38 @@ PS> curl.exe "http://localhost:8080"
 ***/
 func main() {
   var exists bool = false
-  /*** k8s
-  SVC_NAME, exists = os.LookupEnv("SVC_NAME")
-  if !exists {
-    fmt.Println("Missing environment parameter: SVC_NAME")
-    return
-  }
-  APP_NAME_VER, exists = os.LookupEnv("APP_NAME_VER")
-  if !exists {
-    fmt.Println("Missing environment parameter: APP_NAME_VER")
-    return
-  }
-  SERVER, exists = os.LookupEnv("SERVER")
-  if !exists {
-    fmt.Println("Missing environment parameter: SERVER")
-    return
-  }
-  k8s ***/
-  _, exists = os.LookupEnv("PORT")
+  var ev string;
+  // _, exists = os.LookupEnv("NOT_K8S")
+  // if !exists {
+  //   SVC_NAME, exists = os.LookupEnv("SVC_NAME")
+  //   if !exists {
+  //     fmt.Println("Missing environment parameter: SVC_NAME")
+  //     return
+  //   }
+  //   APP_NAME_VER, exists = os.LookupEnv("APP_NAME_VER")
+  //   if !exists {
+  //     fmt.Println("Missing environment parameter: APP_NAME_VER")
+  //     return
+  //   }
+  //   SERVER, exists = os.LookupEnv("SERVER")
+  //   if !exists {
+  //     fmt.Println("Missing environment parameter: SERVER")
+  //     return
+  //   }
+  // }
+  ev, exists = os.LookupEnv("PORT")
   if exists {
-    PORT = os.Getenv("PORT")
+    PORT = ev
   }
   fmt.Printf("%s - Using PORT: %s\n", m.DTF(), PORT)
   SERVER += ":" + PORT
-  _, exists = os.LookupEnv("SHUTDOWN_TIMEOUT")
+  ev, exists = os.LookupEnv("SHUTDOWN_TIMEOUT")
   if exists {
-    sdto := os.Getenv("SHUTDOWN_TIMEOUT")
-    tm, err := strconv.Atoi(sdto)
+    tm, err := strconv.Atoi(ev)
     if err == nil {
       SHUTDOWN_TIMEOUT = tm
     } else {
-      fmt.Printf("%s - '%s' is not an int number.\n", m.DTF(), sdto)
+      fmt.Printf("%s - '%s' is not an int number.\n", m.DTF(), ev)
     }
   }
   fmt.Printf("%s - Using SHUTDOWN_TIMEOUT: %d\n", m.DTF(), SHUTDOWN_TIMEOUT)
