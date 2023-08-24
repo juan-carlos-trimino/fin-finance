@@ -1,4 +1,4 @@
-//
+//Bond pricing.
 package finances
 
 import (
@@ -36,6 +36,19 @@ func (b *Bonds) TaxableVsTaxFreeYields(taxFreeYield, cityTaxRate, stateTaxRate,
 }
 
 /***
+The bond is a promise to pay a face value F at the maturity date T periods from now. Each period
+the bond pays a fixed percentage amount of the face value as coupon C. The cash flows from the bond
+are as follows:
+
+ t =               0     1       2       3    ...     T
+--------------------------------------------------------------
+ Coupon                  C       C       C    ...     C
+ Face Value                                           F
+--------------------------------------------------------------
+Total Cash Flows      C1 = C  C2 = C  C3 = C  ...  CT = C + F
+
+===================================================================================================
+
 A bond's cash flow is determined by calculating the coupon rate multiplied by the face value. A
 $1,000 corporate bond with a 3.0% coupon has an annual cash flow of $30. If it's a 10-year bond
 that has five years left until maturity, there would be five coupon payments remaining.
@@ -170,6 +183,10 @@ func (b *Bonds) YieldToMaturity(cashFlow []float64, bondPrice float64, cp int) (
     }
     r = 0.5 * (top + bottom)
   }
+  /***
+  The yield to maturity is the interest rate that makes the present value of the future coupon
+  payments equal to the current bond price.
+  ***/
   return
 }
 
