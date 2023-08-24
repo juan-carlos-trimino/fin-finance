@@ -23,7 +23,7 @@ Now the debbuger is ready to be used.
       "env": {
         //  "NOT_K8S": "y"
         // "PORT": "8081",
-        "SHUTDOWN_TIMEOUT": "10"
+        // "SHUTDOWN_TIMEOUT": "10"
       },
       "args": [],
     }
