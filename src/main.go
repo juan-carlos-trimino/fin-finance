@@ -94,25 +94,25 @@ PS> curl.exe "http://localhost:8080"
 ***/
 func main() {
   var exists bool = false
-  var ev string;
-  // _, exists = os.LookupEnv("NOT_K8S")
-  // if !exists {
-  //   SVC_NAME, exists = os.LookupEnv("SVC_NAME")
-  //   if !exists {
-  //     fmt.Println("Missing environment parameter: SVC_NAME")
-  //     return
-  //   }
-  //   APP_NAME_VER, exists = os.LookupEnv("APP_NAME_VER")
-  //   if !exists {
-  //     fmt.Println("Missing environment parameter: APP_NAME_VER")
-  //     return
-  //   }
-  //   SERVER, exists = os.LookupEnv("SERVER")
-  //   if !exists {
-  //     fmt.Println("Missing environment parameter: SERVER")
-  //     return
-  //   }
-  // }
+  var ev string
+  _, exists = os.LookupEnv("NOT_K8S")
+  if exists == false {
+    SVC_NAME, exists = os.LookupEnv("SVC_NAME")
+    if !exists {
+      fmt.Println("Missing environment parameter: SVC_NAME")
+      return
+    }
+    APP_NAME_VER, exists = os.LookupEnv("APP_NAME_VER")
+    if !exists {
+      fmt.Println("Missing environment parameter: APP_NAME_VER")
+      return
+    }
+    SERVER, exists = os.LookupEnv("SERVER")
+    if !exists {
+      fmt.Println("Missing environment parameter: SERVER")
+      return
+    }
+  }
   ev, exists = os.LookupEnv("PORT")
   if exists {
     PORT = ev
@@ -162,7 +162,6 @@ func main() {
     res.WriteHeader(http.StatusOK)
   }
 
-
   // files := http.FileServer(http.Dir("/public"))
   // fmt.Println(files)
 
@@ -185,7 +184,7 @@ func main() {
   for idx, f := range h.mux {
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
-  server := http.Server {  //https://pkg.go.dev/net/http#ServeMux
+  server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
     associated with the computer, and it will listen on port PORT.
@@ -243,7 +242,7 @@ func main() {
   locking when accessing variables that other goroutines, including other requests to the same
   handler, may be accessing.
   ***/
-  err := server.ListenAndServe()
+  err := (*server).ListenAndServe()
   if errors.Is(err, http.ErrServerClosed) {
     fmt.Printf("%s - Server has been closed.\n", m.DTF())
   } else if err != nil {
