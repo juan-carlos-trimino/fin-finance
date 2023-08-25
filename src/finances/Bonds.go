@@ -110,6 +110,20 @@ func (b *Bonds) CurrentPrice(cashFlow []float64, currentRate float64, cp int) (p
 }
 
 /***
+When using continuously compounded interest, one does not need the concept of modified duration.
+When the bond is correctly priced, the duration and Macaulay duration will produce the same number.
+***/
+func (b *Bonds) CurrentPriceContinuous(cashFlow []float64, currentRate float64) (price float64) {
+  currentRate /= hundred
+  price = zero
+  var sz int = len(cashFlow)
+  for idx, t := 0, 1.0; idx < sz; idx, t = idx + 1, t + 1.0 {
+    price += math.Exp(-currentRate * t) * cashFlow[idx]
+  }
+  return
+}
+
+/***
 Important: The yield to call is widely deemed to be a more accurate estimate of expected return on
            a bond than the yield to maturity.
 
@@ -190,6 +204,46 @@ func (b *Bonds) YieldToMaturity(cashFlow []float64, bondPrice float64, cp int) (
   return
 }
 
+func (b *Bonds) YieldToMaturityContinuous(cashFlow []float64, bondPrice float64) (r float64) {
+  /***
+  Since the structure of cash flows is such that there exists only one solution to the equation,
+  there is much less likelihood of having multiple solutions when doing this yield estimation for
+  bonds.
+
+  Since the bond yield is above zero, set the lower bound to zero. Then find an upper bound on the
+  yield by increasing the interest rate until the bond price with this interest rate is negative.
+  Finally, bisect the interval between the upper and lower bounds until the desired accuracy is
+  obtained.
+  ***/
+  var bottom float64 = zero
+  var top float64 = one
+  for b.CurrentPriceContinuous(cashFlow, top) > bondPrice {
+    top *= 2.0
+  }
+  r = 0.5 * top
+  var diff float64 = zero
+  const MAX_BISECTION int = 200 //Maximum allowed number of bisections.
+  const ACCURACY float64 = 1e-5
+  for idx := 0; idx < MAX_BISECTION; idx++ { //Bisection loop.
+    /***
+    The bisection method must succeed. Over some interval the function is known to pass through
+    zero because it changes sign. Evaluate the function at the interval's midpoint and examine its
+    sign. Use the midpoint to replace whichever limit has the same sign. After each iteration the
+    bounds containing the root decrease by a factor of two.
+    ***/
+    diff = b.CurrentPriceContinuous(cashFlow, r) - bondPrice
+    if ACCURACY > math.Abs(diff) {
+      break
+    } else if diff > zero {
+      bottom = r
+    } else {
+      top = r
+    }
+    r = 0.5 * (top + bottom)
+  }
+  return
+}
+
 /***
 Duration measures how long it takes, IN YEARS, for an investor to be repaid the bond's price by the
 bond's total cash flows. At the same time, duration is a measure of sensitivity of a bond's or
@@ -243,6 +297,16 @@ func (b *Bonds) Duration(cashFlow []float64, currentRate, bondPrice float64) flo
   return(D / bondPrice)
 }
 
+func (b *Bonds) DurationContinuous(cashFlow []float64, currentRate, bondPrice float64) float64 {
+  var D float64 = zero
+  currentRate /= hundred
+  var sz int = len(cashFlow)
+  for idx, t := 0, 1.0; idx < sz; idx, t = idx + 1, t + 1.0 {
+    D += math.Exp(-currentRate * t) * t * cashFlow[idx]
+  }
+  return(D / bondPrice)
+}
+
 /***
 If the bond is priced correctly, the yield to maturity must equal the current interest rate. If
 current interest rate EQUALS yield to maturity the calculations from Duration and MacaulayDuration
@@ -255,6 +319,11 @@ Notes:
 func (b *Bonds) MacaulayDuration(cashFlow []float64, cp int, bondPrice float64) float64 {
   var ytm = b.YieldToMaturity(cashFlow, bondPrice, cp)
   return(b.Duration(cashFlow, ytm, bondPrice))
+}
+
+func (b *Bonds) MacaulayDurationContinuous(cashFlow []float64, bondPrice float64) float64 {
+  var ytm = b.YieldToMaturityContinuous(cashFlow, bondPrice)
+  return(b.DurationContinuous(cashFlow, ytm, bondPrice))
 }
 
 /***
@@ -337,75 +406,6 @@ func (b *Bonds) Convexity(cashFlow []float64, currentRate float64, cp int) float
   }
   Cx /= price
   return(Cx / math.Pow(currentRate, 2))
-}
-
-/***
-When using continuously compounded interest, one does not need the concept of modified duration.
-When the bond is correctly priced, the duration and Macaulay duration will produce the same number.
-***/
-func (b *Bonds) CurrentPriceContinuous(cashFlow []float64, currentRate float64) (price float64) {
-  currentRate /= hundred
-  price = zero
-  var sz int = len(cashFlow)
-  for idx, t := 0, 1.0; idx < sz; idx, t = idx + 1, t + 1.0 {
-    price += math.Exp(-currentRate * t) * cashFlow[idx]
-  }
-  return
-}
-
-func (b *Bonds) DurationContinuous(cashFlow []float64, currentRate, bondPrice float64) float64 {
-  var D float64 = zero
-  currentRate /= hundred
-  var sz int = len(cashFlow)
-  for idx, t := 0, 1.0; idx < sz; idx, t = idx + 1, t + 1.0 {
-    D += math.Exp(-currentRate * t) * t * cashFlow[idx]
-  }
-  return(D / bondPrice)
-}
-
-func (b *Bonds) YieldToMaturityContinuous(cashFlow []float64, bondPrice float64) (r float64) {
-  /***
-  Since the structure of cash flows is such that there exists only one solution to the equation,
-  there is much less likelihood of having multiple solutions when doing this yield estimation for
-  bonds.
-
-  Since the bond yield is above zero, set the lower bound to zero. Then find an upper bound on the
-  yield by increasing the interest rate until the bond price with this interest rate is negative.
-  Finally, bisect the interval between the upper and lower bounds until the desired accuracy is
-  obtained.
-  ***/
-  var bottom float64 = zero
-  var top float64 = one
-  for b.CurrentPriceContinuous(cashFlow, top) > bondPrice {
-    top *= 2.0
-  }
-  r = 0.5 * top
-  var diff float64 = zero
-  const MAX_BISECTION int = 200 //Maximum allowed number of bisections.
-  const ACCURACY float64 = 1e-5
-  for idx := 0; idx < MAX_BISECTION; idx++ { //Bisection loop.
-    /***
-    The bisection method must succeed. Over some interval the function is known to pass through
-    zero because it changes sign. Evaluate the function at the interval's midpoint and examine its
-    sign. Use the midpoint to replace whichever limit has the same sign. After each iteration the
-    bounds containing the root decrease by a factor of two.
-    ***/
-    diff = b.CurrentPriceContinuous(cashFlow, r) - bondPrice
-    if ACCURACY > math.Abs(diff) {
-      break
-    } else if diff > zero {
-      bottom = r
-    } else {
-      top = r
-    }
-    r = 0.5 * (top + bottom)
-  }
-  return
-}
-
-func (b *Bonds) MacaulayDurationContinuous(cashFlow []float64, bondPrice float64) float64 {
-  var ytm = b.YieldToMaturityContinuous(cashFlow, bondPrice)
-  return(b.DurationContinuous(cashFlow, ytm, bondPrice))
 }
 
 func (b *Bonds) ConvexityContinuous(cashFlow []float64, currentRate, bondPrice float64) float64 {
