@@ -67,6 +67,7 @@ src/webfinances/templates/*
 src/webfinances/templates/bonds/*
 !src/webfinances/templates/bonds/bonds.html
 !src/webfinances/templates/bonds/taxfree.html
+!src/webfinances/templates/bonds/duration.html
 !src/webfinances/templates/bonds/currentprice.html
 !src/webfinances/templates/bonds/yieldtocall.html
 !src/webfinances/templates/bonds/yieldtomaturity.html
