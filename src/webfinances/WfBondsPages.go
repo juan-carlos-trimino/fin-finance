@@ -66,6 +66,14 @@ type wfBondsPages struct {
   fd6CurInterest string
   fd6Compound string
   fd6Result string
+  //
+  fd7FaceValue string
+  fd7Time string
+  fd7TimePeriod string
+  fd7Coupon string
+  fd7CurInterest string
+  fd7Compound string
+  fd7Result string
 }
 
 func NewWfBondsPages() WfBondsPages {
@@ -121,6 +129,14 @@ func NewWfBondsPages() WfBondsPages {
     fd6CurInterest: "7.5",
     fd6Compound: "semiannually",
     fd6Result: "",
+    //
+    fd7FaceValue: "1000.00",
+    fd7Time: "5",
+    fd7TimePeriod: "year",
+    fd7Coupon: "5.4",
+    fd7CurInterest: "7.5",
+    fd7Compound: "semiannually",
+    fd7Result: "",
   }
 }
 
@@ -514,6 +530,64 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd6Result string
       } { "Bonds", m.DTF(), p.currentButton,
           p.fd6FaceValue, p.fd6Time, p.fd6TimePeriod, p.fd6Coupon, p.fd6CurInterest, p.fd6Compound, p.fd6Result,
+        })
+    } else if strings.EqualFold(p.currentPage, "rhs-ui7") {
+      p.currentButton = "lhs-button7"
+      if req.Method == http.MethodPost {
+        p.fd7FaceValue = req.PostFormValue("fd7-facevalue")
+        p.fd7Time = req.PostFormValue("fd7-time")
+        p.fd7TimePeriod = req.PostFormValue("fd7-tp")
+        p.fd7Coupon = req.PostFormValue("fd7-coupon")
+        p.fd7CurInterest = req.PostFormValue("fd7-current")
+        p.fd7Compound = req.PostFormValue("fd7-compound")
+        var fv float64
+        var time float64
+        var couponRate float64
+        var curInterest float64
+        var err error
+        if fv, err = strconv.ParseFloat(p.fd7FaceValue, 64); err != nil {
+          p.fd7Result = fmt.Sprintf("Error: %s -- %+v", p.fd7FaceValue, err)
+        } else if time, err = strconv.ParseFloat(p.fd7Time, 64); err != nil {
+          p.fd7Result = fmt.Sprintf("Error: %s -- %+v", p.fd7Time, err)
+        } else if couponRate, err = strconv.ParseFloat(p.fd7Coupon, 64); err != nil {
+          p.fd7Result = fmt.Sprintf("Error: %s -- %+v", p.fd7Coupon, err)
+        } else if curInterest, err = strconv.ParseFloat(p.fd7CurInterest, 64); err != nil {
+          p.fd7Result = fmt.Sprintf("Error: %s -- %+v", p.fd7CurInterest, err)
+        } else {
+          var b finances.Bonds
+          var cp int = b.GetCompoundingPeriod(p.fd7Compound[0], false)
+          var tp = b.GetTimePeriod(p.fd7TimePeriod[0], false)
+          cf := b.CashFlow(fv, couponRate, cp, time, tp)
+          if cp != finances.Continuously {
+            p.fd7Result = fmt.Sprintf("Modified Duration: %.3f%%", b.ModifiedDuration(cf, cp,
+                                                              b.CurrentPrice(cf, curInterest, cp)))
+          } else {
+            p.fd7Result = "-1.00"
+          }
+        }
+        logEntry.Print(INFO, correlationId, []string {
+          fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur interest = %s, %s",
+                      p.fd7FaceValue, p.fd7Time, p.fd7TimePeriod, p.fd7Coupon, p.fd7Compound,
+                      p.fd7CurInterest, p.fd7Result),
+        })
+      }
+      t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
+                                                 "webfinances/templates/header.html",
+                                                 "webfinances/templates/bonds/modifiedduration.html",
+                                                 "webfinances/templates/footer.html"))
+      t.ExecuteTemplate(res, "bonds", struct {
+        Header string
+        Datetime string
+        CurrentButton string
+        Fd7FaceValue string
+        Fd7Time string
+        Fd7TimePeriod string
+        Fd7Coupon string
+        Fd7CurInterest string
+        Fd7Compound string
+        Fd7Result string
+      } { "Bonds", m.DTF(), p.currentButton,
+          p.fd7FaceValue, p.fd7Time, p.fd7TimePeriod, p.fd7Coupon, p.fd7CurInterest, p.fd7Compound, p.fd7Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
