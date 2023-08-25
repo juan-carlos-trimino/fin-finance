@@ -50,6 +50,14 @@ type wfBondsPages struct {
   fd4CurInterest string
   fd4BondPrice string
   fd4Result string
+  //
+  fd5FaceValue string
+  fd5Time string
+  fd5TimePeriod string
+  fd5Coupon string
+  fd5CurInterest string
+  fd5Compound string
+  fd5Result string
 }
 
 func NewWfBondsPages() WfBondsPages {
@@ -89,6 +97,14 @@ func NewWfBondsPages() WfBondsPages {
     fd4CurInterest: "2.3",
     fd4BondPrice: "1000.00",
     fd4Result: "",
+    //
+    fd5FaceValue: "1000.00",
+    fd5Time: "5",
+    fd5TimePeriod: "year",
+    fd5Coupon: "5.4",
+    fd5CurInterest: "7.5",
+    fd5Compound: "semiannually",
+    fd5Result: "",
   }
 }
 
@@ -367,25 +383,65 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       } { "Bonds", m.DTF(), p.currentButton,
           p.fd4FaceValue, p.fd4Time, p.fd4TimePeriod, p.fd4Coupon, p.fd4Compound, p.fd4CurrentRadio, p.fd4CurInterest, p.fd4BondPrice, p.fd4Result,
         })
-    /**} else if strings.EqualFold(ui, "rhs-ui5") {
-      // p.fd5Values = req.FormValue("fd5-values")
-      // p.currentButton = "lhs-button5"
-      // split := strings.Split(p.fd5Values, ";")
-      // values := make([]float64, len(split))
-      // var err error
-      // for i, s := range split {
-      //   if values[i], err = strconv.ParseFloat(s, 64); err != nil {
-      //     p.fd5Result[1] = fmt.Sprintf("Error: %s -- %+v", s, err)
-      //     break;
-      //   }
-      // }
-      // //
-      // if err == nil {
-      //   var a finances.Annuities
-      //   p.fd5Result[1] = fmt.Sprintf("Avg: %.3f%%", a.AverageRateOfReturn(values) * 100.0)
-      // }
-      // fmt.Printf("%s - values = [%s], %s\n", m.DTF(), p.fd5Values, p.fd5Result[1])
-    } else if strings.EqualFold(ui, "rhs-ui6") {
+    } else if strings.EqualFold(p.currentPage, "rhs-ui5") {
+      p.currentButton = "lhs-button5"
+      if req.Method == http.MethodPost {
+        p.fd5FaceValue = req.PostFormValue("fd5-facevalue")
+        p.fd5Time = req.PostFormValue("fd5-time")
+        p.fd5TimePeriod = req.PostFormValue("fd5-tp")
+        p.fd5Coupon = req.PostFormValue("fd5-coupon")
+        p.fd5CurInterest = req.PostFormValue("fd5-current")
+        p.fd5Compound = req.PostFormValue("fd5-compound")
+        var fv float64
+        var time float64
+        var couponRate float64
+        var curInterest float64
+        var err error
+        if fv, err = strconv.ParseFloat(p.fd5FaceValue, 64); err != nil {
+          p.fd5Result = fmt.Sprintf("Error: %s -- %+v", p.fd5FaceValue, err)
+        } else if time, err = strconv.ParseFloat(p.fd5Time, 64); err != nil {
+          p.fd5Result = fmt.Sprintf("Error: %s -- %+v", p.fd5Time, err)
+        } else if couponRate, err = strconv.ParseFloat(p.fd5Coupon, 64); err != nil {
+          p.fd5Result = fmt.Sprintf("Error: %s -- %+v", p.fd5Coupon, err)
+        } else if curInterest, err = strconv.ParseFloat(p.fd5CurInterest, 64); err != nil {
+          p.fd5Result = fmt.Sprintf("Error: %s -- %+v", p.fd5CurInterest, err)
+        } else {
+          var b finances.Bonds
+          var cp int = b.GetCompoundingPeriod(p.fd5Compound[0], false)
+          var tp = b.GetTimePeriod(p.fd5TimePeriod[0], false)
+          cf := b.CashFlow(fv, couponRate, cp, time, tp)
+          if cp != finances.Continuously {
+            p.fd5Result = fmt.Sprintf("Duration: %.3f%%", b.Duration(cf, curInterest,
+                                                              b.CurrentPrice(cf, curInterest, cp)))
+          } else {
+            p.fd5Result = "-1.00"
+          }
+        }
+        logEntry.Print(INFO, correlationId, []string {
+          fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur interest = %s, %s",
+                      p.fd5FaceValue, p.fd5Time, p.fd5TimePeriod, p.fd5Coupon, p.fd5Compound,
+                      p.fd5CurInterest, p.fd5Result),
+        })
+      }
+      t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
+                                             "webfinances/templates/header.html",
+                                             "webfinances/templates/bonds/duration.html",
+                                             "webfinances/templates/footer.html"))
+      t.ExecuteTemplate(res, "bonds", struct {
+        Header string
+        Datetime string
+        CurrentButton string
+        Fd5FaceValue string
+        Fd5Time string
+        Fd5TimePeriod string
+        Fd5Coupon string
+        Fd5CurInterest string
+        Fd5Compound string
+        Fd5Result string
+      } { "Bonds", m.DTF(), p.currentButton,
+          p.fd5FaceValue, p.fd5Time, p.fd5TimePeriod, p.fd5Coupon, p.fd5CurInterest, p.fd5Compound, p.fd5Result,
+        })
+    /**} else if strings.EqualFold(ui, "rhs-ui6") {
       // p.fd6Time = req.FormValue("fd6-time")
       // p.fd6TimePeriod = req.FormValue("fd6-tp")
       // p.fd6Rate = req.FormValue("fd6-rate")
