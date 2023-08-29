@@ -4,15 +4,15 @@
 <div id="rhs-ui7">
   <form action="/fin/bonds" method="POST" enctype="application/x-www-form-urlencoded">
     <div style="margin-top: 20px">
-      <label class="text-box" for="fd7-facevalue">Face Value.....................</label>
+      <label class="text-box" for="fd7-facevalue">Face Value.................................</label>
       <input class="text-combo" id="fd7-facevalue" name="fd7-facevalue" value="{{ .Fd7FaceValue }}" type="number" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px">
-      <label class="text-box" for="fd7-time">Time...............................</label>
+      <label class="text-box" for="fd7-time">Time...........................................</label>
       <input class="text-combo" id="fd7-time" name="fd7-time" value="{{ .Fd7Time }}" type="number" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px">
-      <label class="text-box" for="fd7-tp">Time Period...................</label>
+      <label class="text-box" for="fd7-tp">Time Period...............................</label>
       <select class="text-combo" name="fd7-tp" id="fd7-tp">
         <option class="text-combo" value="year" {{ if eq .Fd7TimePeriod "year" }} selected {{ end }}>Year(s)</option>
         <option class="text-combo" value="semiyear" {{ if eq .Fd7TimePeriod "semiyear" }} selected {{ end }}>Semiyear(s)</option>
@@ -23,22 +23,22 @@
       </select>
     </div>
     <div style="margin-top: 20px">
-      <label class="text-box" for="fd7-coupon">Coupon Rate (%)..........</label>
+      <label class="text-box" for="fd7-coupon">Coupon Rate (%)......................</label>
       <input class="text-combo" id="fd7-coupon" name="fd7-coupon" value="{{ .Fd7Coupon }}" type="number" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px">
-      <label class="text-box" for="fd7-current">Current Interest (%)....</label>
+      <label class="text-box" for="fd7-current">Current Interest (%)................</label>
       <input class="text-combo" id="fd7-current" name="fd7-current" value="{{ .Fd7CurInterest }}" type="number" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px;">
-      <label class="text-box" for="fd7-compound">Compounding Period...</label>
+      <label class="text-box">Compounding Period or</label><br>
+      <label class="text-box" for="fd7-compound">Coupon Payment Frequency...</label>
       <select class="text-combo" id="fd7-compound" name="fd7-compound">
         <option class="text-combo" value="annually" {{ if eq .Fd7Compound "annually" }} selected {{ end }}>Annually</option>
         <option class="text-combo" value="semiannually" {{ if eq .Fd7Compound "semiannually" }} selected {{ end }}>Semiannually</option>
         <option class="text-combo" value="quarterly" {{ if eq .Fd7Compound "quarterly" }} selected {{ end }}>Quarterly</option>
         <option class="text-combo" value="monthly" {{ if eq .Fd7Compound "monthly" }} selected {{ end }}>Monthly</option>
         <option class="text-combo" value="weekly" {{ if eq .Fd7Compound "weekly" }} selected {{ end }}>Weekly</option>
-        <option class="text-combo" value="daily" {{ if eq .Fd7Compound "daily" }} selected {{ end }}>Daily</option>
         <option class="text-combo" value="continuously" {{ if eq .Fd7Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
     </div>
