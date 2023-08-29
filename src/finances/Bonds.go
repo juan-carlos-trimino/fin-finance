@@ -66,7 +66,7 @@ func (b *Bonds) CashFlow(FV, couponRate float64, cp int, n float64, tp int) (cas
   couponRate /= hundred
   couponRate = b.periodicInterestRate(couponRate, cp)
   var C = FV * couponRate
-  var sz int = int(b.numberOfPeriods(n, tp, float64(Daily365), cp))
+  var sz int = int(b.numberOfCouponPaymentPeriods(n, tp, cp))
   cashFlow = make([]float64, sz, sz) //len=cap=sz
   for idx := range cashFlow {
     cashFlow[idx] = C
@@ -288,13 +288,26 @@ Notes:
 ***/
 func (b *Bonds) Duration(cashFlow []float64, currentRate, bondPrice float64) float64 {
   var D float64 = zero
-  currentRate /= hundred
-  currentRate += one
+  currentRate = one + (currentRate / hundred)
   var sz int = len(cashFlow)
   for idx, t := 0, 1.0; idx < sz; idx, t = idx + 1, t + 1.0 {
     D += (t * cashFlow[idx]) / math.Pow(currentRate, t)
   }
-  return(D / bondPrice)
+  return (D / bondPrice)
+}
+
+func (b *Bonds) Duration1(cashFlow []float64, currentRate float64) (float64) {
+  var D float64 = zero
+  var B float64 = zero
+  currentRate = one + (currentRate / hundred)
+  var sz int = len(cashFlow)
+  var tmp float64 = zero
+  for idx, t := 0, 1.0; idx < sz; idx, t = idx + 1, t + 1.0 {
+    tmp = math.Pow(currentRate, t)
+    D += (t * cashFlow[idx]) / tmp
+    B += cashFlow[idx] / tmp
+  }
+  return (D / B)
 }
 
 func (b *Bonds) DurationContinuous(cashFlow []float64, currentRate, bondPrice float64) float64 {
@@ -318,7 +331,7 @@ Notes:
 ***/
 func (b *Bonds) MacaulayDuration(cashFlow []float64, cp int, bondPrice float64) float64 {
   var ytm = b.YieldToMaturity(cashFlow, bondPrice, cp)
-  return(b.Duration(cashFlow, ytm, bondPrice))
+  return (b.Duration(cashFlow, ytm, bondPrice))
 }
 
 func (b *Bonds) MacaulayDurationContinuous(cashFlow []float64, bondPrice float64) float64 {
@@ -347,8 +360,9 @@ current interest = 9%; compounding period annually
 Modified Duration: 2.512801%
 ***/
 func (b *Bonds) ModifiedDuration(cashFlow []float64, cp int, bondPrice float64) float64 {
-  var ytm = b.YieldToMaturity(cashFlow, bondPrice, cp)
-  return(b.Duration(cashFlow, ytm, bondPrice) / (one + (ytm / hundred)))
+  var ytm = b.YieldToMaturity(cashFlow, bondPrice, cp) / float64(cp)
+  D := b.Duration(cashFlow, ytm, bondPrice) / (one + (ytm / hundred))
+  return (D / float64(cp))
 }
 
 /***
