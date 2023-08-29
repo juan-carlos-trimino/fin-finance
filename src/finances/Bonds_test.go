@@ -52,6 +52,18 @@ func TestBonds_CurrentPrice(t *testing.T) {
     //Price = $102.531
     { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0,
       currentRate_cp: 'a', want: 102.53129466 },
+    //Purchased a 5-year $10,000.00, 4.5% interest bearing bond at the end of the third interest
+    //date at a price that would yield 6% per annum, compounded semiannually.
+    { FV: 10_000.00, couponRate: 4.5, cp: 's', n: 3.5, tp: 'y', currentRate: 6.0,
+      currentRate_cp: 's', want: 9_532.7287783 },
+    //Purchased a 5-year $1,000.00, 6% interest bearing bond at a price that would yield 5% per
+    //annum, compounded semiannually.
+    { FV: 1_000.00, couponRate: 6, cp: 's', n: 5, tp: 'y', currentRate: 5.0,
+      currentRate_cp: 's', want: 1_043.7603196 },
+    //On Jan 1, 19x0, purchased a 4%, 10-year, $1,000.00 bond maturing Jan 1, 19x8, with interest
+    //at 6% per annum, compounded semiannually.
+    { FV: 1_000.00, couponRate: 4, cp: 's', n: 8, tp: 'y', currentRate: 6.0,
+      currentRate_cp: 's', want: 874.3889797 },
   }
   var b Bonds
   for _, tc := range tests {
@@ -231,7 +243,13 @@ func TestBonds_YieldToMaturity(t *testing.T) {
     //ytm = 6.80223%
     { withPrice: true, FV: 100.00, couponRate: 5.0, cp: 's', n: 30.0, tp: 'm', price: 95.92,
       want: 6.80223 },
-  }
+    //ytm = 11.341%
+    { withPrice: true, FV: 1000.00, couponRate: 10.0, cp: 'm', n: 10.0, tp: 'y', price: 920,
+      want: 11.341 },
+    //ytm = 11.358871%
+    { withPrice: true, FV: 1000.00, couponRate: 10.0, cp: 's', n: 10.0, tp: 'y', price: 920,
+      want: 11.358871 },
+    }
   var b Bonds
   for _, tc := range tests {
     var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
