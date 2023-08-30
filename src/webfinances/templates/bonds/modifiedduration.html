@@ -19,7 +19,6 @@
         <option class="text-combo" value="quarter" {{ if eq .Fd7TimePeriod "quarter" }} selected {{ end }}>Quarter(s)</option>
         <option class="text-combo" value="month" {{ if eq .Fd7TimePeriod "month" }} selected {{ end }}>Month(s)</option>
         <option class="text-combo" value="week" {{ if eq .Fd7TimePeriod "week" }} selected {{ end }}>Week(s)</option>
-        <option class="text-combo" value="day" {{ if eq .Fd7TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
     </div>
     <div style="margin-top: 20px">
@@ -48,7 +47,8 @@
   </form>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
-    <p class="p-result">{{ .Fd7Result }}</p>
+    <p class="p-note">{{ index .Fd7Result 0 }}</p>
+    <p class="p-result">{{ index .Fd7Result 1 }}</p>
   </div>
 </div>
 
