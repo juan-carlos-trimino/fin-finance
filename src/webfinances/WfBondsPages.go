@@ -10,6 +10,16 @@ import (
   "strings"
 )
 
+var bond_notes = [...]string {
+  "The modified duration of a bond is a measure of the sensitivity of the bond's price to " +
+  "changes in interest rates. Since bond prices move in an inverse direction from interest " +
+  "rates, for a one percent increase (decrease) in interest rates, the bond's price will " +
+  "decrease (increase) by the percentage shown by the modified duration.",
+  "The Macaulay duration is a measure of a bond's sensitivity to interest rate changes. The " +
+  "duration is the weighed-average number of years the investor must hold a bond until the " +
+  "present value of the bond's cash flows equals the amount paid for the bond.",
+}
+
 type WfBondsPages interface {
   BondsPages(http.ResponseWriter, *http.Request)
 }
@@ -65,7 +75,7 @@ type wfBondsPages struct {
   fd6Coupon string
   fd6CurInterest string
   fd6Compound string
-  fd6Result string
+  fd6Result [2]string
   //
   fd7FaceValue string
   fd7Time string
@@ -73,7 +83,7 @@ type wfBondsPages struct {
   fd7Coupon string
   fd7CurInterest string
   fd7Compound string
-  fd7Result string
+  fd7Result [2]string
 }
 
 func NewWfBondsPages() WfBondsPages {
@@ -128,7 +138,7 @@ func NewWfBondsPages() WfBondsPages {
     fd6Coupon: "5.4",
     fd6CurInterest: "7.5",
     fd6Compound: "semiannually",
-    fd6Result: "",
+    fd6Result: [2]string { bond_notes[1], "" },
     //
     fd7FaceValue: "1000.00",
     fd7Time: "5",
@@ -136,7 +146,7 @@ func NewWfBondsPages() WfBondsPages {
     fd7Coupon: "5.4",
     fd7CurInterest: "7.5",
     fd7Compound: "semiannually",
-    fd7Result: "",
+    fd7Result: [2]string { bond_notes[0], "" },
   }
 }
 
@@ -488,29 +498,29 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         var curInterest float64
         var err error
         if fv, err = strconv.ParseFloat(p.fd6FaceValue, 64); err != nil {
-          p.fd6Result = fmt.Sprintf("Error: %s -- %+v", p.fd6FaceValue, err)
+          p.fd6Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd6FaceValue, err)
         } else if time, err = strconv.ParseFloat(p.fd6Time, 64); err != nil {
-          p.fd6Result = fmt.Sprintf("Error: %s -- %+v", p.fd6Time, err)
+          p.fd6Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd6Time, err)
         } else if couponRate, err = strconv.ParseFloat(p.fd6Coupon, 64); err != nil {
-          p.fd6Result = fmt.Sprintf("Error: %s -- %+v", p.fd6Coupon, err)
+          p.fd6Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd6Coupon, err)
         } else if curInterest, err = strconv.ParseFloat(p.fd6CurInterest, 64); err != nil {
-          p.fd6Result = fmt.Sprintf("Error: %s -- %+v", p.fd6CurInterest, err)
+          p.fd6Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd6CurInterest, err)
         } else {
           var b finances.Bonds
           var cp int = b.GetCompoundingPeriod(p.fd6Compound[0], false)
           var tp = b.GetTimePeriod(p.fd6TimePeriod[0], false)
           cf := b.CashFlow(fv, couponRate, cp, time, tp)
           if cp != finances.Continuously {
-            p.fd6Result = fmt.Sprintf("Macaulay Duration: %.3f%%", b.MacaulayDuration(cf, cp,
+            p.fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f year(s)", b.MacaulayDuration(cf, cp,
                                                               b.CurrentPrice(cf, curInterest, cp)))
           } else {
-            p.fd6Result = "-1.00"
+            p.fd6Result[1] = "-1.00"
           }
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur interest = %s, %s",
                       p.fd6FaceValue, p.fd6Time, p.fd6TimePeriod, p.fd6Coupon, p.fd6Compound,
-                      p.fd6CurInterest, p.fd6Result),
+                      p.fd6CurInterest, p.fd6Result[1]),
         })
       }
       t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
@@ -527,7 +537,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd6Coupon string
         Fd6CurInterest string
         Fd6Compound string
-        Fd6Result string
+        Fd6Result [2]string
       } { "Bonds", m.DTF(), p.currentButton,
           p.fd6FaceValue, p.fd6Time, p.fd6TimePeriod, p.fd6Coupon, p.fd6CurInterest, p.fd6Compound, p.fd6Result,
         })
@@ -546,29 +556,29 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         var curInterest float64
         var err error
         if fv, err = strconv.ParseFloat(p.fd7FaceValue, 64); err != nil {
-          p.fd7Result = fmt.Sprintf("Error: %s -- %+v", p.fd7FaceValue, err)
+          p.fd7Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd7FaceValue, err)
         } else if time, err = strconv.ParseFloat(p.fd7Time, 64); err != nil {
-          p.fd7Result = fmt.Sprintf("Error: %s -- %+v", p.fd7Time, err)
+          p.fd7Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd7Time, err)
         } else if couponRate, err = strconv.ParseFloat(p.fd7Coupon, 64); err != nil {
-          p.fd7Result = fmt.Sprintf("Error: %s -- %+v", p.fd7Coupon, err)
+          p.fd7Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd7Coupon, err)
         } else if curInterest, err = strconv.ParseFloat(p.fd7CurInterest, 64); err != nil {
-          p.fd7Result = fmt.Sprintf("Error: %s -- %+v", p.fd7CurInterest, err)
+          p.fd7Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd7CurInterest, err)
         } else {
           var b finances.Bonds
           var cp int = b.GetCompoundingPeriod(p.fd7Compound[0], false)
           var tp = b.GetTimePeriod(p.fd7TimePeriod[0], false)
           cf := b.CashFlow(fv, couponRate, cp, time, tp)
           if cp != finances.Continuously {
-            p.fd7Result = fmt.Sprintf("Modified Duration: %.3f%%", b.ModifiedDuration(cf, cp,
+            p.fd7Result[1] = fmt.Sprintf("Modified Duration: %.3f%%", b.ModifiedDuration(cf, cp,
                                                               b.CurrentPrice(cf, curInterest, cp)))
           } else {
-            p.fd7Result = "-1.00"
+            p.fd7Result[1] = "-1.00"
           }
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur interest = %s, %s",
                       p.fd7FaceValue, p.fd7Time, p.fd7TimePeriod, p.fd7Coupon, p.fd7Compound,
-                      p.fd7CurInterest, p.fd7Result),
+                      p.fd7CurInterest, p.fd7Result[1]),
         })
       }
       t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
@@ -585,7 +595,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd7Coupon string
         Fd7CurInterest string
         Fd7Compound string
-        Fd7Result string
+        Fd7Result [2]string
       } { "Bonds", m.DTF(), p.currentButton,
           p.fd7FaceValue, p.fd7Time, p.fd7TimePeriod, p.fd7Coupon, p.fd7CurInterest, p.fd7Compound, p.fd7Result,
         })
