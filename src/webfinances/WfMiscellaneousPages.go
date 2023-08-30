@@ -10,15 +10,11 @@ import (
   "strings"
 )
 
-var notes1 = [...]string {
+var misc_notes = [...]string {
   "When comparing interest rates, use effective annual rates.",
-}
-var notes3 = [...]string {
   "Nominal returns are not adjusted for inflation.",
   "Real returns are useful while comparing returns over different time periods because of the differences in inflation rates.",
   "Real returns are adjusted for inflation.",
-}
-var notes5 = [...]string {
   "Values are semicolon (;) separated; e.g., 3;3.1;3.2;-1.01",
 }
 
@@ -36,7 +32,7 @@ type wfMiscellaneousPages struct {
   //
   fd2Effective string
   fd2Compound string
-  fd2Result [2]string
+  fd2Result [3]string
   //
   fd3Nominal string
   fd3Inflation string
@@ -65,15 +61,15 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
     //
     fd1Nominal: "3.5",
     fd1Compound: "monthly",
-    fd1Result: [2]string { "", "" },
+    fd1Result: [2]string { misc_notes[0], "" },
     //
     fd2Effective: "3.5",
     fd2Compound: "monthly",
-    fd2Result: [2]string { "", "" },
+    fd2Result: [3]string { misc_notes[0], misc_notes[1], "" },
     //
     fd3Nominal: "2.0",
     fd3Inflation: "2.0",
-    fd3Result: [4]string { notes3[0], "", "", "" },
+    fd3Result: [4]string { misc_notes[1], misc_notes[2], misc_notes[3], "" },
     //
     fd4Interest: "14.87",
     fd4Compound: "annually",
@@ -81,7 +77,7 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
     fd4Result: "",
     //
     fd5Values: "2.0;1.5",
-    fd5Result: [2]string { notes5[0], "" },
+    fd5Result: [2]string { misc_notes[4], "" },
     //
     fd6Time: "1.0",
     fd6TimePeriod: "year",
@@ -128,11 +124,9 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         var nr float64
         var err error
         if nr, err = strconv.ParseFloat(p.fd1Nominal, 64); err != nil {
-          p.fd1Result[0] = ""
           p.fd1Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd1Nominal, err)
         } else {
           var a finances.Annuities
-          p.fd1Result[0] = notes1[0]
           p.fd1Result[1] = fmt.Sprintf("Effective Annual Rate: %.3f%%", a.NominalRateToEAR(nr / 100.0,
                                        a.GetCompoundingPeriod(p.fd1Compound[0], false)) * 100.0)
         }
@@ -166,18 +160,16 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         var ear float64
         var err error
         if ear, err = strconv.ParseFloat(p.fd2Effective, 64); err != nil {
-          p.fd2Result[0] = ""
-          p.fd2Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd2Effective, err)
+          p.fd2Result[2] = fmt.Sprintf("Error: %s -- %+v", p.fd2Effective, err)
         } else {
           var a finances.Annuities
-          p.fd2Result[0] = notes1[0]
-          p.fd2Result[1] = fmt.Sprintf("Nominal Rate: %.3f%% %s", a.EARToNominalRate(ear / 100.0,
+          p.fd2Result[2] = fmt.Sprintf("Nominal Rate: %.3f%% %s", a.EARToNominalRate(ear / 100.0,
                                        a.GetCompoundingPeriod(p.fd2Compound[0], false)) * 100.0,
                                        p.fd2Compound)
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("effective rate = %s, cp = %s, %s", p.fd2Effective, p.fd2Compound,
-                      p.fd2Result[1]),
+                      p.fd2Result[2]),
         })
       }
       t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
@@ -190,7 +182,7 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         CurrentButton string
         Fd2Effective string
         Fd2Compound string
-        Fd2Result [2]string
+        Fd2Result [3]string
       } { "Miscellaneous", m.DTF(), p.currentButton,
           p.fd2Effective, p.fd2Compound, p.fd2Result,
         })
@@ -203,17 +195,11 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         var ir float64
         var err error
         if nr, err = strconv.ParseFloat(p.fd3Nominal, 64); err != nil {
-          p.fd3Result[1] = ""
-          p.fd3Result[2] = ""
           p.fd3Result[3] = fmt.Sprintf("Error: %s -- %+v", p.fd3Nominal, err)
         } else if ir, err = strconv.ParseFloat(p.fd3Inflation, 64); err != nil {
-          p.fd3Result[1] = ""
-          p.fd3Result[2] = ""
           p.fd3Result[3] = fmt.Sprintf("Error: %s -- %+v", p.fd3Inflation, err)
         } else {
           var a finances.Annuities
-          p.fd3Result[1] = notes3[1]
-          p.fd3Result[2] = notes3[2]
           p.fd3Result[3] = fmt.Sprintf("Real Interest Rate: %.3f%%", a.RealInterestRate(nr / 100.0,
                                        ir / 100.0) * 100.0)
         }
