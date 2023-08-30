@@ -346,7 +346,10 @@ func TestBonds_ModifiedDuration(t *testing.T) {
   var tests = []test {
     //MDuration = 2.512801%
     { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentInterest: 9.0,
-      currentInterest_cp: 'a', want: 2.512801 },
+      want: 2.512801 },
+    //MDuration = 2.62144622%
+    { FV: 1000.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentInterest: 5.0,
+      want: 2.62144622 },
   }
   var b Bonds
   for _, tc := range tests {
@@ -354,7 +357,7 @@ func TestBonds_ModifiedDuration(t *testing.T) {
                               b.GetTimePeriod(tc.tp, false))
     var MDuration = b.ModifiedDuration(cashFlow, b.GetCompoundingPeriod(tc.cp, false),
                                        b.CurrentPrice(cashFlow, tc.currentInterest,
-                                       b.GetCompoundingPeriod(tc.currentInterest_cp, false)))
+                                       b.GetCompoundingPeriod(tc.cp, false)))
     if math.Abs(MDuration - tc.want) < 1e-5 {
       fmt.Printf("MDuration = %.2f%%\n", MDuration)
     } else {
@@ -377,7 +380,10 @@ func TestBonds_MacaulayDuration(t *testing.T) {
   var tests = []test {
     //macyears = 2.738954
     { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentInterest: 9.0,
-      currentInterest_cp: 'a', want: 2.738954 },
+      want: 2.738954 },
+    //macyears = 2.7525185
+    { FV: 1000.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentInterest: 5.0,
+      want: 2.7525185 },
   }
   var b Bonds
   for _, tc := range tests {
@@ -385,7 +391,7 @@ func TestBonds_MacaulayDuration(t *testing.T) {
                               b.GetTimePeriod(tc.tp, false))
     var macyears = b.MacaulayDuration(cashFlow, b.GetCompoundingPeriod(tc.cp, false),
                               b.CurrentPrice(cashFlow, tc.currentInterest,
-                                             b.GetCompoundingPeriod(tc.currentInterest_cp, false)))
+                                             b.GetCompoundingPeriod(tc.cp, false)))
     if math.Abs(macyears - tc.want) < 1e-5 {
       fmt.Printf("macyears = %.2f\n", macyears)
     } else {
