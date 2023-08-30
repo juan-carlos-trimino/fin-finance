@@ -330,8 +330,9 @@ Notes:
     equal to the maturity if and only if the bond is a zero-coupon bond.
 ***/
 func (b *Bonds) MacaulayDuration(cashFlow []float64, cp int, bondPrice float64) float64 {
-  var ytm = b.YieldToMaturity(cashFlow, bondPrice, cp)
-  return (b.Duration(cashFlow, ytm, bondPrice))
+  var ytm = b.YieldToMaturity(cashFlow, bondPrice, cp) / float64(cp)
+  D := b.Duration(cashFlow, ytm, bondPrice)
+  return (D / float64(cp))
 }
 
 func (b *Bonds) MacaulayDurationContinuous(cashFlow []float64, bondPrice float64) float64 {
