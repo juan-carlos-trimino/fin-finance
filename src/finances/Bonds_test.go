@@ -314,16 +314,19 @@ func TestBonds_Convexity(t *testing.T) {
     want float64
   }
   var tests = []test {
-    //Cx = 8.932479
     { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentInterest: 9.0,
-      currentInterest_cp: 'a', want: 8.932479 },
+      want: 8.932479 },
+    { FV: 1000.00, couponRate: 5.4, cp: 's', n: 5.0, tp: 'y', currentInterest: 7.5,
+      want: 21.62517240 },
+    { FV: 1000.00, couponRate: 5.4, cp: 's', n: 60.0, tp: 'm', currentInterest: 7.5,
+      want: 21.62517240 },
   }
   var b Bonds
   for _, tc := range tests {
     var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false),
                               tc.n, b.GetTimePeriod(tc.tp, false))
     var Cx = b.Convexity(cashFlow, tc.currentInterest,
-                         b.GetCompoundingPeriod(tc.currentInterest_cp, false))
+                         b.GetCompoundingPeriod(tc.cp, false))
     if math.Abs(Cx - tc.want) < 1e-5 {
       fmt.Printf("Cx = %.2f\n", Cx)
     } else {
