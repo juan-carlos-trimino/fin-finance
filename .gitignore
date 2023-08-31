@@ -67,6 +67,7 @@ src/webfinances/templates/*
 src/webfinances/templates/bonds/*
 !src/webfinances/templates/bonds/bonds.html
 !src/webfinances/templates/bonds/taxfree.html
+!src/webfinances/templates/bonds/convexity.html
 !src/webfinances/templates/bonds/duration.html
 !src/webfinances/templates/bonds/macaulayduration.html
 !src/webfinances/templates/bonds/modifiedduration.html
