@@ -19,6 +19,7 @@
           // document.getElementById("lhs-button5").disabled = false;
           document.getElementById("lhs-button6").disabled = false;
           document.getElementById("lhs-button7").disabled = false;
+          document.getElementById("lhs-button8").disabled = false;
         } else if (eid === "lhs-button2") {
           // audio.play();
           document.getElementById("lhs-button1").disabled = false;
@@ -28,6 +29,7 @@
           // document.getElementById("lhs-button5").disabled = false;
           document.getElementById("lhs-button6").disabled = false;
           document.getElementById("lhs-button7").disabled = false;
+          document.getElementById("lhs-button8").disabled = false;
         } else if (eid === "lhs-button3") {
           // audio.play();
           document.getElementById("lhs-button1").disabled = false;
@@ -37,6 +39,7 @@
           // document.getElementById("lhs-button5").disabled = false;
           document.getElementById("lhs-button6").disabled = false;
           document.getElementById("lhs-button7").disabled = false;
+          document.getElementById("lhs-button8").disabled = false;
         } else if (eid === "lhs-button4") {
           // audio.play();
           document.getElementById("lhs-button1").disabled = false;
@@ -46,6 +49,7 @@
           // document.getElementById("lhs-button5").disabled = false;
           document.getElementById("lhs-button6").disabled = false;
           document.getElementById("lhs-button7").disabled = false;
+          document.getElementById("lhs-button8").disabled = false;
         } else if (eid === "lhs-button5") {
           // audio.play();
           document.getElementById("lhs-button1").disabled = false;
@@ -55,6 +59,7 @@
           document.getElementById("lhs-button5").disabled = true;
           document.getElementById("lhs-button6").disabled = false;
           document.getElementById("lhs-button7").disabled = false;
+          document.getElementById("lhs-button8").disabled = false;
         } else if (eid === "lhs-button6") {
           // audio.play();
           document.getElementById("lhs-button1").disabled = false;
@@ -64,15 +69,27 @@
           // document.getElementById("lhs-button5").disabled = false;
           document.getElementById("lhs-button6").disabled = true;
           document.getElementById("lhs-button7").disabled = false;
+          document.getElementById("lhs-button8").disabled = false;
         } else if (eid === "lhs-button7") {
           // audio.play();
           document.getElementById("lhs-button1").disabled = false;
           document.getElementById("lhs-button2").disabled = false;
           document.getElementById("lhs-button3").disabled = false;
           document.getElementById("lhs-button4").disabled = false;
-          document.getElementById("lhs-button5").disabled = false;
+          // document.getElementById("lhs-button5").disabled = false;
           document.getElementById("lhs-button6").disabled = false;
           document.getElementById("lhs-button7").disabled = true;
+          document.getElementById("lhs-button8").disabled = false;
+        } else if (eid === "lhs-button8") {
+          // audio.play();
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = false;
+          document.getElementById("lhs-button3").disabled = false;
+          document.getElementById("lhs-button4").disabled = false;
+          // document.getElementById("lhs-button5").disabled = false;
+          document.getElementById("lhs-button6").disabled = false;
+          document.getElementById("lhs-button7").disabled = false;
+          document.getElementById("lhs-button8").disabled = true;
         }
       }
 
@@ -134,6 +151,13 @@
           <a href="/fin/bonds?compute=rhs-ui7" target="_self">
             <button class="button" id="lhs-button7">
               Modified Duration
+            </button>
+          </a>
+        </div>
+        <div class="div-center">
+          <a href="/fin/bonds?compute=rhs-ui8" target="_self">
+            <button class="button" id="lhs-button8">
+              Convexity
             </button>
           </a>
         </div>
