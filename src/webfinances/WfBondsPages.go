@@ -18,6 +18,9 @@ var bond_notes = [...]string {
   "The Macaulay duration is a measure of a bond's sensitivity to interest rate changes. The " +
   "duration is the weighed-average number of years the investor must hold a bond until the " +
   "present value of the bond's cash flows equals the amount paid for the bond.",
+  "Convexity in bonds measures how sensitive the bond's duration is to changes in interest " +
+  "rates. The higher the convexity, the less the bond price will increase when rates fall -- " +
+  "and the less the bond price will drop when rates rise.",
 }
 
 type WfBondsPages interface {
@@ -84,6 +87,14 @@ type wfBondsPages struct {
   fd7CurInterest string
   fd7Compound string
   fd7Result [2]string
+  //
+  fd8FaceValue string
+  fd8Time string
+  fd8TimePeriod string
+  fd8Coupon string
+  fd8CurInterest string
+  fd8Compound string
+  fd8Result [2]string
 }
 
 func NewWfBondsPages() WfBondsPages {
@@ -147,6 +158,14 @@ func NewWfBondsPages() WfBondsPages {
     fd7CurInterest: "7.5",
     fd7Compound: "semiannually",
     fd7Result: [2]string { bond_notes[0], "" },
+    //
+    fd8FaceValue: "1000.00",
+    fd8Time: "5",
+    fd8TimePeriod: "year",
+    fd8Coupon: "5.4",
+    fd8CurInterest: "7.5",
+    fd8Compound: "semiannually",
+    fd8Result: [2]string { bond_notes[2], "" },
   }
 }
 
@@ -598,6 +617,63 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd7Result [2]string
       } { "Bonds", m.DTF(), p.currentButton,
           p.fd7FaceValue, p.fd7Time, p.fd7TimePeriod, p.fd7Coupon, p.fd7CurInterest, p.fd7Compound, p.fd7Result,
+        })
+    } else if strings.EqualFold(p.currentPage, "rhs-ui8") {
+      p.currentButton = "lhs-button8"
+      if req.Method == http.MethodPost {
+        p.fd8FaceValue = req.PostFormValue("fd8-facevalue")
+        p.fd8Time = req.PostFormValue("fd8-time")
+        p.fd8TimePeriod = req.PostFormValue("fd8-tp")
+        p.fd8Coupon = req.PostFormValue("fd8-coupon")
+        p.fd8CurInterest = req.PostFormValue("fd8-current")
+        p.fd8Compound = req.PostFormValue("fd8-compound")
+        var fv float64
+        var time float64
+        var couponRate float64
+        var curInterest float64
+        var err error
+        if fv, err = strconv.ParseFloat(p.fd8FaceValue, 64); err != nil {
+          p.fd8Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd8FaceValue, err)
+        } else if time, err = strconv.ParseFloat(p.fd8Time, 64); err != nil {
+          p.fd8Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd8Time, err)
+        } else if couponRate, err = strconv.ParseFloat(p.fd8Coupon, 64); err != nil {
+          p.fd8Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd8Coupon, err)
+        } else if curInterest, err = strconv.ParseFloat(p.fd8CurInterest, 64); err != nil {
+          p.fd8Result[1] = fmt.Sprintf("Error: %s -- %+v", p.fd8CurInterest, err)
+        } else {
+          var b finances.Bonds
+          var cp int = b.GetCompoundingPeriod(p.fd8Compound[0], false)
+          var tp = b.GetTimePeriod(p.fd8TimePeriod[0], false)
+          cf := b.CashFlow(fv, couponRate, cp, time, tp)
+          if cp != finances.Continuously {
+            p.fd8Result[1] = fmt.Sprintf("Convexity: %.3f", b.Convexity(cf, curInterest, cp))
+          } else {
+            p.fd8Result[1] = "-1.00"
+          }
+        }
+        logEntry.Print(INFO, correlationId, []string {
+          fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur interest = %s, %s",
+                          p.fd8FaceValue, p.fd8Time, p.fd8TimePeriod, p.fd8Coupon, p.fd8Compound,
+                          p.fd8CurInterest, p.fd8Result[1]),
+        })
+      }
+      t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
+                                             "webfinances/templates/header.html",
+                                             "webfinances/templates/bonds/convexity.html",
+                                             "webfinances/templates/footer.html"))
+      t.ExecuteTemplate(res, "bonds", struct {
+        Header string
+        Datetime string
+        CurrentButton string
+        Fd8FaceValue string
+        Fd8Time string
+        Fd8TimePeriod string
+        Fd8Coupon string
+        Fd8CurInterest string
+        Fd8Compound string
+        Fd8Result [2]string
+      } { "Bonds", m.DTF(), p.currentButton,
+          p.fd8FaceValue, p.fd8Time, p.fd8TimePeriod, p.fd8Coupon, p.fd8CurInterest, p.fd8Compound, p.fd8Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
