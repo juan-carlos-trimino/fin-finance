@@ -411,16 +411,16 @@ Notes:
     payments.
 ***/
 func (b *Bonds) Convexity(cashFlow []float64, currentRate float64, cp int) float64 {
-  var price float64 = b.CurrentPrice(cashFlow, currentRate, cp)
+  var B float64 = b.CurrentPrice(cashFlow, currentRate, cp)
   var Cx float64 = zero
-  currentRate /= hundred
-  currentRate += one
+  currentRate = one + ((currentRate / float64(cp)) / hundred)
   var sz int = len(cashFlow)
   for idx, t := 0, 1.0; idx < sz; idx, t = idx + 1, t + 1.0 {
     Cx += ((one + t) * t * cashFlow[idx]) / math.Pow(currentRate, t)
   }
-  Cx /= price
-  return(Cx / math.Pow(currentRate, 2))
+  Cx /= float64(cp)
+  Cx = (Cx / B) / math.Pow(currentRate, 2)
+  return (Cx / float64(cp))
 }
 
 func (b *Bonds) ConvexityContinuous(cashFlow []float64, currentRate, bondPrice float64) float64 {
