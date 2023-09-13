@@ -472,7 +472,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           var tp = b.GetTimePeriod(p.fd5TimePeriod[0], false)
           cf := b.CashFlow(fv, couponRate, cp, time, tp)
           if cp != finances.Continuously {
-            p.fd5Result = fmt.Sprintf("Duration: %.3f%%", b.Duration(cf, curInterest,
+            p.fd5Result = fmt.Sprintf("Duration: %.3f%%", b.Duration(cf, cp, curInterest,
                                                               b.CurrentPrice(cf, curInterest, cp)))
           } else {
             p.fd5Result = "-1.00"
