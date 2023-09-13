@@ -43,6 +43,7 @@ src/webfinances/*
 !src/webfinances/Messages.go
 !src/webfinances/WfBondsPages.go
 !src/webfinances/WfMiscellaneousPages.go
+!src/webfinances/WfMortgagePages.go
 !src/webfinances/WfPages.go
 !src/webfinances/WfSiAccuratePages.go
 !src/webfinances/WfSiBankersPages.go
@@ -74,6 +75,11 @@ src/webfinances/templates/bonds/*
 !src/webfinances/templates/bonds/currentprice.html
 !src/webfinances/templates/bonds/yieldtocall.html
 !src/webfinances/templates/bonds/yieldtomaturity.html
+# ... and this directory and its file...
+!src/webfinances/templates/mortgage/
+src/webfinances/templates/mortgage/*
+!src/webfinances/templates/mortgage/costofmortgage.html
+!src/webfinances/templates/mortgage/mortgage.html
 # ... and this directory and its file...
 !src/webfinances/templates/miscellaneous/
 src/webfinances/templates/miscellaneous/*
