@@ -286,7 +286,13 @@ Notes:
 (2) When the bond is correctly priced, the duration and Macaulay duration will produce the same
     number.
 ***/
-func (b *Bonds) Duration(cashFlow []float64, currentRate, bondPrice float64) float64 {
+func (b *Bonds) Duration(cashFlow []float64, cp int, currentRate, bondPrice float64) float64 {
+  currentRate /= float64(cp)
+  D := b.duration(cashFlow, currentRate, bondPrice)
+  return (D / float64(cp))
+}
+
+func (b *Bonds) duration(cashFlow []float64, currentRate, bondPrice float64) float64 {
   var D float64 = zero
   currentRate = one + (currentRate / hundred)
   var sz int = len(cashFlow)
@@ -296,7 +302,7 @@ func (b *Bonds) Duration(cashFlow []float64, currentRate, bondPrice float64) flo
   return (D / bondPrice)
 }
 
-func (b *Bonds) Duration1(cashFlow []float64, currentRate float64) (float64) {
+func (b *Bonds) duration1(cashFlow []float64, currentRate float64) (float64) {
   var D float64 = zero
   var B float64 = zero
   currentRate = one + (currentRate / hundred)
@@ -331,7 +337,7 @@ Notes:
 ***/
 func (b *Bonds) MacaulayDuration(cashFlow []float64, cp int, bondPrice float64) float64 {
   var ytm = b.YieldToMaturity(cashFlow, bondPrice, cp) / float64(cp)
-  D := b.Duration(cashFlow, ytm, bondPrice)
+  D := b.duration(cashFlow, ytm, bondPrice)
   return (D / float64(cp))
 }
 
@@ -362,7 +368,7 @@ Modified Duration: 2.512801%
 ***/
 func (b *Bonds) ModifiedDuration(cashFlow []float64, cp int, bondPrice float64) float64 {
   var ytm = b.YieldToMaturity(cashFlow, bondPrice, cp) / float64(cp)
-  D := b.Duration(cashFlow, ytm, bondPrice) / (one + (ytm / hundred))
+  D := b.duration(cashFlow, ytm, bondPrice) / (one + (ytm / hundred))
   return (D / float64(cp))
 }
 
