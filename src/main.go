@@ -1,6 +1,45 @@
 // HTTP server.
 package main
 
+/***
+*****************************************************************************************
+*** To run the app in a K8s environment, do NOT set the environment variable NOT_K8S. ***
+*****************************************************************************************
+
+To run the app as a standalone HTTP server:
+Compile and run the app.
+$ go build -o finance && NOT_K8S= ./finance
+
+To change the PORT.
+$ go build -o finance && NOT_K8S= PORT=8181 ./finance
+
+Compile and run the app in the background.
+$ go build -o finance && NOT_K8S= ./finance &
+
+Force rebuilding of packages.
+$ go build -o finance -a && NOT_K8S= ./finance
+
+Compile and run (in the background) at the same time.
+$ NOT_K8S= go run main.go &
+
+***************************************************************************************************
+
+How to kill a process using a port on localhost (Windows).
+C:\> netstat -ano | findstr :<port>
+C:\> taskkill /PID <PID> /F
+or
+C:\> npx kill-port <port>
+
+Linux
+$ ps -a
+$ kill <PID>
+
+To display the headers:
+$ curl.exe -IL "http://localhost:8080"
+
+PS> curl.exe "http://localhost:8080"
+***/
+
 import (
   "context"
   "errors"
@@ -77,21 +116,6 @@ func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   http.NotFound(res, req)  //404 - page not found.
 }
 
-/***
-How to kill a process using a port on localhost (Windows).
-C:\> netstat -ano | findstr :<port>
-C:\> taskkill /PID <PID> /F
-or
-C:\> npx kill-port <port>
-Linux
-$ ps -a
-$ kill <PID>
-
-To display the headers:
-$ curl.exe -IL "http://localhost:8080"
-
-PS> curl.exe "http://localhost:8080"
-***/
 func main() {
   var exists bool = false
   var ev string
