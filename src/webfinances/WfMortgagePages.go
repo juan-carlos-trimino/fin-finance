@@ -10,6 +10,11 @@ import (
   "strings"
 )
 
+var mortgage_notes = [...]string {
+  "Refinance mortgage and HELOC with one load.",
+  "If the blended interest rate is higher than what you could get on a new fixed-rate mortgage, consider it.",
+}
+
 type WfMortgagePages interface {
   MortgagePages(http.ResponseWriter, *http.Request)
 }
@@ -33,14 +38,11 @@ type wfMortgagePages struct {
   fd2Compound string
   fd2Result string
   //
-  fd3FaceValue string
-  fd3TimeCall string
-  fd3TimePeriod string
-  fd3Coupon string
-  fd3Compound string
-  fd3BondPrice string
-  fd3CallPrice string
-  fd3Result string
+  fd3Mrate string
+  fd3Mbalance string
+  fd3Hrate string
+  fd3Hbalance string
+  fd3Result [3]string
 }
 
 func NewWfMortgagePages() WfMortgagePages {
@@ -63,14 +65,11 @@ func NewWfMortgagePages() WfMortgagePages {
     fd2Compound: "semiannually",
     fd2Result: "",
     //
-    fd3FaceValue: "1000.00",
-    fd3TimeCall: "2",
-    fd3TimePeriod: "year",
-    fd3Coupon: "2.0",
-    fd3Compound: "semiannually",
-    fd3BondPrice: "990.00",
-    fd3CallPrice: "1050.00",
-    fd3Result: "",
+    fd3Mrate: "3.375",
+    fd3Mbalance: "300000.00",
+    fd3Hrate: "2.875",
+    fd3Hbalance: "100000.00",
+    fd3Result: [3]string { mortgage_notes[0], mortgage_notes[1], "" },
   }
 }
 
@@ -218,60 +217,48 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
       p.currentButton = "lhs-button3"
       if req.Method == http.MethodPost {
-        p.fd3FaceValue = req.PostFormValue("fd3-facevalue")
-        p.fd3TimeCall = req.PostFormValue("fd3-timecall")
-        p.fd3TimePeriod = req.PostFormValue("fd3-tp")
-        p.fd3Coupon = req.PostFormValue("fd3-coupon")
-        p.fd3BondPrice = req.PostFormValue("fd3-bondprice")
-        p.fd3CallPrice = req.PostFormValue("fd3-callprice")
-        p.fd3Compound = req.PostFormValue("fd3-compound")
-        var fv float64
-        var timeToCall float64
-        var couponRate float64
-        var bondPrice float64
-        var callPrice float64
+        p.fd3Mrate = req.PostFormValue("fd3-mrate")
+        p.fd3Mbalance = req.PostFormValue("fd3-mbalance")
+        p.fd3Hrate = req.PostFormValue("fd3-hrate")
+        p.fd3Hbalance = req.PostFormValue("fd3-hbalance")
+        var mRate float64
+        var mBalance float64
+        var hRate float64
+        var hBalance float64
         var err error
-        if fv, err = strconv.ParseFloat(p.fd3FaceValue, 64); err != nil {
-          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3FaceValue, err)
-        } else if timeToCall, err = strconv.ParseFloat(p.fd3TimeCall, 64); err != nil {
-          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3TimeCall, err)
-        } else if couponRate, err = strconv.ParseFloat(p.fd3Coupon, 64); err != nil {
-          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Coupon, err)
-        } else if bondPrice, err = strconv.ParseFloat(p.fd3BondPrice, 64); err != nil {
-          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3BondPrice, err)
-        } else if callPrice, err = strconv.ParseFloat(p.fd3CallPrice, 64); err != nil {
-          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3CallPrice, err)
+        if mRate, err = strconv.ParseFloat(p.fd3Mrate, 64); err != nil {
+          p.fd3Result[2] = fmt.Sprintf("Error: %s -- %+v", p.fd3Mrate, err)
+        } else if mBalance, err = strconv.ParseFloat(p.fd3Mbalance, 64); err != nil {
+          p.fd3Result[2] = fmt.Sprintf("Error: %s -- %+v", p.fd3Mbalance, err)
+        } else if hRate, err = strconv.ParseFloat(p.fd3Hrate, 64); err != nil {
+          p.fd3Result[2] = fmt.Sprintf("Error: %s -- %+v", p.fd3Hrate, err)
+        } else if hBalance, err = strconv.ParseFloat(p.fd3Hbalance, 64); err != nil {
+          p.fd3Result[2] = fmt.Sprintf("Error: %s -- %+v", p.fd3Hbalance, err)
         } else {
-          var b finances.Bonds
-          p.fd3Result = fmt.Sprintf("Yield to Call: %.3f%%", b.YieldToCall(fv, couponRate,
-                                     b.GetCompoundingPeriod(p.fd3Compound[0], true), timeToCall,
-                                     b.GetTimePeriod(p.fd3TimePeriod[0], true), bondPrice,
-                                     callPrice))
+          var m finances.Mortgage
+          p.fd3Result[2] = fmt.Sprintf("Blended Interest Rate: %.3f%%",
+                                       m.BlendedInterestRate(mBalance, mRate, hBalance, hRate))
         }
         logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("fv = %s, coupon rate = %s, cp = %s, time to call = %s, tp = %s, bond price = %s, call price = %s, %s\n",
-                       p.fd3FaceValue, p.fd3Coupon, p.fd3Compound, p.fd3TimeCall, p.fd3TimePeriod,
-                       p.fd3BondPrice, p.fd3CallPrice, p.fd3Result),
+          fmt.Sprintf("mortgage balance = %s, mortgage rate = %s, HELOC balance = %s, HELOC rate = %s, %s\n",
+                      p.fd3Mbalance, p.fd3Mrate, p.fd3Hbalance, p.fd3Hrate, p.fd3Result[2]),
         })
       }
-      t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/mortgage/mortgage.html",
                                              "webfinances/templates/header.html",
-                                             "webfinances/templates/bonds/yieldtocall.html",
+                                             "webfinances/templates/mortgage/heloc.html",
                                              "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "bonds", struct {
+      t.ExecuteTemplate(res, "mortgage", struct {
         Header string
         Datetime string
         CurrentButton string
-        Fd3FaceValue string
-        Fd3TimeCall string
-        Fd3TimePeriod string
-        Fd3Coupon string
-        Fd3Compound string
-        Fd3BondPrice string
-        Fd3CallPrice string
-        Fd3Result string
+        Fd3Mrate string
+        Fd3Mbalance string
+        Fd3Hrate string
+        Fd3Hbalance string
+        Fd3Result [3]string
       } { "Bonds", m.DTF(), p.currentButton,
-          p.fd3FaceValue, p.fd3TimeCall, p.fd3TimePeriod, p.fd3Coupon, p.fd3Compound, p.fd3BondPrice, p.fd3CallPrice, p.fd3Result,
+          p.fd3Mrate, p.fd3Mbalance, p.fd3Hrate, p.fd3Hbalance, p.fd3Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
