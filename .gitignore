@@ -78,6 +78,7 @@ src/webfinances/templates/bonds/*
 # ... and this directory and its file...
 !src/webfinances/templates/mortgage/
 src/webfinances/templates/mortgage/*
+!src/webfinances/templates/mortgage/amortizationtable.html
 !src/webfinances/templates/mortgage/costofmortgage.html
 !src/webfinances/templates/mortgage/heloc.html
 !src/webfinances/templates/mortgage/mortgage.html

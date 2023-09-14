@@ -30,13 +30,12 @@ type wfMortgagePages struct {
   fd1Amount string
   fd1Result [3]string
   //
-  fd2FaceValue string
-  fd2Time string
+  fd2N string
   fd2TimePeriod string
-  fd2Coupon string
-  fd2Current string
+  fd2Interest string
   fd2Compound string
-  fd2Result string
+  fd2Amount string
+  fd2Result [][5]string  //Slice of array of 5 strings.
   //
   fd3Mrate string
   fd3Mbalance string
@@ -57,13 +56,12 @@ func NewWfMortgagePages() WfMortgagePages {
     fd1Amount: "100000.00",
     fd1Result: [3]string { "", "", "" },
     //
-    fd2FaceValue: "1000.00",
-    fd2Time: "5",
+    fd2N: "30.0",
     fd2TimePeriod: "year",
-    fd2Coupon: "3.00",
-    fd2Current: "3.5",
-    fd2Compound: "semiannually",
-    fd2Result: "",
+    fd2Interest: "3.00",
+    fd2Compound: "monthly",
+    fd2Amount: "100000.00",
+    fd2Result: [][5]string {},
     //
     fd3Mrate: "3.375",
     fd3Mbalance: "300000.00",
@@ -158,61 +156,65 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
       p.currentButton = "lhs-button2"
       if req.Method == http.MethodPost {
-        p.fd2FaceValue = req.FormValue("fd2-facevalue")
-        p.fd2Time = req.PostFormValue("fd2-time")
+        p.fd2N = req.FormValue("fd2-n")
         p.fd2TimePeriod = req.PostFormValue("fd2-tp")
-        p.fd2Coupon = req.PostFormValue("fd2-coupon")
-        p.fd2Current = req.PostFormValue("fd2-current")
+        p.fd2Interest = req.PostFormValue("fd2-i")
         p.fd2Compound = req.PostFormValue("fd2-compound")
-        var fv float64
-        var time float64
-        var coupon float64
-        var current float64
+        p.fd2Amount = req.PostFormValue("fd2-amount")
+        var n float64
+        var i float64
+        var amount float64
         var err error
-        if fv, err = strconv.ParseFloat(p.fd2FaceValue, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2FaceValue, err)
-        } else if time, err = strconv.ParseFloat(p.fd2Time, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Time, err)
-        } else if coupon, err = strconv.ParseFloat(p.fd2Coupon, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Coupon, err)
-        } else if current, err = strconv.ParseFloat(p.fd2Current, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Current, err)
+        if n, err = strconv.ParseFloat(p.fd2N, 64); err != nil {
+          //p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2N, err)
+        } else if i, err = strconv.ParseFloat(p.fd2Interest, 64); err != nil {
+          //p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Interest, err)
+        } else if amount, err = strconv.ParseFloat(p.fd2Amount, 64); err != nil {
+          //p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Amount, err)
         } else {
-          var b finances.Bonds
-          cf := b.CashFlow(fv, coupon, b.GetCompoundingPeriod(p.fd2Compound[0], true), time,
-                           b.GetTimePeriod(p.fd2TimePeriod[0], true))
-          currentPrice := b.CurrentPrice(cf, current, b.GetCompoundingPeriod(p.fd2Compound[0], true))
-          if fv > currentPrice {
-            p.fd2Result = fmt.Sprintf("Current Price: $%.2f (discount)", currentPrice)
-          } else if fv < currentPrice {
-            p.fd2Result = fmt.Sprintf("Current Price: $%.2f (premium)", currentPrice)
-          } else {
-            p.fd2Result = fmt.Sprintf("Current Price: $%.2f (par)", currentPrice)
+          var m finances.Mortgage
+          var at = m.AmortizationTable(amount, i / 100.0, p.fd1Compound[0], n, p.fd1TimePeriod[0])
+
+          var x = len(at.Rows) + 1
+          p.fd2Result = make([][5]string, x)
+          for idx := 0; idx < x; idx++ {
+            if idx == 0 {
+              p.fd2Result[idx][0] = "--"
+              p.fd2Result[idx][1] = "--"
+              p.fd2Result[idx][2] = "--"
+              p.fd2Result[idx][3] = "--"
+              p.fd2Result[idx][4] = fmt.Sprintf("%v", at.Rows[idx].Balance)
+            } else {
+              p.fd2Result[idx][0] = fmt.Sprintf("%v", idx)
+              p.fd2Result[idx][1] = fmt.Sprintf("%v", at.Rows[idx].Payment)
+              p.fd2Result[idx][2] = fmt.Sprintf("%v", at.Rows[idx].PmtPrincipal)
+              p.fd2Result[idx][3] = fmt.Sprintf("%v", at.Rows[idx].PmtInterest)
+              p.fd2Result[idx][4] = fmt.Sprintf("%v", at.Rows[idx].Balance)
+            }
           }
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon rate = %s, current interest = %s, cp = %s, %s",
-                      p.fd2FaceValue, p.fd2Time, p.fd2TimePeriod, p.fd2Coupon, p.fd2Current,
-                      p.fd2Compound, p.fd2Result),
-        })
+        // logEntry.Print(INFO, correlationId, []string {
+        //   fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon rate = %s, current interest = %s, cp = %s, %s",
+        //               p.fd2FaceValue, p.fd2Time, p.fd2TimePeriod, p.fd2Coupon, p.fd2Current,
+        //               p.fd2Compound, p.fd2Result),
+        // })
       }
-      t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/mortgage/mortgage.html",
                                              "webfinances/templates/header.html",
-                                             "webfinances/templates/bonds/currentprice.html",
+                                             "webfinances/templates/mortgage/amortizationtable.html",
                                              "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "bonds", struct {
+      t.ExecuteTemplate(res, "mortgage", struct {
         Header string
         Datetime string
         CurrentButton string
-        Fd2FaceValue string
-        Fd2Time string
+        Fd2N string
         Fd2TimePeriod string
-        Fd2Coupon string
-        Fd2Current string
+        Fd2Interest string
         Fd2Compound string
-        Fd2Result string
+        Fd2Amount string
+        Fd2Result [][5]string
       } { "Bonds", m.DTF(), p.currentButton,
-          p.fd2FaceValue, p.fd2Time, p.fd2TimePeriod, p.fd2Coupon, p.fd2Current, p.fd2Compound, p.fd2Result,
+          p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2Amount, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
       p.currentButton = "lhs-button3"
