@@ -1,5 +1,25 @@
 {{ define "mortgage-layout" }}
 
+<style>
+  table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    font-weight: bold;
+    color: rgb(2, 71, 31);
+    width: 100%;
+  }
+
+  td, th {
+    border: 2px solid #037a13;
+    text-align: center;
+    padding: 8px;
+  }
+
+  tr:nth-child(even) {
+    background-color: rgb(185, 243, 163);
+  }
+</style>
+
 <!-- rhs-ui2 -->
 <div id="rhs-ui2">
   <form action="/fin/mortgage" method="POST" enctype="application/x-www-form-urlencoded">
@@ -46,7 +66,9 @@
   </form>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
-    <table style="width:100%" border="1">
+    <p class="p-result">{{ .Fd2TotalCost }}</p>
+    <p class="p-result">{{ .Fd2TotalInterest }}</p>
+    <table>
       <caption>Amortization Table</caption>
       <tr>
         <th>Payment No.</th>
@@ -55,18 +77,16 @@
         <th>Interest</th>
         <th>Declining Balance</th>
       </tr>
+      {{ range .Fd2Result }}
       <tr>
-        <td>{{ index .Fd2Result 0 }}</td>
-        <td>{{ index .Fd2Result 1 }}</td>
-        <td>{{ index .Fd2Result 2 }}</td>
-        <td>{{ index .Fd2Result 3 }}</td>
-        <td>{{ index .Fd2Result 4 }}</td>
+        <td>{{ .PaymentNo }}</td>
+        <td>{{ .Payment }}</td>
+        <td>{{ .PmtPrincipal }}</td>
+        <td>{{ .PmtInterest }}</td>
+        <td>{{ .Balance }}</td>
       </tr>
+      {{ end }}
     </table>
-    
-    <!-- <p class="p-note">{{ index .Fd3Result 0 }}</p>
-    <p class="p-note">{{ index .Fd3Result 1 }}</p>
-    <p class="p-result">{{ index .Fd3Result 2 }}</p> -->
   </div>
 </div>
 

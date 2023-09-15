@@ -15,6 +15,11 @@ var mortgage_notes = [...]string {
   "If the blended interest rate is higher than what you could get on a new fixed-rate mortgage, consider it.",
 }
 
+type Row struct { //Rows for the amortization table.
+  PaymentNo string
+  Payment, PmtPrincipal, PmtInterest, Balance string
+}
+
 type WfMortgagePages interface {
   MortgagePages(http.ResponseWriter, *http.Request)
 }
@@ -35,7 +40,9 @@ type wfMortgagePages struct {
   fd2Interest string
   fd2Compound string
   fd2Amount string
-  fd2Result [][5]string  //Slice of array of 5 strings.
+  fd2TotalCost string
+  fd2TotalInterest string
+  fd2Result []Row
   //
   fd3Mrate string
   fd3Mbalance string
@@ -61,7 +68,9 @@ func NewWfMortgagePages() WfMortgagePages {
     fd2Interest: "3.00",
     fd2Compound: "monthly",
     fd2Amount: "100000.00",
-    fd2Result: [][5]string {},
+    fd2TotalCost: "",
+    fd2TotalInterest: "",
+    fd2Result: []Row{},
     //
     fd3Mrate: "3.375",
     fd3Mbalance: "300000.00",
@@ -166,38 +175,51 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         var amount float64
         var err error
         if n, err = strconv.ParseFloat(p.fd2N, 64); err != nil {
-          //p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2N, err)
+          p.fd2Result = append(p.fd2Result,
+                          Row {
+                            PaymentNo: fmt.Sprintf("Error: %s -- %+v", p.fd2N, err),
+                          })
         } else if i, err = strconv.ParseFloat(p.fd2Interest, 64); err != nil {
-          //p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Interest, err)
+          p.fd2Result = append(p.fd2Result,
+            Row {
+              PaymentNo: fmt.Sprintf("Error: %s -- %+v", p.fd2Interest, err),
+            })
         } else if amount, err = strconv.ParseFloat(p.fd2Amount, 64); err != nil {
-          //p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Amount, err)
+          p.fd2Result = append(p.fd2Result,
+            Row {
+              PaymentNo: fmt.Sprintf("Error: %s -- %+v", p.fd2Amount, err),
+            })
         } else {
           var m finances.Mortgage
           var at = m.AmortizationTable(amount, i / 100.0, p.fd1Compound[0], n, p.fd1TimePeriod[0])
-
-          var x = len(at.Rows) + 1
-          p.fd2Result = make([][5]string, x)
-          for idx := 0; idx < x; idx++ {
-            if idx == 0 {
-              p.fd2Result[idx][0] = "--"
-              p.fd2Result[idx][1] = "--"
-              p.fd2Result[idx][2] = "--"
-              p.fd2Result[idx][3] = "--"
-              p.fd2Result[idx][4] = fmt.Sprintf("%v", at.Rows[idx].Balance)
-            } else {
-              p.fd2Result[idx][0] = fmt.Sprintf("%v", idx)
-              p.fd2Result[idx][1] = fmt.Sprintf("%v", at.Rows[idx].Payment)
-              p.fd2Result[idx][2] = fmt.Sprintf("%v", at.Rows[idx].PmtPrincipal)
-              p.fd2Result[idx][3] = fmt.Sprintf("%v", at.Rows[idx].PmtInterest)
-              p.fd2Result[idx][4] = fmt.Sprintf("%v", at.Rows[idx].Balance)
-            }
+          var numberOfRows = len(at.Rows)
+          p.fd2Result = make([]Row, 0, numberOfRows + 1)
+          p.fd2Result = append(p.fd2Result,
+                          Row {
+                            PaymentNo: "--",
+                            Payment: "--",
+                            PmtPrincipal: "--",
+                            PmtInterest: "--",
+                            Balance: fmt.Sprintf("%.2f", amount),
+                          })
+          for idx := 0; idx < numberOfRows; idx++ {
+            p.fd2Result = append(p.fd2Result,
+                            Row {
+                              PaymentNo: fmt.Sprintf("%v", idx + 1),
+                              Payment: fmt.Sprintf("%.2f", at.Rows[idx].Payment),
+                              PmtPrincipal: fmt.Sprintf("%.2f", at.Rows[idx].PmtPrincipal),
+                              PmtInterest: fmt.Sprintf("%.2f", at.Rows[idx].PmtInterest),
+                              Balance: fmt.Sprintf("%.2f", at.Rows[idx].Balance),
+                            })
           }
+          p.fd2TotalCost = fmt.Sprintf("Total Cost: $%.2f", at.TotalCost)
+          p.fd2TotalInterest = fmt.Sprintf("Total Interest: $%.2f", at.TotalInterest)
         }
-        // logEntry.Print(INFO, correlationId, []string {
-        //   fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon rate = %s, current interest = %s, cp = %s, %s",
-        //               p.fd2FaceValue, p.fd2Time, p.fd2TimePeriod, p.fd2Coupon, p.fd2Current,
-        //               p.fd2Compound, p.fd2Result),
-        // })
+        logEntry.Print(INFO, correlationId, []string {
+          fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, amount = %s, total cost = %s, total interest = %s",
+                      p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2Amount,
+                      p.fd2TotalCost, p.fd2TotalInterest),
+        })
       }
       t := template.Must(template.ParseFiles("webfinances/templates/mortgage/mortgage.html",
                                              "webfinances/templates/header.html",
@@ -212,9 +234,12 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd2Interest string
         Fd2Compound string
         Fd2Amount string
-        Fd2Result [][5]string
+        Fd2TotalCost string
+        Fd2TotalInterest string
+        Fd2Result []Row
       } { "Bonds", m.DTF(), p.currentButton,
-          p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2Amount, p.fd2Result,
+          p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2Amount, p.fd2TotalCost,
+          p.fd2TotalInterest, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
       p.currentButton = "lhs-button3"
