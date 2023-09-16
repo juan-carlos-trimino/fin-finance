@@ -69,3 +69,11 @@ func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) 
     Datetime string
   } { "Simple Interest", m.DTF() })
 }
+
+func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering OrdinaryAnnuityPage/webfinances.\n", m.DTF())
+  tmpl.ExecuteTemplate(res, "ordinary_annuity_page", struct {
+    Header string
+    Datetime string
+  } { "Ordinary Annuity", m.DTF() })
+}

@@ -154,13 +154,13 @@ func main() {
   }
   fmt.Printf("%s - Using SHUTDOWN_TIMEOUT: %d\n", m.DTF(), SHUTDOWN_TIMEOUT)
   var wfpages = webfinances.WfPages{}
+  var wfoainterest = webfinances.NewWfOaInterestRatePages()
   var wfmortgage = webfinances.NewWfMortgagePages()
   var wfbonds = webfinances.NewWfBondsPages()
   var wfsia = webfinances.NewWfSiAccuratePages()
   var wfsio = webfinances.NewWfSiOrdinaryPages()
   var wfsib = webfinances.NewWfSiBankersPages()
   var wfmisc = webfinances.NewWfMiscellaneousPages()
-  var wfa webfinances.Annuities
   /***
   The Go web server will route requests to different functions depending on the requested URL.
   ***/
@@ -194,6 +194,8 @@ func main() {
   h.mux["/"] = wfpages.HomePage
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
+  h.mux["/fin/ordinaryannuity"] = wfpages.OrdinaryAnnuityPage
+  h.mux["/fin/ordinaryannuity/interestrate"] = wfoainterest.OaInterestRatePages
   h.mux["/finances"] = wfpages.FinancesPage
   h.mux["/fin/bonds"] = wfbonds.BondsPages
   h.mux["/fin/mortgage"] = wfmortgage.MortgagePages
@@ -202,8 +204,6 @@ func main() {
   h.mux["/fin/simpleinterest/bankers"] = wfsib.SimpleInterestBankersPages
   h.mux["/fin/simpleinterest/ordinary"] = wfsio.SimpleInterestOrdinaryPages
   h.mux["/fin/miscellaneous"] = wfmisc.MiscellaneousPages
-  h.mux["/fin/annuities/AverageRateOfReturn"] = wfa.AverageRateOfReturn
-  h.mux["/fin/annuities/GrowthDecayOfFunds"] = wfa.GrowthDecayOfFunds
   commonMiddlewares := []middlewares.Middleware {
     middlewares.CorrelationId,
   }
