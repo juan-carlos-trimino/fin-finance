@@ -44,6 +44,7 @@ src/webfinances/*
 !src/webfinances/WfBondsPages.go
 !src/webfinances/WfMiscellaneousPages.go
 !src/webfinances/WfMortgagePages.go
+!src/webfinances/WfOaInterestRatePages.go
 !src/webfinances/WfPages.go
 !src/webfinances/WfSiAccuratePages.go
 !src/webfinances/WfSiBankersPages.go
@@ -63,6 +64,7 @@ src/webfinances/templates/*
 !src/webfinances/templates/header.html
 !src/webfinances/templates/index.html
 !src/webfinances/templates/simpleinterest.html
+!src/webfinances/templates/ordinaryannuity.html
 # ... and this directory and its file...
 !src/webfinances/templates/bonds/
 src/webfinances/templates/bonds/*
@@ -82,6 +84,13 @@ src/webfinances/templates/mortgage/*
 !src/webfinances/templates/mortgage/costofmortgage.html
 !src/webfinances/templates/mortgage/heloc.html
 !src/webfinances/templates/mortgage/mortgage.html
+# ... and this directory and its file...
+!src/webfinances/templates/ordinaryannuity/
+src/webfinances/templates/ordinaryannuity/*
+!src/webfinances/templates/ordinaryannuity/interestrate/
+src/webfinances/templates/ordinaryannuity/interestrate/*
+!src/webfinances/templates/ordinaryannuity/interestrate/interestrate.html
+!src/webfinances/templates/ordinaryannuity/interestrate/n-PV-FV.html
 # ... and this directory and its file...
 !src/webfinances/templates/miscellaneous/
 src/webfinances/templates/miscellaneous/*
