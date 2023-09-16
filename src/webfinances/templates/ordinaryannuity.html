@@ -1,0 +1,60 @@
+{{ define "ordinary_annuity_page" }}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Simple Interest</title>
+    <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
+  </head>
+  <body>
+    <main>
+      {{ template "header" . }}
+      <div class="div-center">
+        <a href="/fin/ordinaryannuity/interestrate" target="_self">
+          <button class="button">Interest Rate</button>
+        </a>
+      </div>
+      <div class="div-center">
+        <a href="/fin/simpleinterest/bankers" target="_self">
+          <button class="button" disabled>Present Value</button>
+        </a>
+      </div>
+      <div class="div-center">
+        <a href="/fin/simpleinterest/accurate" target="_self">
+          <button class="button"disabled>Future Value</button>
+        </a>
+      </div>
+      <div class="div-center">
+        <a href="/fin/simpleinterest/accurate" target="_self">
+          <button class="button"disabled>Compounding Periods</button>
+        </a>
+      </div>
+      <div class="div-center">
+        <a href="/fin/simpleinterest/accurate" target="_self">
+          <button class="button"disabled>Equal Periodic Payments</button>
+        </a>
+      </div>
+      <div class="div-center">
+        <a href="/fin/simpleinterest/accurate" target="_self">
+          <button class="button"disabled>Growing Annuity</button>
+        </a>
+      </div>
+      <div class="div-center">
+        <a href="/fin/simpleinterest/accurate" target="_self">
+          <button class="button"disabled>Perpetuities</button>
+        </a>
+      </div>
+      <div class="div-center">
+        <a href="/finances" target="_self">
+          <button class="button">Back</button>
+        </a>
+      </div>
+    </main>
+    {{ template "footer" }}
+  </body>
+</html>
+
+{{ end }}
