@@ -170,9 +170,10 @@ func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, r
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd2Result = fmt.Sprintf("Interest Rate: %.3f%%", si.BankersRate(pv, a,
+          p.fd2Result = fmt.Sprintf("Interest Rate: %.3f%% %s", si.BankersRate(pv, a,
                                     periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
-                                    periods.GetTimePeriod(p.fd2TimePeriod[0], false)))
+                                    periods.GetTimePeriod(p.fd2TimePeriod[0], false)) * 100.0,
+                                    p.fd2Compound)
         }
         fmt.Printf("%s - n = %s, tp = %s, a = %s, cp = %s, pv = %s, %s\n", m.DTF(), p.fd2Time,
                    p.fd2TimePeriod, p.fd2Amount, p.fd2Compound, p.fd2PV, p.fd2Result)

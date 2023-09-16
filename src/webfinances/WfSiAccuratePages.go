@@ -182,9 +182,10 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd2Result = fmt.Sprintf("Interest Rate: %.3f%%", si.AccurateRate(pv, a,
-                                     periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
-                                     periods.GetTimePeriod(p.fd2TimePeriod[0], false)))
+          p.fd2Result = fmt.Sprintf("Interest Rate: %.3f%% %s", si.AccurateRate(pv, a,
+                                    periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
+                                    periods.GetTimePeriod(p.fd2TimePeriod[0], false)) * 100.0,
+                                    p.fd2Compound)
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, tp = %s, a = %s, cp = %s, pv = %s, %s", p.fd2Time, p.fd2TimePeriod,
