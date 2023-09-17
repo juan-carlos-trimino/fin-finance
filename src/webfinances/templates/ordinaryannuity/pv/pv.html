@@ -1,0 +1,62 @@
+{{ define "oapresentvalue" }}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>OA Present Value</title>
+    <script>
+      function disableElements(eid) {
+        if (eid === "lhs-button1") {
+          document.getElementById("lhs-button1").disabled = true;
+          document.getElementById("lhs-button2").disabled = false;
+        } else if (eid === "lhs-button2") {
+          document.getElementById("lhs-button1").disabled = false;
+          document.getElementById("lhs-button2").disabled = true;
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', (event) => {
+        disableElements('{{ .CurrentButton }}');
+      });
+    </script>
+    <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
+  </head>
+  <body>
+    <div>
+      {{ template "header" . }}
+    </div>
+    <div class="split-screen">
+      <div class="left-side">
+        <div class="div-center" style="margin-top: 20px">
+          <a href="/fin/ordinaryannuity/pv?compute=rhs-ui1" target="_self">
+            <button class="button" id="lhs-button1">
+              n, i, FV
+            </button>
+          </a>
+        </div>
+        <div class="div-center" style="margin-top: 20px">
+          <a href="/fin/ordinaryannuity/pv?compute=rhs-ui2" target="_self">
+            <button class="button" id="lhs-button2">
+              n, i, PMT
+            </button>
+          </a>
+        </div>
+        <div class="div-center">
+          <a href="/fin/ordinaryannuity" target="_self">
+            <button class="button">Back</button>
+          </a>
+        </div>
+      </div>
+      <!---->
+      <div class="right-side">
+        {{ template "oapresentvalue-layout" . }}
+      </div>
+    </div>
+    {{ template "footer" }}
+  </body>
+</html>
+
+{{ end }}
