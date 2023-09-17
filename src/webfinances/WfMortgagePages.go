@@ -237,7 +237,7 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd2TotalCost string
         Fd2TotalInterest string
         Fd2Result []Row
-      } { "Bonds", m.DTF(), p.currentButton,
+      } { "Mortgage", m.DTF(), p.currentButton,
           p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2Amount, p.fd2TotalCost,
           p.fd2TotalInterest, p.fd2Result,
         })
@@ -284,7 +284,7 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd3Hrate string
         Fd3Hbalance string
         Fd3Result [3]string
-      } { "Bonds", m.DTF(), p.currentButton,
+      } { "Mortgage", m.DTF(), p.currentButton,
           p.fd3Mrate, p.fd3Mbalance, p.fd3Hrate, p.fd3Hbalance, p.fd3Result,
         })
     } else {

@@ -146,7 +146,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd1Compound string
         Fd1PV string
         Fd1Result string
-      } { "Ordinary Interest", m.DTF(), p.currentButton,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton,
           p.fd1Time, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -192,7 +192,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd2Compound string
         Fd2PV string
         Fd2Result string
-      } { "Ordinary Interest", m.DTF(), p.currentButton,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton,
           p.fd2Time, p.fd2TimePeriod, p.fd2Amount, p.fd2Compound, p.fd2PV, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
@@ -237,7 +237,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd3Compound string
         Fd3Amount string
         Fd3Result string
-      } { "Ordinary Interest", m.DTF(), p.currentButton,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton,
           p.fd3Time, p.fd3TimePeriod, p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
@@ -283,7 +283,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd4Amount string
         Fd4PV string
         Fd4Result string
-      } { "Ordinary Interest", m.DTF(), p.currentButton,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton,
           p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result,
         })
     } else {
