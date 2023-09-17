@@ -45,7 +45,7 @@ func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   logEntry := LogEntry{}
   logEntry.Print(INFO, correlationId, []string {
-    "Entering BondsPages/webfinances.",
+    "Entering OaInterestRatePages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     /***
@@ -116,7 +116,7 @@ func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req
         Fd1PV string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity", m.DTF(), p.currentButton,
+      } { "Ordinary Annuity / Interest Rate", m.DTF(), p.currentButton,
           p.fd1N, p.fd1TimePeriod, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result,
         })
     } else {
