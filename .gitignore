@@ -39,7 +39,6 @@ src/misc/*
 # ... and this directory and its file...
 !src/webfinances/
 src/webfinances/*
-!src/webfinances/annuities.go
 !src/webfinances/Messages.go
 !src/webfinances/WfBondsPages.go
 !src/webfinances/WfMiscellaneousPages.go
