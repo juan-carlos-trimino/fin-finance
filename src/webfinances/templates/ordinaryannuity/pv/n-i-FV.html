@@ -19,6 +19,10 @@
       </select>
     </div>
     <div style="margin-top: 20px;">
+      <label class="text-box" for="fd1-interest">Interest (%)..................</label>
+      <input class="text-combo" id="fd1-interest" name="fd1-interest" value="{{ .Fd1Interest }}" type="number" step="any" maxlength="7" required/>
+    </div>
+    <div style="margin-top: 20px;">
       <label class="text-box" for="fd1-cp">Compounding Period...</label>
       <select class="text-combo" id="fd1-cp" name="fd1-cp">
         <option class="text-combo" value="annually" {{ if eq .Fd1Compound "annually" }} selected {{ end }}>Annually</option>
@@ -29,10 +33,6 @@
         <option class="text-combo" value="daily" {{ if eq .Fd1Compound "daily" }} selected {{ end }}>Daily</option>
         <option class="text-combo" value="continuously" {{if eq .Fd1Compound "continuously"}} selected {{end}}>Continuously</option>
       </select>
-    </div>
-    <div style="margin-top: 20px;">
-      <label class="text-box" for="fd1-pv">Present Value (PV).......</label>
-      <input class="text-combo" id="fd1-pv" name="fd1-pv" value="{{ .Fd1PV }}" type="number" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px;">
       <label class="text-box" for="fd1-fv">Future Value (FV)........</label>

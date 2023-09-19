@@ -20,10 +20,17 @@ type wfOaPvPages struct {
   //
   fd1N string
   fd1TimePeriod string
+  fd1Interest string
   fd1Compound string
-  fd1PV string
   fd1FV string
   fd1Result string
+  //
+  fd2N string
+  fd2TimePeriod string
+  fd2Interest string
+  fd2Compound string
+  fd2PMT string
+  fd2Result string
 }
 
 func NewWfOaPvPages() WfOaPvPages {
@@ -33,10 +40,17 @@ func NewWfOaPvPages() WfOaPvPages {
     //
     fd1N: "1.0",
     fd1TimePeriod: "year",
+    fd1Interest: "1.00",
     fd1Compound: "monthly",
-    fd1PV: "1.00",
-    fd1FV: "1.07",
+    fd1FV: "1.00",
     fd1Result: "",
+    //
+    fd2N: "1.0",
+    fd2TimePeriod: "year",
+    fd2Interest: "1.00",
+    fd2Compound: "monthly",
+    fd2PMT: "1.00",
+    fd2Result: "",
   }
 }
 
@@ -73,29 +87,28 @@ func (p *wfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
       if req.Method == http.MethodPost {
         p.fd1N = req.PostFormValue("fd1-n")
         p.fd1TimePeriod = req.PostFormValue("fd1-tp")
+        p.fd1Interest = req.PostFormValue("fd1-interest")
         p.fd1Compound = req.PostFormValue("fd1-cp")
-        p.fd1PV = req.PostFormValue("fd1-pv")
         p.fd1FV = req.PostFormValue("fd1-fv")
         var n float64
-        var pv float64
+        var i float64
         var fv float64
         var err error
         if n, err = strconv.ParseFloat(p.fd1N, 64); err != nil {
           p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1N, err)
-        } else if pv, err = strconv.ParseFloat(p.fd1PV, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1PV, err)
+        } else if i, err = strconv.ParseFloat(p.fd1Interest, 64); err != nil {
+          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1Interest, err)
         } else if fv, err = strconv.ParseFloat(p.fd1FV, 64); err != nil {
           p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1FV, err)
         } else {
           var oa finances.Annuities
-          p.fd1Result = fmt.Sprintf("Interest: %.3f%% %s", oa.O_Interest_PV_FV(pv, fv, n,
-                                    oa.GetTimePeriod(p.fd1TimePeriod[0], true),
-                                    oa.GetCompoundingPeriod(p.fd1Compound[0], true)) * 100.0,
-                                    p.fd1Compound)
+          p.fd1Result = fmt.Sprintf("PV: $%.2f", oa.O_PresentValue_FV(fv, i / 100.0,
+                                    oa.GetCompoundingPeriod(p.fd1Compound[0], true),
+                                    n, oa.GetTimePeriod(p.fd1TimePeriod[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("n = %s, tp = %s, cp = %s, pv = %s, fv = %s, %s",
-                      p.fd1N, p.fd1TimePeriod, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result),
+          fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, fv = %s, %s",
+                      p.fd1N, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1FV, p.fd1Result),
         })
       }
       /***
@@ -106,18 +119,65 @@ func (p *wfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/ordinaryannuity/pv/n-i-FV.html",
                                              "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "oapv", struct {
+      t.ExecuteTemplate(res, "oapresentvalue", struct {
         Header string
         Datetime string
         CurrentButton string
         Fd1N string
         Fd1TimePeriod string
+        Fd1Interest string
         Fd1Compound string
-        Fd1PV string
         Fd1FV string
         Fd1Result string
       } { "Ordinary Annuity / Present Value", m.DTF(), p.currentButton,
-          p.fd1N, p.fd1TimePeriod, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result,
+          p.fd1N, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1FV, p.fd1Result,
+        })
+    } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
+      p.currentButton = "lhs-button2"
+      if req.Method == http.MethodPost {
+        p.fd2N = req.FormValue("fd2-n")
+        p.fd2TimePeriod = req.PostFormValue("fd2-tp")
+        p.fd2Interest = req.PostFormValue("fd2-interest")
+        p.fd2Compound = req.PostFormValue("fd2-cp")
+        p.fd2PMT = req.PostFormValue("fd2-pmt")
+        var n float64
+        var i float64
+        var pmt float64
+        var err error
+        if n, err = strconv.ParseFloat(p.fd2N, 64); err != nil {
+          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2N, err)
+        } else if i, err = strconv.ParseFloat(p.fd2Interest, 64); err != nil {
+          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Interest, err)
+        } else if pmt, err = strconv.ParseFloat(p.fd2PMT, 64); err != nil {
+          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2PMT, err)
+        } else {
+          var oa finances.Annuities
+          p.fd2Result = fmt.Sprintf("PV: $%.2f", oa.O_PresentValue_PMT(pmt, i / 100.0,
+                                    oa.GetCompoundingPeriod(p.fd1Compound[0], true),
+                                    n, oa.GetTimePeriod(p.fd1TimePeriod[0], true)))
+        }
+        logEntry.Print(INFO, correlationId, []string {
+          fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s",
+                      p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PMT,
+                      p.fd2Result),
+        })
+      }
+      t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/pv/pv.html",
+                                             "webfinances/templates/header.html",
+                                             "webfinances/templates/ordinaryannuity/pv/n-i-PMT.html",
+                                             "webfinances/templates/footer.html"))
+      t.ExecuteTemplate(res, "oapresentvalue", struct {
+        Header string
+        Datetime string
+        CurrentButton string
+        Fd2N string
+        Fd2TimePeriod string
+        Fd2Interest string
+        Fd2Compound string
+        Fd2PMT string
+        Fd2Result string
+      } { "Ordinary Annuity / Present Value", m.DTF(), p.currentButton,
+          p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PMT, p.fd2Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
