@@ -94,6 +94,7 @@ src/webfinances/templates/ordinaryannuity/interestrate/*
 !src/webfinances/templates/ordinaryannuity/pv/
 src/webfinances/templates/ordinaryannuity/pv/*
 !src/webfinances/templates/ordinaryannuity/pv/n-i-FV.html
+!src/webfinances/templates/ordinaryannuity/pv/n-i-PMT.html
 !src/webfinances/templates/ordinaryannuity/pv/pv.html
 # ... and this directory and its file...
 !src/webfinances/templates/miscellaneous/
