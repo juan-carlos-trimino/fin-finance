@@ -245,7 +245,7 @@ func (p Periods) GetCompoundingPeriod(compoundingPeriod byte, isDaily365 bool) i
   case 'w', 'W':  //(W)eekly
     return Weekly
   case 'd', 'D':  //(D)aily
-    if isDaily365 == true {
+    if isDaily365 {
       return Daily365
     } else {
       return Daily360
