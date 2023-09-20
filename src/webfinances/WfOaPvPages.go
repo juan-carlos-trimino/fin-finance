@@ -153,8 +153,8 @@ func (p *wfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
         } else {
           var oa finances.Annuities
           p.fd2Result = fmt.Sprintf("PV: $%.2f", oa.O_PresentValue_PMT(pmt, i / 100.0,
-                                    oa.GetCompoundingPeriod(p.fd1Compound[0], true),
-                                    n, oa.GetTimePeriod(p.fd1TimePeriod[0], true)))
+                                    oa.GetCompoundingPeriod(p.fd2Compound[0], true),
+                                    n, oa.GetTimePeriod(p.fd2TimePeriod[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s",
