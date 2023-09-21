@@ -28,7 +28,6 @@ type wfSiAccuratePages struct {
   fd2Time string
   fd2TimePeriod string
   fd2Amount string
-  fd2Compound string
   fd2PV string
   fd2Result string
   //
@@ -62,7 +61,6 @@ func NewWfSiAccuratePages() WfSiAccuratePages {
     fd2Time: "1",
     fd2TimePeriod: "year",
     fd2Amount: "1.00",
-    fd2Compound: "annually",
     fd2PV: "1.00",
     fd2Result: "",
     //
@@ -132,8 +130,8 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
           var si finances.SimpleInterest
           var periods finances.Periods
           p.fd1Result = fmt.Sprintf("Amount of Interest: $%.2f", si.AccurateInterest(pv, i / 100.0,
-                                     periods.GetCompoundingPeriod(p.fd1Compound[0], false), n,
-                                     periods.GetTimePeriod(p.fd1TimePeriod[0], false)))
+                                     periods.GetCompoundingPeriod(p.fd1Compound[0], true), n,
+                                     periods.GetTimePeriod(p.fd1TimePeriod[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", p.fd1Time, p.fd1TimePeriod,
@@ -167,7 +165,6 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
         p.fd2Time = req.PostFormValue("fd2-time")
         p.fd2TimePeriod = req.PostFormValue("fd2-tp")
         p.fd2Amount = req.PostFormValue("fd2-amount")
-        p.fd2Compound = req.PostFormValue("fd2-compound")
         p.fd2PV = req.PostFormValue("fd2-pv")
         var n float64
         var a float64
@@ -182,14 +179,12 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd2Result = fmt.Sprintf("Interest Rate: %.3f%% %s", si.AccurateRate(pv, a,
-                                    periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
-                                    periods.GetTimePeriod(p.fd2TimePeriod[0], false)) * 100.0,
-                                    p.fd2Compound)
+          p.fd2Result = fmt.Sprintf("Interest Rate: %.3f%%", si.AccurateRate(pv, a,
+                                    n, periods.GetTimePeriod(p.fd2TimePeriod[0], true)) * 100.0)
         }
         logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("n = %s, tp = %s, a = %s, cp = %s, pv = %s, %s", p.fd2Time, p.fd2TimePeriod,
-                       p.fd2Amount, p.fd2Compound, p.fd2PV, p.fd2Result),
+          fmt.Sprintf("n = %s, tp = %s, a = %s, pv = %s, %s", p.fd2Time, p.fd2TimePeriod,
+                       p.fd2Amount, p.fd2PV, p.fd2Result),
         })
       }
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestaccurate/accurate.html",
@@ -203,11 +198,10 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
         Fd2Time string
         Fd2TimePeriod string
         Fd2Amount string
-        Fd2Compound string
         Fd2PV string
         Fd2Result string
       } { "Simple Interest / Accurate (Exact) Interest", m.DTF(), p.currentButton,
-          p.fd2Time, p.fd2TimePeriod, p.fd2Amount, p.fd2Compound, p.fd2PV, p.fd2Result,
+          p.fd2Time, p.fd2TimePeriod, p.fd2Amount, p.fd2PV, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
       p.currentButton = "lhs-button3"
@@ -231,8 +225,8 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
           var si finances.SimpleInterest
           var periods finances.Periods
           p.fd3Result = fmt.Sprintf("Principal: $%.2f", si.AccuratePrincipal(a, i / 100.0,
-                                     periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
-                                     periods.GetTimePeriod(p.fd2TimePeriod[0], false)))
+                                     periods.GetCompoundingPeriod(p.fd3Compound[0], true), n,
+                                     periods.GetTimePeriod(p.fd3TimePeriod[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s\n", p.fd3Time, p.fd3TimePeriod,
@@ -277,15 +271,14 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd4Result = fmt.Sprintf("Time: %.2f %s(s)", si.AccurateTime(pv, a, i / 100.0,
-                                     periods.GetCompoundingPeriod(p.fd4Compound[0], false),
-                                     periods.GetTimePeriod(p.fd4TimePeriod[0], false)),
-                                     p.fd4TimePeriod)
+          p.fd4Result = fmt.Sprintf("Time: %.2f %s", si.AccurateTime(pv, a, i / 100.0,
+                                     periods.GetCompoundingPeriod(p.fd4Compound[0], true),
+                                     periods.GetTimePeriod(p.fd4TimePeriod[0], true)),
+                                     periods.TimePeriods(p.fd4Compound))
         }
         logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("tp = %s, i = %s, cp = %s, a = %s, i = %s, pv = %s, %s\n", p.fd3Time,
-                       p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV,
-                       p.fd4Result),
+          fmt.Sprintf("tp = %s, i = %s, cp = %s, a = %s, pv = %s, %s\n", p.fd4TimePeriod,
+                       p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result),
         })
       }
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestaccurate/accurate.html",
