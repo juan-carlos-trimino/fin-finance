@@ -18,7 +18,7 @@
       <input class="text-combo" id="fd1-time" name="fd1-time" value="{{ .Fd1Time }}" type="number" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px">
-      <label class="text-box" for="fd1-tp">Time Periodx..................</label>
+      <label class="text-box" for="fd1-tp">Time Period..................</label>
       <select class="text-combo" id="fd1-tp" name="fd1-tp">
         <option class="text-combo" value="year" {{ if eq .Fd1TimePeriod "year" }} selected {{ end }}>Year(s)</option>
         <option class="text-combo" value="semiyear" {{ if eq .Fd1TimePeriod "semiyear" }} selected {{ end }}>Semiyear(s)</option>
