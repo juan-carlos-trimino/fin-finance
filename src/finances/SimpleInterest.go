@@ -164,40 +164,32 @@ func (si *SimpleInterest) AccurateInterest(p, i float64, cp int, n float64, tp i
   if cp == Continuously {
     return (math.NaN())
   }
-  n = si.numberOfPeriods(n, tp, float64(Daily365), cp)
+  i /= float64(cp)
+  n /= float64(tp)
+  n *= float64(cp);
   return (p * i * n) //INT
 }
 
-func (si *SimpleInterest) AccurateRate(p, INT float64, cp int, n float64, tp int) float64 {
-  if cp == Continuously {
-    return (math.NaN())
-  }
-  n = si.numberOfPeriods(n, tp, float64(Daily365), cp)
+func (si *SimpleInterest) AccurateRate(p, INT float64, n float64, tp int) float64 {
+  n /= float64(tp)
   return (INT / (p * n)) //rate.
 }
 
-func (si *SimpleInterest) AccuratePrincipal(INT, rate float64, cp int, n float64, tp int) float64 {
+func (si *SimpleInterest) AccuratePrincipal(amount, INT float64, cp int, n float64, tp int) float64 {
   if cp == Continuously {
     return (math.NaN())
   }
-  n = si.numberOfPeriods(n, tp, float64(Daily365), cp)
-  return (INT / (rate * n)) //p
+  INT /= float64(cp)
+  n /= float64(tp)
+  n *= float64(cp)
+  return (amount / (INT * n)) //p
 }
 
-func (si *SimpleInterest) AccurateTime(p, INT, rate float64, cp, tp int) (time float64) {
+func (si *SimpleInterest) AccurateTime(p, amount, INT float64, cp, tp int) (n float64) {
   if cp == Continuously {
     return (math.NaN())
   }
-  rate /= float64(cp)
-  time = INT / (rate * p)
-  if tp == Days {
-    tp = Daily365
-  }
-  //
-  if cp == tp {
-    time /= float64(tp)
-  } else {
-    time *= float64(tp)
-  }
+  amount *= float64(cp)
+  n = amount / (INT * p)
   return
 }
