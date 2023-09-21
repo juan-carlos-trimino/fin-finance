@@ -270,7 +270,7 @@ func (p Periods) GetTimePeriod(timePeriod byte, isDaily365 bool) int {
   case 'w', 'W':  //(W)eeks
     return Weeks
   case 'd', 'D':  //(D)ays
-    if isDaily365 == true {
+    if isDaily365 {
       return Daily365
     } else {
       return Daily360
