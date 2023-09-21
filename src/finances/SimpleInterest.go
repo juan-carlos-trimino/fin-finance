@@ -185,7 +185,7 @@ func (si *SimpleInterest) AccuratePrincipal(amount, INT float64, cp int, n float
   return (amount / (INT * n)) //p
 }
 
-func (si *SimpleInterest) AccurateTime(p, amount, INT float64, cp, tp int) (n float64) {
+func (si *SimpleInterest) AccurateTime(p, amount, INT float64, cp int) (n float64) {
   if cp == Continuously {
     return (math.NaN())
   }

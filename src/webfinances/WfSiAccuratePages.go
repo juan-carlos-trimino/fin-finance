@@ -38,7 +38,6 @@ type wfSiAccuratePages struct {
   fd3Amount string
   fd3Result string
   //
-  fd4TimePeriod string
   fd4Interest string
   fd4Compound string
   fd4Amount string
@@ -71,7 +70,6 @@ func NewWfSiAccuratePages() WfSiAccuratePages {
     fd3Amount: "1.00",
     fd3Result: "",
     //
-    fd4TimePeriod: "year",
     fd4Interest: "1.00",
     fd4Compound: "annually",
     fd4Amount: "1.00",
@@ -253,7 +251,6 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
     } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
       p.currentButton = "lhs-button4"
       if req.Method == http.MethodPost {
-        p.fd4TimePeriod = req.FormValue("fd4-tp")
         p.fd4Interest = req.FormValue("fd4-interest")
         p.fd4Compound = req.FormValue("fd4-compound")
         p.fd4Amount = req.FormValue("fd4-amount")
@@ -272,13 +269,12 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
           var si finances.SimpleInterest
           var periods finances.Periods
           p.fd4Result = fmt.Sprintf("Time: %.2f %s", si.AccurateTime(pv, a, i / 100.0,
-                                     periods.GetCompoundingPeriod(p.fd4Compound[0], true),
-                                     periods.GetTimePeriod(p.fd4TimePeriod[0], true)),
+                                     periods.GetCompoundingPeriod(p.fd4Compound[0], true)),
                                      periods.TimePeriods(p.fd4Compound))
         }
         logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("tp = %s, i = %s, cp = %s, a = %s, pv = %s, %s\n", p.fd4TimePeriod,
-                       p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result),
+          fmt.Sprintf("i = %s, cp = %s, a = %s, pv = %s, %s\n", p.fd4Interest, p.fd4Compound,
+                      p.fd4Amount, p.fd4PV, p.fd4Result),
         })
       }
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestaccurate/accurate.html",
@@ -289,14 +285,13 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
         Header string
         Datetime string
         CurrentButton string
-        Fd4TimePeriod string
         Fd4Interest string
         Fd4Compound string
         Fd4Amount string
         Fd4PV string
         Fd4Result string
       } { "Simple Interest / Accurate (Exact) Interest", m.DTF(), p.currentButton,
-          p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result,
+          p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
