@@ -3,17 +3,6 @@
 <!-- rhs-ui4 -->
 <div id="rhs-ui4">
   <form action="/fin/simpleinterest/bankers" method="POST">
-    <div style="margin-top: 20px">
-      <label class="text-box" for="fd4-tp">Time Period...................</label>
-      <select class="text-combo" id="fd4-tp" name="fd4-tp">
-        <option class="text-combo" value="year" {{ if eq .Fd4TimePeriod "year" }} selected {{ end }}>Year(s)</option>
-        <option class="text-combo" value="semiyear" {{ if eq .Fd4TimePeriod "semiyear" }} selected {{ end }}>Semiyear(s)</option>
-        <option class="text-combo" value="quarter" {{ if eq .Fd4TimePeriod "quarter" }} selected {{ end }}>Quarter(s)</option>
-        <option class="text-combo" value="month" {{ if eq .Fd4TimePeriod "month" }} selected {{ end }}>Month(s)</option>
-        <option class="text-combo" value="week" {{ if eq .Fd4TimePeriod "week" }} selected {{ end }}>Week(s)</option>
-        <option class="text-combo" value="day" {{ if eq .Fd4TimePeriod "day" }} selected {{ end }}>Day(s)</option>
-      </select>
-    </div>
     <div style="margin-top: 20px;">
       <label class="text-box" for="fd4-interest">Interest (i %).................</label>
       <input class="text-combo" id="fd4-interest" name="fd4-interest" value="{{ .Fd4Interest }}" type="number" step="any" maxlength="7" required/>

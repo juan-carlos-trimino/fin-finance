@@ -268,7 +268,7 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd4Result = fmt.Sprintf("Time: %.2f %s", si.AccurateTime(pv, a, i / 100.0,
+          p.fd4Result = fmt.Sprintf("Time: %.3f %s", si.AccurateTime(pv, a, i / 100.0,
                                      periods.GetCompoundingPeriod(p.fd4Compound[0], true)),
                                      periods.TimePeriods(p.fd4Compound))
         }

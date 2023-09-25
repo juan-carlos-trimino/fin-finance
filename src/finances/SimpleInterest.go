@@ -122,41 +122,33 @@ func (si *SimpleInterest) BankersInterest(p, i float64, cp int, n float64, tp in
   if cp == Continuously {
     return (math.NaN())
   }
-  n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
-  return (p * i * n) //INT
+  i /= float64(cp)
+  n /= float64(tp)
+  n *= float64(cp)
+  return (p * i * n)
 }
 
-func (si *SimpleInterest) BankersRate(p, INT float64, cp int, n float64, tp int) float64 {
+func (si *SimpleInterest) BankersRate(p, amount float64, n float64, tp int) float64 {
+  n /= float64(tp)
+  return (amount / (p * n))
+}
+
+func (si *SimpleInterest) BankersPrincipal(amount, INT float64, cp int, n float64, tp int) float64 {
   if cp == Continuously {
     return (math.NaN())
   }
-  n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
-  return (INT / (p * n)) //rate.
+  INT /= float64(cp)
+  n /= float64(tp)
+  n *= float64(cp)
+  return (amount / (INT * n))
 }
 
-func (si *SimpleInterest) BankersPrincipal(INT, rate float64, cp int, n float64, tp int) float64 {
+func (si *SimpleInterest) BankersTime(p, amount, INT float64, cp int) (n float64) {
   if cp == Continuously {
     return (math.NaN())
   }
-  n = si.numberOfPeriods(n, tp, float64(Daily360), cp)
-  return (INT / (rate * n)) //p
-}
-
-func (si *SimpleInterest) BankersTime(p, INT, rate float64, cp, tp int) (time float64) {
-  if cp == Continuously {
-    return (math.NaN())
-  }
-  rate /= float64(cp)
-  time = INT / (rate * p)
-  if tp == Days {
-    tp = Daily360
-  }
-  //
-  if cp == tp {
-    time /= float64(tp)
-  } else {
-    time *= float64(tp)
-  }
+  amount *= float64(cp)
+  n = amount / (INT * p)
   return
 }
 
@@ -167,12 +159,12 @@ func (si *SimpleInterest) AccurateInterest(p, i float64, cp int, n float64, tp i
   i /= float64(cp)
   n /= float64(tp)
   n *= float64(cp);
-  return (p * i * n) //INT
+  return (p * i * n)
 }
 
-func (si *SimpleInterest) AccurateRate(p, INT float64, n float64, tp int) float64 {
+func (si *SimpleInterest) AccurateRate(p, amount float64, n float64, tp int) float64 {
   n /= float64(tp)
-  return (INT / (p * n)) //rate.
+  return (amount / (p * n))
 }
 
 func (si *SimpleInterest) AccuratePrincipal(amount, INT float64, cp int, n float64, tp int) float64 {
@@ -182,7 +174,7 @@ func (si *SimpleInterest) AccuratePrincipal(amount, INT float64, cp int, n float
   INT /= float64(cp)
   n /= float64(tp)
   n *= float64(cp)
-  return (amount / (INT * n)) //p
+  return (amount / (INT * n))
 }
 
 func (si *SimpleInterest) AccurateTime(p, amount, INT float64, cp int) (n float64) {
