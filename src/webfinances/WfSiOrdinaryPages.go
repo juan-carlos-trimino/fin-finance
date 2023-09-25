@@ -27,7 +27,6 @@ type wfSiOrdinaryPages struct {
   fd2Time string
   fd2TimePeriod string
   fd2Amount string
-  fd2Compound string
   fd2PV string
   fd2Result string
   //
@@ -38,7 +37,6 @@ type wfSiOrdinaryPages struct {
   fd3Amount string
   fd3Result string
   //
-  fd4TimePeriod string
   fd4Interest string
   fd4Compound string
   fd4Amount string
@@ -61,7 +59,6 @@ func NewWfSiOrdinaryPages() WfSiOrdinaryPages {
     fd2Time: "1",
     fd2TimePeriod: "year",
     fd2Amount: "1.00",
-    fd2Compound: "annually",
     fd2PV: "1.00",
     fd2Result: "",
     //
@@ -72,7 +69,6 @@ func NewWfSiOrdinaryPages() WfSiOrdinaryPages {
     fd3Amount: "1.00",
     fd3Result: "",
     //
-    fd4TimePeriod: "year",
     fd4Interest: "1.00",
     fd4Compound: "annually",
     fd4Amount: "1.00",
@@ -155,7 +151,6 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         p.fd2Time = req.PostFormValue("fd2-time")
         p.fd2TimePeriod = req.PostFormValue("fd2-tp")
         p.fd2Amount = req.PostFormValue("fd2-amount")
-        p.fd2Compound = req.PostFormValue("fd2-compound")
         p.fd2PV = req.PostFormValue("fd2-pv")
         var n float64
         var a float64
@@ -170,13 +165,11 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd2Result = fmt.Sprintf("Interest Rate: %.3f%% %s", si.OrdinaryRate(pv, a,
-                                    periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
-                                    periods.GetTimePeriod(p.fd2TimePeriod[0], false)) * 100.0,
-                                    p.fd2Compound)
+          p.fd2Result = fmt.Sprintf("Interest Rate: %.3f%%", si.OrdinaryRate(pv, a,
+                                    n, periods.GetTimePeriod(p.fd2TimePeriod[0], false)) * 100.0)
         }
-        fmt.Printf("%s - n = %s, tp = %s, a = %s, cp = %s, pv = %s, %s\n", m.DTF(), p.fd2Time,
-                  p.fd2TimePeriod, p.fd2Amount, p.fd2Compound, p.fd2PV, p.fd2Result)
+        fmt.Printf("%s - n = %s, tp = %s, a = %s, pv = %s, %s\n", m.DTF(), p.fd2Time,
+                  p.fd2TimePeriod, p.fd2Amount, p.fd2PV, p.fd2Result)
       }
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestordinary/ordinary.html",
                                              "webfinances/templates/header.html",
@@ -189,11 +182,10 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd2Time string
         Fd2TimePeriod string
         Fd2Amount string
-        Fd2Compound string
         Fd2PV string
         Fd2Result string
       } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton,
-          p.fd2Time, p.fd2TimePeriod, p.fd2Amount, p.fd2Compound, p.fd2PV, p.fd2Result,
+          p.fd2Time, p.fd2TimePeriod, p.fd2Amount, p.fd2PV, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
       p.currentButton = "lhs-button3"
@@ -217,8 +209,8 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
           var si finances.SimpleInterest
           var periods finances.Periods
           p.fd3Result = fmt.Sprintf("Principal: $%.2f", si.OrdinaryPrincipal(a, i / 100.0,
-                                    periods.GetCompoundingPeriod(p.fd2Compound[0], false), n,
-                                    periods.GetTimePeriod(p.fd2TimePeriod[0], false)))
+                                    periods.GetCompoundingPeriod(p.fd3Compound[0], false), n,
+                                    periods.GetTimePeriod(p.fd3TimePeriod[0], false)))
         }
         fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, a = %s, %s\n", m.DTF(), p.fd3Time,
                    p.fd3TimePeriod, p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result)
@@ -243,7 +235,6 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
     } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
       p.currentButton = "lhs-button4"
       if req.Method == http.MethodPost {
-        p.fd4TimePeriod = req.PostFormValue("fd4-tp")
         p.fd4Interest = req.PostFormValue("fd4-interest")
         p.fd4Compound = req.PostFormValue("fd4-compound")
         p.fd4Amount = req.PostFormValue("fd4-amount")
@@ -261,13 +252,12 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd4Result = fmt.Sprintf("Time: %.2f %s(s)", si.OrdinaryTime(pv, a, i / 100.0,
-                                    periods.GetCompoundingPeriod(p.fd4Compound[0], false),
-                                    periods.GetTimePeriod(p.fd4TimePeriod[0], false)),
-                                    p.fd4TimePeriod)
+          p.fd4Result = fmt.Sprintf("Time: %.2f %s", si.OrdinaryTime(pv, a, i / 100.0,
+                                    periods.GetCompoundingPeriod(p.fd4Compound[0], false)),
+                                    periods.TimePeriods(p.fd4Compound))
         }
-        fmt.Printf("%s - tp = %s, i = %s, cp = %s, a = %s, i = %s, pv = %s, %s\n", m.DTF(), p.fd3Time,
-                   p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result)
+        fmt.Printf("%s - i = %s, cp = %s, a = %s, pv = %s, %s\n", m.DTF(),
+                   p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result)
       }
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestordinary/ordinary.html",
                                              "webfinances/templates/header.html",
@@ -277,14 +267,13 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Header string
         Datetime string
         CurrentButton string
-        Fd4TimePeriod string
         Fd4Interest string
         Fd4Compound string
         Fd4Amount string
         Fd4PV string
         Fd4Result string
       } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton,
-          p.fd4TimePeriod, p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result,
+          p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
