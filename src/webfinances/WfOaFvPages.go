@@ -102,7 +102,7 @@ func (p *wfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
           p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1FV, err)
         } else {
           var oa finances.Annuities
-          p.fd1Result = fmt.Sprintf("PV: $%.2f", oa.O_PresentValue_FV(fv, i / 100.0,
+          p.fd1Result = fmt.Sprintf("Future Value: $%.2f", oa.O_PresentValue_FV(fv, i / 100.0,
                                     oa.GetCompoundingPeriod(p.fd1Compound[0], true),
                                     n, oa.GetTimePeriod(p.fd1TimePeriod[0], true)))
         }
@@ -152,14 +152,13 @@ func (p *wfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
           p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2PMT, err)
         } else {
           var oa finances.Annuities
-          p.fd2Result = fmt.Sprintf("PV: $%.2f", oa.O_PresentValue_PMT(pmt, i / 100.0,
-                                    oa.GetCompoundingPeriod(p.fd1Compound[0], true),
-                                    n, oa.GetTimePeriod(p.fd1TimePeriod[0], true)))
+          p.fd2Result = fmt.Sprintf("Future Value: $%.2f", oa.O_PresentValue_PMT(pmt, i / 100.0,
+                                    oa.GetCompoundingPeriod(p.fd2Compound[0], true),
+                                    n, oa.GetTimePeriod(p.fd2TimePeriod[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s",
-                      p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PMT,
-                      p.fd2Result),
+          fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s", p.fd2N,
+                      p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PMT, p.fd2Result),
         })
       }
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/fv/fv.html",
