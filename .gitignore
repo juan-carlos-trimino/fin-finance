@@ -44,6 +44,7 @@ src/webfinances/*
 !src/webfinances/WfMiscellaneousPages.go
 !src/webfinances/WfMortgagePages.go
 !src/webfinances/WfOaInterestRatePages.go
+!src/webfinances/WfOaCpPages.go
 !src/webfinances/WfOaFvPages.go
 !src/webfinances/WfOaPvPages.go
 !src/webfinances/WfPages.go
@@ -88,6 +89,12 @@ src/webfinances/templates/mortgage/*
 # ... and this directory and its file...
 !src/webfinances/templates/ordinaryannuity/
 src/webfinances/templates/ordinaryannuity/*
+!src/webfinances/templates/ordinaryannuity/cp/
+src/webfinances/templates/ordinaryannuity/cp/*
+!src/webfinances/templates/ordinaryannuity/cp/cp.html
+!src/webfinances/templates/ordinaryannuity/cp/i-PMT-FV.html
+!src/webfinances/templates/ordinaryannuity/cp/i-PMT-PV.html
+!src/webfinances/templates/ordinaryannuity/cp/i-PV-FV.html
 !src/webfinances/templates/ordinaryannuity/interestrate/
 src/webfinances/templates/ordinaryannuity/interestrate/*
 !src/webfinances/templates/ordinaryannuity/interestrate/interestrate.html
