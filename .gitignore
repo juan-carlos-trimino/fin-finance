@@ -92,6 +92,11 @@ src/webfinances/templates/ordinaryannuity/*
 src/webfinances/templates/ordinaryannuity/interestrate/*
 !src/webfinances/templates/ordinaryannuity/interestrate/interestrate.html
 !src/webfinances/templates/ordinaryannuity/interestrate/n-PV-FV.html
+!src/webfinances/templates/ordinaryannuity/fv/
+src/webfinances/templates/ordinaryannuity/fv/*
+!src/webfinances/templates/ordinaryannuity/fv/fv.html
+!src/webfinances/templates/ordinaryannuity/fv/n-i-PMT.html
+!src/webfinances/templates/ordinaryannuity/fv/n-i-PV.html
 !src/webfinances/templates/ordinaryannuity/pv/
 src/webfinances/templates/ordinaryannuity/pv/*
 !src/webfinances/templates/ordinaryannuity/pv/n-i-FV.html
