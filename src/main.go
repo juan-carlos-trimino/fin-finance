@@ -158,6 +158,7 @@ func main() {
   var wfoapv = webfinances.NewWfOaPvPages()
   var wfoafv = webfinances.NewWfOaFvPages()
   var wfoacp = webfinances.NewWfOaCpPages()
+  var wfoaepp = webfinances.NewWfOaEppPages()
   var wfmortgage = webfinances.NewWfMortgagePages()
   var wfbonds = webfinances.NewWfBondsPages()
   var wfsia = webfinances.NewWfSiAccuratePages()
@@ -189,10 +190,8 @@ func main() {
     // //https://go.dev/src/net/http/status.go
     res.WriteHeader(http.StatusOK)
   }
-
   // files := http.FileServer(http.Dir("/public"))
   // fmt.Println(files)
-
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/"] = wfpages.HomePage
   h.mux["/contact"] = wfpages.ContactPage
@@ -202,6 +201,7 @@ func main() {
   h.mux["/fin/ordinaryannuity/fv"] = wfoafv.OaFvPages
   h.mux["/fin/ordinaryannuity/pv"] = wfoapv.OaPvPages
   h.mux["/fin/ordinaryannuity/cp"] = wfoacp.OaCpPages
+  h.mux["/fin/ordinaryannuity/epp"] = wfoaepp.OaEppPages
   h.mux["/finances"] = wfpages.FinancesPage
   h.mux["/fin/bonds"] = wfbonds.BondsPages
   h.mux["/fin/mortgage"] = wfmortgage.MortgagePages

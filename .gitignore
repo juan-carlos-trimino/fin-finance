@@ -45,6 +45,7 @@ src/webfinances/*
 !src/webfinances/WfMortgagePages.go
 !src/webfinances/WfOaInterestRatePages.go
 !src/webfinances/WfOaCpPages.go
+!src/webfinances/WfOaEppPages.go
 !src/webfinances/WfOaFvPages.go
 !src/webfinances/WfOaPvPages.go
 !src/webfinances/WfPages.go
@@ -95,6 +96,11 @@ src/webfinances/templates/ordinaryannuity/cp/*
 !src/webfinances/templates/ordinaryannuity/cp/i-PMT-FV.html
 !src/webfinances/templates/ordinaryannuity/cp/i-PMT-PV.html
 !src/webfinances/templates/ordinaryannuity/cp/i-PV-FV.html
+!src/webfinances/templates/ordinaryannuity/epp/
+src/webfinances/templates/ordinaryannuity/epp/*
+!src/webfinances/templates/ordinaryannuity/epp/epp.html
+!src/webfinances/templates/ordinaryannuity/epp/n-i-FV.html
+!src/webfinances/templates/ordinaryannuity/epp/n-i-PV.html
 !src/webfinances/templates/ordinaryannuity/interestrate/
 src/webfinances/templates/ordinaryannuity/interestrate/*
 !src/webfinances/templates/ordinaryannuity/interestrate/interestrate.html
