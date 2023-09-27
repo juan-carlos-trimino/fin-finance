@@ -47,6 +47,7 @@ src/webfinances/*
 !src/webfinances/WfOaCpPages.go
 !src/webfinances/WfOaEppPages.go
 !src/webfinances/WfOaFvPages.go
+!src/webfinances/WfOaGaPages.go
 !src/webfinances/WfOaPvPages.go
 !src/webfinances/WfPages.go
 !src/webfinances/WfSiAccuratePages.go
@@ -101,6 +102,11 @@ src/webfinances/templates/ordinaryannuity/epp/*
 !src/webfinances/templates/ordinaryannuity/epp/epp.html
 !src/webfinances/templates/ordinaryannuity/epp/n-i-FV.html
 !src/webfinances/templates/ordinaryannuity/epp/n-i-PV.html
+!src/webfinances/templates/ordinaryannuity/ga/
+src/webfinances/templates/ordinaryannuity/ga/*
+!src/webfinances/templates/ordinaryannuity/ga/FV.html
+!src/webfinances/templates/ordinaryannuity/ga/ga.html
+!src/webfinances/templates/ordinaryannuity/ga/PV.html
 !src/webfinances/templates/ordinaryannuity/interestrate/
 src/webfinances/templates/ordinaryannuity/interestrate/*
 !src/webfinances/templates/ordinaryannuity/interestrate/interestrate.html
