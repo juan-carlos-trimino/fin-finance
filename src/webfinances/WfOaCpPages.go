@@ -109,8 +109,9 @@ func (p *wfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
           p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1FV, err)
         } else {
           var oa finances.Annuities
-          p.fd1Result = fmt.Sprintf("Compounding Period: %.3f", oa.O_Periods_PV_FV(pv, fv,
-                                    i / 100.0, oa.GetCompoundingPeriod(p.fd1Compound[0], true)))
+          p.fd1Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.O_Periods_PV_FV(pv, fv,
+                                    i / 100.0, oa.GetCompoundingPeriod(p.fd1Compound[0], true)),
+                                    oa.TimePeriods(p.fd1Compound))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("i = %s, cp = %s, pv = %s, fv = %s, %s",
@@ -156,8 +157,9 @@ func (p *wfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
           p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2PV, err)
         } else {
           var oa finances.Annuities
-          p.fd2Result = fmt.Sprintf("Compounding Period: %.3f", oa.O_Periods_PMT_PV(pmt, pv,
-                                    i / 100.0, oa.GetCompoundingPeriod(p.fd2Compound[0], true)))
+          p.fd2Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.O_Periods_PMT_PV(pmt, pv,
+                                    i / 100.0, oa.GetCompoundingPeriod(p.fd2Compound[0], true)),
+                                    oa.TimePeriods(p.fd2Compound))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("i = %s, cp = %s, pmt = %s, pv = %s, %s",
@@ -199,8 +201,9 @@ func (p *wfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
           p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3FV, err)
         } else {
           var oa finances.Annuities
-          p.fd3Result = fmt.Sprintf("Compounding Period: %.3f", oa.O_Periods_PMT_FV(pmt, fv,
-                                    i / 100.0, oa.GetCompoundingPeriod(p.fd3Compound[0], true)))
+          p.fd3Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.O_Periods_PMT_FV(pmt, fv,
+                                    i / 100.0, oa.GetCompoundingPeriod(p.fd3Compound[0], true)),
+                                    oa.TimePeriods(p.fd3Compound))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", p.fd3Interest,
