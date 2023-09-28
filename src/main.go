@@ -174,7 +174,7 @@ func main() {
   The Go web server will route requests to different functions depending on the requested URL.
   ***/
   var h handlers = handlers{}
-  h.mux = make(map[string]http.HandlerFunc, 32)
+  h.mux = make(map[string]http.HandlerFunc, 64)
   h.mux["/readiness"] =
   func (res http.ResponseWriter, req *http.Request) {
     fmt.Printf("\naaaaaaServer not ready. %s\n", SERVER)
