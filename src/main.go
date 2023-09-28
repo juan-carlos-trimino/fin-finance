@@ -154,6 +154,7 @@ func main() {
   }
   fmt.Printf("%s - Using SHUTDOWN_TIMEOUT: %d\n", m.DTF(), SHUTDOWN_TIMEOUT)
   var wfpages = webfinances.WfPages{}
+  var wfadpv = webfinances.NewWfAdPvPages()
   var wfoainterest = webfinances.NewWfOaInterestRatePages()
   var wfoapv = webfinances.NewWfOaPvPages()
   var wfoafv = webfinances.NewWfOaFvPages()
@@ -206,6 +207,8 @@ func main() {
   h.mux["/fin/ordinaryannuity/epp"] = wfoaepp.OaEppPages
   h.mux["/fin/ordinaryannuity/ga"] = wfoaga.OaGaPages
   h.mux["/fin/ordinaryannuity/perpetuity"] = wfoaperpetuity.OaPerpetuityPages
+  h.mux["/fin/annuitydue"] = wfpages.AnnuityDuePage
+  h.mux["/fin/annuitydue/pv"] = wfadpv.AdPvPages
   h.mux["/finances"] = wfpages.FinancesPage
   h.mux["/fin/bonds"] = wfbonds.BondsPages
   h.mux["/fin/mortgage"] = wfmortgage.MortgagePages

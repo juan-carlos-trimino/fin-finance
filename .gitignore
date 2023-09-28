@@ -43,6 +43,7 @@ src/webfinances/*
 !src/webfinances/WfBondsPages.go
 !src/webfinances/WfMiscellaneousPages.go
 !src/webfinances/WfMortgagePages.go
+!src/webfinances/WfAdPvPages.go
 !src/webfinances/WfOaInterestRatePages.go
 !src/webfinances/WfOaCpPages.go
 !src/webfinances/WfOaEppPages.go
@@ -63,6 +64,7 @@ src/webfinances/public/css/*
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
+!src/webfinances/templates/annuitydue.html
 !src/webfinances/templates/contact.html
 !src/webfinances/templates/finances.html
 !src/webfinances/templates/footer.html
@@ -127,6 +129,12 @@ src/webfinances/templates/ordinaryannuity/pv/*
 !src/webfinances/templates/ordinaryannuity/pv/n-i-FV.html
 !src/webfinances/templates/ordinaryannuity/pv/n-i-PMT.html
 !src/webfinances/templates/ordinaryannuity/pv/pv.html
+# ... and this directory and its file...
+!src/webfinances/templates/annuitydue/pv/
+src/webfinances/templates/annuitydue/pv/*
+!src/webfinances/templates/annuitydue/pv/n-i-FV.html
+!src/webfinances/templates/annuitydue/pv/n-i-PMT.html
+!src/webfinances/templates/annuitydue/pv/pv.html
 # ... and this directory and its file...
 !src/webfinances/templates/miscellaneous/
 src/webfinances/templates/miscellaneous/*
