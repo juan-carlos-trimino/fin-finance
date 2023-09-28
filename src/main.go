@@ -160,6 +160,7 @@ func main() {
   var wfoacp = webfinances.NewWfOaCpPages()
   var wfoaepp = webfinances.NewWfOaEppPages()
   var wfoaga = webfinances.NewWfOaGaPages()
+  var wfoaperpetuity = webfinances.NewWfOaPerpetuityPages()
   var wfmortgage = webfinances.NewWfMortgagePages()
   var wfbonds = webfinances.NewWfBondsPages()
   var wfsia = webfinances.NewWfSiAccuratePages()
@@ -204,6 +205,7 @@ func main() {
   h.mux["/fin/ordinaryannuity/cp"] = wfoacp.OaCpPages
   h.mux["/fin/ordinaryannuity/epp"] = wfoaepp.OaEppPages
   h.mux["/fin/ordinaryannuity/ga"] = wfoaga.OaGaPages
+  h.mux["/fin/ordinaryannuity/perpetuity"] = wfoaperpetuity.OaPerpetuityPages
   h.mux["/finances"] = wfpages.FinancesPage
   h.mux["/fin/bonds"] = wfbonds.BondsPages
   h.mux["/fin/mortgage"] = wfmortgage.MortgagePages
