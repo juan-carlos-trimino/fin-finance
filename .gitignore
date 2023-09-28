@@ -130,6 +130,8 @@ src/webfinances/templates/ordinaryannuity/pv/*
 !src/webfinances/templates/ordinaryannuity/pv/n-i-PMT.html
 !src/webfinances/templates/ordinaryannuity/pv/pv.html
 # ... and this directory and its file...
+!src/webfinances/templates/annuitydue/
+src/webfinances/templates/annuitydue/*
 !src/webfinances/templates/annuitydue/pv/
 src/webfinances/templates/annuitydue/pv/*
 !src/webfinances/templates/annuitydue/pv/n-i-FV.html
