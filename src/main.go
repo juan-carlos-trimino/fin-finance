@@ -120,7 +120,7 @@ func main() {
   var exists bool = false
   var ev string
   _, exists = os.LookupEnv("NOT_K8S")
-  if exists == false {
+  if !exists {
     SVC_NAME, exists = os.LookupEnv("SVC_NAME")
     if !exists {
       fmt.Println("Missing environment parameter: SVC_NAME")
@@ -295,5 +295,4 @@ func main() {
     signalChan <- syscall.SIGINT //Let the goroutine finish.
   }
   <- waitMainChan //Block until shutdown is done.
-  return
 }
