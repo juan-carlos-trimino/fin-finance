@@ -1,0 +1,42 @@
+{{ define "oaperpetuity-layout" }}
+
+<!-- rhs-ui2 -->
+<div id="rhs-ui2">
+  <form action="/fin/ordinaryannuity/perpetuity" method="POST">
+    <div style="margin-top: 20px;">
+      <label class="text-box" for="fd2-interest">Interest (%)...................</label>
+      <input class="text-combo" id="fd2-interest" name="fd2-interest" value="{{ .Fd2Interest }}" type="number" step="any" maxlength="7" required/>
+    </div>
+    <div style="margin-top: 20px;">
+      <label class="text-box" for="fd2-cp">Compounding Period...</label>
+      <select class="text-combo" id="fd2-cp" name="fd2-cp">
+        <option class="text-combo" value="annually" {{ if eq .Fd2Compound "annually" }} selected {{ end }}>Annually</option>
+        <option class="text-combo" value="semiannually" {{ if eq .Fd2Compound "semiannually" }} selected {{ end }}>Semiannually</option>
+        <option class="text-combo" value="quarterly" {{ if eq .Fd2Compound "quarterly" }} selected {{ end }}>Quarterly</option>
+        <option class="text-combo" value="monthly" {{ if eq .Fd2Compound "monthly" }} selected {{ end }}>Monthly</option>
+        <option class="text-combo" value="weekly" {{ if eq .Fd2Compound "weekly" }} selected {{ end }}>Weekly</option>
+        <option class="text-combo" value="daily" {{ if eq .Fd2Compound "daily" }} selected {{ end }}>Daily</option>
+        <option class="text-combo" value="continuously" {{if eq .Fd2Compound "continuously"}} selected {{end}}>Continuously</option>
+      </select>
+    </div>
+    <div style="margin-top: 20px;">
+      <label class="text-box" for="fd2-grow">Grow (%)......................</label>
+      <input class="text-combo" id="fd2-grow" name="fd2-grow" value="{{ .Fd2Grow }}" type="number" step="any" min="0" maxlength="7" required/>
+    </div>
+    <div style="margin-top: 20px;">
+      <label class="text-box" for="fd2-pmt">Payment (PMT)............</label>
+      <input class="text-combo" id="fd2-pmt" name="fd2-pmt" value="{{ .Fd2Pmt }}" type="number" step="any" min="1" maxlength="7" required/>
+    </div>
+    <div class="div-center" style="margin-top: 45px;">
+      <button class="button" id="btcompute" name="compute" value="rhs-ui2" type="submit">
+        Compute
+      </button>
+    </div>
+  </form>
+  <div>
+    <hr size="4" width="50%" color="darkgreen"/>
+    <p class="p-result">{{ .Fd2Result }}</p>
+  </div>
+</div>
+
+{{ end }}
