@@ -252,7 +252,7 @@ func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, r
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd4Result = fmt.Sprintf("Time: %.3f %s(s)", si.BankersTime(pv, a, i / 100.0,
+          p.fd4Result = fmt.Sprintf("Time: %.3f %s", si.BankersTime(pv, a, i / 100.0,
                                     periods.GetCompoundingPeriod(p.fd4Compound[0], false)),
                                     periods.TimePeriods(p.fd4Compound))
         }
