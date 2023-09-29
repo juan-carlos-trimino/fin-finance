@@ -67,7 +67,8 @@ func (b *Bonds) CashFlow(FV, couponRate float64, cp int, n float64, tp int) (cas
   couponRate = b.periodicInterestRate(couponRate, cp)
   var C = FV * couponRate
   var sz int = int(b.numberOfCouponPaymentPeriods(n, tp, cp))
-  cashFlow = make([]float64, sz, sz) //len=cap=sz
+  //The capacity argument may be omitted, in which case the capacity equals the length.
+  cashFlow = make([]float64, sz) //len=cap=sz
   for idx := range cashFlow {
     cashFlow[idx] = C
   }
@@ -301,7 +302,7 @@ func (b *Bonds) duration(cashFlow []float64, currentRate, bondPrice float64) flo
   }
   return (D / bondPrice)
 }
-
+/*** Silence the message U1000 for unused functions. Uncomment when usage is required.
 func (b *Bonds) duration1(cashFlow []float64, currentRate float64) (float64) {
   var D float64 = zero
   var B float64 = zero
@@ -315,7 +316,7 @@ func (b *Bonds) duration1(cashFlow []float64, currentRate float64) (float64) {
   }
   return (D / B)
 }
-
+***/
 func (b *Bonds) DurationContinuous(cashFlow []float64, currentRate, bondPrice float64) float64 {
   var D float64 = zero
   currentRate /= hundred

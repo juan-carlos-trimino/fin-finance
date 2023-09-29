@@ -30,15 +30,15 @@ func TestSimpleInterest_Interest(t *testing.T) {
     want float64
   }
   var tests = []test {
-    { typeOf: "accurate", p: 100.00, rate: 4.00, cp: Monthly, n: 1.0, tp: Months, want: 4.00 },
+    { typeOf: "accurate", p: 156.00, rate: 153.846, cp: Monthly, n: 1.0, tp: Months, want: 19.999980 },
     { typeOf: "accurate", p: 100.00, rate: 4.00, cp: Annually, n: 1.0, tp: Months, want: 0.3333333333 },
-    { typeOf: "accurate", p: 10000.00, rate: 9.00, cp: Annually, n: 153.0, tp: Days, want: 377.26027397 },
-    { typeOf: "banker's", p: 100.00, rate: 4.00, cp: Monthly, n: 1, tp: Months, want: 4.00 },
+    { typeOf: "accurate", p: 10000.00, rate: 9.00, cp: Annually, n: 153.0, tp: Daily365, want: 377.26027397 },
+    { typeOf: "banker's", p: 100.00, rate: 4.00, cp: Monthly, n: 1, tp: Months, want: 0.3333333333 },
     { typeOf: "banker's", p: 100.00, rate: 4.00, cp: Annually, n: 1, tp: Months, want: 0.3333333333 },
-    { typeOf: "banker's", p: 10000.00, rate: 9.00, cp: Annually, n: 153, tp: Days, want: 382.50 },
-    { typeOf: "ordinary", p: 100.00, rate: 4.00, cp: Monthly, n: 1, tp: Months, want: 4.00 },
+    { typeOf: "banker's", p: 10000.00, rate: 9.00, cp: Annually, n: 153, tp: Daily360, want: 382.50 },
+    { typeOf: "ordinary", p: 100.00, rate: 4.00, cp: Monthly, n: 1, tp: Months, want: 0.3333333333 },
     { typeOf: "ordinary", p: 100.00, rate: 4.00, cp: Annually, n: 1, tp: Months, want: 0.3333333333 },
-    { typeOf: "ordinary", p: 10000.00, rate: 9.00, cp: Annually, n: 153, tp: Days, want: 375.00 },
+    { typeOf: "ordinary", p: 10000.00, rate: 9.00, cp: Annually, n: 153, tp: Daily360, want: 375.00 },
   }
   var si SimpleInterest
   for _, tc := range tests {
@@ -74,42 +74,41 @@ func TestSimpleInterest_Rate(t *testing.T) {
   type test struct {
     typeOf string
     p float64 //Principal
-    i float64 //Interest
-    cp int //Compounding period
+    a float64 //Amount of interest
     n float64 //Time
     tp int //Time period
     want float64
   }
   var tests = []test {
-    { typeOf: "accurate", p: 100.00, i: 4.00, cp: Monthly, n: 1.0, tp: Months, want: 4.00 },
-    { typeOf: "accurate", p: 100.00, i: 0.3333333333, cp: Annually, n: 1.0, tp: Months, want: 4.0 },
-    { typeOf: "accurate", p: 10000.00, i: 377.26027397, cp: Annually, n: 153.0, tp: Days, want: 9.0 },
-    { typeOf: "banker's", p: 100.00, i: 4.00, cp: Monthly, n: 1.0, tp: Months, want: 4.00 },
-    { typeOf: "banker's", p: 100.00, i: 0.3333333333, cp: Annually, n: 1.0, tp: Months, want: 4.0 },
-    { typeOf: "banker's", p: 10000.00, i: 382.50, cp: Annually, n: 153.0, tp: Days, want: 9.0 },
-    { typeOf: "ordinary", p: 100.00, i: 4.00, cp: Monthly, n: 1.0, tp: Months, want: 4.00 },
-    { typeOf: "ordinary", p: 100.00, i: 0.3333333333, cp: Annually, n: 1.0, tp: Months, want: 4.0 },
-    { typeOf: "ordinary", p: 10000.00, i: 375.00, cp: Annually, n: 153.0, tp: Days, want: 9.0 },
+    { typeOf: "accurate", p: 156.00, a: 20.00, n: 1.0, tp: Months, want: 153.84615384 },
+    { typeOf: "accurate", p: 156.00, a: 20.00, n: 1.0, tp: Years, want: 12.8205128 },
+    { typeOf: "accurate", p: 10000.00, a: 377.26, n: 153.0, tp: Daily365, want: 9.0 },
+    { typeOf: "banker's", p: 100.00, a: 4.00, n: 1.0, tp: Months, want: 48.00 },
+    { typeOf: "banker's", p: 100.00, a: 10.33, n: 1.0, tp: Months, want: 123.960 },
+    { typeOf: "banker's", p: 10000.00, a: 382.50, n: 153.0, tp: Daily360, want: 9.0 },
+    { typeOf: "ordinary", p: 100.00, a: 4.00, n: 1.0, tp: Months, want: 48.00 },
+    { typeOf: "ordinary", p: 100.00, a: 23.33, n: 1.0, tp: Months, want: 279.960 },
+    { typeOf: "ordinary", p: 10000.00, a: 375.00, n: 153.0, tp: Daily360, want: 9.00 },
   }
   var si SimpleInterest
   for _, tc := range tests {
     switch tc.typeOf {
     case "accurate":
-      i := si.AccurateRate(tc.p, tc.i, tc.cp, tc.n, tc.tp) * 100.0
+      i := si.AccurateRate(tc.p, tc.a, tc.n, tc.tp) * 100.0
       if math.Abs(i - tc.want) < 1e-5 {
         fmt.Printf("Accurate Rate = %.2f%%\n", i)
       } else {
         t.Errorf("Accurate Rate = %.10f%%, Want = %.10f%%", i, tc.want)
       }
     case "banker's":
-      i := si.BankersRate(tc.p, tc.i, tc.cp, tc.n, tc.tp) * 100.0
+      i := si.BankersRate(tc.p, tc.a, tc.n, tc.tp) * 100.0
       if math.Abs(i - tc.want) < 1e-5 {
         fmt.Printf("Banker's Rate = %.2f%%\n", i)
       } else {
         t.Errorf("Banker's Rate = %.10f%%, Want = %.10f%%", i, tc.want)
       }
     case "ordinary":
-      i := si.OrdinaryRate(tc.p, tc.i, tc.cp, tc.n, tc.tp) * 100.0
+      i := si.OrdinaryRate(tc.p, tc.a, tc.n, tc.tp) * 100.0
       if math.Abs(i - tc.want) < 1e-5 {
         fmt.Printf("Ordinary Rate = %.2f%%\n", i)
       } else {
@@ -124,7 +123,7 @@ func TestSimpleInterest_Rate(t *testing.T) {
 func TestSimpleInterest_Principal(t *testing.T) {
   type test struct {
     typeOf string
-    i float64 //Interest
+    a float64 //Interest of interest
     rate float64 //Interest rate
     cp int //Compounding period
     n float64 //Time
@@ -132,15 +131,15 @@ func TestSimpleInterest_Principal(t *testing.T) {
     want float64
   }
   var tests = []test {
-    { typeOf: "accurate", i: 4.00, rate: 4.00, cp: Monthly, n: 1.0, tp: Months, want: 100.00 },
-    { typeOf: "accurate", i: 0.3333333333, rate: 4.00, cp: Annually, n: 1.0, tp: Months, want: 100.00 },
-    { typeOf: "accurate", i: 377.26027397, rate: 9.0, cp: Annually, n: 153.0, tp: Days, want: 10000.00 },
-    { typeOf: "banker's", i: 4.00, rate: 4.00, cp: Monthly, n: 1.0, tp: Months, want: 100.00 },
-    { typeOf: "banker's", i: 0.3333333333, rate: 4.00, cp: Annually, n: 1.0, tp: Months, want: 100.00 },
-    { typeOf: "banker's", i: 382.50, rate: 9.0, cp: Annually, n: 153.0, tp: Days, want: 10000.00 },
-    { typeOf: "ordinary", i: 4.00, rate: 4.00, cp: Monthly, n: 1.0, tp: Months, want: 100.00 },
-    { typeOf: "ordinary", i: 0.3333333333, rate: 4.00, cp: Annually, n: 1.0, tp: Months, want: 100.00 },
-    { typeOf: "ordinary", i: 375.00, rate: 9.0, cp: Annually, n: 153.0, tp: Days, want: 10000.00 },
+    { typeOf: "accurate", a: 4.00, rate: 4.00, cp: Monthly, n: 1.0, tp: Months, want: 1200.00 },
+    { typeOf: "accurate", a: 0.33, rate: 4.00, cp: Annually, n: 1.0, tp: Months, want: 100.00 },
+    { typeOf: "accurate", a: 377.26027397, rate: 9.0, cp: Annually, n: 153.0, tp: Days, want: 10000.00 },
+    { typeOf: "banker's", a: 4.00, rate: 4.00, cp: Monthly, n: 1.0, tp: Months, want: 100.00 },
+    { typeOf: "banker's", a: 0.3333333333, rate: 4.00, cp: Annually, n: 1.0, tp: Months, want: 100.00 },
+    { typeOf: "banker's", a: 382.50, rate: 9.0, cp: Annually, n: 153.0, tp: Days, want: 10000.00 },
+    { typeOf: "ordinary", a: 4.00, rate: 4.00, cp: Monthly, n: 1.0, tp: Months, want: 100.00 },
+    { typeOf: "ordinary", a: 0.3333333333, rate: 4.00, cp: Annually, n: 1.0, tp: Months, want: 100.00 },
+    { typeOf: "ordinary", a: 375.00, rate: 9.0, cp: Annually, n: 153.0, tp: Days, want: 10000.00 },
   }
   var si SimpleInterest
   for _, tc := range tests {
@@ -176,42 +175,41 @@ func TestSimpleInterest_Time(t *testing.T) {
   type test struct {
     typeOf string
     p float64 //Principal
-    i float64 //Interest
+    a float64 //Interest of interest
     rate float64 //Interest rate
 		cp int
-    tp int //Time period
     want float64
   }
   var tests = []test {
-    { typeOf: "accurate", p:100, i: 4.00, rate: 4.00, cp: Monthly, tp: Months, want: 1.00 },
-    { typeOf: "accurate", p:100, i: 0.3333333333, rate: 4.00, cp: Annually, tp: Months, want: 1.00 },
-    { typeOf: "accurate", p:10000.00, i: 377.26027397, rate: 9.0, cp: Annually, tp: Days, want: 153.00 },
-    { typeOf: "banker's", p:100, i: 4.00, rate: 4.00, cp: Monthly, tp: Months, want: 1.00 },
-    { typeOf: "banker's", p:100, i: 0.3333333333, rate: 4.00, cp: Annually, tp: Months, want: 1.00 },
-    { typeOf: "banker's", p:10000.00, i: 382.50, rate: 9.0, cp: Annually, tp: Days, want: 153.00 },
-    { typeOf: "ordinary", p:100, i: 4.00, rate: 4.00, cp: Monthly, tp: Months, want: 1.00 },
-    { typeOf: "ordinary", p:100, i: 0.3333333333, rate: 4.00, cp: Annually, tp: Months, want: 1.00 },
-    { typeOf: "ordinary", p:10000.00, i: 375.00, rate: 9.0, cp: Annually, tp: Days, want: 150.00 },
+    { typeOf: "accurate", p:100, a: 4.00, rate: 4.00, cp: Monthly, want: 12.00 },
+    { typeOf: "accurate", p:100, a: 1.33, rate: 4.00, cp: Annually, want: 0.333 },
+    { typeOf: "accurate", p:10000.00, a: 377.26, rate: 9.0, cp: Daily, want: 153.00 },
+    { typeOf: "banker's", p:100, a: 4.00, rate: 4.00, cp: Monthly, want: 12.00 },
+    { typeOf: "banker's", p:100, a: 0.33, rate: 4.00, cp: Annually, want: 0.083 },
+    { typeOf: "banker's", p:10000.00, a: 382.50, rate: 9.0, cp: Daily, want: 153.00 },
+    { typeOf: "ordinary", p:100, a: 4.00, rate: 4.00, cp: Monthly, want: 12.00 },
+    { typeOf: "ordinary", p:100, a: 0.33, rate: 4.00, cp: Annually, want: 0.08 },
+    { typeOf: "ordinary", p:10000.00, a: 375.00, rate: 9.0, cp: Daily, want: 150.00 },
   }
   var si SimpleInterest
   for _, tc := range tests {
     switch tc.typeOf {
     case "accurate":
-      time := si.AccurateTime(tc.p, tc.i, tc.rate / hundred, tc.cp, tc.tp)
+      time := si.AccurateTime(tc.p, tc.a, tc.rate / hundred, tc.cp)
       if math.Abs(time - tc.want) < 1e-5 {
         fmt.Printf("Accurate Time = %.2f\n", time)
       } else {
         t.Errorf("Accurate Time = %.10f, Want = %.10f", time, tc.want)
       }
     case "banker's":
-      time := si.BankersTime(tc.p, tc.i, tc.rate / hundred, tc.cp, tc.tp)
+      time := si.BankersTime(tc.p, tc.a, tc.rate / hundred, tc.cp)
       if math.Abs(time - tc.want) < 1e-5 {
         fmt.Printf("Banker's Time = %.2f\n", time)
       } else {
         t.Errorf("Banker's Time = %.10f, Want = %.10f", time, tc.want)
       }
     case "ordinary":
-      time := si.BankersTime(tc.p, tc.i, tc.rate / hundred, tc.cp, tc.tp)
+      time := si.BankersTime(tc.p, tc.a, tc.rate / hundred, tc.cp)
       if math.Abs(time - tc.want) < 1e-5 {
         fmt.Printf("Ordinary Time = %.2f\n", time)
       } else {
