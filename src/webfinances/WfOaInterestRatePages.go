@@ -1,6 +1,7 @@
 package webfinances
 
 import (
+  "context"
   "finance/middlewares"
   "finance/finances"
   "fmt"
@@ -123,6 +124,13 @@ func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
+    }
+    //
+    if req.Context().Err() == context.DeadlineExceeded {
+      fmt.Println("*** Request timeout ***")
+      if strings.EqualFold(p.currentPage, "rhs-ui1") {
+        p.fd1Result = ""
+      }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)

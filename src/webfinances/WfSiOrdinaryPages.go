@@ -1,6 +1,7 @@
 package webfinances
 
 import (
+  "context"
   "finance/finances"
   "fmt"
   "html/template"
@@ -279,6 +280,19 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
+    }
+    //
+    if req.Context().Err() == context.DeadlineExceeded {
+      fmt.Println("*** Request timeout ***")
+      if strings.EqualFold(p.currentPage, "rhs-ui1") {
+        p.fd1Result = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
+        p.fd2Result = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
+        p.fd3Result = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
+        p.fd4Result = ""
+      }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)

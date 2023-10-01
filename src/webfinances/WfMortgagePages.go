@@ -1,6 +1,7 @@
 package webfinances
 
 import (
+  "context"
   "finance/middlewares"
   "finance/finances"
   "fmt"
@@ -291,6 +292,21 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
+    }
+    //
+    if req.Context().Err() == context.DeadlineExceeded {
+      fmt.Println("*** Request timeout ***")
+      if strings.EqualFold(p.currentPage, "rhs-ui1") {
+        p.fd1Result[0] = ""
+        p.fd1Result[1] = ""
+        p.fd1Result[2] = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
+        p.fd2Result = nil
+        p.fd2TotalCost = ""
+        p.fd2TotalInterest = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
+        p.fd3Result[2] = ""
+      }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)

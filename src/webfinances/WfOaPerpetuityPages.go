@@ -1,6 +1,7 @@
 package webfinances
 
 import (
+  "context"
   "finance/middlewares"
   "finance/finances"
   "fmt"
@@ -165,6 +166,15 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
+    }
+    //
+    if req.Context().Err() == context.DeadlineExceeded {
+      fmt.Println("*** Request timeout ***")
+      if strings.EqualFold(p.currentPage, "rhs-ui1") {
+        p.fd1Result = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
+        p.fd2Result = ""
+      }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)

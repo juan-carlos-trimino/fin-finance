@@ -1,6 +1,7 @@
 package webfinances
 
 import (
+  "context"
   "finance/middlewares"
   "finance/finances"
   "fmt"
@@ -230,6 +231,15 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
+    }
+    //
+    if req.Context().Err() == context.DeadlineExceeded {
+      fmt.Println("*** Request timeout ***")
+      if strings.EqualFold(p.currentPage, "rhs-ui2") {
+        p.fd2Result = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
+        p.fd3Result = ""
+      }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)

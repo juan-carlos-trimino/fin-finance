@@ -1,6 +1,7 @@
 package webfinances
 
 import (
+  "context"
   "finance/middlewares"
   "finance/finances"
   "fmt"
@@ -679,6 +680,27 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
+    }
+    //
+    if req.Context().Err() == context.DeadlineExceeded {
+      fmt.Println("*** Request timeout ***")
+      if strings.EqualFold(p.currentPage, "rhs-ui1") {
+        p.fd1Result = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
+        p.fd2Result = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
+        p.fd3Result = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
+        p.fd4Result = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui5") {
+        p.fd5Result = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui6") {
+        p.fd6Result[1] = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui7") {
+        p.fd7Result[1] = ""
+      } else if strings.EqualFold(p.currentPage, "rhs-ui8") {
+        p.fd8Result[1] = ""
+      }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)

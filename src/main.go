@@ -235,8 +235,6 @@ func main() {
     associated with the computer, and it will listen on port PORT.
     ***/
     Addr: ":" + PORT,
-
-
     /***
       Connection accepted
       │
@@ -251,12 +249,15 @@ func main() {
       │  │        │           │        │          Write the response
       │  │        │           │        │          │
       │  │        │           │        │          │
-      ╔══════╦═══════════╦═════════╦═════════╦══════════╗
-      ║ Wait ║   TLS     ║ Request ║ Request ║ Response ║ Idle
-      ║      ║ handshake ║ headers ║  body   ║          ║ <------->
-      ╚══════╩═══════════╩═════════╩═════════╩══════════╝  IdleTimeout
-                                   <-------------------->  (Keep-alive only)
+      ╔══════╦═══════════╦═════════╦═════════╦══════════╦════════╗
+      ║ Wait ║   TLS     ║ Request ║ Request ║ Response ║  Idle  ║
+      ║      ║ handshake ║ headers ║  body   ║          ║        ║
+      ╚══════╩═══════════╩═════════╩═════════╩══════════╩════════╝
+                                   <-------------------->
                                          HTTP handler
+                                                        <-------->
+                                                        IdleTimeout
+                                                     (Keep-alive only)
                          <--------->
                  http.Server.ReadHeaderTimeout
       <-------------------------------------->
@@ -265,24 +266,14 @@ func main() {
                                     http.TimeoutHandler
 
       The five steps of an HTTP response and the related timeouts.
-
-
-
-    While exposing our endpoint to untrusted clients, the best practice is to set at least
-the http.Server.ReadHeaderTimeout field and use the http.TimeoutHandler wrapper
-function. Otherwise, clients may exploit this flaw and, for example, create neverending
-connections that can lead to exhaustion of system resources.
     ***/
-
-
-
     //It specifies the maximum amount of time to read the request headers.
     ReadHeaderTimeout: 250 * time.Millisecond,
     /***
     It specifies the maximum amount of time to read the entire request.
-    ReadTimeout = ReadHeaderTimeout + TimeoutHandler + Extratime
-    ReadTimeout: 990 * time.Millisecond,
+    ReadTimeout = ReadHeaderTimeout + TimeoutHandler + Extra time
     **/
+    ReadTimeout: 990 * time.Millisecond,
     /***
     If a handler fails to respond on time, the server will reply with "503 Service Unavailable" and
     the specified message; the context passed to the handler will be canceled.
@@ -295,7 +286,7 @@ connections that can lead to exhaustion of system resources.
     for the idle timeout. If neither is set, there won't be any timeouts, and connections will
     remain open until they are closed by clients.
     ***/
-    IdleTimeout: 25 * time.Second,
+    IdleTimeout: 30 * time.Second,
     MaxHeaderBytes: 1 << 20,  //1 MB.
   }
   /***
