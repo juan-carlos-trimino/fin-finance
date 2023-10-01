@@ -8,6 +8,8 @@ import (
   "net/http"
   "strconv"
   "strings"
+  "time"
+  "context"
 )
 
 type WfSiAccuratePages interface {
@@ -109,6 +111,7 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
     if strings.EqualFold(p.currentPage, "rhs-ui1") {
       p.currentButton = "lhs-button1"
       if req.Method == http.MethodPost {
+        time.Sleep(2 * time.Second)
         p.fd1Time = req.PostFormValue("fd1-time")
         p.fd1TimePeriod = req.PostFormValue("fd1-tp")
         p.fd1Interest = req.PostFormValue("fd1-interest")
@@ -135,6 +138,14 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
           fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", p.fd1Time, p.fd1TimePeriod,
                        p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1Result),
         })
+
+        time.Sleep(2 * time.Second)
+        if req.Context().Err() == context.DeadlineExceeded {
+          fmt.Println("xxxxxxxxxxxxx Timeout xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+          p.fd1Result = ""
+          return
+       }
+
       }
       /***
       The Must function wraps around the ParseGlob function that returns a pointer to a template
@@ -160,6 +171,7 @@ func (p *wfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter,
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
       p.currentButton = "lhs-button2"
       if req.Method == http.MethodPost {
+        time.Sleep(2 * time.Second)
         p.fd2Time = req.PostFormValue("fd2-time")
         p.fd2TimePeriod = req.PostFormValue("fd2-tp")
         p.fd2Amount = req.PostFormValue("fd2-amount")

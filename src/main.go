@@ -235,7 +235,67 @@ func main() {
     associated with the computer, and it will listen on port PORT.
     ***/
     Addr: ":" + PORT,
-    Handler: &h,
+
+
+    /***
+      Connection accepted
+      │
+      │  Wait for the client to send the request
+      │  │
+      │  │        If enabled (The TLS handshake doesn't have to be repeated with an already established connection.)
+      │  │        │
+      │  │        │           Read the headers
+      │  │        │           │
+      │  │        │           │        Read the body
+      │  │        │           │        │
+      │  │        │           │        │          Write the response
+      │  │        │           │        │          │
+      │  │        │           │        │          │
+      ╔══════╦═══════════╦═════════╦═════════╦══════════╗
+      ║ Wait ║   TLS     ║ Request ║ Request ║ Response ║ Idle
+      ║      ║ handshake ║ headers ║  body   ║          ║ <------->
+      ╚══════╩═══════════╩═════════╩═════════╩══════════╝  IdleTimeout
+                                   <-------------------->  (Keep-alive only)
+                                         HTTP handler
+                         <--------->
+                 http.Server.ReadHeaderTimeout
+      <-------------------------------------->
+              http.Server.ReadTimeout
+                                   <-------------------->
+                                    http.TimeoutHandler
+
+      The five steps of an HTTP response and the related timeouts.
+
+
+
+    While exposing our endpoint to untrusted clients, the best practice is to set at least
+the http.Server.ReadHeaderTimeout field and use the http.TimeoutHandler wrapper
+function. Otherwise, clients may exploit this flaw and, for example, create neverending
+connections that can lead to exhaustion of system resources.
+    ***/
+
+
+
+    //It specifies the maximum amount of time to read the request headers.
+    ReadHeaderTimeout: 250 * time.Millisecond,
+    /***
+    It specifies the maximum amount of time to read the entire request.
+    ReadTimeout = ReadHeaderTimeout + TimeoutHandler + Extratime
+    ReadTimeout: 990 * time.Millisecond,
+    **/
+    /***
+    If a handler fails to respond on time, the server will reply with "503 Service Unavailable" and
+    the specified message; the context passed to the handler will be canceled.
+    Note: The http.Server.WriteTimeout is not necessary since http.TimeoutHandler is being used.
+    ***/
+    Handler: http.TimeoutHandler(&h, 700 * time.Millisecond, "Request timeout."),
+    /***
+    It configures the maximum amount of time for the next request when keep-alives are enabled.
+    Note that if http.Server.IdleTimeout isn't set, the value of http.Server.ReadTimeout is used
+    for the idle timeout. If neither is set, there won't be any timeouts, and connections will
+    remain open until they are closed by clients.
+    ***/
+    IdleTimeout: 25 * time.Second,
     MaxHeaderBytes: 1 << 20,  //1 MB.
   }
   /***
@@ -295,4 +355,5 @@ func main() {
     signalChan <- syscall.SIGINT //Let the goroutine finish.
   }
   <- waitMainChan //Block until shutdown is done.
+
 }
