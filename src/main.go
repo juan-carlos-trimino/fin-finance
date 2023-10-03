@@ -41,18 +41,18 @@ PS> curl.exe "http://localhost:8080"
 ***/
 
 import (
-  "context"
-  "errors"
-  "finance/webfinances"
-  "finance/middlewares"
-  "finance/misc"
-  "fmt"
-  "net/http"
-  "os"
-  "os/signal"
-  "strconv"
-  "syscall"
-  "time"
+	"context"
+	"errors"
+	"finance/middlewares"
+	"finance/misc"
+	"finance/webfinances"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
+	"time"
 )
 
 var (  //Environment variables.
@@ -196,9 +196,9 @@ func main() {
     // //https://go.dev/src/net/http/status.go
     res.WriteHeader(http.StatusOK)
   }
-  // files := http.FileServer(http.Dir("/public"))
-  // fmt.Println(files)
+  //Serve static files; i.e., the server will serve it as it is, without processing it first.
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
+  h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.HomePage
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
@@ -346,5 +346,8 @@ func main() {
     signalChan <- syscall.SIGINT //Let the goroutine finish.
   }
   <- waitMainChan //Block until shutdown is done.
+}
 
+func faviconHandler(res http.ResponseWriter, req *http.Request) {
+  http.NotFound(res, req)  //404 - page not found.
 }
