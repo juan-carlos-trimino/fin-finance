@@ -1,0 +1,36 @@
+<!-- The define action for the home page -->
+{{ define "welcome_page" }}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Welcome to Finances</title>
+    <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
+  </head>
+  <body>
+    <main>
+      <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
+      {{ template "header" . }}
+      <div class="div-center">
+        <button class="button" disabled>Securities</button>
+      </div>
+      <div class="div-center">
+        <a href="/finances" target="_self">
+          <button class="button">Finances</button>
+        </a>
+      </div>
+      <br>
+      <div class="div-center">
+        <a href="/logout" target="_self">
+          <button class="button">Logout</button>
+        </a>
+      </div>
+    </main>
+    {{ template "footer" }}
+  </body>
+</html>
+
+{{ end }}
