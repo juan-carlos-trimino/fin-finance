@@ -73,8 +73,9 @@ src/webfinances/templates/*
 !src/webfinances/templates/footer.html
 !src/webfinances/templates/header.html
 !src/webfinances/templates/index.html
-!src/webfinances/templates/simpleinterest.html
 !src/webfinances/templates/ordinaryannuity.html
+!src/webfinances/templates/simpleinterest.html
+!src/webfinances/templates/welcome.html
 # ... and this directory and its file...
 !src/webfinances/templates/bonds/
 src/webfinances/templates/bonds/*
@@ -196,3 +197,7 @@ src/middlewares/*
 !src/middlewares/ChainMiddlewares.go
 !src/middlewares/MwCorrelationId.go
 !src/middlewares/MwContextKey.go
+# ... and this directory and its file...
+!src/sessions/
+src/sessions/*
+!src/sessions/session.go
