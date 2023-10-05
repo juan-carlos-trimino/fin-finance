@@ -49,7 +49,7 @@ func checkSession(res http.ResponseWriter, req *http.Request) bool {
     tmpl.ExecuteTemplate(res, "index_page", struct {
       Error string
     } {
-        "Session token error",
+        "Invalid session token",
       })
     return false
   }
@@ -60,7 +60,7 @@ func checkSession(res http.ResponseWriter, req *http.Request) bool {
     tmpl.ExecuteTemplate(res, "index_page", struct {
       Error string
     } {
-        "Session token expired",
+        "Session has expired",
       })
     return false
   }
@@ -128,7 +128,29 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
 
 func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering LogoutPage/webfinances.\n", m.DTF())
-  //close session
+  cookie, err := req.Cookie("session_token")
+  if err != nil {
+    if err == http.ErrNoCookie {
+      tmpl.ExecuteTemplate(res, "index_page", struct {
+        Error string
+      } {
+          "Please loggin",
+        })
+    } else {
+      tmpl.ExecuteTemplate(res, "index_page", struct {
+        Error string
+      } {
+          "Bad request",
+        })
+    }
+    return
+  }
+  delete(sessions.Sessions, cookie.Value)
+  http.SetCookie(res, &http.Cookie{
+    Name: "session_token",
+    Value: "",
+    Expires: time.Now(),
+  })
   http.Redirect(res, req, "/", http.StatusSeeOther)
 }
 
