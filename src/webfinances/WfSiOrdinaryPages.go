@@ -79,6 +79,9 @@ func NewWfSiOrdinaryPages() WfSiOrdinaryPages {
 }
 
 func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, req *http.Request) {
+  if !checkSession(res, req) {
+    return
+  }
   fmt.Printf("%s - Entering SimpleInterestOrdinaryPages/webfinances.\n", m.DTF())
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     /***

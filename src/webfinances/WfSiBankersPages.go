@@ -79,6 +79,9 @@ func NewWfSiBankersPages() WfSiBankersPages {
 }
 
 func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, req *http.Request) {
+  if !checkSession(res, req) {
+    return
+  }
   fmt.Printf("%s - Entering SimpleInterestBankersPages/webfinances.\n", m.DTF())
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     /***

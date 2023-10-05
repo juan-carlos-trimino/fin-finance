@@ -45,6 +45,7 @@ import (
 	"errors"
 	"finance/middlewares"
 	"finance/misc"
+  "finance/sessions"
 	"finance/webfinances"
 	"fmt"
 	"net/http"
@@ -199,9 +200,13 @@ func main() {
   //Serve static files; i.e., the server will serve it as it is, without processing it first.
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/favicon.ico"] = faviconHandler
-  h.mux["/"] = wfpages.HomePage
+  h.mux["/"] = wfpages.IndexPage
+  h.mux["/login"] = wfpages.LoginPage
+  h.mux["/logout"] = wfpages.LogoutPage
+  h.mux["/welcome"] = wfpages.WelcomePage
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
+  h.mux["/finances"] = wfpages.FinancesPage
   h.mux["/fin/ordinaryannuity"] = wfpages.OrdinaryAnnuityPage
   h.mux["/fin/ordinaryannuity/interestrate"] = wfoainterest.OaInterestRatePages
   h.mux["/fin/ordinaryannuity/fv"] = wfoafv.OaFvPages
@@ -215,7 +220,6 @@ func main() {
   h.mux["/fin/annuitydue/epp"] = wfadepp.AdEppPages
   h.mux["/fin/annuitydue/fv"] = wfadfv.AdFvPages
   h.mux["/fin/annuitydue/pv"] = wfadpv.AdPvPages
-  h.mux["/finances"] = wfpages.FinancesPage
   h.mux["/fin/bonds"] = wfbonds.BondsPages
   h.mux["/fin/mortgage"] = wfmortgage.MortgagePages
   h.mux["/fin/simpleinterest"] = wfpages.SimpleInterestPage
@@ -229,6 +233,7 @@ func main() {
   for idx, f := range h.mux {
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
+  sessions.Users["jct"] = "pw"
   server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address

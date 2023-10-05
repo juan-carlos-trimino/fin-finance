@@ -2,15 +2,42 @@
 package finances
 
 /***
-To build and run the tests:
+To execute all _test.go files in the same directory:
 $ go test
-
+---
 The -v flag prints the name and execution time of each test in the package:
 $ go test -v
-
+---
 The -run flag, whose argument is a regular expression, causes 'go test' to run only those tests
 whose function name matches the pattern:
 $ go test -v -run="Simple"
+---
+Parallel execution mode allows running specific tests in parallel, which can be very useful: e.g.,
+to speed up long-running tests. To run a test in parallel, mark the test by calling t.Parallel:
+func TestFoo(t *testing.T) {
+  t.Parallel()
+  //...
+}
+
+When a test is marked by using t.Parallel, it is executed in parallel alongside all the other
+parallel tests. In terms of execution, though, Go first runs all the sequential tests one by one.
+Once the sequential tests are completed, it executes the parallel tests.
+
+By default, the maximum number of tests that can run simultaneously equals the GOMAXPROCS value. To
+serialize tests or, for example, increase this number in the context of long-running tests doing a
+lot of I/O, we can change this value using the -parallel flag:
+$ go test -v -run="Simple" -parallel 16
+---
+To enable the race detector (will increase the overhead of memory usage and execution time):
+$ go test -v -run="Simple" -race
+---
+
+
+To get more information regarding the test cases, use the verbose (-v) flag and the coverage (-cover) flag
+for the coverage of the test cases against the code.
+$ go test -v -run="Simple" -cover
+
+
 ***/
 
 import (
@@ -20,6 +47,7 @@ import (
 )
 
 func TestSimpleInterest_Interest(t *testing.T) {
+  t.Parallel()
   type test struct {
     typeOf string
     p float64 //Principal
@@ -71,6 +99,7 @@ func TestSimpleInterest_Interest(t *testing.T) {
 }
 
 func TestSimpleInterest_Rate(t *testing.T) {
+  t.Parallel()
   type test struct {
     typeOf string
     p float64 //Principal
@@ -121,6 +150,7 @@ func TestSimpleInterest_Rate(t *testing.T) {
 }
 
 func TestSimpleInterest_Principal(t *testing.T) {
+  t.Parallel()
   type test struct {
     typeOf string
     a float64 //Interest of interest
@@ -172,6 +202,7 @@ func TestSimpleInterest_Principal(t *testing.T) {
 }
 
 func TestSimpleInterest_Time(t *testing.T) {
+  t.Parallel()
   type test struct {
     typeOf string
     p float64 //Principal

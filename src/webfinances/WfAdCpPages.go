@@ -64,6 +64,9 @@ func NewWfAdCpPages() WfAdCpPages {
 }
 
 func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
+  if !checkSession(res, req) {
+    return
+  }
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   logEntry := LogEntry{}

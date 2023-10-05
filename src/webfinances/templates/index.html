@@ -1,5 +1,5 @@
 <!-- The define action for the home page -->
-{{ define "home_page" }}
+{{ define "index_page" }}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -7,23 +7,21 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Finances</title>
+    <title>Login for Finances</title>
     <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
   </head>
   <body>
     <main>
-      <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
-      {{ template "header" . }}
-      <div class="div-center">
-        <button class="button" disabled>Securities</button>
-      </div>
-      <div class="div-center">
-        <a href="/finances" target="_self">
-          <button class="button">Finances</button>
-        </a>
-      </div>
+      <h3>{{ .Error }}</h3>
+      <h1>Login</h1>
+      <form method="post" action="/login">
+        <label>Username:</label>
+        <input type="text" name="username"><br><br>
+        <label>Password:</label>
+        <input type="password" name="password"><br><br>
+        <input type="submit" name="submit" value="Login">
+      </form>
     </main>
-    {{ template "footer" }}
   </body>
 </html>
 
