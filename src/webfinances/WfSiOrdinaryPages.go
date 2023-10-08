@@ -2,6 +2,7 @@ package webfinances
 
 import (
   "context"
+  "finance/middlewares"
   "finance/finances"
   "fmt"
   "html/template"
@@ -79,7 +80,10 @@ func NewWfSiOrdinaryPages() WfSiOrdinaryPages {
 }
 
 func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, req *http.Request) {
-  if !checkSession(res, req) {
+  ctxKey := middlewares.MwContextKey{}
+  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
+  if !sessionStatus {
+    invalidSession(res)
     return
   }
   fmt.Printf("%s - Entering SimpleInterestOrdinaryPages/webfinances.\n", m.DTF())

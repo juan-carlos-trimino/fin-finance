@@ -5,7 +5,7 @@ go 1.20
 
 require (
 	github.com/google/uuid v1.3.1
-	golang.org/x/text v0.3.7
+	golang.org/x/text v0.13.0
 )
 
 require (
@@ -30,6 +30,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.starlark.net v0.0.0-20220816155156-cfacd8902214 // indirect
 	golang.org/x/arch v0.0.0-20190927153633-4e8777c89be4 // indirect
-	golang.org/x/sys v0.0.0-20220908164124-27713097b956 // indirect
+	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

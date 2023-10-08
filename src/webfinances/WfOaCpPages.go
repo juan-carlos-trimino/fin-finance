@@ -64,10 +64,13 @@ func NewWfOaCpPages() WfOaCpPages {
 }
 
 func (p *wfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
-  if !checkSession(res, req) {
+  ctxKey := middlewares.MwContextKey{}
+  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
+  if !sessionStatus {
+    invalidSession(res)
     return
   }
-  ctxKey := middlewares.MwContextKey{}
+  ctxKey = middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   logEntry := LogEntry{}
   logEntry.Print(INFO, correlationId, []string {

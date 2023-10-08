@@ -63,9 +63,20 @@ var (  //Environment variables.
   SVC_NAME string
   APP_NAME_VER string
   SERVER string = "localhost"
+  USER_NAME = "jct"
+  PASSWORD = "pw"
 )
 
 var m = misc.Misc{}
+
+/***
+var sessionManager *sessions.SessionManager
+//Initialize the session manager.
+func init() {
+  sessionManager = sessions.NewSessionManager("memory", "session_token", 3600)
+}
+***/
+
 
 /***
 In Go, a handler is an interface (type Handler interface) that has a method named ServeHTTP with
@@ -202,38 +213,40 @@ func main() {
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
   h.mux["/login"] = wfpages.LoginPage
-  h.mux["/logout"] = wfpages.LogoutPage
-  h.mux["/welcome"] = wfpages.WelcomePage
-  h.mux["/contact"] = wfpages.ContactPage
-  h.mux["/about"] = wfpages.AboutPage
-  h.mux["/finances"] = wfpages.FinancesPage
-  h.mux["/fin/ordinaryannuity"] = wfpages.OrdinaryAnnuityPage
-  h.mux["/fin/ordinaryannuity/interestrate"] = wfoainterest.OaInterestRatePages
-  h.mux["/fin/ordinaryannuity/fv"] = wfoafv.OaFvPages
-  h.mux["/fin/ordinaryannuity/pv"] = wfoapv.OaPvPages
-  h.mux["/fin/ordinaryannuity/cp"] = wfoacp.OaCpPages
-  h.mux["/fin/ordinaryannuity/epp"] = wfoaepp.OaEppPages
-  h.mux["/fin/ordinaryannuity/ga"] = wfoaga.OaGaPages
-  h.mux["/fin/ordinaryannuity/perpetuity"] = wfoaperpetuity.OaPerpetuityPages
-  h.mux["/fin/annuitydue"] = wfpages.AnnuityDuePage
-  h.mux["/fin/annuitydue/cp"] = wfadcp.AdCpPages
-  h.mux["/fin/annuitydue/epp"] = wfadepp.AdEppPages
-  h.mux["/fin/annuitydue/fv"] = wfadfv.AdFvPages
-  h.mux["/fin/annuitydue/pv"] = wfadpv.AdPvPages
-  h.mux["/fin/bonds"] = wfbonds.BondsPages
-  h.mux["/fin/mortgage"] = wfmortgage.MortgagePages
-  h.mux["/fin/simpleinterest"] = wfpages.SimpleInterestPage
-  h.mux["/fin/simpleinterest/accurate"] = wfsia.SimpleInterestAccuratePages
-  h.mux["/fin/simpleinterest/bankers"] = wfsib.SimpleInterestBankersPages
-  h.mux["/fin/simpleinterest/ordinary"] = wfsio.SimpleInterestOrdinaryPages
-  h.mux["/fin/miscellaneous"] = wfmisc.MiscellaneousPages
+  h.mux["/logout"] = middlewares.ValidateSessions(wfpages.LogoutPage)
+  h.mux["/welcome"] = middlewares.ValidateSessions(wfpages.WelcomePage)
+  h.mux["/contact"] = middlewares.ValidateSessions(wfpages.ContactPage)
+  h.mux["/about"] = middlewares.ValidateSessions(wfpages.AboutPage)
+  h.mux["/finances"] = middlewares.ValidateSessions(wfpages.FinancesPage)
+  h.mux["/fin/ordinaryannuity"] = middlewares.ValidateSessions(wfpages.OrdinaryAnnuityPage)
+  h.mux["/fin/ordinaryannuity/interestrate"] = middlewares.ValidateSessions(wfoainterest.OaInterestRatePages)
+  h.mux["/fin/ordinaryannuity/fv"] = middlewares.ValidateSessions(wfoafv.OaFvPages)
+  h.mux["/fin/ordinaryannuity/pv"] = middlewares.ValidateSessions(wfoapv.OaPvPages)
+  h.mux["/fin/ordinaryannuity/cp"] = middlewares.ValidateSessions(wfoacp.OaCpPages)
+  h.mux["/fin/ordinaryannuity/epp"] = middlewares.ValidateSessions(wfoaepp.OaEppPages)
+  h.mux["/fin/ordinaryannuity/ga"] = middlewares.ValidateSessions(wfoaga.OaGaPages)
+  h.mux["/fin/ordinaryannuity/perpetuity"] = middlewares.ValidateSessions(wfoaperpetuity.OaPerpetuityPages)
+  h.mux["/fin/annuitydue"] = middlewares.ValidateSessions(wfpages.AnnuityDuePage)
+  h.mux["/fin/annuitydue/cp"] = middlewares.ValidateSessions(wfadcp.AdCpPages)
+  h.mux["/fin/annuitydue/epp"] = middlewares.ValidateSessions(wfadepp.AdEppPages)
+  h.mux["/fin/annuitydue/fv"] = middlewares.ValidateSessions(wfadfv.AdFvPages)
+  h.mux["/fin/annuitydue/pv"] = middlewares.ValidateSessions(wfadpv.AdPvPages)
+  h.mux["/fin/bonds"] = middlewares.ValidateSessions(wfbonds.BondsPages)
+  h.mux["/fin/mortgage"] = middlewares.ValidateSessions(wfmortgage.MortgagePages)
+  h.mux["/fin/simpleinterest"] = middlewares.ValidateSessions(wfpages.SimpleInterestPage)
+  h.mux["/fin/simpleinterest/accurate"] = middlewares.ValidateSessions(wfsia.SimpleInterestAccuratePages)
+  h.mux["/fin/simpleinterest/bankers"] = middlewares.ValidateSessions(wfsib.SimpleInterestBankersPages)
+  h.mux["/fin/simpleinterest/ordinary"] = middlewares.ValidateSessions(wfsio.SimpleInterestOrdinaryPages)
+  h.mux["/fin/miscellaneous"] = middlewares.ValidateSessions(wfmisc.MiscellaneousPages)
   commonMiddlewares := []middlewares.Middleware {
     middlewares.CorrelationId,
+    //middlewares.ValidateSessions,
   }
   for idx, f := range h.mux {
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
-  sessions.Users["jct"] = "pw"
+  hashPassword, _ := sessions.HashSecret(PASSWORD)
+  sessions.Users[USER_NAME] = hashPassword
   server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
@@ -273,25 +286,29 @@ func main() {
       The five steps of an HTTP response and the related timeouts.
     ***/
     //It specifies the maximum amount of time to read the request headers.
-    ReadHeaderTimeout: 250 * time.Millisecond,
+//    ReadHeaderTimeout: 250 * time.Millisecond,
+    ReadHeaderTimeout: 1 * time.Hour,
     /***
     It specifies the maximum amount of time to read the entire request.
     ReadTimeout = ReadHeaderTimeout + TimeoutHandler + Extra time
     **/
-    ReadTimeout: 990 * time.Millisecond,
+//    ReadTimeout: 990 * time.Millisecond,
+    ReadTimeout: 1 * time.Hour,
     /***
     If a handler fails to respond on time, the server will reply with "503 Service Unavailable" and
     the specified message; the context passed to the handler will be canceled.
     Note: The http.Server.WriteTimeout is not necessary since http.TimeoutHandler is being used.
     ***/
-    Handler: http.TimeoutHandler(&h, 700 * time.Millisecond, "Request timeout."),
+//    Handler: http.TimeoutHandler(&h, 700 * time.Millisecond, "Request timeout."),
+    Handler: http.TimeoutHandler(&h, 1 * time.Hour, "Request timeout."),
     /***
     It configures the maximum amount of time for the next request when keep-alives are enabled.
     Note that if http.Server.IdleTimeout isn't set, the value of http.Server.ReadTimeout is used
     for the idle timeout. If neither is set, there won't be any timeouts, and connections will
     remain open until they are closed by clients.
     ***/
-    IdleTimeout: 30 * time.Second,
+//    IdleTimeout: 30 * time.Second,
+    IdleTimeout: 1 * time.Hour,
     MaxHeaderBytes: 1 << 20,  //1 MB.
   }
   /***

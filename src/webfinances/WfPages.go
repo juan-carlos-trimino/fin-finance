@@ -2,13 +2,16 @@ package webfinances
 
 import (
   //"encoding/json"
+  "finance/middlewares"
   "finance/misc"
   "finance/sessions"
   "fmt"
   //The option -u instructs 'get' to update the module with dependencies.
   //go get -u github.com/google/uuid
   "github.com/google/uuid"
-//  "golang.org/x/crypto/bcrypt"
+  //Package template (html/template) implements data-driven templates for generating HTML output
+  //safe against code injection. It provides the same interface as text/template and should be used
+  //instead of text/template whenever the output is HTML.
   "html/template"
   "net/http"
   "time"
@@ -17,6 +20,12 @@ import (
 var m = misc.Misc{}
 var tmpl *template.Template
 
+/***
+In Go, the predefined init() function sets off a piece of code to run before any other part of the
+package; i.e., adding the init() function tells the compiler that when the package is imported, it
+should run the init() function once. Unlike the main() function that can only be declared once, the
+init() function can be declared multiple times throughout a package.
+***/
 func init() {
   fmt.Printf("%s - Entering init/webfinances.\n", m.DTF())
   /***
@@ -26,45 +35,37 @@ func init() {
   tmpl = template.Must(template.ParseGlob("webfinances/templates/*.html"))
 }
 
-func checkSession(res http.ResponseWriter, req *http.Request) bool {
-  cookie, err := req.Cookie("session_token")
-  if err != nil {
-    if err == http.ErrNoCookie {
-      tmpl.ExecuteTemplate(res, "index_page", struct {
-        Error string
-      } {
-          "Please loggin",
-        })
-    } else {
-      tmpl.ExecuteTemplate(res, "index_page", struct {
-        Error string
-      } {
-          "Bad request",
-        })
-    }
-    return false
+/***
+When handling authentication errors, the application should not disclose which part of the
+authentication data was incorrect. Instead of "Invalid username" or "Invalid password", just use
+"Invalid username and/or password" interchangeably.
+***/
+func invalidSession(res http.ResponseWriter) {
+  tmpl.ExecuteTemplate(res, "index_page", struct {
+    Error string
+  } { "Invalid username and/or password" })
+}
+
+func refresh(res http.ResponseWriter, req *http.Request) {
+  // if !checkSession(res, req) {
+  //   return
+  // }
+  cookie, _ := req.Cookie("session_token")
+  //If the previous session is valid, create a new session token for the current user.
+  sessionToken := uuid.NewString()
+  expiresAt := time.Now().Add(120 * time.Second)
+  sessions.Sessions[sessionToken] = sessions.Session{
+    Username: sessions.Sessions[cookie.Value].Username,
+    Expiry: expiresAt,
   }
-  session, exists := sessions.Sessions[cookie.Value]
-  if !exists {
-    tmpl.ExecuteTemplate(res, "index_page", struct {
-      Error string
-    } {
-        "Invalid session token",
-      })
-    return false
-  }
-  //If the session token is present, but has expired, delete the session and return
-  //an unauthorized status.
-  if session.IsExpired() {
-    delete(sessions.Sessions, cookie.Value)
-    tmpl.ExecuteTemplate(res, "index_page", struct {
-      Error string
-    } {
-        "Session has expired",
-      })
-    return false
-  }
-  return true
+  //Delete the old session token.
+  delete(sessions.Sessions, cookie.Value)
+  //Set the new token.
+  http.SetCookie(res, &http.Cookie{
+    Name: "session_token",
+    Value: sessionToken,
+    Expires: expiresAt,
+  })
 }
 
 type WfPages struct{}
@@ -74,29 +75,20 @@ func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
   tmpl.ExecuteTemplate(res, "index_page", nil)
 }
 
-
-/*** signup user
-  //Parse and decode the request body into a new `Credentials` instance.
-  creds := &sessions.Credentials{}
-  if err := json.NewDecoder(req.Body).Decode(creds); err != nil {
-    tmpl.ExecuteTemplate(res, "index_page", struct {
-      Error string
-    } {
-        "Invalid username and/or password",
-      })
-  }
-  hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creds.Password), bcrypt.DefaultCost)
-
-***/
-
-
 func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering LoginPage/webfinances.\n", m.DTF())
   un := req.PostFormValue("username")
   pw := req.PostFormValue("password")
   //Get the expected password from the in memory map.
   password, ok := sessions.Users[un]
-  if !ok || password != pw {
+  if !ok {
+    tmpl.ExecuteTemplate(res, "index_page", struct {
+      Error string
+    } {
+        "Invalid username and/or password",
+      })
+    return
+  } else if err := sessions.CompareHashAndPassword(password, []byte(pw)); err != nil {
     tmpl.ExecuteTemplate(res, "index_page", struct {
       Error string
     } {
@@ -104,25 +96,25 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
       })
     return
   }
+  sessionToken := sessions.SetSessionToken(un)
   /***
-  Session based authentication keeps the users' sessions secure in a couple of ways:
-  1. Since the session tokens are randomly generated, its near-impossible for a malicious user to
-     brute-force his way into a user's session.
-  2. If a user's session token is compromised somehow, it cannot be used after its expiry. This is
-     why the expiry time is restricted to small intervals (a few seconds to a couple of minutes).
+  Once a cookie is set on a client, it is sent along with every subsequent request. Cookies store
+  historical information (including user login information) on the client's computer. The client's
+  browser sends these cookies everytime the user visits the same website, automatically completing
+  the login step for the user.
+
+  Sessions, on the other hand, store historical information on the server side. The server uses a
+  session id to identify different sessions, and the session id that is generated by the server
+  should always be random and unique. You can use cookies or URL arguments to get the client's
+  identity.
   ***/
-  sessionToken := uuid.NewString()
-  expiresAt := time.Now().Add(120 * time.Second)
-  sessions.Sessions[sessionToken] = sessions.Session{
-    Username: un,
-    Expiry: expiresAt,
-  }
-  //Once a cookie is set on a client, it is sent along with every subsequent request.
   http.SetCookie(res, &http.Cookie{
     Name: "session_token",
     Value: sessionToken,
-    Expires: expiresAt,
+    Expires: sessions.Sessions[sessionToken].Expiry,
   })
+  //The browser redirects to the homepage after the server verifies the login information and
+  //returns an HTTP response.
   http.Redirect(res, req, "/welcome", http.StatusSeeOther)
 }
 
@@ -156,27 +148,37 @@ func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
 
 func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering WelcomePage/webfinances.\n", m.DTF())
-  if checkSession(res, req) {
+  ctxKey := middlewares.MwContextKey{}
+  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
+  if sessionStatus {
     tmpl.ExecuteTemplate(res, "welcome_page", struct {
       Header string
       Datetime string
     } { "Investments", m.DTF() })
+  } else {
+    invalidSession(res)
   }
 }
 
 func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering ContactPage/webfinances.\n", m.DTF())
-  if checkSession(res, req) {
+  ctxKey := middlewares.MwContextKey{}
+  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
+  if sessionStatus {
     tmpl.ExecuteTemplate(res, "contact_page", struct {
       Header string
       Datetime string
     } { "Investments", m.DTF() })
+  } else {
+    invalidSession(res)
   }
 }
 
 func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering AboutPage/webfinances.\n", m.DTF())
-  if checkSession(res, req) {
+  ctxKey := middlewares.MwContextKey{}
+  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
+  if sessionStatus {
     /***
     Executing the template means that we take the content from the template files, combine it with
     data from another source, and generate the final HTML content.
@@ -185,6 +187,8 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
       Header string
       Datetime string
     } { "Investments", m.DTF() })
+  } else {
+    invalidSession(res)
   }
 }
 
@@ -197,41 +201,57 @@ func (p WfPages) PublicHomeFile(res http.ResponseWriter, req *http.Request) {
 
 func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering FinancesPage/webfinances.\n", m.DTF())
-  if checkSession(res, req) {
+  ctxKey := middlewares.MwContextKey{}
+  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
+  if sessionStatus {
     tmpl.ExecuteTemplate(res, "finances_page", struct {
       Header string
       Datetime string
     } { "Finances", m.DTF() })
+  } else {
+    invalidSession(res)
   }
 }
 
 func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering SimpleInterestPage/webfinances.\n", m.DTF())
-  if checkSession(res, req) {
+  ctxKey := middlewares.MwContextKey{}
+  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
+  if sessionStatus {
     tmpl.ExecuteTemplate(res, "simple_interest_page", struct {
       Header string
       Datetime string
     } { "Simple Interest", m.DTF() })
+  } else {
+    invalidSession(res)
   }
 }
 
 func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering OrdinaryAnnuityPage/webfinances.\n", m.DTF())
-  if checkSession(res, req) {
+  ctxKey := middlewares.MwContextKey{}
+  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
+  if sessionStatus {
     tmpl.ExecuteTemplate(res, "ordinary_annuity_page", struct {
       Header string
       Datetime string
     } { "Ordinary Annuity", m.DTF() })
+  } else {
+    invalidSession(res)
   }
 }
 
 func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering AnnuityDuePage/webfinances.\n", m.DTF())
-  if checkSession(res, req) {
+  ctxKey := middlewares.MwContextKey{}
+  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
+  if sessionStatus {
     tmpl.ExecuteTemplate(res, "annuity_due_page", struct {
       Header string
       Datetime string
     } { "Annuity Due", m.DTF() })
+  } else {
+    invalidSession(res)
   }
 }
 
