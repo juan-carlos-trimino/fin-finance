@@ -197,6 +197,7 @@ src/middlewares/*
 !src/middlewares/ChainMiddlewares.go
 !src/middlewares/MwCorrelationId.go
 !src/middlewares/MwContextKey.go
+!src/middlewares/MwValidateSessions.go
 # ... and this directory and its file...
 !src/sessions/
 src/sessions/*
