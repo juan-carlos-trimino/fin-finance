@@ -6,9 +6,6 @@ import (
   "finance/misc"
   "finance/sessions"
   "fmt"
-  //The option -u instructs 'get' to update the module with dependencies.
-  //go get -u github.com/google/uuid
-  "github.com/google/uuid"
   //Package template (html/template) implements data-driven templates for generating HTML output
   //safe against code injection. It provides the same interface as text/template and should be used
   //instead of text/template whenever the output is HTML.
@@ -46,28 +43,6 @@ func invalidSession(res http.ResponseWriter) {
   } { "Invalid username and/or password" })
 }
 
-func refresh(res http.ResponseWriter, req *http.Request) {
-  // if !checkSession(res, req) {
-  //   return
-  // }
-  cookie, _ := req.Cookie("session_token")
-  //If the previous session is valid, create a new session token for the current user.
-  sessionToken := uuid.NewString()
-  expiresAt := time.Now().Add(120 * time.Second)
-  sessions.Sessions[sessionToken] = sessions.Session{
-    Username: sessions.Sessions[cookie.Value].Username,
-    Expiry: expiresAt,
-  }
-  //Delete the old session token.
-  delete(sessions.Sessions, cookie.Value)
-  //Set the new token.
-  http.SetCookie(res, &http.Cookie{
-    Name: "session_token",
-    Value: sessionToken,
-    Expires: expiresAt,
-  })
-}
-
 type WfPages struct{}
 
 func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
@@ -81,11 +56,7 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
   pw := req.PostFormValue("password")
   //Get the expected password from the in memory map.
   if hashedPassword, ok := sessions.Users[un]; !ok {
-    //invalidSession(res)
-    // tmpl := template.Must(template.ParseFiles("webfinances/templates/index.html"))
-    tmpl.ExecuteTemplate(res, "index_page", struct {
-      Error string
-    } { "Invalid username and/or password" })
+    invalidSession(res)
   } else if ok, _ := sessions.CompareHashAndPassword(hashedPassword, []byte(pw)); !ok {
     invalidSession(res)
   } else {
@@ -106,13 +77,6 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
       Value: sessionToken,
       Expires: sessions.Sessions[sessionToken].Expiry,
     })
-  // tmpl.ExecuteTemplate(res, "welcome_page", struct {
-  //   Header string
-  //   Datetime string
-  //   //CsrfToken string
-  // } { "Investments", m.DTF()/*, sessions.Sessions[sessionToken].CsrfToken*/ })
-  //The browser redirects to the homepage after the server verifies the login information and
-  //returns an HTTP response.
     http.Redirect(res, req, "/welcome", http.StatusSeeOther)
   }
 }
@@ -122,11 +86,8 @@ func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    tmpl.ExecuteTemplate(res, "index_page", struct {
-      Error string
-    } { "Invalid username and/or password" })
+    invalidSession(res)
   } else {
-    //sessionToken, _ := ctxKey.GetSessionToken(req.Context())
     delete(sessions.Sessions, sessionToken)
     http.SetCookie(res, &http.Cookie{
       Name: "session_token",
@@ -143,10 +104,7 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    //invalidSession(res)
-    tmpl.ExecuteTemplate(res, "index_page", struct {
-      Error string
-    } { "Invalid username and/or password" })
+    invalidSession(res)
   } else {
     tmpl.ExecuteTemplate(res, "welcome_page", struct {
       Header string
@@ -247,35 +205,5 @@ func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
     } { "Annuity Due", m.DTF() })
   }
 }
-
-
-/*
-https://astaxie.gitbooks.io/build-web-application-with-golang/content/en/06.2.html
-
-//create a global session manager in the main() function
-var globalSessions *session.Manager
-//Initialize the session manager.
-func init() {
-  globalSessions = NewSessionManager("memory", "gosessionid", 3600)
-}
-
------------------
-package sessionmanager
-
-type SessionManager struct {
-  cookieName string  //Private cookiename
-  lock sync.Mutex  //Protect session
-  provider Provider
-  maxlifetime int64
-}
-
-func NewSessionManager(providerName, cookieName string, maxlifetime int64) *SessionManager, error) {
-  provider, ok := provides[providerName]
-  if !ok {
-    return nil, fmt.Errorf(Session: unknown provider %q (forgotten import?), providerName)
-  }
-  return &SessionManager{ provider: provider, cookieName: cookieName, maxlifetime: maxlifetime }, nil
-}
-*/
 
 
