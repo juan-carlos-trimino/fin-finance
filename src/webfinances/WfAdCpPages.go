@@ -67,13 +67,11 @@ func NewWfAdCpPages() WfAdCpPages {
 
 func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
-  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if !sessionStatus {
+  if sessionToken == "" {
     invalidSession(res)
     return
   }
-  ctxKey = middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   logEntry := LogEntry{}
   logEntry.Print(INFO, correlationId, []string {
@@ -176,6 +174,9 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
                       p.fd2Interest, p.fd2Compound, p.fd2Payment, p.fd2PV, p.fd2Result),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/cp/cp.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/annuitydue/cp/i-PMT-PV.html",
@@ -196,7 +197,7 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Fd2PV string
         Fd2Result string
       } { "Annuity Due / Compounding Periods", m.DTF(), p.currentButton,
-          sessions.Sessions[sessionToken].CsrfToken,
+          sessions.Sessions[newSessionToken].CsrfToken,
           p.fd2Interest, p.fd2Compound, p.fd2Payment, p.fd2PV, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
@@ -227,6 +228,9 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
                       p.fd3Compound, p.fd3Payment, p.fd3FV, p.fd3Result),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/cp/cp.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/annuitydue/cp/i-PMT-FV.html",
@@ -247,7 +251,7 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Fd3FV string
         Fd3Result string
       } { "Annuity Due / Compounding Periods", m.DTF(), p.currentButton,
-          sessions.Sessions[sessionToken].CsrfToken,
+          sessions.Sessions[newSessionToken].CsrfToken,
           p.fd3Interest, p.fd3Compound, p.fd3Payment, p.fd3FV, p.fd3Result,
         })
     } else {

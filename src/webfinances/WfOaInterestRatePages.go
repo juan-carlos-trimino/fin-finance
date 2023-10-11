@@ -4,6 +4,7 @@ import (
   "context"
   "finance/middlewares"
   "finance/finances"
+	"finance/sessions"
   "fmt"
   "html/template"
   "net/http"
@@ -43,12 +44,11 @@ func NewWfOaInterestRatePages() WfOaInterestRatePages {
 
 func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
-  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
-  if !sessionStatus {
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
     invalidSession(res)
     return
   }
-  ctxKey = middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   logEntry := LogEntry{}
   logEntry.Print(INFO, correlationId, []string {
@@ -105,6 +105,9 @@ func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req
                       p.fd1N, p.fd1TimePeriod, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       /***
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
@@ -117,13 +120,14 @@ func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd1N string
         Fd1TimePeriod string
         Fd1Compound string
         Fd1PV string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Interest Rate", m.DTF(), p.currentButton,
+      } { "Ordinary Annuity / Interest Rate", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd1N, p.fd1TimePeriod, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result,
         })
     } else {

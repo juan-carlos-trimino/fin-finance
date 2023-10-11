@@ -2,7 +2,8 @@
 
 <!-- rhs-ui2 -->
 <div id="rhs-ui2">
-  <form action="/fin/ordinaryannuity/cp" method="POST">
+  <form action="/fin/ordinaryannuity/cp" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px;">
       <label class="text-box" for="fd2-interest">Interest (%)...................</label>
       <input class="text-combo" id="fd2-interest" name="fd2-interest" value="{{ .Fd2Interest }}" type="number" step="any" maxlength="7" required/>

@@ -2,7 +2,8 @@
 
 <!-- rhs-ui1 -->
 <div id="rhs-ui1">
-  <form action="/fin/annuitydue/fv" method="POST">
+  <form action="/fin/annuitydue/fv" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd1-n">Time (n).........................</label>
       <input class="text-combo" id="fd1-n" name="fd1-n" value="{{ .Fd1N }}" type="number" step="any" min="1" maxlength="7" required/>

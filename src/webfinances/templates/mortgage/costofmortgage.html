@@ -12,7 +12,7 @@
   the body of the request, but the GET method attribute does not have a request body, and the data
   are set in the URL as name-value pairs.
   -->
-  <form action="/fin/mortgage" method="post" enctype="application/x-www-form-urlencoded" autocomplete="off">
+  <form action="/fin/mortgage" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd1-n">Time (n).........................</label>

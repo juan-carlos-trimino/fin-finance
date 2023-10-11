@@ -2,7 +2,8 @@
 
 <!-- rhs-ui1 -->
 <div id="rhs-ui1">
-  <form action="/fin/simpleinterest/ordinary" method="POST">
+  <form action="/fin/simpleinterest/ordinary" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd1-time">Time (n).........................</label>
       <input class="text-combo" id="fd1-time" name="fd1-time" value="{{ .Fd1Time }}" type="number" step="any" maxlength="7" required/>

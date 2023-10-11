@@ -4,6 +4,7 @@ import (
   "context"
   "finance/middlewares"
   "finance/finances"
+	"finance/sessions"
   "fmt"
   "html/template"
   "net/http"
@@ -51,12 +52,11 @@ func NewWfOaPerpetuityPages() WfOaPerpetuityPages {
 
 func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
-  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
-  if !sessionStatus {
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
     invalidSession(res)
     return
   }
-  ctxKey = middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   logEntry := LogEntry{}
   logEntry.Print(INFO, correlationId, []string {
@@ -106,6 +106,9 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
                       p.fd1Interest, p.fd1Compound, p.fd1Pmt, p.fd1Result),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       /***
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
@@ -118,11 +121,12 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd1Interest string
         Fd1Compound string
         Fd1Pmt string
         Fd1Result string
-      } { "Ordinary Annuity / Perpetuities", m.DTF(), p.currentButton,
+      } { "Ordinary Annuity / Perpetuities", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd1Interest, p.fd1Compound, p.fd1Pmt, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -152,6 +156,9 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
                       p.fd2Interest, p.fd2Compound, p.fd2Grow, p.fd2Pmt, p.fd2Result),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/perpetuity/perpetuity.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/ordinaryannuity/perpetuity/gp.html",
@@ -160,12 +167,13 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd2Interest string
         Fd2Compound string
         Fd2Grow string
         Fd2Pmt string
         Fd2Result string
-      } { "Ordinary Annuity / Perpetuities", m.DTF(), p.currentButton,
+      } { "Ordinary Annuity / Perpetuities", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd2Interest, p.fd2Compound, p.fd2Grow, p.fd2Pmt, p.fd2Result,
         })
     } else {

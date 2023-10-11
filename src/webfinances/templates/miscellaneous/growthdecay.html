@@ -2,7 +2,8 @@
 
 <!-- rhs-ui4 -->
 <div id="rhs-ui4">
-  <form action="/fin/miscellaneous" method="POST">
+  <form action="/fin/miscellaneous" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd4-interest">Interest (%)...................</label>
       <input class="text-combo" id="fd4-interest" name="fd4-interest" value="{{ .Fd4Interest }}" type="number" step="any" maxlength="7" required/>

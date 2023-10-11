@@ -4,6 +4,7 @@ import (
   "context"
   "finance/middlewares"
   "finance/finances"
+	"finance/sessions"
   "fmt"
   "html/template"
   "net/http"
@@ -81,8 +82,8 @@ func NewWfSiBankersPages() WfSiBankersPages {
 
 func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
-  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
-  if !sessionStatus {
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
     invalidSession(res)
     return
   }
@@ -136,6 +137,9 @@ func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, r
         fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s\n", m.DTF(), p.fd1Time,
                    p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1Result)
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestbankers/bankers.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/simpleinterestbankers/amountofinterest.html",
@@ -144,13 +148,14 @@ func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, r
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd1Time string
         Fd1TimePeriod string
         Fd1Interest string
         Fd1Compound string
         Fd1PV string
         Fd1Result string
-      } { "Simple Interest / Banker's Interest", m.DTF(), p.currentButton,
+      } { "Simple Interest / Banker's Interest", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd1Time, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -179,6 +184,9 @@ func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, r
         fmt.Printf("%s - n = %s, tp = %s, a = %s, pv = %s, %s\n", m.DTF(), p.fd2Time,
                    p.fd2TimePeriod, p.fd2Amount, p.fd2PV, p.fd2Result)
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestbankers/bankers.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/simpleinterestbankers/interestrate.html",
@@ -187,12 +195,13 @@ func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, r
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd2Time string
         Fd2TimePeriod string
         Fd2Amount string
         Fd2PV string
         Fd2Result string
-      } { "Simple Interest / Banker's Interest", m.DTF(), p.currentButton,
+      } { "Simple Interest / Banker's Interest", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd2Time, p.fd2TimePeriod, p.fd2Amount, p.fd2PV, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
@@ -223,6 +232,9 @@ func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, r
         fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, a = %s, %s\n", m.DTF(), p.fd3Time,
                    p.fd3TimePeriod, p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result)
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestbankers/bankers.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/simpleinterestbankers/principal.html",
@@ -231,13 +243,14 @@ func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, r
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd3Time string
         Fd3TimePeriod string
         Fd3Interest string
         Fd3Compound string
         Fd3Amount string
         Fd3Result string
-      } { "Simple Interest / Banker's Interest", m.DTF(), p.currentButton,
+      } { "Simple Interest / Banker's Interest", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd3Time, p.fd3TimePeriod, p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
@@ -267,6 +280,9 @@ func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, r
         fmt.Printf("%s - i = %s, cp = %s, a = %s, pv = %s, %s\n", m.DTF(),
                    p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result)
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestbankers/bankers.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/simpleinterestbankers/time.html",
@@ -275,12 +291,13 @@ func (p *wfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, r
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd4Interest string
         Fd4Compound string
         Fd4Amount string
         Fd4PV string
         Fd4Result string
-      } { "Simple Interest / Banker's Interest", m.DTF(), p.currentButton,
+      } { "Simple Interest / Banker's Interest", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result,
         })
     } else {

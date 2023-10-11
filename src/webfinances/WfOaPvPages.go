@@ -4,6 +4,7 @@ import (
   "context"
   "finance/middlewares"
   "finance/finances"
+	"finance/sessions"
   "fmt"
   "html/template"
   "net/http"
@@ -56,10 +57,12 @@ func NewWfOaPvPages() WfOaPvPages {
 }
 
 func (p *wfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
-  // if !checkSession(res, req) {
-  //   return
-  // }
   ctxKey := middlewares.MwContextKey{}
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
+    invalidSession(res)
+    return
+  }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   logEntry := LogEntry{}
   logEntry.Print(INFO, correlationId, []string {
@@ -115,6 +118,9 @@ func (p *wfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
                       p.fd1N, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1FV, p.fd1Result),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       /***
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
@@ -127,13 +133,14 @@ func (p *wfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd1N string
         Fd1TimePeriod string
         Fd1Interest string
         Fd1Compound string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Present Value", m.DTF(), p.currentButton,
+      } { "Ordinary Annuity / Present Value", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd1N, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1FV, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -166,6 +173,9 @@ func (p *wfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
                       p.fd2Result),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/pv/pv.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/ordinaryannuity/pv/n-i-PMT.html",
@@ -174,13 +184,14 @@ func (p *wfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd2N string
         Fd2TimePeriod string
         Fd2Interest string
         Fd2Compound string
         Fd2PMT string
         Fd2Result string
-      } { "Ordinary Annuity / Present Value", m.DTF(), p.currentButton,
+      } { "Ordinary Annuity / Present Value", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PMT, p.fd2Result,
         })
     } else {

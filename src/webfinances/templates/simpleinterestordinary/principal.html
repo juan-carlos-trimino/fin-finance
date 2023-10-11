@@ -2,7 +2,8 @@
 
 <!-- rhs-ui3 -->
 <div id="rhs-ui3">
-  <form action="/fin/simpleinterest/ordinary" method="POST">
+  <form action="/fin/simpleinterest/ordinary" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd3-time">Time (n).........................</label>
       <input class="text-combo" id="fd3-time" name="fd3-time" value="{{ .Fd3Time }}" type="number" step="any" min="1" maxlength="7" required/>

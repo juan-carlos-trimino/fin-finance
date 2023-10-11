@@ -2,7 +2,8 @@
 
 <!-- rhs-ui5 -->
 <div id="rhs-ui5">
-  <form action="/fin/miscellaneous" method="POST">
+  <form action="/fin/miscellaneous" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd5-values">Values...</label>
       <input class="text-combo" id="fd5-values" name="fd5-values" value="{{ .Fd5Values }}" type="string" required/>

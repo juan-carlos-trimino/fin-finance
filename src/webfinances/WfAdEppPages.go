@@ -4,6 +4,7 @@ import (
   "context"
   "finance/middlewares"
   "finance/finances"
+	"finance/sessions"
   "fmt"
   "html/template"
   "net/http"
@@ -57,12 +58,11 @@ func NewWfAdEppPages() WfAdEppPages {
 
 func (p *wfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
-  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
-  if !sessionStatus {
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
     invalidSession(res)
     return
   }
-  ctxKey = middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   logEntry := LogEntry{}
   logEntry.Print(INFO, correlationId, []string {
@@ -118,6 +118,9 @@ func (p *wfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
                        p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1FV, p.fd1Result),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       /***
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
@@ -130,6 +133,7 @@ func (p *wfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd1N string
         Fd1TimePeriod string
         Fd1Interest string
@@ -137,6 +141,7 @@ func (p *wfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
         Fd1FV string
         Fd1Result string
       } { "Annuity Due / Equal Periodic Payments", m.DTF(), p.currentButton,
+          sessions.Sessions[newSessionToken].CsrfToken,
           p.fd1N, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1FV, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -168,6 +173,9 @@ func (p *wfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
                        p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PV, p.fd2Result),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/epp/epp.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/annuitydue/epp/n-i-PV.html",
@@ -176,6 +184,7 @@ func (p *wfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd2N string
         Fd2TimePeriod string
         Fd2Interest string
@@ -183,6 +192,7 @@ func (p *wfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
         Fd2PV string
         Fd2Result string
       } { "Annuity Due / Equal Periodic Payments", m.DTF(), p.currentButton,
+          sessions.Sessions[newSessionToken].CsrfToken,
           p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PV, p.fd2Result,
         })
     } else {

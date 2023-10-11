@@ -28,8 +28,7 @@
           the authentication data was incorrect. Instead of "Invalid username" or "Invalid
           password", just use "Invalid username and/or password" interchangeably.
       -->
-      <form method="post" action="/login" autocomplete="off">
-        <!-- <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/> -->
+      <form method="post" action="/login" enctype="application/x-www-form-urlencoded" autocomplete="off">
         <label>Username: <input type="text" name="username"></label><br><br>
         <!--
         The password entry should be obscured on the user's screen.

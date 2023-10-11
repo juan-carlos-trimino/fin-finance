@@ -4,6 +4,7 @@ import (
   "context"
   "finance/finances"
   "finance/middlewares"
+	"finance/sessions"
   "fmt"
   "html/template"
   "net/http"
@@ -91,12 +92,11 @@ func NewWfMiscellaneousPages() WfMiscellaneousPages {
 
 func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
-  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
-  if !sessionStatus {
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
     invalidSession(res)
     return
   }
-  ctxKey = middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   logEntry := LogEntry{}
   logEntry.Print(INFO, correlationId, []string {
@@ -141,6 +141,9 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
           fmt.Sprintf("nominal rate = %s, cp = %s, %s", p.fd1Nominal, p.fd1Compound, p.fd1Result[1]),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       /***
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
@@ -153,10 +156,11 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd1Nominal string
         Fd1Compound string
         Fd1Result [2]string
-      } { "Miscellaneous", m.DTF(), p.currentButton,
+      } { "Miscellaneous", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd1Nominal, p.fd1Compound, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -179,6 +183,9 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
                       p.fd2Result[2]),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/miscellaneous/effectiveannualrate.html",
@@ -187,10 +194,11 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd2Effective string
         Fd2Compound string
         Fd2Result [3]string
-      } { "Miscellaneous", m.DTF(), p.currentButton,
+      } { "Miscellaneous", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd2Effective, p.fd2Compound, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
@@ -215,6 +223,9 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
                       p.fd3Result[3]),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/miscellaneous/nominalratevs.html",
@@ -223,10 +234,11 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd3Nominal string
         Fd3Inflation string
         Fd3Result [4]string
-      } { "Miscellaneous", m.DTF(), p.currentButton,
+      } { "Miscellaneous", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd3Nominal, p.fd3Inflation, p.fd3Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
@@ -253,6 +265,9 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
                       p.fd4Compound, p.fd4Factor, p.fd4Result),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/miscellaneous/growthdecay.html",
@@ -261,11 +276,12 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd4Interest string
         Fd4Compound string
         Fd4Factor string
         Fd4Result string
-      } { "Miscellaneous", m.DTF(), p.currentButton,
+      } { "Miscellaneous", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd4Interest, p.fd4Compound, p.fd4Factor, p.fd4Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui5") {
@@ -290,6 +306,9 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
           fmt.Sprintf("values = [%s], %s\n", p.fd5Values, p.fd5Result[1]),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/miscellaneous/averagerate.html",
@@ -298,9 +317,10 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd5Values string
         Fd5Result [2]string
-      } { "Miscellaneous", m.DTF(), p.currentButton,
+      } { "Miscellaneous", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd5Values, p.fd5Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui6") {
@@ -332,6 +352,9 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
                       p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/miscellaneous/depreciation.html",
@@ -340,13 +363,14 @@ func (p *wfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd6Time string
         Fd6TimePeriod string
         Fd6Rate string
         Fd6Compound string
         Fd6PV string
         Fd6Result string
-      } { "Miscellaneous", m.DTF(), p.currentButton,
+      } { "Miscellaneous", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd6Time, p.fd6TimePeriod, p.fd6Rate, p.fd6Compound, p.fd6PV, p.fd6Result,
         })
     } else {

@@ -2,7 +2,8 @@
 
 <!-- rhs-ui3 -->
 <div id="rhs-ui3">
-  <form action="/fin/bonds" method="POST" enctype="application/x-www-form-urlencoded">
+  <form action="/fin/bonds" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <!-- margin: top, right, bottom, left -->
     <div style="margin-top: 20px">
       <label class="text-box" for="fd3-facevalue">Face Value.....................</label>

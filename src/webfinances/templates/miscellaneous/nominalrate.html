@@ -2,7 +2,8 @@
 
 <!-- rhs-ui1 -->
 <div id="rhs-ui1">
-  <form action="/fin/miscellaneous" method="POST">
+  <form action="/fin/miscellaneous" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd1-nominal">Nominal Rate (%)........</label>
       <input class="text-combo" id="fd1-nominal" name="fd1-nominal" value="{{ .Fd1Nominal }}" type="number" step="any" maxlength="7" required/>

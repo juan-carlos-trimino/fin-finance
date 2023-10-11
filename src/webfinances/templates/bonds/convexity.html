@@ -2,7 +2,8 @@
 
 <!-- rhs-ui8 -->
 <div id="rhs-ui8">
-  <form action="/fin/bonds" method="POST" enctype="application/x-www-form-urlencoded">
+  <form action="/fin/bonds" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd8-facevalue">Face Value.................................</label>
       <input class="text-combo" id="fd8-facevalue" name="fd8-facevalue" value="{{ .Fd8FaceValue }}" type="number" step="any" maxlength="7" required/>
