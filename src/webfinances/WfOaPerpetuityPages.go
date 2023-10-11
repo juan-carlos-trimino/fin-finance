@@ -106,7 +106,7 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
                       p.fd1Interest, p.fd1Compound, p.fd1Pmt, p.fd1Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       /***
@@ -126,7 +126,7 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
         Fd1Compound string
         Fd1Pmt string
         Fd1Result string
-      } { "Ordinary Annuity / Perpetuities", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Ordinary Annuity / Perpetuities", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd1Interest, p.fd1Compound, p.fd1Pmt, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -156,7 +156,7 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
                       p.fd2Interest, p.fd2Compound, p.fd2Grow, p.fd2Pmt, p.fd2Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/perpetuity/perpetuity.html",
@@ -173,7 +173,7 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
         Fd2Grow string
         Fd2Pmt string
         Fd2Result string
-      } { "Ordinary Annuity / Perpetuities", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Ordinary Annuity / Perpetuities", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd2Interest, p.fd2Compound, p.fd2Grow, p.fd2Pmt, p.fd2Result,
         })
     } else {

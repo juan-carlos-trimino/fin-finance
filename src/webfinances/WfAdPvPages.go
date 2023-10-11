@@ -169,7 +169,7 @@ func (p *wfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
                       p.fd2Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/pv/pv.html",
@@ -187,8 +187,7 @@ func (p *wfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
         Fd2Compound string
         Fd2PMT string
         Fd2Result string
-      } { "Annuity Due / Present Value", m.DTF(), p.currentButton,
-          sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Annuity Due / Present Value", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PMT, p.fd2Result,
         })
     } else {

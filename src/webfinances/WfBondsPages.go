@@ -234,7 +234,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
                       p.fd1TaxFree, p.fd1CityTax, p.fd1StateTax, p.fd1FederalTax, p.fd1Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       /***
@@ -255,7 +255,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd1StateTax string
         Fd1FederalTax string
         Fd1Result string
-      } { "Bonds", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Bonds", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd1TaxFree, p.fd1CityTax, p.fd1StateTax, p.fd1FederalTax, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -299,7 +299,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
                       p.fd2Compound, p.fd2Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
@@ -318,7 +318,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd2Current string
         Fd2Compound string
         Fd2Result string
-      } { "Bonds", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Bonds", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd2FaceValue, p.fd2Time, p.fd2TimePeriod, p.fd2Coupon, p.fd2Current, p.fd2Compound, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
@@ -360,7 +360,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
                        p.fd3BondPrice, p.fd3CallPrice, p.fd3Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
@@ -380,7 +380,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd3BondPrice string
         Fd3CallPrice string
         Fd3Result string
-      } { "Bonds", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Bonds", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd3FaceValue, p.fd3TimeCall, p.fd3TimePeriod, p.fd3Coupon, p.fd3Compound, p.fd3BondPrice, p.fd3CallPrice, p.fd3Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
@@ -443,7 +443,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
                       p.fd4CurrentRadio, p.fd4CurInterest, p.fd4BondPrice, p.fd4Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
@@ -464,7 +464,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd4CurInterest string
         Fd4BondPrice string
         Fd4Result string
-      } { "Bonds", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Bonds", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd4FaceValue, p.fd4Time, p.fd4TimePeriod, p.fd4Coupon, p.fd4Compound, p.fd4CurrentRadio, p.fd4CurInterest, p.fd4BondPrice, p.fd4Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui5") {
@@ -507,7 +507,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
                       p.fd5CurInterest, p.fd5Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
@@ -526,7 +526,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd5CurInterest string
         Fd5Compound string
         Fd5Result string
-      } { "Bonds", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Bonds", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd5FaceValue, p.fd5Time, p.fd5TimePeriod, p.fd5Coupon, p.fd5CurInterest, p.fd5Compound, p.fd5Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui6") {
@@ -569,7 +569,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
                       p.fd6CurInterest, p.fd6Result[1]),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
@@ -588,7 +588,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd6CurInterest string
         Fd6Compound string
         Fd6Result [2]string
-      } { "Bonds", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Bonds", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd6FaceValue, p.fd6Time, p.fd6TimePeriod, p.fd6Coupon, p.fd6CurInterest, p.fd6Compound, p.fd6Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui7") {
@@ -631,7 +631,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
                       p.fd7CurInterest, p.fd7Result[1]),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
@@ -650,7 +650,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd7CurInterest string
         Fd7Compound string
         Fd7Result [2]string
-      } { "Bonds", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Bonds", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd7FaceValue, p.fd7Time, p.fd7TimePeriod, p.fd7Coupon, p.fd7CurInterest, p.fd7Compound, p.fd7Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui8") {
@@ -692,7 +692,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
                           p.fd8CurInterest, p.fd8Result[1]),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
@@ -711,7 +711,7 @@ func (p *wfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd8CurInterest string
         Fd8Compound string
         Fd8Result [2]string
-      } { "Bonds", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Bonds", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd8FaceValue, p.fd8Time, p.fd8TimePeriod, p.fd8Coupon, p.fd8CurInterest, p.fd8Compound, p.fd8Result,
         })
     } else {

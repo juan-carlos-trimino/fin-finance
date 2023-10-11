@@ -11,7 +11,6 @@ import (
   //instead of text/template whenever the output is HTML.
   "html/template"
   "net/http"
-  "time"
 )
 
 var m = misc.Misc{}
@@ -60,7 +59,7 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
   } else if ok, _ := sessions.CompareHashAndPassword(hashedPassword, []byte(pw)); !ok {
     invalidSession(res)
   } else {
-    sessionToken := sessions.AddEntryToSessions(un)
+    sessionToken, session := sessions.AddEntryToSessions(un)
     /***
     Once a cookie is set on a client, it is sent along with every subsequent request. Cookies store
     historical information (including user login information) on the client's computer. The
@@ -75,7 +74,7 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
     http.SetCookie(res, &http.Cookie{
       Name: "session_token",
       Value: sessionToken,
-      Expires: sessions.Sessions[sessionToken].Expiry,
+      Expires: session.Expiry,
     })
     http.Redirect(res, req, "/welcome", http.StatusSeeOther)
   }
@@ -88,13 +87,8 @@ func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    delete(sessions.Sessions, sessionToken)
-    http.SetCookie(res, &http.Cookie{
-      Name: "session_token",
-      Value: "",
-      Path: "/",
-      Expires: time.Now(),
-    })
+    cookie := sessions.DeleteSession(sessionToken)
+    http.SetCookie(res, cookie)
     http.Redirect(res, req, "/", http.StatusSeeOther)
   }
 }

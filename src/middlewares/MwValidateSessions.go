@@ -13,15 +13,15 @@ func ValidateSessions(handler http.HandlerFunc) http.HandlerFunc {
     cookie, err := req.Cookie("session_token")
     if err != nil {
       ctx = context.WithValue(req.Context(), sessionTokenKey, "")
-    } else if session, exists := sessions.Sessions[cookie.Value]; !exists {
+    } else if exists := sessions.SessionExists(cookie.Value); !exists {
       ctx = context.WithValue(req.Context(), sessionTokenKey, "")
     //If the session token is present, but has expired, delete the session and return
     //an unauthorized status.
-    } else if session.IsExpired(cookie.Value) {
+    } else if sessions.IsSessionExpired(cookie.Value) {
       ctx = context.WithValue(req.Context(), sessionTokenKey, "")
     } else if req.Method == http.MethodPost {
       csrf := req.PostFormValue("csrf_token")
-      if !sessions.CompareUuids(csrf, session.CsrfToken) {
+      if !sessions.CompareUuids(csrf, cookie.Value) {
         ctx = context.WithValue(req.Context(), sessionTokenKey, "")
       } else {
         //ctx = context.WithValue(context.Background(), sessionStatusKey, true)

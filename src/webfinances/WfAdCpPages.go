@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-  "time"
 )
 
 type WfAdCpPages interface {
@@ -174,18 +173,13 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
                       p.fd2Interest, p.fd2Compound, p.fd2Payment, p.fd2PV, p.fd2Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/cp/cp.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/annuitydue/cp/i-PMT-PV.html",
                                              "webfinances/templates/footer.html"))
-      sessions.Sessions[sessionToken] = sessions.Session{
-        Username: sessions.Sessions[sessionToken].Username,
-        Expiry: time.Now().Add(120 * time.Second),
-        CsrfToken: sessions.GetNewUuid(),
-      }
       t.ExecuteTemplate(res, "adcompoundingperiods", struct {
         Header string
         Datetime string
@@ -196,8 +190,7 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Fd2Payment string
         Fd2PV string
         Fd2Result string
-      } { "Annuity Due / Compounding Periods", m.DTF(), p.currentButton,
-          sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Annuity Due / Compounding Periods", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd2Interest, p.fd2Compound, p.fd2Payment, p.fd2PV, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
@@ -228,18 +221,13 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
                       p.fd3Compound, p.fd3Payment, p.fd3FV, p.fd3Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/cp/cp.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/annuitydue/cp/i-PMT-FV.html",
                                              "webfinances/templates/footer.html"))
-      sessions.Sessions[sessionToken] = sessions.Session{
-        Username: sessions.Sessions[sessionToken].Username,
-        Expiry: time.Now().Add(120 * time.Second),
-        CsrfToken: sessions.GetNewUuid(),
-      }
       t.ExecuteTemplate(res, "adcompoundingperiods", struct {
         Header string
         Datetime string
@@ -250,8 +238,7 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Fd3Payment string
         Fd3FV string
         Fd3Result string
-      } { "Annuity Due / Compounding Periods", m.DTF(), p.currentButton,
-          sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Annuity Due / Compounding Periods", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd3Interest, p.fd3Compound, p.fd3Payment, p.fd3FV, p.fd3Result,
         })
     } else {

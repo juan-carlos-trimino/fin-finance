@@ -118,7 +118,7 @@ func (p *wfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
                        p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1FV, p.fd1Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       /***
@@ -140,8 +140,7 @@ func (p *wfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
         Fd1Compound string
         Fd1FV string
         Fd1Result string
-      } { "Annuity Due / Equal Periodic Payments", m.DTF(), p.currentButton,
-          sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Annuity Due / Equal Periodic Payments", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd1N, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1FV, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -173,7 +172,7 @@ func (p *wfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
                        p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PV, p.fd2Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/epp/epp.html",
@@ -191,8 +190,7 @@ func (p *wfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
         Fd2Compound string
         Fd2PV string
         Fd2Result string
-      } { "Annuity Due / Equal Periodic Payments", m.DTF(), p.currentButton,
-          sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Annuity Due / Equal Periodic Payments", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PV, p.fd2Result,
         })
     } else {

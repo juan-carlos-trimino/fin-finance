@@ -120,7 +120,7 @@ func (p *wfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
                       p.fd1N, p.fd1Interest, p.fd1Compound, p.fd1Grow, p.fd1Pmt, p.fd1Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       /***
@@ -142,7 +142,7 @@ func (p *wfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
         Fd1Grow string
         Fd1Pmt string
         Fd1Result string
-      } { "Ordinary Annuity / Growing Annuity", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Ordinary Annuity / Growing Annuity", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd1N, p.fd1Interest, p.fd1Compound, p.fd1Grow, p.fd1Pmt, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -176,7 +176,7 @@ func (p *wfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
                       p.fd2N, p.fd2Interest, p.fd2Compound, p.fd2Grow, p.fd2Pmt, p.fd2Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/ga/ga.html",
@@ -194,7 +194,7 @@ func (p *wfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
         Fd2Grow string
         Fd2Pmt string
         Fd2Result string
-      } { "Ordinary Annuity / Growing Annuity", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Ordinary Annuity / Growing Annuity", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd2N, p.fd2Interest, p.fd2Compound, p.fd2Grow, p.fd2Pmt, p.fd2Result,
         })
     } else {

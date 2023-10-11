@@ -137,7 +137,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s\n", m.DTF(), p.fd1Time,
                    p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1Result)
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestordinary/ordinary.html",
@@ -155,7 +155,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd1Compound string
         Fd1PV string
         Fd1Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd1Time, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -184,7 +184,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         fmt.Printf("%s - n = %s, tp = %s, a = %s, pv = %s, %s\n", m.DTF(), p.fd2Time,
                   p.fd2TimePeriod, p.fd2Amount, p.fd2PV, p.fd2Result)
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestordinary/ordinary.html",
@@ -201,7 +201,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd2Amount string
         Fd2PV string
         Fd2Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd2Time, p.fd2TimePeriod, p.fd2Amount, p.fd2PV, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
@@ -232,7 +232,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, a = %s, %s\n", m.DTF(), p.fd3Time,
                    p.fd3TimePeriod, p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result)
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestordinary/ordinary.html",
@@ -250,7 +250,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd3Compound string
         Fd3Amount string
         Fd3Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd3Time, p.fd3TimePeriod, p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
@@ -280,7 +280,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         fmt.Printf("%s - i = %s, cp = %s, a = %s, pv = %s, %s\n", m.DTF(),
                    p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result)
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestordinary/ordinary.html",
@@ -297,7 +297,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd4Amount string
         Fd4PV string
         Fd4Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result,
         })
     } else {

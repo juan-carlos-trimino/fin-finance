@@ -125,7 +125,7 @@ func (p *wfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
                       p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       /***
@@ -146,8 +146,7 @@ func (p *wfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
         Fd1PV string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Compounding Periods", m.DTF(), p.currentButton,
-          sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Ordinary Annuity / Compounding Periods", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -178,7 +177,7 @@ func (p *wfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
                       p.fd2Interest, p.fd2Compound, p.fd2Payment, p.fd2PV, p.fd2Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/cp/cp.html",
@@ -195,8 +194,7 @@ func (p *wfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
         Fd2Payment string
         Fd2PV string
         Fd2Result string
-      } { "Ordinary Annuity / Compounding Periods", m.DTF(), p.currentButton,
-          sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Ordinary Annuity / Compounding Periods", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd2Interest, p.fd2Compound, p.fd2Payment, p.fd2PV, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
@@ -227,7 +225,7 @@ func (p *wfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
                       p.fd3Compound, p.fd3Payment, p.fd3FV, p.fd3Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/cp/cp.html",
@@ -244,8 +242,7 @@ func (p *wfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
         Fd3Payment string
         Fd3FV string
         Fd3Result string
-      } { "Ordinary Annuity / Compounding Periods", m.DTF(), p.currentButton,
-          sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Ordinary Annuity / Compounding Periods", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd3Interest, p.fd3Compound, p.fd3Payment, p.fd3FV, p.fd3Result,
         })
     } else {

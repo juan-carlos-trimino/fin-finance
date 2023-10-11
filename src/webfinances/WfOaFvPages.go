@@ -118,7 +118,7 @@ func (p *wfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
                       p.fd1N, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1FV, p.fd1Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       /***
@@ -140,7 +140,7 @@ func (p *wfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
         Fd1Compound string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Future Value", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Ordinary Annuity / Future Value", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd1N, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1FV, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -172,7 +172,7 @@ func (p *wfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
                       p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PMT, p.fd2Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/fv/fv.html",
@@ -190,7 +190,7 @@ func (p *wfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
         Fd2Compound string
         Fd2PMT string
         Fd2Result string
-      } { "Ordinary Annuity / Future Value", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Ordinary Annuity / Future Value", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PMT, p.fd2Result,
         })
     } else {

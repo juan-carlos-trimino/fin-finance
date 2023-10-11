@@ -105,7 +105,7 @@ func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req
                       p.fd1N, p.fd1TimePeriod, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result),
         })
       }
-      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       /***
@@ -127,7 +127,7 @@ func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req
         Fd1PV string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Interest Rate", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
+      } { "Ordinary Annuity / Interest Rate", m.DTF(), p.currentButton, newSession.CsrfToken,
           p.fd1N, p.fd1TimePeriod, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result,
         })
     } else {
