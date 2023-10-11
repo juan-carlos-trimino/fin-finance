@@ -12,22 +12,24 @@ func ValidateSessions(handler http.HandlerFunc) http.HandlerFunc {
     var ctx context.Context
     cookie, err := req.Cookie("session_token")
     if err != nil {
-      ctx = context.WithValue(req.Context(), sessionStatusKey, false)
+      ctx = context.WithValue(req.Context(), sessionTokenKey, "")
     } else if session, exists := sessions.Sessions[cookie.Value]; !exists {
-      ctx = context.WithValue(req.Context(), sessionStatusKey, false)
+      ctx = context.WithValue(req.Context(), sessionTokenKey, "")
     //If the session token is present, but has expired, delete the session and return
     //an unauthorized status.
-    } else if session.IsExpired() {
-      delete(sessions.Sessions, cookie.Value)
-      ctx = context.WithValue(req.Context(), sessionStatusKey, false)
-    } else {
+    } else if session.IsExpired(cookie.Value) {
+      ctx = context.WithValue(req.Context(), sessionTokenKey, "")
+    } else if req.Method == http.MethodPost {
       csrf := req.PostFormValue("csrf_token")
-      if err := sessions.CompareHashAndPassword([]byte(csrf), sessions.Sessions[cookie.Value].CsrfToken); err == nil {
-        ctx = context.WithValue(req.Context(), sessionStatusKey, true)
-        ctx = context.WithValue(req.Context(), sessionTokenKey, cookie.Value)
+      if !sessions.CompareUuids(csrf, session.CsrfToken) {
+        ctx = context.WithValue(req.Context(), sessionTokenKey, "")
       } else {
-        ctx = context.WithValue(req.Context(), sessionStatusKey, false)
+        //ctx = context.WithValue(context.Background(), sessionStatusKey, true)
+        //ctx = context.WithValue(ctx, sessionTokenKey, cookie.Value)
+        ctx = context.WithValue(req.Context(), sessionTokenKey, cookie.Value)
       }
+    } else {
+      ctx = context.WithValue(req.Context(), sessionTokenKey, cookie.Value)
     }
     handler.ServeHTTP(res, req.WithContext(ctx))
   }

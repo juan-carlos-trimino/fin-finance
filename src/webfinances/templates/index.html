@@ -29,7 +29,7 @@
           password", just use "Invalid username and/or password" interchangeably.
       -->
       <form method="post" action="/login" autocomplete="off">
-        <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
+        <!-- <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/> -->
         <label>Username: <input type="text" name="username"></label><br><br>
         <!--
         The password entry should be obscured on the user's screen.

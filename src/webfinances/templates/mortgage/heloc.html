@@ -3,6 +3,7 @@
 <!-- rhs-ui3 -->
 <div id="rhs-ui3">
   <form action="/fin/mortgage" method="POST" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd3-mrate">Mortgage Rate (%)...</label>
       <input class="text-combo" id="fd3-mrate" name="fd3-mrate" value="{{ .Fd3Mrate }}" type="number" step="any" maxlength="7" required/>

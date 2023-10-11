@@ -7,8 +7,15 @@ import (
   //The option -u instructs 'get' to update the module with dependencies.
   //go get -u golang.org/x/crypto/bcrypt
   "golang.org/x/crypto/bcrypt"
-	"time"
+  "net/http"
+  "strings"
+  "time"
 )
+
+//Store the session information for each user in memory.
+var Sessions = map[string]Session{}  //key: sessionToken, value: session
+//Store the username and password for each user.
+var Users = map[string][]byte{}  //key: username, value: password
 
 type Session struct {
   Username string
@@ -17,19 +24,31 @@ type Session struct {
   CsrfToken string
 }
 
-//Store the session information for each user in memory.
-var Sessions = map[string]Session{}  //key: sessionToken, value: session
+//Determine if a session has expired.
+func (s *Session) IsExpired(sessionToken string) bool {
+  var expired bool = s.Expiry.Before(time.Now())
+  if expired {
+    //Delete the session.
+    delete(Sessions, sessionToken)
+  }
+  return expired
+}
 
 func HashSecret(secret string) ([]byte, error) {
   hashedSecret, err := bcrypt.GenerateFromPassword([]byte(secret), bcrypt.DefaultCost)
   return hashedSecret, err
 }
 
-func CompareHashAndPassword(hashedPassword, password []byte) error {
-  return bcrypt.CompareHashAndPassword(hashedPassword, password)
+func CompareHashAndPassword(hashedPassword, password []byte) (bool, error) {
+  err := bcrypt.CompareHashAndPassword(hashedPassword, password)
+  return err == nil, err
 }
 
-func SetSessionToken(userName string) (sessionToken string) {
+func CompareUuids(u1, u2 string) bool {
+  return strings.EqualFold(u1, u2)
+}
+
+func AddEntryToSessions(userName string) (sessionToken string) {
   /***
   Session based authentication keeps the users' sessions secure in a couple of ways:
   1. Since the session tokens are randomly generated, its near-impossible for a malicious user to
@@ -46,26 +65,32 @@ func SetSessionToken(userName string) (sessionToken string) {
   return
 }
 
-
-
-
-//Create a struct that models the structure of a user, both in the request body, and in the DB
-// type Credentials struct {
-//   Password string `json:"password"`
-//   Username string `json:"username"`
-// }
-type Credentials struct {
-  Password string
-  Username string
+func UpdateEntryInSessions(oldSessionToken string) (newSessionToken string) {
+  newSessionToken = uuid.NewString()
+  Sessions[newSessionToken] = Session{
+    Username: Sessions[oldSessionToken].Username,
+    Expiry: time.Now().Add(120 * time.Second),
+    CsrfToken: uuid.NewString(),
+  }
+  delete(Sessions, oldSessionToken)
+  return
 }
 
-//Store the username and password for each user.
-var Users = map[string][]byte{}  //key: username, value: password
-
-//Determine if a session has expired.
-func (s *Session) IsExpired() bool {
-  return s.Expiry.Before(time.Now())
+func GetNewUuid() string {
+  return uuid.NewString()
 }
+
+func CreateCookie(sessionToken string) (cookie *http.Cookie) {
+  cookie = &http.Cookie{
+    Name: "session_token",
+    Value: sessionToken,
+    Path: "/",
+    Expires: Sessions[sessionToken].Expiry,
+  }
+  return
+}
+
+
 
 
 

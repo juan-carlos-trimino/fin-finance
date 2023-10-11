@@ -1,14 +1,16 @@
 package webfinances
 
 import (
-  "context"
-  "finance/middlewares"
-  "finance/finances"
-  "fmt"
-  "html/template"
-  "net/http"
-  "strconv"
-  "strings"
+	"context"
+	"finance/finances"
+	"finance/middlewares"
+	"finance/sessions"
+	"fmt"
+	"html/template"
+	"net/http"
+	"strconv"
+	"strings"
+  "time"
 )
 
 type WfAdCpPages interface {
@@ -66,6 +68,7 @@ func NewWfAdCpPages() WfAdCpPages {
 func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if !sessionStatus {
     invalidSession(res)
     return
@@ -177,16 +180,23 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/annuitydue/cp/i-PMT-PV.html",
                                              "webfinances/templates/footer.html"))
+      sessions.Sessions[sessionToken] = sessions.Session{
+        Username: sessions.Sessions[sessionToken].Username,
+        Expiry: time.Now().Add(120 * time.Second),
+        CsrfToken: sessions.GetNewUuid(),
+      }
       t.ExecuteTemplate(res, "adcompoundingperiods", struct {
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd2Interest string
         Fd2Compound string
         Fd2Payment string
         Fd2PV string
         Fd2Result string
       } { "Annuity Due / Compounding Periods", m.DTF(), p.currentButton,
+          sessions.Sessions[sessionToken].CsrfToken,
           p.fd2Interest, p.fd2Compound, p.fd2Payment, p.fd2PV, p.fd2Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
@@ -221,16 +231,23 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/annuitydue/cp/i-PMT-FV.html",
                                              "webfinances/templates/footer.html"))
+      sessions.Sessions[sessionToken] = sessions.Session{
+        Username: sessions.Sessions[sessionToken].Username,
+        Expiry: time.Now().Add(120 * time.Second),
+        CsrfToken: sessions.GetNewUuid(),
+      }
       t.ExecuteTemplate(res, "adcompoundingperiods", struct {
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd3Interest string
         Fd3Compound string
         Fd3Payment string
         Fd3FV string
         Fd3Result string
       } { "Annuity Due / Compounding Periods", m.DTF(), p.currentButton,
+          sessions.Sessions[sessionToken].CsrfToken,
           p.fd3Interest, p.fd3Compound, p.fd3Payment, p.fd3FV, p.fd3Result,
         })
     } else {

@@ -12,7 +12,8 @@
   the body of the request, but the GET method attribute does not have a request body, and the data
   are set in the URL as name-value pairs.
   -->
-  <form action="/fin/mortgage" method="POST" enctype="application/x-www-form-urlencoded">
+  <form action="/fin/mortgage" method="post" enctype="application/x-www-form-urlencoded" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd1-n">Time (n).........................</label>
       <input class="text-combo" id="fd1-n" name="fd1-n" value="{{ .Fd1N }}" type="number" step="any" maxlength="7" required/>

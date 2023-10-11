@@ -1,14 +1,15 @@
 package webfinances
 
 import (
-  "context"
-  "finance/middlewares"
-  "finance/finances"
-  "fmt"
-  "html/template"
-  "net/http"
-  "strconv"
-  "strings"
+	"context"
+	"finance/finances"
+	"finance/middlewares"
+	"finance/sessions"
+	"fmt"
+	"html/template"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 var mortgage_notes = [...]string {
@@ -83,12 +84,11 @@ func NewWfMortgagePages() WfMortgagePages {
 
 func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
-  sessionStatus, _ := ctxKey.GetSessionStatus(req.Context())
-  if !sessionStatus {
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
     invalidSession(res)
     return
   }
-  ctxKey = middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   logEntry := LogEntry{}
   logEntry.Print(INFO, correlationId, []string {
@@ -148,6 +148,9 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
                       p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1Amount, p.fd1Result[0]),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       /***
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
@@ -160,13 +163,14 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd1N string
         Fd1TimePeriod string
         Fd1Interest string
         Fd1Compound string
         Fd1Amount string
         Fd1Result [3]string
-      } { "Mortgage", m.DTF(), p.currentButton,
+      } { "Mortgage", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd1N, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1Amount, p.fd1Result,
         })
     } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
@@ -228,6 +232,9 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
                       p.fd2TotalCost, p.fd2TotalInterest),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/mortgage/mortgage.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/mortgage/amortizationtable.html",
@@ -236,6 +243,7 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd2N string
         Fd2TimePeriod string
         Fd2Interest string
@@ -244,7 +252,7 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd2TotalCost string
         Fd2TotalInterest string
         Fd2Result []Row
-      } { "Mortgage", m.DTF(), p.currentButton,
+      } { "Mortgage", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2Amount, p.fd2TotalCost,
           p.fd2TotalInterest, p.fd2Result,
         })
@@ -278,6 +286,9 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
                       p.fd3Mbalance, p.fd3Mrate, p.fd3Hbalance, p.fd3Hrate, p.fd3Result[2]),
         })
       }
+      newSessionToken := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/mortgage/mortgage.html",
                                              "webfinances/templates/header.html",
                                              "webfinances/templates/mortgage/heloc.html",
@@ -286,12 +297,13 @@ func (p *wfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Header string
         Datetime string
         CurrentButton string
+        CsrfToken string
         Fd3Mrate string
         Fd3Mbalance string
         Fd3Hrate string
         Fd3Hbalance string
         Fd3Result [3]string
-      } { "Mortgage", m.DTF(), p.currentButton,
+      } { "Mortgage", m.DTF(), p.currentButton, sessions.Sessions[newSessionToken].CsrfToken,
           p.fd3Mrate, p.fd3Mbalance, p.fd3Hrate, p.fd3Hbalance, p.fd3Result,
         })
     } else {
