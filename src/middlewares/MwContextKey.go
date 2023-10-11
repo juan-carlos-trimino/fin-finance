@@ -14,7 +14,6 @@ same context could override the value that is already set. Even if another packa
 correlationIdKey based on a ctxKey type as well, it will be a different key.
 ***/
 const correlationIdKey ctxKey = "correlationIdKey"
-const sessionStatusKey ctxKey = "sessionStatusKey"
 const sessionTokenKey ctxKey = "sessionTokenKey"
 
 type MwContextKey struct{}
@@ -26,12 +25,6 @@ that key.
 func (ck MwContextKey) GetCorrelationId(ctx context.Context) (cid string, ok bool) {
   //A type assertion is an operation applied to an interface value.
   cid, ok = ctx.Value(correlationIdKey).(string)
-  return
-}
-
-func (ck MwContextKey) GetSessionStatus(ctx context.Context) (session bool, ok bool) {
-  //A type assertion is an operation applied to an interface value.
-  session, ok = ctx.Value(sessionStatusKey).(bool)
   return
 }
 
