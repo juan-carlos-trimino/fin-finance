@@ -13,13 +13,13 @@ import (
 )
 
 //Store the session information for each user in memory.
-var sessions = map[string]session{}  //key: sessionToken, value: session
+var sessions = map[string]session_token{}  //key: sessionToken, value: session
 //Store the username and password for each user.
 var Users = map[string][]byte{}  //key: username, value: password
 
-type session struct {
+type session_token struct {
   Username string
-  Expiry time.Time  //xxxxxxxxxxxxxxxxxxxx enforce periodic session termination as a way to prevent session hijacking.
+  Expiry time.Time  //Enforce periodic session termination as a way to prevent session hijacking.
 //  lock sync.Mutex  //Protect session
   CsrfToken string
 }
@@ -54,14 +54,14 @@ func CompareHashAndPassword(hashedPassword, password []byte) (bool, error) {
 }
 
 func CompareUuids(csrf, sessionToken string) bool {
-  s, exists := sessions[sessionToken]
+  session, exists := sessions[sessionToken]
   if exists {
-    return strings.EqualFold(csrf, s.CsrfToken)
+    return strings.EqualFold(csrf, session.CsrfToken)
   }
   return exists
 }
 
-func AddEntryToSessions(userName string) (sessionToken string, s session) {
+func AddEntryToSessions(userName string) (sessionToken string, session session_token) {
   /***
   Session based authentication keeps the users' sessions secure in a couple of ways:
   1. Since the session tokens are randomly generated, its near-impossible for a malicious user to
@@ -70,24 +70,24 @@ func AddEntryToSessions(userName string) (sessionToken string, s session) {
      why the expiry time is restricted to small intervals (a few seconds to a couple of minutes).
   ***/
   sessionToken = uuid.NewString()
-  sessions[sessionToken] = session{
+  sessions[sessionToken] = session_token{
     Username: userName,
     Expiry: time.Now().Add(120 * time.Second),
     CsrfToken: uuid.NewString(),
   }
-  s = sessions[sessionToken]
+  session = sessions[sessionToken]
   return
 }
 
-func UpdateEntryInSessions(oldSessionToken string) (newSessionToken string, s session) {
+func UpdateEntryInSessions(oldSessionToken string) (newSessionToken string, session session_token) {
   newSessionToken = uuid.NewString()
-  sessions[newSessionToken] = session{
+  sessions[newSessionToken] = session_token{
     Username: sessions[oldSessionToken].Username,
     Expiry: time.Now().Add(120 * time.Second),
     CsrfToken: uuid.NewString(),
   }
   delete(sessions, oldSessionToken)
-  s = sessions[newSessionToken]
+  session = sessions[newSessionToken]
   return
 }
 
