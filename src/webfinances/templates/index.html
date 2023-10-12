@@ -8,6 +8,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Login for Finances</title>
+    <!-- <script>
+      document.getElementById("un").focus();
+      document.getElementById("un").select();
+    </script> -->
     <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
   </head>
   <body>
@@ -29,7 +33,7 @@
           password", just use "Invalid username and/or password" interchangeably.
       -->
       <form method="post" action="/login" enctype="application/x-www-form-urlencoded" autocomplete="off">
-        <label>Username: <input type="text" name="username"></label><br><br>
+        <label>Username: <input type="text" name="username" autofocus></label><br><br>
         <!--
         The password entry should be obscured on the user's screen.
         -->
