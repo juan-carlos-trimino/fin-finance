@@ -6,7 +6,8 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px;">
       <label class="text-box" for="fd3-interest">Interest (%)...................</label>
-      <input class="text-combo" id="fd3-interest" name="fd3-interest" value="{{ .Fd3Interest }}" type="number" step="any" maxlength="7" required autofocus/>
+      <input class="text-combo" id="fd3-interest" name="fd3-interest" value="{{ .Fd3Interest }}"
+             type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px;">
       <label class="text-box" for="fd3-cp">Compounding Period...</label>
