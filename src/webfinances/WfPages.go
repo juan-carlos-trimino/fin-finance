@@ -53,10 +53,7 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering LoginPage/webfinances.\n", m.DTF())
   un := req.PostFormValue("username")
   pw := req.PostFormValue("password")
-  //Get the expected password from the in memory map.
-  if hashedPassword, ok := sessions.Users[un]; !ok {
-    invalidSession(res)
-  } else if ok, _ := sessions.CompareHashAndPassword(hashedPassword, []byte(pw)); !ok {
+  if !sessions.ValidateUser(un, pw) {
     invalidSession(res)
   } else {
     sessionToken, session := sessions.AddEntryToSessions(un)
