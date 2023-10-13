@@ -14,8 +14,6 @@ import (
 
 //Store the session information for each user in memory.
 var sessions = map[string]session_token{}  //key: sessionToken, value: session
-//Store the username and password for each user.
-var Users = map[string][]byte{}  //key: username, value: password
 
 type session_token struct {
   Username string
