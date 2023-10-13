@@ -205,3 +205,4 @@ src/middlewares/*
 !src/sessions/
 src/sessions/*
 !src/sessions/session.go
+!src/sessions/users.go
