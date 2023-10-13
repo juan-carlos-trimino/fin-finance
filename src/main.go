@@ -45,7 +45,7 @@ import (
 	"errors"
 	"finance/middlewares"
 	"finance/misc"
-  "finance/sessions"
+	"finance/sessions"
 	"finance/webfinances"
 	"fmt"
 	"net/http"
@@ -245,8 +245,16 @@ func main() {
   for idx, f := range h.mux {
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
-  hashPassword, _ := sessions.HashSecret(PASSWORD)
-  sessions.Users[USER_NAME] = hashPassword
+  sessions.ReadUsersPasswords()
+  if sessions.UsersLength() == 0 {
+    sessions.AddUser(USER_NAME, PASSWORD)
+    sessions.AddUser("jct1", "pw1")
+    sessions.ReadUsersPasswords()
+  }
+
+
+
+
   server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
