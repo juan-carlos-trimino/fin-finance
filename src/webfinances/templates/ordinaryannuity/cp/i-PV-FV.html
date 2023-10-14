@@ -6,27 +6,37 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px;">
       <label class="text-box" for="fd1-interest">Interest (%)...................</label>
-      <input class="text-combo" id="fd1-interest" name="fd1-interest" value="{{ .Fd1Interest }}" type="number" step="any" maxlength="7" required/>
+      <input class="text-combo" id="fd1-interest" name="fd1-interest" value="{{ .Fd1Interest }}"
+       type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px;">
       <label class="text-box" for="fd1-cp">Compounding Period...</label>
       <select class="text-combo" id="fd1-cp" name="fd1-cp">
-        <option class="text-combo" value="annually" {{ if eq .Fd1Compound "annually" }} selected {{ end }}>Annually</option>
-        <option class="text-combo" value="semiannually" {{ if eq .Fd1Compound "semiannually" }} selected {{ end }}>Semiannually</option>
-        <option class="text-combo" value="quarterly" {{ if eq .Fd1Compound "quarterly" }} selected {{ end }}>Quarterly</option>
-        <option class="text-combo" value="monthly" {{ if eq .Fd1Compound "monthly" }} selected {{ end }}>Monthly</option>
-        <option class="text-combo" value="weekly" {{ if eq .Fd1Compound "weekly" }} selected {{ end }}>Weekly</option>
-        <option class="text-combo" value="daily" {{ if eq .Fd1Compound "daily" }} selected {{ end }}>Daily</option>
-        <option class="text-combo" value="continuously" {{if eq .Fd1Compound "continuously"}} selected {{end}}>Continuously</option>
+        <option class="text-combo" value="annually"
+         {{ if eq .Fd1Compound "annually" }} selected {{ end }}>Annually</option>
+        <option class="text-combo" value="semiannually"
+         {{ if eq .Fd1Compound "semiannually" }} selected {{ end }}>Semiannually</option>
+        <option class="text-combo" value="quarterly"
+         {{ if eq .Fd1Compound "quarterly" }} selected {{ end }}>Quarterly</option>
+        <option class="text-combo" value="monthly"
+         {{ if eq .Fd1Compound "monthly" }} selected {{ end }}>Monthly</option>
+        <option class="text-combo" value="weekly"
+         {{ if eq .Fd1Compound "weekly" }} selected {{ end }}>Weekly</option>
+        <option class="text-combo" value="daily"
+         {{ if eq .Fd1Compound "daily" }} selected {{ end }}>Daily</option>
+        <option class="text-combo" value="continuously"
+         {{if eq .Fd1Compound "continuously"}} selected {{end}}>Continuously</option>
       </select>
     </div>
     <div style="margin-top: 20px;">
       <label class="text-box" for="fd1-pv">Present Value (PV).......</label>
-      <input class="text-combo" id="fd1-pv" name="fd1-pv" value="{{ .Fd1PV }}" type="number" step="any" min="1" maxlength="7" required/>
+      <input class="text-combo" id="fd1-pv" name="fd1-pv" value="{{ .Fd1PV }}" type="number"
+       step="any" min="1" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px;">
       <label class="text-box" for="fd1-fv">Future Value (FV)........</label>
-      <input class="text-combo" id="fd1-fv" name="fd1-fv" value="{{ .Fd1FV }}" type="number" step="any" min="1" maxlength="7" required/>
+      <input class="text-combo" id="fd1-fv" name="fd1-fv" value="{{ .Fd1FV }}" type="number"
+       step="any" min="1" maxlength="7" required/>
     </div>
     <div class="div-center" style="margin-top: 45px;">
       <button class="button" id="btcompute" name="compute" value="rhs-ui1" type="submit">
