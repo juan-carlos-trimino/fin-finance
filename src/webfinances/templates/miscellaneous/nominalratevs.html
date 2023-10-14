@@ -7,17 +7,21 @@
     <!-- margin: top, right, bottom, left -->
     <div style="margin-top: 20px">
       <label class="text-box" for="fd3-nominal">Nominal Rate (%)...</label>
-      <input class="text-combo" id="fd3-nominal" name="fd3-nominal" value="{{ .Fd3Nominal }}" type="number" step="any" maxlength="7" required/>
+      <input class="text-combo" id="fd3-nominal" name="fd3-nominal" value="{{ .Fd3Nominal }}"
+       type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div>
       <p class="p-note">{{ index .Fd3Result 0 }}</p>
     </div>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd3-inflation">Inflation Rate (%)...</label>
-      <input class="text-combo" id="fd3-inflation" name="fd3-inflation" value="{{ .Fd3Inflation }}" type="number" step="any" maxlength="7" required/>
+      <input class="text-combo" id="fd3-inflation" name="fd3-inflation" value="{{ .Fd3Inflation }}"
+       type="number" step="any" maxlength="7" required/>
     </div>
     <div class="div-center" style="margin-top: 45px;">
-      <button class="button" id="btcompute" name="compute" value="rhs-ui3" type="submit">Compute</button>
+      <button class="button" id="btcompute" name="compute" value="rhs-ui3" type="submit">
+        Compute
+      </button>
     </div>
   </form>
   <div>

@@ -6,18 +6,26 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd1-nominal">Nominal Rate (%)........</label>
-      <input class="text-combo" id="fd1-nominal" name="fd1-nominal" value="{{ .Fd1Nominal }}" type="number" step="any" maxlength="7" required/>
+      <input class="text-combo" id="fd1-nominal" name="fd1-nominal" value="{{ .Fd1Nominal }}"
+       type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px;">
       <label class="text-box" for="fd1-compound">Compounding Period...</label>
       <select class="text-combo" id="fd1-compound" name="fd1-compound">
-        <option class="text-combo" value="annually" {{ if eq .Fd1Compound "annually" }} selected {{ end }}>Annually</option>
-        <option class="text-combo" value="semiannually" {{ if eq .Fd1Compound "semiannually" }} selected {{ end }}>Semiannually</option>
-        <option class="text-combo" value="quarterly" {{ if eq .Fd1Compound "quarterly" }} selected {{ end }}>Quarterly</option>
-        <option class="text-combo" value="monthly" {{ if eq .Fd1Compound "monthly" }} selected {{ end }}>Monthly</option>
-        <option class="text-combo" value="weekly" {{ if eq .Fd1Compound "weekly" }} selected {{ end }}>Weekly</option>
-        <option class="text-combo" value="daily" {{ if eq .Fd1Compound "daily" }} selected {{ end }}>Daily</option>
-        <option class="text-combo" value="continuously" {{if eq .Fd1Compound "continuously"}} selected {{ end }}>Continuously</option>
+        <option class="text-combo" value="annually"
+         {{ if eq .Fd1Compound "annually" }} selected {{ end }}>Annually</option>
+        <option class="text-combo" value="semiannually"
+         {{ if eq .Fd1Compound "semiannually" }} selected {{ end }}>Semiannually</option>
+        <option class="text-combo" value="quarterly"
+         {{ if eq .Fd1Compound "quarterly" }} selected {{ end }}>Quarterly</option>
+        <option class="text-combo" value="monthly"
+         {{ if eq .Fd1Compound "monthly" }} selected {{ end }}>Monthly</option>
+        <option class="text-combo" value="weekly"
+         {{ if eq .Fd1Compound "weekly" }} selected {{ end }}>Weekly</option>
+        <option class="text-combo" value="daily"
+         {{ if eq .Fd1Compound "daily" }} selected {{ end }}>Daily</option>
+        <option class="text-combo" value="continuously"
+         {{if eq .Fd1Compound "continuously"}} selected {{ end }}>Continuously</option>
       </select>
     </div>
     <div class="div-center" style="margin-top: 45px;">
