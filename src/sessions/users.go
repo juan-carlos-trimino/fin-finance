@@ -29,6 +29,16 @@ func ValidateUser(username, password string) bool {
   return ok
 }
 
+
+
+func AddFromMemory(username, password string) {
+  hashPassword, _ := HashSecret(password)
+  users[username] = hashPassword
+}
+
+
+
+
 func ReadUsersFromFile() error {
   var f *os.File
   var err error

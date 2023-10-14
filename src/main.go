@@ -245,12 +245,15 @@ func main() {
   for idx, f := range h.mux {
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
-  sessions.ReadUsersFromFile()
-  if sessions.UsersLength() == 0 {
-    sessions.AddUserToFile(USER_NAME, PASSWORD)
-    sessions.AddUserToFile("jct1", "pw1")
-    sessions.ReadUsersFromFile()
-  }
+  // sessions.ReadUsersFromFile()
+  // if sessions.UsersLength() == 0 {
+  //   sessions.AddUserToFile(USER_NAME, PASSWORD)
+  //   sessions.AddUserToFile("jct1", "pw1")
+  //   sessions.ReadUsersFromFile()
+  // }
+
+  sessions.AddFromMemory(USER_NAME, PASSWORD)
+
   server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
