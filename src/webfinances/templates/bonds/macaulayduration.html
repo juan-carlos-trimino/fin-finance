@@ -6,44 +6,61 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd6-facevalue">Face Value.................................</label>
-      <input class="text-combo" id="fd6-facevalue" name="fd6-facevalue" value="{{ .Fd6FaceValue }}" type="number" step="any" maxlength="7" required/>
+      <input class="text-combo" id="fd6-facevalue" name="fd6-facevalue" value="{{ .Fd6FaceValue }}"
+       type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd6-time">Time...........................................</label>
-      <input class="text-combo" id="fd6-time" name="fd6-time" value="{{ .Fd6Time }}" type="number" step="any" maxlength="7" required/>
+      <input class="text-combo" id="fd6-time" name="fd6-time" value="{{ .Fd6Time }}" type="number"
+       step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd6-tp">Time Period...............................</label>
       <select class="text-combo" name="fd6-tp" id="fd6-tp">
-        <option class="text-combo" value="year" {{ if eq .Fd6TimePeriod "year" }} selected {{ end }}>Year(s)</option>
-        <option class="text-combo" value="semiyear" {{ if eq .Fd6TimePeriod "semiyear" }} selected {{ end }}>Semiyear(s)</option>
-        <option class="text-combo" value="quarter" {{ if eq .Fd6TimePeriod "quarter" }} selected {{ end }}>Quarter(s)</option>
-        <option class="text-combo" value="month" {{ if eq .Fd6TimePeriod "month" }} selected {{ end }}>Month(s)</option>
-        <option class="text-combo" value="week" {{ if eq .Fd6TimePeriod "week" }} selected {{ end }}>Week(s)</option>
+        <option class="text-combo" value="year"
+         {{ if eq .Fd6TimePeriod "year" }} selected {{ end }}>Year(s)</option>
+        <option class="text-combo" value="semiyear"
+         {{ if eq .Fd6TimePeriod "semiyear" }} selected {{ end }}>Semiyear(s)</option>
+        <option class="text-combo" value="quarter"
+         {{ if eq .Fd6TimePeriod "quarter" }} selected {{ end }}>Quarter(s)</option>
+        <option class="text-combo" value="month"
+         {{ if eq .Fd6TimePeriod "month" }} selected {{ end }}>Month(s)</option>
+        <option class="text-combo" value="week"
+         {{ if eq .Fd6TimePeriod "week" }} selected {{ end }}>Week(s)</option>
       </select>
     </div>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd6-coupon">Coupon Rate (%)......................</label>
-      <input class="text-combo" id="fd6-coupon" name="fd6-coupon" value="{{ .Fd6Coupon }}" type="number" step="any" maxlength="7" required/>
+      <input class="text-combo" id="fd6-coupon" name="fd6-coupon" value="{{ .Fd6Coupon }}"
+       type="number" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px">
       <label class="text-box" for="fd6-current">Current Interest (%)................</label>
-      <input class="text-combo" id="fd6-current" name="fd6-current" value="{{ .Fd6CurInterest }}" type="number" step="any" maxlength="7" required/>
+      <input class="text-combo" id="fd6-current" name="fd6-current" value="{{ .Fd6CurInterest }}"
+       type="number" step="any" maxlength="7" required/>
     </div>
     <div style="margin-top: 20px;">
       <label class="text-box">Compounding Period or</label><br>
       <label class="text-box" for="fd6-compound">Coupon Payment Frequency...</label>
       <select class="text-combo" id="fd6-compound" name="fd6-compound">
-        <option class="text-combo" value="annually" {{ if eq .Fd6Compound "annually" }} selected {{ end }}>Annually</option>
-        <option class="text-combo" value="semiannually" {{ if eq .Fd6Compound "semiannually" }} selected {{ end }}>Semiannually</option>
-        <option class="text-combo" value="quarterly" {{ if eq .Fd6Compound "quarterly" }} selected {{ end }}>Quarterly</option>
-        <option class="text-combo" value="monthly" {{ if eq .Fd6Compound "monthly" }} selected {{ end }}>Monthly</option>
-        <option class="text-combo" value="weekly" {{ if eq .Fd6Compound "weekly" }} selected {{ end }}>Weekly</option>
-        <option class="text-combo" value="continuously" {{ if eq .Fd6Compound "continuously" }} selected {{ end }}>Continuously</option>
+        <option class="text-combo" value="annually"
+         {{ if eq .Fd6Compound "annually" }} selected {{ end }}>Annually</option>
+        <option class="text-combo" value="semiannually"
+         {{ if eq .Fd6Compound "semiannually" }} selected {{ end }}>Semiannually</option>
+        <option class="text-combo" value="quarterly"
+         {{ if eq .Fd6Compound "quarterly" }} selected {{ end }}>Quarterly</option>
+        <option class="text-combo" value="monthly"
+         {{ if eq .Fd6Compound "monthly" }} selected {{ end }}>Monthly</option>
+        <option class="text-combo" value="weekly"
+         {{ if eq .Fd6Compound "weekly" }} selected {{ end }}>Weekly</option>
+        <option class="text-combo" value="continuously"
+         {{ if eq .Fd6Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
     </div>
     <div class="div-center" style="margin-top: 45px;">
-      <button class="button" id="btcompute" name="compute" value="rhs-ui6" type="submit">Compute</button>
+      <button class="button" id="btcompute" name="compute" value="rhs-ui6" type="submit">
+        Compute
+      </button>
     </div>
   </form>
   <div>
