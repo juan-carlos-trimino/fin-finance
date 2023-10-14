@@ -1,15 +1,16 @@
 package sessions
 
 import (
-  "bufio"
-  "finance/misc"
-  "fmt"
-  "os"
-  "strings"
+	"bufio"
+	"finance/misc"
+	"fmt"
+	"os"
+	"strings"
+	"sync"
 )
 
 var m = misc.Misc{}
-
+var muFile sync.Mutex  //Protect the file.
 //Store the username and password for each user.
 var users = map[string][]byte{}  //key: username, value: password
 
@@ -28,7 +29,7 @@ func ValidateUser(username, password string) bool {
   return ok
 }
 
-func ReadUsersPasswords() error {
+func ReadUsersFromFile() error {
   var f *os.File
   var err error
   f, err = os.OpenFile("./files/user.txt", os.O_APPEND | os.O_RDONLY, 0600)
@@ -40,6 +41,8 @@ func ReadUsersPasswords() error {
   builder := strings.Builder{}
   //Grow to a larger size to reduce future resizes of the buffer.
   builder.Grow(2048)
+  muFile.Lock()  //Readers lock.
+  defer muFile.Unlock()
   scanner := bufio.NewScanner(f)
   for scanner.Scan() {
     if builder.Len() == 0 {
@@ -52,17 +55,26 @@ func ReadUsersPasswords() error {
   return nil
 }
 
-func AddUser(username, password string) error {
+func AddUserToFile(username, password string) error {
   hashPassword, _ := HashSecret(password)
-	var f *os.File
+  var f *os.File
   var err error
-  f, err = os.OpenFile("./files/user.txt", os.O_CREATE | os.O_APPEND | os.O_WRONLY, 0600)
+
+  //The leading zero forces a base-8 conversion. 0600
+  f, err = os.OpenFile("./files/user.txt", os.O_CREATE | os.O_APPEND | os.O_WRONLY,
+  os.FileMode(0600))
+
+  fmt.Println("***** perm: ", os.FileMode(0600))
+
+
   if err != nil {
     fmt.Printf("%s - %s\n", m.DTF(), err)
     panic(err)
   }
   defer f.Close()
-  hashPassword = append(hashPassword, 0x0A)
+  hashPassword = append(hashPassword, 0x0A)  //Add LF.
+  muFile.Lock()
+  defer muFile.Unlock()
   if _, err = f.WriteString(username + "\n"); err != nil {
     fmt.Printf("%s - %s\n", m.DTF(), err)
   } else if _, err = f.Write(hashPassword); err != nil {
