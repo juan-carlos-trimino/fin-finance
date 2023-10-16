@@ -39,6 +39,7 @@ src/mathutil/*
 !src/misc/
 src/misc/*
 !src/misc/misc.go
+!src/misc/os-linux.go
 # ... and this directory and its file...
 !src/webfinances/
 src/webfinances/*
