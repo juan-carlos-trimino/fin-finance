@@ -1,4 +1,5 @@
-// HTTP server.
+// +build !windows
+//HTTP server.
 package main
 
 /***
@@ -53,7 +54,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
-	"time"
+ 	"time"
 )
 
 var (  //Environment variables.
@@ -245,15 +246,36 @@ func main() {
   for idx, f := range h.mux {
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
-  // sessions.ReadUsersFromFile()
-  // if sessions.UsersLength() == 0 {
-  //   sessions.AddUserToFile(USER_NAME, PASSWORD)
-  //   sessions.AddUserToFile("jct1", "pw1")
-  //   sessions.ReadUsersFromFile()
-  // }
 
-  sessions.AddFromMemory(USER_NAME, PASSWORD)
 
+  fmt.Println("OS: " + misc.DetermineOS())
+  if root, _ := misc.IsRoot(); root {
+    fmt.Println("User running as root.")
+  } else {
+    fmt.Println("User is not running as root.")
+  }
+/***
+  if _, err := os.Stat("./files"); errors.Is(err, os.ErrNotExist) {
+
+    // fmt.Println("Current mask: " + syscall.Umask(0))
+
+    err = os.Mkdir("./files", 0666)
+    if err != nil {
+      panic(err)
+    }
+    sessions.AddUserToFile(USER_NAME, PASSWORD)
+    sessions.AddUserToFile("jct1", "pw1")
+  }
+  sessions.ReadUsersFromFile()
+***/
+  if sessions.UsersLength() == 0 {
+    sessions.AddUserToFile(USER_NAME, PASSWORD)
+    sessions.AddUserToFile("jct1", "pw1")
+    sessions.ReadUsersFromFile()
+  }
+  //sessions.AddFromMemory(USER_NAME, PASSWORD)
+
+  
   server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
