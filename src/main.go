@@ -254,6 +254,7 @@ func main() {
   } else {
     fmt.Println("User is not running as root.")
   }
+
 /***
   if _, err := os.Stat("./files"); errors.Is(err, os.ErrNotExist) {
 
@@ -268,12 +269,12 @@ func main() {
   }
   sessions.ReadUsersFromFile()
 ***/
-  if sessions.UsersLength() == 0 {
-    sessions.AddUserToFile(USER_NAME, PASSWORD)
-    sessions.AddUserToFile("jct1", "pw1")
-    sessions.ReadUsersFromFile()
-  }
-  //sessions.AddFromMemory(USER_NAME, PASSWORD)
+  // if sessions.UsersLength() == 0 {
+  //   sessions.AddUserToFile(USER_NAME, PASSWORD)
+  //   sessions.AddUserToFile("jct1", "pw1")
+  //   sessions.ReadUsersFromFile()
+  // }
+  sessions.AddFromMemory(USER_NAME, PASSWORD)
 
   
   server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
