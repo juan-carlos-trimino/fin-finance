@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"syscall"
 )
 
 var m = misc.Misc{}
@@ -125,18 +126,11 @@ func AddUserToFile(username, password string) error {
   hashPassword, _ := HashSecret(password)
   var f *os.File
   var err error
-
-  //The leading zero forces a base-8 conversion. 0600
-
+  oldMask := syscall.Umask(0006)
   //If the file doesn't exist, create it; otherwise, append to the file.
-  f, err = os.OpenFile("./files/user.txt", os.O_CREATE | os.O_APPEND | os.O_WRONLY, 0600)
-//  os.FileMode(0600))
-
-  fmt.Println("***** perm: ", os.FileMode(0600))
-
-
+  f, err = os.OpenFile("./files/user.txt", os.O_CREATE | os.O_APPEND | os.O_WRONLY, 0666)
+  syscall.Umask(oldMask)
   if err != nil {
-    fmt.Printf("%s - %s\n", m.DTF(), err)
     panic(err)
   }
   defer f.Close()
