@@ -247,20 +247,27 @@ func main() {
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
 
-
-  fmt.Println("OS: " + misc.DetermineOS())
-  if root, _ := misc.IsRoot(); root {
-    fmt.Println("User running as root.")
+/***
+  fmt.Println("OS: " + misc.GetOS())
+  if userName, err := misc.GetUsername(); err != nil {
+    fmt.Println(err)
   } else {
-    fmt.Println("User is not running as root.")
+    fmt.Println("Username: " + userName)
+  }
+  //
+  if ok, err := misc.IsRoot(); err != nil {
+    fmt.Println(err)
+  } else if ok {
+    fmt.Println("The current user is running as root.")
+  } else {
+    fmt.Println("The current user is not running as root.")
   }
 
-/***
   if _, err := os.Stat("./files"); errors.Is(err, os.ErrNotExist) {
-
-    // fmt.Println("Current mask: " + syscall.Umask(0))
-
-    err = os.Mkdir("./files", 0666)
+    oldMask := syscall.Umask(0017)
+    fmt.Printf("Current mask: %04o\n", oldMask)
+    err = os.Mkdir("./files", 0777)
+    syscall.Umask(oldMask)
     if err != nil {
       panic(err)
     }
@@ -268,7 +275,7 @@ func main() {
     sessions.AddUserToFile("jct1", "pw1")
   }
   sessions.ReadUsersFromFile()
-***/
+ ***/
   // if sessions.UsersLength() == 0 {
   //   sessions.AddUserToFile(USER_NAME, PASSWORD)
   //   sessions.AddUserToFile("jct1", "pw1")
