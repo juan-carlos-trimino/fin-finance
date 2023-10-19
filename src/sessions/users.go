@@ -122,7 +122,7 @@ func AddUserToFile(username, password string) error {
   defer muFile.Unlock()
   oldMask := syscall.Umask(0006)
   //If the file doesn't exist, create it; otherwise, append to the file.
-  f, err = os.OpenFile("./files/user.txt", os.O_CREATE | os.O_APPEND | os.O_WRONLY, 0666)
+  f, err = os.OpenFile("./files/user.txt", os.O_CREATE | os.O_APPEND | os.O_RDWR, 0666)
   syscall.Umask(oldMask)
   if err != nil {
     return err
