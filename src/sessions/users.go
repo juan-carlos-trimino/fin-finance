@@ -1,16 +1,13 @@
 package sessions
 
 import (
-	"bufio"
-	"finance/misc"
-	"fmt"
-	"os"
-	"strings"
-	"sync"
-	"syscall"
+  "bufio"
+  "os"
+  "strings"
+  "sync"
+  "syscall"
 )
 
-var m = misc.Misc{}
 /***
 Each logical resource in your application should have its own lock that is used to synchronize
 access to any and all parts of the logical resource. You should not have a single lock for all
@@ -84,63 +81,62 @@ func ValidateUser(username, password string) bool {
   return ok
 }
 
-
-
-func AddFromMemory(username, password string) {
-  hashPassword, _ := HashSecret(password)
-  users[username] = hashPassword
-}
-
-
-
-
 func ReadUsersFromFile() error {
   var f *os.File
   var err error
-  f, err = os.OpenFile("./files/user.txt", os.O_RDONLY, 0600)
+  muFile.Lock()
+  f, err = os.OpenFile("./files/user.txt", os.O_RDONLY, 0440)
   if err != nil {
-    fmt.Printf("%s - %s\n", m.DTF(), err)
+    muFile.Unlock()
     return err
   }
-  defer f.Close()
   builder := strings.Builder{}
   //Grow to a larger size to reduce future resizes of the buffer.
-  builder.Grow(2048)
-  muFile.Lock()  //Readers lock.
-  defer muFile.Unlock()
+  builder.Grow(1024)
+  var usersTmp = map[string][]byte{}  //key: username, value: password
   scanner := bufio.NewScanner(f)
   for scanner.Scan() {
     if builder.Len() == 0 {
       builder.WriteString(scanner.Text())
     } else {
-      muMemory.Lock()  //Writer lock
-      users[builder.String()] = scanner.Bytes()
-      muMemory.Unlock()
+      usersTmp[builder.String()] = scanner.Bytes()
       builder.Reset()
     }
   }
+  f.Close()
+  muFile.Unlock()
+  muMemory.Lock()  //Writer lock
+  for k, v := range usersTmp {
+    users[k] = v
+  }
+  muMemory.Unlock()
   return nil
 }
 
 func AddUserToFile(username, password string) error {
   hashPassword, _ := HashSecret(password)
+  hashPassword = append(hashPassword, 0x0A)  //Add LF.
   var f *os.File
   var err error
+  muFile.Lock()
+  defer muFile.Unlock()
   oldMask := syscall.Umask(0006)
   //If the file doesn't exist, create it; otherwise, append to the file.
   f, err = os.OpenFile("./files/user.txt", os.O_CREATE | os.O_APPEND | os.O_WRONLY, 0666)
   syscall.Umask(oldMask)
   if err != nil {
-    panic(err)
+    return err
   }
   defer f.Close()
-  hashPassword = append(hashPassword, 0x0A)  //Add LF.
-  muFile.Lock()
-  defer muFile.Unlock()
-  if _, err = f.WriteString(username + "\n"); err != nil {
-    fmt.Printf("%s - %s\n", m.DTF(), err)
-  } else if _, err = f.Write(hashPassword); err != nil {
-    fmt.Printf("%s - %s\n", m.DTF(), err)
+  if _, err = f.WriteString(username + "\n"); err == nil {
+    _, err = f.Write(hashPassword)
   }
   return err
+}
+
+////////
+//for testing
+func AddFromMemory(username, password string) {
+  hashPassword, _ := HashSecret(password)
+  users[username] = hashPassword
 }
