@@ -154,7 +154,7 @@ func main() {
   if exists {
     PORT = ev
   }
-  fmt.Printf("%s - Using PORT: %s\n", m.DTF(), PORT)
+  fmt.Printf("Using PORT: %s\n", PORT)
   SERVER += ":" + PORT
   ev, exists = os.LookupEnv("SHUTDOWN_TIMEOUT")
   if exists {
@@ -162,10 +162,49 @@ func main() {
     if err == nil {
       SHUTDOWN_TIMEOUT = tm
     } else {
-      fmt.Printf("%s - '%s' is not an int number.\n", m.DTF(), ev)
+      fmt.Printf("'%s' is not an int number.\n", ev)
     }
   }
-  fmt.Printf("%s - Using SHUTDOWN_TIMEOUT: %d\n", m.DTF(), SHUTDOWN_TIMEOUT)
+  fmt.Printf("Using SHUTDOWN_TIMEOUT: %d\n", SHUTDOWN_TIMEOUT)
+  /***
+  fmt.Println("OS: " + misc.GetOS())
+  if userName, err := misc.GetUsername(); err != nil {
+    fmt.Println(err)
+  } else {
+    fmt.Println("Username: " + userName)
+  }
+  //
+  if ok, err := misc.IsRoot(); err != nil {
+    fmt.Println(err)
+  } else if ok {
+    fmt.Println("The current user is running as root.")
+  } else {
+    fmt.Println("The current user is not running as root.")
+  }
+  //
+  if _, err := os.Stat("./files"); err != nil {
+    if os.IsNotExist(err) {
+      oldMask := syscall.Umask(0017)
+      fmt.Printf("Default mask: %04o\nUsing mask: 0017\n", oldMask)
+      err = os.Mkdir("./files", 0777)
+      syscall.Umask(oldMask)
+      if err != nil {
+        panic(err)
+      } else if err = sessions.AddUserToFile(USER_NAME, PASSWORD); err != nil {
+        panic(err)
+      } else if err = sessions.AddUserToFile("jct1", "pw1"); err != nil {
+        panic(err)
+      }
+    } else {
+      panic(err)
+    }
+  }
+  //
+  if err := sessions.ReadUsersFromFile(); err != nil {
+    panic(err)
+  }
+  ***/
+sessions.AddFromMemory(USER_NAME, PASSWORD)
   var wfpages = webfinances.WfPages{}
   var wfadcp = webfinances.NewWfAdCpPages()
   var wfadepp = webfinances.NewWfAdEppPages()
@@ -246,44 +285,6 @@ func main() {
   for idx, f := range h.mux {
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
-
-/***
-  fmt.Println("OS: " + misc.GetOS())
-  if userName, err := misc.GetUsername(); err != nil {
-    fmt.Println(err)
-  } else {
-    fmt.Println("Username: " + userName)
-  }
-  //
-  if ok, err := misc.IsRoot(); err != nil {
-    fmt.Println(err)
-  } else if ok {
-    fmt.Println("The current user is running as root.")
-  } else {
-    fmt.Println("The current user is not running as root.")
-  }
-
-  if _, err := os.Stat("./files"); errors.Is(err, os.ErrNotExist) {
-    oldMask := syscall.Umask(0017)
-    fmt.Printf("Current mask: %04o\n", oldMask)
-    err = os.Mkdir("./files", 0777)
-    syscall.Umask(oldMask)
-    if err != nil {
-      panic(err)
-    }
-    sessions.AddUserToFile(USER_NAME, PASSWORD)
-    sessions.AddUserToFile("jct1", "pw1")
-  }
-  sessions.ReadUsersFromFile()
- ***/
-  // if sessions.UsersLength() == 0 {
-  //   sessions.AddUserToFile(USER_NAME, PASSWORD)
-  //   sessions.AddUserToFile("jct1", "pw1")
-  //   sessions.ReadUsersFromFile()
-  // }
-  sessions.AddFromMemory(USER_NAME, PASSWORD)
-
-  
   server := &http.Server {  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
@@ -323,29 +324,29 @@ func main() {
       The five steps of an HTTP response and the related timeouts.
     ***/
     //It specifies the maximum amount of time to read the request headers.
-//    ReadHeaderTimeout: 250 * time.Millisecond,
-    ReadHeaderTimeout: 1 * time.Hour,
+    ReadHeaderTimeout: 250 * time.Millisecond,
+//    ReadHeaderTimeout: 1 * time.Hour,
     /***
     It specifies the maximum amount of time to read the entire request.
     ReadTimeout = ReadHeaderTimeout + TimeoutHandler + Extra time
     **/
-//    ReadTimeout: 990 * time.Millisecond,
-    ReadTimeout: 1 * time.Hour,
+    ReadTimeout: 990 * time.Millisecond,
+//    ReadTimeout: 1 * time.Hour,
     /***
     If a handler fails to respond on time, the server will reply with "503 Service Unavailable" and
     the specified message; the context passed to the handler will be canceled.
     Note: The http.Server.WriteTimeout is not necessary since http.TimeoutHandler is being used.
     ***/
-//    Handler: http.TimeoutHandler(&h, 700 * time.Millisecond, "Request timeout."),
-    Handler: http.TimeoutHandler(&h, 1 * time.Hour, "Request timeout."),
+    Handler: http.TimeoutHandler(&h, 700 * time.Millisecond, "Request timeout."),
+//    Handler: http.TimeoutHandler(&h, 1 * time.Hour, "Request timeout."),
     /***
     It configures the maximum amount of time for the next request when keep-alives are enabled.
     Note that if http.Server.IdleTimeout isn't set, the value of http.Server.ReadTimeout is used
     for the idle timeout. If neither is set, there won't be any timeouts, and connections will
     remain open until they are closed by clients.
     ***/
-//    IdleTimeout: 30 * time.Second,
-    IdleTimeout: 1 * time.Hour,
+    IdleTimeout: 30 * time.Second,
+//    IdleTimeout: 1 * time.Hour,
     MaxHeaderBytes: 1 << 20,  //1 MB.
   }
   /***
