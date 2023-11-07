@@ -207,3 +207,7 @@ src/middlewares/*
 src/sessions/*
 !src/sessions/session.go
 !src/sessions/users.go
+# ... and this directory and its file...
+!src/security/
+src/security/*
+!src/security/security.go

@@ -1,5 +1,7 @@
+//go:build !windows
 // +build !windows
-//HTTP server.
+
+// HTTP server.
 package main
 
 /***
@@ -43,23 +45,29 @@ PS> curl.exe "http://localhost:8080"
 
 import (
 	"context"
+	"crypto/tls"
+	// "crypto/tls"
 	"errors"
 	"finance/middlewares"
 	"finance/misc"
+	"finance/security"
 	"finance/sessions"
 	"finance/webfinances"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
+	_ "net/http/pprof" //Blank import of pprof.
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
- 	"time"
+	"time"
 )
 
 var (  //Environment variables.
   MAX_RETRIES int = 10
   SHUTDOWN_TIMEOUT int = 15
+  // PORT string = "8443"
   PORT string = "8080"
   SVC_NAME string
   APP_NAME_VER string
@@ -166,7 +174,31 @@ func main() {
     }
   }
   fmt.Printf("Using SHUTDOWN_TIMEOUT: %d\n", SHUTDOWN_TIMEOUT)
-  /***
+
+////////////////////////////
+rootCert, rootCertPEM, rootPrivKey := security.GenRootCA()
+fmt.Println("rootCert\n", string(rootCertPEM))
+// interCert, interCertPEM, interPrivKey := security.GenIntermediateCA(rootCert, rootPrivKey)
+// fmt.Println("Intermediate Cert CA\n", string(interCertPEM))
+// security.VerifyIntermediateCA(rootCert, interCert)
+// serverCert, serverCertPEM, _ := security.GenServerCert(interCert, interPrivKey)
+// fmt.Println("serverCert\n", string(serverCertPEM))
+// security.VerifyCertificateChain(rootCert, interCert, serverCert)
+/*serverCert*/_, serverCertPEM, serverPrivKeyPEM := security.GenServerCert(rootCert, rootPrivKey)
+
+
+//Generate the TLS keypair for the server.
+serverTlsCert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
+if err != nil {
+  panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
+}
+var serverTlsConf = &tls.Config{
+  Certificates: []tls.Certificate{serverTlsCert},
+}
+
+//////////////////////////////////////
+
+  // /***
   fmt.Println("OS: " + misc.GetOS())
   if userName, err := misc.GetUsername(); err != nil {
     fmt.Println(err)
@@ -203,8 +235,10 @@ func main() {
   if err := sessions.ReadUsersFromFile(); err != nil {
     panic(err)
   }
-  ***/
-sessions.AddFromMemory(USER_NAME, PASSWORD)
+  // ***/
+// sessions.AddFromMemory(USER_NAME, PASSWORD)
+//////////////////////////////////////
+
   var wfpages = webfinances.WfPages{}
   var wfadcp = webfinances.NewWfAdCpPages()
   var wfadepp = webfinances.NewWfAdEppPages()
@@ -278,6 +312,62 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
   h.mux["/fin/simpleinterest/bankers"] = middlewares.ValidateSessions(wfsib.SimpleInterestBankersPages)
   h.mux["/fin/simpleinterest/ordinary"] = middlewares.ValidateSessions(wfsio.SimpleInterestOrdinaryPages)
   h.mux["/fin/miscellaneous"] = middlewares.ValidateSessions(wfmisc.MiscellaneousPages)
+  /***
+  Handlers for pprof.
+
+  One way to enable the Go profiler (pprof) is to use the net/http/pprof package to serve the
+  profiling data via HTTP. By using the blank import, it leads to a side effect that allows us to
+  reach the pprof URL http://{url}:{port}/debug/pprof. Note that enabling pprof is safe even in
+  production (https://go.dev/doc/diagnostics#profiling). The profiles that impact performance, such
+  as CPU profiling, aren't enabled by default, nor do they run continuously; they are activated
+  only for a specific period.
+
+  To view all available profiles, open your browser and type the following address into the
+  browser's address bar:
+  http://{url}:{port}/debug/pprof/
+
+  Please note you will need to have graphviz (https://graphviz.org/) installed for web
+  visualizations. To install it in a Linux system, run the commands below:
+  (If the universe repo is not enabled, enable it.)
+  $ sudo add-apt-repository universe
+  $ sudo apt update
+  $ sudo apt install graphviz
+
+  CPU Profiling
+  -------------
+  When it is activated, the application asks the OS to interrupt it every 10ms (default). When the
+  application is interrupted, it suspends the current activity and transfers the execution to the
+  profiler. The profiler collects execution statistics, and then it transfers execution back to the
+  application.
+
+  To active the CPU profiling, you access the debug/pprof/profile endpoint. Accessing this endpoint
+  will execute CPU profiling for 30 seconds by default. For 30 seconds, the application is
+  interrupted every 10ms.
+  To write the output to a file, use the command below:
+  $ curl http://{url}:{port}/debug/pprof/{prof1}?seconds={x} --output {filename}
+    where {prof1} is trace or profile.
+  $ curl http://{url}:{port}/debug/pprof/{prof2} --output {filename}
+    where {prof2} is heap.
+  To inspect a file, use the command below:
+  $ go tool pprof {filename}
+  To inspect the result using the graphical user interface, use the command below:
+  $ go tool pprof -http=:{port1} {filename}
+  To directly connect to the debug point, use the command below:
+  $ go tool pprof http://{url}:{port}/debug/pprof/{prof1}?seconds={x}
+  $ go tool pprof http://{url}:{port}/debug/pprof/{prof2}
+  To inspect the result using the graphical user interface, use the command below:
+  $ go tool pprof -http=:{port1} http://{url}:{port2}/debug/pprof/{prof1}?seconds={x}
+  $ go tool pprof -http=:{port1} http://{url}:{port2}/debug/pprof/{prof2}
+  ***/
+  h.mux["/debug/pprof/"] = pprof.Index
+  // h.mux["/debug/pprof/heap"] = pprof.Index
+  h.mux["/debug/pprof/heap"] = pprof.Handler("heap").ServeHTTP
+  h.mux["/debug/pprof/block"] = pprof.Handler("block").ServeHTTP
+  h.mux["/debug/pprof/goroutine"] = pprof.Handler("goroutine").ServeHTTP
+  h.mux["/debug/pprof/cmdline"] = pprof.Cmdline
+  h.mux["/debug/pprof/profile"] = pprof.Profile
+  h.mux["/debug/pprof/symbol"] = pprof.Symbol
+  h.mux["/debug/pprof/trace"] = pprof.Trace
   commonMiddlewares := []middlewares.Middleware {
     middlewares.CorrelationId,
     //middlewares.ValidateSessions,
@@ -324,20 +414,20 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
       The five steps of an HTTP response and the related timeouts.
     ***/
     //It specifies the maximum amount of time to read the request headers.
-    ReadHeaderTimeout: 250 * time.Millisecond,
+    ReadHeaderTimeout: 900 * time.Millisecond,
 //    ReadHeaderTimeout: 1 * time.Hour,
     /***
     It specifies the maximum amount of time to read the entire request.
     ReadTimeout = ReadHeaderTimeout + TimeoutHandler + Extra time
     **/
-    ReadTimeout: 990 * time.Millisecond,
+    ReadTimeout: 2500 * time.Millisecond,
 //    ReadTimeout: 1 * time.Hour,
     /***
     If a handler fails to respond on time, the server will reply with "503 Service Unavailable" and
     the specified message; the context passed to the handler will be canceled.
     Note: The http.Server.WriteTimeout is not necessary since http.TimeoutHandler is being used.
     ***/
-    Handler: http.TimeoutHandler(&h, 700 * time.Millisecond, "Request timeout."),
+    Handler: http.TimeoutHandler(&h, 35 * time.Second, "Request timeout."),
 //    Handler: http.TimeoutHandler(&h, 1 * time.Hour, "Request timeout."),
     /***
     It configures the maximum amount of time for the next request when keep-alives are enabled.
@@ -348,6 +438,7 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
     IdleTimeout: 30 * time.Second,
 //    IdleTimeout: 1 * time.Hour,
     MaxHeaderBytes: 1 << 20,  //1 MB.
+    TLSConfig: serverTlsConf,
   }
   /***
   A channel is a communication mechanism that lets one goroutine send values to another goroutine.
@@ -398,7 +489,8 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
   locking when accessing variables that other goroutines, including other requests to the same
   handler, may be accessing.
   ***/
-  err := (*server).ListenAndServe()
+  // err := (*server).ListenAndServe()
+  err = (*server).ListenAndServeTLS("", "")
   if errors.Is(err, http.ErrServerClosed) {
     fmt.Printf("%s - Server has been closed.\n", m.DTF())
   } else if err != nil {
@@ -411,3 +503,38 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
 func faviconHandler(res http.ResponseWriter, req *http.Request) {
   http.NotFound(res, req)  //404 - page not found.
 }
+
+
+///////////////////
+/***
+server := &http.Server{
+  Addr:         ":" + *port,
+  ReadTimeout:  5 * time.Minute, // 5 min to allow for delays when 'curl' on OSx prompts for username/password
+  WriteTimeout: 10 * time.Second,
+  TLSConfig:    getTLSConfig(*host, *caCert, tls.ClientAuthType(*certOpt)),
+}
+****/
+//https://youngkin.github.io/post/gohttpsclientserver/
+
+
+//Redirect http requests to https.
+func redirectHttpToHttps(res http.ResponseWriter, req *http.Request) {
+  url := *req.URL
+  url.Scheme = "https"
+  url.Host = req.Host
+  http.Redirect(res, req, url.String(), http.StatusMovedPermanently)
+}
+
+
+/***
+
+openssl req -x509 -newkey rsa:4096 -keyout privKey.pem -out pubCert.pem -days 365
+
+Before we can use this code we need a certificate. Run the following command to generate a private key file and a certificate signing request.
+openssl req -new -newkey rsa:2048 -nodes -x509 -days 365 -out pubCert.pem -keyout privKey.pem \
+  -subj "/C=US/ST=Texas/L=Houston/O=Company Name/OU=Dept A/CN=localhost"
+
+
+
+
+***/
