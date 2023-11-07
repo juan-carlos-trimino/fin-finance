@@ -198,7 +198,7 @@ var serverTlsConf = &tls.Config{
 
 //////////////////////////////////////
 
-  // /***
+  /***
   fmt.Println("OS: " + misc.GetOS())
   if userName, err := misc.GetUsername(); err != nil {
     fmt.Println(err)
@@ -235,8 +235,8 @@ var serverTlsConf = &tls.Config{
   if err := sessions.ReadUsersFromFile(); err != nil {
     panic(err)
   }
-  // ***/
-// sessions.AddFromMemory(USER_NAME, PASSWORD)
+  ***/
+sessions.AddFromMemory(USER_NAME, PASSWORD)
 //////////////////////////////////////
 
   var wfpages = webfinances.WfPages{}
