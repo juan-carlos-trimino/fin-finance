@@ -67,8 +67,8 @@ import (
 var (  //Environment variables.
   MAX_RETRIES int = 10
   SHUTDOWN_TIMEOUT int = 15
-  // PORT string = "8443"
-  PORT string = "8080"
+  PORT string = "8443"
+  // PORT string = "8080"
   SVC_NAME string
   APP_NAME_VER string
   SERVER string = "localhost"
@@ -188,13 +188,13 @@ fmt.Println("rootCert\n", string(rootCertPEM))
 
 
 //Generate the TLS keypair for the server.
-serverTlsCert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
-if err != nil {
-  panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
-}
-var serverTlsConf = &tls.Config{
-  Certificates: []tls.Certificate{serverTlsCert},
-}
+// serverTlsCert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
+// if err != nil {
+//   panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
+// }
+// var serverTlsConf = &tls.Config{
+//   Certificates: []tls.Certificate{serverTlsCert},
+// }
 
 //////////////////////////////////////
 
@@ -414,31 +414,59 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
       The five steps of an HTTP response and the related timeouts.
     ***/
     //It specifies the maximum amount of time to read the request headers.
-    ReadHeaderTimeout: 900 * time.Millisecond,
-//    ReadHeaderTimeout: 1 * time.Hour,
+    ReadHeaderTimeout: 3 * time.Second,
     /***
     It specifies the maximum amount of time to read the entire request.
     ReadTimeout = ReadHeaderTimeout + TimeoutHandler + Extra time
     **/
-    ReadTimeout: 2500 * time.Millisecond,
-//    ReadTimeout: 1 * time.Hour,
+    ReadTimeout: 6 * time.Second,
     /***
     If a handler fails to respond on time, the server will reply with "503 Service Unavailable" and
     the specified message; the context passed to the handler will be canceled.
     Note: The http.Server.WriteTimeout is not necessary since http.TimeoutHandler is being used.
     ***/
-    Handler: http.TimeoutHandler(&h, 35 * time.Second, "Request timeout."),
-//    Handler: http.TimeoutHandler(&h, 1 * time.Hour, "Request timeout."),
+    Handler: http.TimeoutHandler(&h, 30 * time.Second, "Request timeout."),
     /***
     It configures the maximum amount of time for the next request when keep-alives are enabled.
     Note that if http.Server.IdleTimeout isn't set, the value of http.Server.ReadTimeout is used
     for the idle timeout. If neither is set, there won't be any timeouts, and connections will
     remain open until they are closed by clients.
     ***/
-    IdleTimeout: 30 * time.Second,
-//    IdleTimeout: 1 * time.Hour,
+    IdleTimeout: 120 * time.Second,
     MaxHeaderBytes: 1 << 20,  //1 MB.
-    TLSConfig: serverTlsConf,
+    TLSConfig: &tls.Config{
+      MinVersion: tls.VersionTLS13,
+      /***
+      When using version 1.3 this isn't configurable. Because you want to use the most up to date
+      version, keep it empty, which results in a default list of ciphersuites to be used with a
+      preference order based on hardware performance.
+      ***/
+      CipherSuites: nil,
+      /***
+..........      To control the server's preferred ciphersuite to use as provided by the CipherSuites............, when false it will select the client’s preferred ciphersuite. Setting this will ensure that safer and faster ciphersuites are used. [@valsorda2016a]
+      ***/
+      PreferServerCipherSuites: true,
+      CurvePreferences: []tls.CurveID{
+        tls.CurveP521,
+        tls.CurveP384,
+        tls.CurveP256,
+      },
+//      Certificates: []tls.Certificate{serverTlsCert},
+
+			GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+        // Always get latest localhost.crt and localhost.key 
+        // ex: keeping certificates file somewhere in global location where created certificates updated and this closure function can refer that
+cert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
+if err != nil {
+return nil, err
+}
+return &cert, nil
+},
+
+
+},
+TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+
   }
   /***
   A channel is a communication mechanism that lets one goroutine send values to another goroutine.
@@ -490,7 +518,7 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
   handler, may be accessing.
   ***/
   // err := (*server).ListenAndServe()
-  err = (*server).ListenAndServeTLS("", "")
+  err := (*server).ListenAndServeTLS("", "")
   if errors.Is(err, http.ErrServerClosed) {
     fmt.Printf("%s - Server has been closed.\n", m.DTF())
   } else if err != nil {

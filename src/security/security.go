@@ -79,7 +79,7 @@ $ openssl x509 -text -noout -in rootCA.crt
 
 import (
 	// "bytes"
-	"bytes"
+	// "bytes"
 	"crypto/rand"
 	"encoding/pem"
 	"fmt"
@@ -88,7 +88,7 @@ import (
 	// "crypto/rsa"
 	// "crypto/sha256"
 	"crypto/rsa"
-	"crypto/tls"
+	// "crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"math/big"
@@ -415,6 +415,7 @@ func GenerateSelfSignedCert(host, certPath, keyPath string) error {
 
 	// Generate key
 	keyBuffer := bytes.Buffer{}
+  var b bytes.Buffer // A Buffer needs no initialization.
 	if err := pem.Encode(&keyBuffer, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)}); err != nil {
 		return err
 	}
