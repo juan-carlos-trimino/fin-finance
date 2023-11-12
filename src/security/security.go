@@ -80,6 +80,7 @@ $ openssl x509 -text -noout -in rootCA.crt
 import (
 	// "bytes"
 	// "bytes"
+	"crypto/ecdsa"
 	"crypto/rand"
 	"encoding/pem"
 	"fmt"
@@ -104,6 +105,11 @@ import (
 
 func genCert(template, parent *x509.Certificate, pubKey *rsa.PublicKey,
              parentPrivKey *rsa.PrivateKey) (*x509.Certificate, []byte) {
+  /***
+  The certificate is signed by parent. If parent is equal to template then the certificate is
+  self-signed. The parameter pubKey is the public key of the certificate to be generated and
+  parentPrivKey is the private key of the signer.
+  ***/
   certBytes, err := x509.CreateCertificate(rand.Reader, template, parent, pubKey, parentPrivKey)
   if err != nil {
     panic("Failed to create certificate.\n" + err.Error())
@@ -137,15 +143,23 @@ func rootCATemplate() x509.Certificate {
       Locality: []string{"Houston"},
       StreetAddress: []string{"721 Tree St."},
       PostalCode: []string{"77909"},
-      CommonName: "Root CA",
+      //CommonName: "Root CA",
     },
     NotBefore: time.Now(),
     NotAfter: time.Now().AddDate(0, 0, 7),
     IsCA: true,  //A CA certificate.
     BasicConstraintsValid: true,
     //Specify how the certificate's public key may be used.
-    KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature,
-    ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+    //Subject public key is used to verify signatures on certificates.
+    //This extension must only be used for CA certificates.
+    KeyUsage: x509.KeyUsageCertSign |
+    //Certificate may be used to apply a digital signature.
+              x509.KeyUsageDigitalSignature |
+    //Subject public key is to verify signatures on revocation information, such as a CRL.
+    //This extension must only be used for CA certificates
+              x509.KeyUsageCRLSign,
+    //CAs/ICAs should not have any EKUs specified
+    ExtKeyUsage: []x509.ExtKeyUsage{},
 //    MaxPathLen: 2,
 //    IPAddresses: []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
 //    DNSNames: []string{"localhost"},
@@ -164,6 +178,7 @@ func GenRootCA() (*x509.Certificate, []byte, *rsa.PrivateKey) {
   if err != nil {
     panic("Failed to generate a RSA keypair.\n" + err.Error())
   }
+  //Create a self-signed certificate.
   cert, certPEM := genCert(&template, &template, &privKey.PublicKey, privKey)
   return cert, certPEM, privKey
 }
@@ -178,17 +193,18 @@ func intermediateCATemplate() x509.Certificate {
       Locality: []string{"Houston"},
       StreetAddress: []string{"721 Tree St."},
       PostalCode: []string{"77909"},
-      CommonName: "SelfTLS CA",
+      //CommonName: "SelfTLS CA",
     },
     NotBefore: time.Now(),
-    NotAfter: time.Now().AddDate(0, 0, 3),
+    NotAfter: time.Now().AddDate(0, 0, 7),
     IsCA: true,
     BasicConstraintsValid: true,
-    KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
-    ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-    MaxPathLenZero: false,
-    MaxPathLen: 1,
-    IPAddresses: []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
+    KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature | x509.KeyUsageCRLSign,
+    //CAs/ICAs should not have any EKUs specified
+    ExtKeyUsage: []x509.ExtKeyUsage{},
+    // MaxPathLenZero: false,
+    // MaxPathLen: 1,
+    // IPAddresses: []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
   }
   return template
 }
@@ -214,13 +230,19 @@ func serverTemplate(hosts []string) x509.Certificate {
       Locality: []string{"Dallas"},
       StreetAddress: []string{"3000 Lake Dr"},
       PostalCode: []string{"76092"},
-      CommonName: "Server Cert",
+      CommonName: "localhost",
     },
     NotBefore: time.Now(),
-    NotAfter: time.Now().AddDate(0, 0, 3),  //Valid for three day.
+    NotAfter: time.Now().AddDate(0, 0, 7),  //Valid for seven day.
     IsCA: false,
     BasicConstraintsValid: true,
-    KeyUsage: x509.KeyUsageDigitalSignature,
+    KeyUsage: x509.KeyUsageDigitalSignature |
+    //Certificate enables use of a key agreement protocol to establish a symmetric key with a target.
+    //Symmetric key may then be used to encrypt & decrypt data sent between the entities.
+              x509.KeyUsageKeyAgreement |
+    //Certificate may be used to encrypt a symmetric key which is then transferred to the target.
+    //Target decrypts key, subsequently using it to encrypt & decrypt data between the entities.
+              x509.KeyUsageKeyEncipherment,
     ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
     // MaxPathLenZero: true,
     // IPAddresses: []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
@@ -238,14 +260,14 @@ func serverTemplate(hosts []string) x509.Certificate {
   return template
 }
 
-func GenServerCert(cert *x509.Certificate, certPrivKey *rsa.PrivateKey) (*x509.Certificate,
+func GenServerCert(caCert *x509.Certificate, caCertPrivKey *rsa.PrivateKey) (*x509.Certificate,
                    []byte, []byte) {
   template := serverTemplate([]string{"localhost", "::1", "127.0.0.1"})
   serverPrivKey, err := rsa.GenerateKey(rand.Reader, 2048)
   if err != nil {
     panic("Failed to generate the server key.\n" + err.Error())
   }
-  serverCert, serverCertPEM := genCert(&template, cert, &serverPrivKey.PublicKey, certPrivKey)
+  serverCert, serverCertPEM := genCert(&template, caCert, &serverPrivKey.PublicKey, caCertPrivKey)
   serverPrivKeyPEM := pem.EncodeToMemory(&pem.Block{
     Type: "RSA PRIVATE KEY",
     Bytes: x509.MarshalPKCS1PrivateKey(serverPrivKey),
@@ -266,11 +288,11 @@ func VerifyIntermediateCA(rootCert, interCert *x509.Certificate) {
   fmt.Println("Intermediate CA verified.")
 }
 
-func VerifyCertificateChain(rootCert, dCert, serverCert *x509.Certificate) {
+func VerifyCertificateChain(rootCert, interCert, serverCert *x509.Certificate) {
   roots := x509.NewCertPool()
   roots.AddCert(rootCert)
   inter := x509.NewCertPool()
-  inter.AddCert(dCert)
+  inter.AddCert(interCert)
   opts := x509.VerifyOptions{
     Roots: roots,
     Intermediates: inter,
@@ -283,8 +305,26 @@ func VerifyCertificateChain(rootCert, dCert, serverCert *x509.Certificate) {
   fmt.Println("Certificate chain is valid.")
 }
 
-
-
+func KeyToPemBlock(key interface{}) *pem.Block {
+  switch k := key.(type) {
+  case *rsa.PrivateKey:
+    return &pem.Block{
+      Type: "RSA PRIVATE KEY",
+      Bytes: x509.MarshalPKCS1PrivateKey(k),
+    }
+  case *ecdsa.PrivateKey:
+    if b, err := x509.MarshalECPrivateKey(k); err != nil {
+      panic("Unable to marshal ECDSA private key.\n" + err.Error())
+    } else {
+      return &pem.Block{
+        Type: "EC PRIVATE KEY",
+        Bytes: b,
+      }
+    }
+  default:
+    return nil
+  }
+}
 
 /***
 
