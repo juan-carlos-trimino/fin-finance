@@ -212,6 +212,7 @@ _, serverCertPEM, serverPrivKeyPEM := security.GenServerCert(rootCert, rootPrivK
 //   Certificates: []tls.Certificate{serverTlsCert},
 // }
 // Configure the server to trust TLS client cert issued by your CA.
+//The operating system also contains a list with well-known certificate authorities that it trusts.
 rootCAs, _ := x509.SystemCertPool()
 if rootCAs == nil {
   rootCAs = x509.NewCertPool()
@@ -599,16 +600,6 @@ func faviconHandler(res http.ResponseWriter, req *http.Request) {
 
 
 ///////////////////
-/***
-server := &http.Server{
-  Addr:         ":" + *port,
-  ReadTimeout:  5 * time.Minute, // 5 min to allow for delays when 'curl' on OSx prompts for username/password
-  WriteTimeout: 10 * time.Second,
-  TLSConfig:    getTLSConfig(*host, *caCert, tls.ClientAuthType(*certOpt)),
-}
-****/
-//https://youngkin.github.io/post/gohttpsclientserver/
-
 
 //Redirect http requests to https.
 func redirectHttpToHttps(res http.ResponseWriter, req *http.Request) {
@@ -617,17 +608,3 @@ func redirectHttpToHttps(res http.ResponseWriter, req *http.Request) {
   url.Host = req.Host
   http.Redirect(res, req, url.String(), http.StatusMovedPermanently)
 }
-
-
-/***
-
-openssl req -x509 -newkey rsa:4096 -keyout privKey.pem -out pubCert.pem -days 365
-
-Before we can use this code we need a certificate. Run the following command to generate a private key file and a certificate signing request.
-openssl req -new -newkey rsa:2048 -nodes -x509 -days 365 -out pubCert.pem -keyout privKey.pem \
-  -subj "/C=US/ST=Texas/L=Houston/O=Company Name/OU=Dept A/CN=localhost"
-
-
-
-
-***/
