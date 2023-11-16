@@ -210,6 +210,18 @@ func intermediateCATemplate() x509.Certificate {
   return template
 }
 
+/***
+This consists of a Root CA that has issued a certificate for one subordinate known as the
+Intermediate CA. The difference here is that the issued certificates are trusted as they come from
+a trusted authority via the intermediate CA.
+
+In most production deployments, a hierarchy has multiple CAs. The root CA issues certificates to
+the intermediate CAs, which in turn generate intermediate certificates: these are used to sign
+client certificates, such as a cluster certificate.
+
+The certificate chain needs to be verified up unto the root CA. The trust chain contains your
+certificate, concatenated with all intermediate certificates.
+***/
 func GenIntermediateCA(cert *x509.Certificate, certPrivKey *rsa.PrivateKey) (*x509.Certificate,
                        []byte, *rsa.PrivateKey) {
   template := intermediateCATemplate()
@@ -306,6 +318,16 @@ func VerifyCertificateChain(rootCert, interCert, serverCert *x509.Certificate) {
   fmt.Println("Certificate chain is valid.")
 }
 
+//Return a copy of the system cert pool; on error, return an empty pool.
+func SystemCertPool() (*x509.CertPool) {
+  //https://pkg.go.dev/crypto/x509#SystemCertPool
+  certPool, _ := x509.SystemCertPool()
+  if certPool == nil {
+    return x509.NewCertPool()
+  }
+  return certPool
+}
+
 func KeyToPemBlock(key interface{}) *pem.Block {
   switch k := key.(type) {
   case *rsa.PrivateKey:
@@ -326,3 +348,6 @@ func KeyToPemBlock(key interface{}) *pem.Block {
     return nil
   }
 }
+
+
+

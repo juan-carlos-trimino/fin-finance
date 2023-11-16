@@ -81,11 +81,11 @@ func ValidateUser(username, password string) bool {
   return ok
 }
 
-func ReadUsersFromFile() error {
+func ReadUsersFromFile(filename string) error {
   var f *os.File
   var err error
   muFile.Lock()
-  f, err = os.OpenFile("./files/user.txt", os.O_RDONLY, 0440)
+  f, err = os.OpenFile(filename, os.O_RDONLY, 0440)
   if err != nil {
     muFile.Unlock()
     return err
@@ -113,7 +113,7 @@ func ReadUsersFromFile() error {
   return nil
 }
 
-func AddUserToFile(username, password string) error {
+func AddUserToFile(filename, username, password string) error {
   hashPassword, _ := HashSecret(password)
   hashPassword = append(hashPassword, 0x0A)  //Add LF.
   var f *os.File
@@ -122,7 +122,7 @@ func AddUserToFile(username, password string) error {
   defer muFile.Unlock()
   oldMask := syscall.Umask(0006)
   //If the file doesn't exist, create it; otherwise, append to the file.
-  f, err = os.OpenFile("./files/user.txt", os.O_CREATE | os.O_APPEND | os.O_RDWR, 0666)
+  f, err = os.OpenFile(filename, os.O_CREATE | os.O_APPEND | os.O_RDWR, 0666)
   syscall.Umask(oldMask)
   if err != nil {
     return err

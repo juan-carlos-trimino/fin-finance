@@ -44,12 +44,8 @@ PS> curl.exe "http://localhost:8080"
 ***/
 
 import (
-
-// "encoding/pem"
-
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"finance/middlewares"
 	"finance/misc"
@@ -64,6 +60,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -71,8 +68,10 @@ import (
 var (  //Environment variables.
   MAX_RETRIES int = 10
   SHUTDOWN_TIMEOUT int = 15
-  PORT string = "8443"
-  PORT_REDIRECT string = "8080"
+  HTTPS bool = false
+  HTTP bool = true
+  HTTPS_PORT string = "8443"
+  HTTP_PORT string = "8080"
   SVC_NAME string
   APP_NAME_VER string
   SERVER string = "localhost"
@@ -89,7 +88,6 @@ func init() {
   sessionManager = sessions.NewSessionManager("memory", "session_token", 3600)
 }
 ***/
-
 
 /***
 In Go, a handler is an interface (type Handler interface) that has a method named ServeHTTP with
@@ -144,6 +142,30 @@ func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 func main() {
   var exists bool = false
   var ev string
+  ev, exists = os.LookupEnv("HTTPS")
+  if exists {
+    b, err := strconv.ParseBool(ev)
+    if err == nil {
+      HTTPS = b
+    } else {
+      fmt.Printf("'%s' is not a boolean.\n", ev)
+    }
+  }
+  //
+  ev, exists = os.LookupEnv("HTTP")
+  if exists {
+    b, err := strconv.ParseBool(ev)
+    if err == nil {
+      HTTP = b
+    } else {
+      fmt.Printf("'%s' is not a boolean.\n", ev)
+    }
+  }
+  //
+  if HTTP == false && HTTPS == false {
+    fmt.Println("Select one (HTTP or HTTPS) server or both servers.")
+    return
+  }
   _, exists = os.LookupEnv("NOT_K8S")
   if !exists {
     SVC_NAME, exists = os.LookupEnv("SVC_NAME")
@@ -162,12 +184,23 @@ func main() {
       return
     }
   }
-  ev, exists = os.LookupEnv("PORT")
-  if exists {
-    PORT = ev
+  //
+  if HTTP {
+    ev, exists = os.LookupEnv("HTTP_PORT")
+    if exists {
+      HTTP_PORT = ev
+    }
+    fmt.Printf("Using HTTP PORT: %s\n", HTTP_PORT)
   }
-  fmt.Printf("Using PORT: %s\n", PORT)
-  SERVER += ":" + PORT
+  //
+  if HTTPS {
+    ev, exists = os.LookupEnv("HTTPS_PORT")
+    if exists {
+      HTTPS_PORT = ev
+    }
+    fmt.Printf("Using HTTPS PORT: %s\n", HTTPS_PORT)
+  }
+  //SERVER += ":" + PORT
   ev, exists = os.LookupEnv("SHUTDOWN_TIMEOUT")
   if exists {
     tm, err := strconv.Atoi(ev)
@@ -178,52 +211,6 @@ func main() {
     }
   }
   fmt.Printf("Using SHUTDOWN_TIMEOUT: %d\n", SHUTDOWN_TIMEOUT)
-
-////////////////////////////
-// see Certificate structure at
-// http://golang.org/pkg/crypto/x509/#Certificate
-// see http://golang.org/pkg/crypto/x509/#KeyUsage
-
-//Addr:      ":4443",
-//server would listen on IP address 0.0.0.0 and TCP port 4443.
-
-rootCert, rootCertPEM, rootPrivKey := security.GenRootCA()
-// block, _ := pem.Decode([]byte(rootCertPEM))
-// if certV, err := x509.ParseCertificate(block.Bytes); err == nil {
-//   fmt.Println(certV)
-// } else {
-//   fmt.Println(err.Error())
-// }
-// fmt.Println("rootCert\n", string(rootCertPEM))
-// interCert, interCertPEM, interPrivKey := security.GenIntermediateCA(rootCert, rootPrivKey)
-// fmt.Println("Intermediate Cert CA\n", string(interCertPEM))
-// security.VerifyIntermediateCA(rootCert, interCert)
-// serverCert, serverCertPEM, _ := security.GenServerCert(interCert, interPrivKey)
-// fmt.Println("serverCert\n", string(serverCertPEM))
-// security.VerifyCertificateChain(rootCert, interCert, serverCert)
-
-_, serverCertPEM, serverPrivKeyPEM := security.GenServerCert(rootCert, rootPrivKey)
-//Generate the TLS keypair for the server.
- serverTlsCert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
- if err != nil {
-   panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
- }
-//var serverTlsConf = &tls.Config{
-//   Certificates: []tls.Certificate{serverTlsCert},
-// }
-// Configure the server to trust TLS client cert issued by your CA.
-//The operating system also contains a list with well-known certificate authorities that it trusts.
-rootCAs, _ := x509.SystemCertPool()
-if rootCAs == nil {
-  rootCAs = x509.NewCertPool()
-}
-// rootCAs := x509.NewCertPool()
-if ok := rootCAs.AppendCertsFromPEM(rootCertPEM); !ok {
-  panic("Failed to append certificate.\n" + err.Error())
-}
-//////////////////////////////////////
-
-  /***
   fmt.Println("OS: " + misc.GetOS())
   if userName, err := misc.GetUsername(); err != nil {
     fmt.Println(err)
@@ -238,32 +225,79 @@ if ok := rootCAs.AppendCertsFromPEM(rootCertPEM); !ok {
   } else {
     fmt.Println("The current user is not running as root.")
   }
-  //
-  if _, err := os.Stat("./files"); err != nil {
-    if os.IsNotExist(err) {
-      oldMask := syscall.Umask(0017)
-      fmt.Printf("Default mask: %04o\nUsing mask: 0017\n", oldMask)
-      err = os.Mkdir("./files", 0777)
-      syscall.Umask(oldMask)
-      if err != nil {
-        panic(err)
-      } else if err = sessions.AddUserToFile(USER_NAME, PASSWORD); err != nil {
-        panic(err)
-      } else if err = sessions.AddUserToFile("jct1", "pw1"); err != nil {
-        panic(err)
+  readUsers(/*"./dataDir", "user.txt"*/"", "")
+  /***
+  A channel is a communication mechanism that lets one goroutine send values to another goroutine.
+  Each channel is a conduit for values of a particular type, called the channel's element type.
+
+  As with maps, a channel is a reference to the data structure created by make. When we copy a
+  channel or pass one as an argument to a function, we are copying a reference, so caller and
+  callee refer to the same data structure. As with other reference types, the zero value of a
+  channel is nil.
+  ***/
+  //Buffered channel capacity 1; notifier will not block.
+  var signalChan1, signalChan2 chan os.Signal = make(chan os.Signal, 1), nil
+  /***
+  When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return
+  ErrServerClosed. Make sure the program doesn't exit and waits instead for Shutdown to return.
+  ***/
+  var wg sync.WaitGroup
+  var httpServer *http.Server = makeServer(HTTP_PORT, makeHandlers())
+  if HTTPS {
+    wg.Add(1)
+    httpServer.Handler = makeHttpToHttpsRedirectHandler(HTTPS_PORT)
+    signalChan2 = make(chan os.Signal, 1) //Buffered channel capacity 1; notifier will not block.
+    go func() {
+      httpsServer := makeServer(HTTPS_PORT, makeHandlers())
+      httpsServer.TLSConfig = makeTlsConfig()
+      go waitForServer(httpsServer, signalChan2, &wg)
+      fmt.Printf("%s - Starting the server at port %s...\n", m.DTF(), httpsServer.Addr)
+      err := (*httpsServer).ListenAndServeTLS("", "")
+      if errors.Is(err, http.ErrServerClosed) {
+        fmt.Printf("%s - Server has been closed at port %s.\n", m.DTF(), httpsServer.Addr)
+      } else if err != nil {
+        fmt.Printf("%s - Server error: %+v\n", m.DTF(), err)
+        signalChan2 <- syscall.SIGINT //Let the goroutine finish.
       }
-    } else {
-      panic(err)
+    }()
+  }
+  //
+  if HTTP {
+    wg.Add(1)
+    /***
+    When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return
+    ErrServerClosed. Make sure the program doesn't exit and waits instead for Shutdown to return.
+    ***/
+    go waitForServer(httpServer, signalChan1, &wg)
+    fmt.Printf("%s - Starting the server at port %s...\n", m.DTF(), httpServer.Addr)
+    /***
+    ListenAndServe runs forever, or until the server fails (or fails to start) with an error,
+    always non-nil, which it returns.
+
+    The web server invokes each handler in a new goroutine, so handlers must take precautions such
+    as locking when accessing variables that other goroutines, including other requests to the same
+    handler, may be accessing.
+
+ Because we already set the paths of the key and cert in the tlsConfig, we can set certFile and keyFile arguments to empty strings.  
+ Note that we’re going to add the --insecure flag to our command. This is because we’ve self-signed the certificate and curl rightfully doesn’t trust that.
+ curl.exe --verbose --insecure http://localhost:8080
+  ***/
+    err := (*httpServer).ListenAndServe()
+    if errors.Is(err, http.ErrServerClosed) {
+      fmt.Printf("%s - Server has been closed at port %s.\n", m.DTF(), httpServer.Addr)
+    } else if err != nil {
+      fmt.Printf("%s - Server error: %+v\n", m.DTF(), err)
+      signalChan1 <- syscall.SIGINT //Let the goroutine finish.
     }
   }
-  //
-  if err := sessions.ReadUsersFromFile(); err != nil {
-    panic(err)
-  }
-  ***/
-sessions.AddFromMemory(USER_NAME, PASSWORD)
-//////////////////////////////////////
+  wg.Wait() //Block until shutdown is done.
+}
 
+func faviconHandler(res http.ResponseWriter, req *http.Request) {
+  http.NotFound(res, req)  //404 - page not found.
+}
+
+func makeHandlers() *handlers {
   var wfpages = webfinances.WfPages{}
   var wfadcp = webfinances.NewWfAdCpPages()
   var wfadepp = webfinances.NewWfAdEppPages()
@@ -285,7 +319,7 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
   /***
   The Go web server will route requests to different functions depending on the requested URL.
   ***/
-  var h handlers = handlers{}
+  h := &handlers{}
   h.mux = make(map[string]http.HandlerFunc, 64)
   //h.mux["/readiness"] =
   //func (res http.ResponseWriter, req *http.Request){
@@ -307,7 +341,7 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
     // //https://go.dev/src/net/http/status.go
     //res.WriteHeader(http.StatusOK)
   //}
-  //Serve static files; i.e., the server will serve it as it is, without processing it first.
+  //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
@@ -397,16 +431,173 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
     middlewares.CorrelationId,
     //middlewares.ValidateSessions,
   }
+  //
   for idx, f := range h.mux{
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
+  return h
+}
+
+func makeHttpToHttpsRedirectHandler(port string) *handlers {
+  /***
+  The Go web server will route requests to different functions depending on the requested URL.
+  ***/
+  h := &handlers{}
+  h.mux = make(map[string]http.HandlerFunc, 1)
+  h.mux["/"] = func(res http.ResponseWriter, req *http.Request) {
+    host, _, _ := net.SplitHostPort(req.Host)
+    u := req.URL
+    u.Host = net.JoinHostPort(host, port)
+    u.Scheme="https"
+    fmt.Printf("%s - Redirecting to %s\n", m.DTF(), u.String())
+    http.Redirect(res, req, u.String(), http.StatusMovedPermanently)
+  }
+  return h
+}
+
+func readUsers(dir, filename string) {
+  if dir != "" && filename != "" {
+    if _, err := os.Stat(dir); err != nil {
+      if os.IsNotExist(err) {
+        oldMask := syscall.Umask(0017)
+        fmt.Printf("Default mask: %04o\nUsing mask: 0017\n", oldMask)
+        err = os.Mkdir(dir, 0777)
+        syscall.Umask(oldMask)
+        if err != nil {
+          panic("Cannot create dir.\n" + err.Error())
+        } else if err = sessions.AddUserToFile(dir + "/" + filename, USER_NAME, PASSWORD);
+                  err != nil {
+          panic(err)
+        } else if err = sessions.AddUserToFile(dir + "/" + filename, "jct1", "pw1"); err != nil {
+          panic(err)
+        }
+      } else {
+        panic(err)
+      }
+    }
+    //
+    if err := sessions.ReadUsersFromFile(dir + "/" + filename); err != nil {
+      panic(err)
+    }
+  } else {
+    sessions.AddFromMemory(USER_NAME, PASSWORD)
+  }
+}
+
+
+
+func makeTlsConfig() *tls.Config {
+
+// see Certificate structure at
+// http://golang.org/pkg/crypto/x509/#Certificate
+// see http://golang.org/pkg/crypto/x509/#KeyUsage
+
+//Addr:      ":4443",
+//server would listen on IP address 0.0.0.0 and TCP port 4443.
+
+rootCert, rootCertPEM, rootPrivKey := security.GenRootCA()
+// fmt.Println("rootCert\n", string(rootCertPEM))
+// interCert, interCertPEM, interPrivKey := security.GenIntermediateCA(rootCert, rootPrivKey)
+// fmt.Println("Intermediate Cert CA\n", string(interCertPEM))
+// security.VerifyIntermediateCA(rootCert, interCert)
+// serverCert, serverCertPEM, _ := security.GenServerCert(interCert, interPrivKey)
+// fmt.Println("serverCert\n", string(serverCertPEM))
+// security.VerifyCertificateChain(rootCert, interCert, serverCert)
+
+_, serverCertPEM, serverPrivKeyPEM := security.GenServerCert(rootCert, rootPrivKey)
+// //Generate the TLS keypair for the server.
+serverTlsCert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
+if err != nil {
+  panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
+}
+rootCAs := security.SystemCertPool()
+if ok := rootCAs.AppendCertsFromPEM(rootCertPEM); !ok {
+  panic("Failed to append CA's certificate.\n" + err.Error())
+}
+
+
+  tlsConfig := &tls.Config{
+    MinVersion: tls.VersionTLS13,
+    /***
+    When using version 1.3 this isn't configurable. Because you want to use the most up to date
+    version, keep it empty, which results in a default list of ciphersuites to be used with a
+    preference order based on hardware performance.
+    ***/
+    CipherSuites: nil,
+    /***
+    Control the server's preferred ciphersuite to use as provided by the CipherSuites. When
+    false, it will select the client's preferred ciphersuite. Setting this will ensure that safer
+    and faster ciphersuites are used.
+    ***/
+    PreferServerCipherSuites: true,
+    /***
+    CurvePreferences contains the elliptic curves that will be used in an ECDHE handshake;
+    however, without tls.CurveP384 because a client using tls.CurveP384 would cause up to a
+    second of CPU to be consumed on the server.
+    ***/
+    CurvePreferences: []tls.CurveID{
+      tls.CurveP521,
+      // tls.CurveP384,
+      tls.CurveP256,
+    },
+    Certificates: []tls.Certificate{serverTlsCert},
+    /***
+    GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+      cert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
+      if err != nil {
+        panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
+      }
+      return &cert, nil
+    },
+    ***/
+    //For mTLS
+    //ClientAuth: tls.RequireAndVerifyClientCert,
+    // ClientCAs: rootCAs,
+    RootCAs: rootCAs,
+    // InsecureSkipVerify: true,
+  }
+  return tlsConfig
+}
+
+
+
+
+func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.WaitGroup) {
+  fmt.Printf("%s - Waiting for notification to shut down the server at %s.\n", m.DTF(), server.Addr)
+  /***
+  signal.Notify disables the default behavior for a given set of asynchronous signals and instead
+  delivers them over one or more registered channels.
+  https://pkg.go.dev/os/signal#hdr-Default_behavior_of_signals_in_Go_programs
+  ***/
+  signal.Notify(signalChan,
+    syscall.SIGINT, //Ctrl-C
+    syscall.SIGTERM, //Kubernetes sends a SIGTERM.
+  )
+  <- signalChan //Waiting for the signal; signal is discarded.
+  ctx, cancel := context.WithTimeout(context.Background(), time.Duration(SHUTDOWN_TIMEOUT) * time.Second)
+  defer func() {
+    //Extra handling goes here...
+    close(signalChan)
+    //Calling cancel() releases the resources associated with the context.
+    cancel()
+    wg.Done() //Shutdown is done; let the main goroutine terminate.
+  }()
+  //https://pkg.go.dev/net/http#Server.Shutdown
+  if err := server.Shutdown(ctx); err != nil {
+    fmt.Printf("%s - Server shutdown failed: %+v\n", m.DTF(), err)  //https://pkg.go.dev/fmt
+  }
+}
+
+func makeServer(port string, h *handlers) *http.Server {
   server := &http.Server{  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
     associated with the computer, and it will listen on port PORT.
     ***/
-    Addr: ":" + PORT,
+    Addr: ":" + port,
     /***
+    Set timeouts so that a slow or malicious client doesn't hold resources forever.
+
       Connection accepted
       │
       │  Wait for the client to send the request
@@ -450,7 +641,7 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
     the specified message; the context passed to the handler will be canceled.
     Note: The http.Server.WriteTimeout is not necessary since http.TimeoutHandler is being used.
     ***/
-    Handler: http.TimeoutHandler(&h, 30 * time.Second, "Request timeout."),
+    Handler: http.TimeoutHandler(h, 30 * time.Second, "Request timeout."),
     /***
     It configures the maximum amount of time for the next request when keep-alives are enabled.
     Note that if http.Server.IdleTimeout isn't set, the value of http.Server.ReadTimeout is used
@@ -459,152 +650,11 @@ sessions.AddFromMemory(USER_NAME, PASSWORD)
     ***/
     IdleTimeout: 120 * time.Second,
     MaxHeaderBytes: 1 << 20,  //1 MB.
-    TLSConfig: &tls.Config{
-      MinVersion: tls.VersionTLS13,
-      /***
-      When using version 1.3 this isn't configurable. Because you want to use the most up to date
-      version, keep it empty, which results in a default list of ciphersuites to be used with a
-      preference order based on hardware performance.
-      ***/
-      CipherSuites: nil,
-      /***
-      Control the server's preferred ciphersuite to use as provided by the CipherSuites. When
-      false, it will select the client's preferred ciphersuite. Setting this will ensure that safer
-      and faster ciphersuites are used.
-      ***/
-      PreferServerCipherSuites: true,
-      /***
-      CurvePreferences contains the elliptic curves that will be used in an ECDHE handshake;
-      however, without tls.CurveP384 because a client using tls.CurveP384 would cause up to a
-      second of CPU to be consumed on the server.
-      ***/
-      CurvePreferences: []tls.CurveID{
-        tls.CurveP521,
-        // tls.CurveP384,
-        tls.CurveP256,
-      },
-      Certificates: []tls.Certificate{serverTlsCert},
-      /***
-      GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
-        cert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
-        if err != nil {
-          panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
-        }
-        return &cert, nil
-      },
-      ***/
-      //For mTLS
-      //ClientAuth: tls.RequireAndVerifyClientCert,
-      // ClientCAs: rootCAs,
-      RootCAs: rootCAs,
-      // InsecureSkipVerify: true,
-    },
     /***
     Setting TLSNextProto to an empty map will disable HTTP/2 for this server. If you want to enable
     HTTP/2, set it to nil or remove the field. Since Go 1.6, it is enabled by default.
     ***/
     TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
   }
-  /***
-  A channel is a communication mechanism that lets one goroutine send values to another goroutine.
-  Each channel is a conduit for values of a particular type, called the channel's element type.
-
-  As with maps, a channel is a reference to the data structure created by make. When we copy a
-  channel or pass one as an argument to a function, we are copying a reference, so caller and
-  callee refer to the same data structure. As with other reference types, the zero value of a
-  channel is nil.
-  ***/
-  signalChan := make(chan os.Signal, 1) //Buffered channel capacity 1; notifier will not block.
-  /***
-  When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return
-  ErrServerClosed. Make sure the program doesn't exit and waits instead for Shutdown to return.
-  ***/
-  waitMainChan := make(chan struct{})
-  go func() {
-    fmt.Printf("%s - Waiting for notification to shut down the server.\n", m.DTF())
-    /***
-    signal.Notify disables the default behavior for a given set of asynchronous signals and instead
-    delivers them over one or more registered channels.
-    https://pkg.go.dev/os/signal#hdr-Default_behavior_of_signals_in_Go_programs
-    ***/
-    signal.Notify(signalChan,
-      syscall.SIGINT, //Ctrl-C
-      syscall.SIGTERM, //Kubernetes sends a SIGTERM.
-    )
-    <- signalChan //Waiting for the signal; signal is discarded.
-    ctx, cancel := context.WithTimeout(context.Background(), time.Duration(SHUTDOWN_TIMEOUT) * time.Second)
-    defer func() {
-      //Extra handling goes here...
-      close(signalChan)
-      //Calling cancel() releases the resources associated with the context.
-      cancel()
-      close(waitMainChan) //Shutdown is done; let the main goroutine terminate.
-    }()
-    //https://pkg.go.dev/net/http#Server.Shutdown
-    if err := server.Shutdown(ctx); err != nil {
-      fmt.Printf("%s - Server shutdown failed: %+v\n", m.DTF(), err)  //https://pkg.go.dev/fmt
-    }
-  }()
-
-
-  go func() {
-    server := &http.Server{
-      Addr: ":" + PORT_REDIRECT,
-      Handler: http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-        
-        host, _, _ := net.SplitHostPort(req.Host)
-        u := req.URL
-        u.Host = net.JoinHostPort(host, PORT)
-        u.Scheme="https"
-        //fmt.Println(u.String())
-        fmt.Printf("%s - Redirecting to %s\n", m.DTF(), u.String())
-
-
-        http.Redirect(res, req, u.String(), http.StatusMovedPermanently)
-      }),
-    }
-    fmt.Printf("%s - Starting the server at port %s...\n", m.DTF(), PORT_REDIRECT)
-    (*server).ListenAndServe()
-    fmt.Printf("%s - Server at port %s has been closed.\n", m.DTF(), PORT_REDIRECT)
-  }()
-
-
-
-  fmt.Printf("%s - Starting the server at port %s...\n", m.DTF(), PORT)
-  /***
-  ListenAndServe runs forever, or until the server fails (or fails to start) with an error,
-  always non-nil, which it returns.
-
-  The web server invokes each handler in a new goroutine, so handlers must take precautions such as
-  locking when accessing variables that other goroutines, including other requests to the same
-  handler, may be accessing.
-
- Because we already set the paths of the key and cert in the tlsConfig, we can set certFile and keyFile arguments to empty strings.  
- Note that we’re going to add the --insecure flag to our command. This is because we’ve self-signed the certificate and curl rightfully doesn’t trust that.
- curl.exe --verbose --insecure http://localhost:8080
-  ***/
-  // err := (*server).ListenAndServe()
-  err = (*server).ListenAndServeTLS("", "")
-  if errors.Is(err, http.ErrServerClosed) {
-    fmt.Printf("%s - Server at port %s has been closed.\n", m.DTF(), PORT)
-  } else if err != nil {
-    fmt.Printf("%s - Server error: %+v\n", m.DTF(), err)
-    signalChan <- syscall.SIGINT //Let the goroutine finish.
-  }
-  <- waitMainChan //Block until shutdown is done.
-}
-
-func faviconHandler(res http.ResponseWriter, req *http.Request) {
-  http.NotFound(res, req)  //404 - page not found.
-}
-
-
-///////////////////
-
-//Redirect http requests to https.
-func redirectHttpToHttps(res http.ResponseWriter, req *http.Request) {
-  url := *req.URL
-  url.Scheme = "https"
-  url.Host = req.Host
-  http.Redirect(res, req, url.String(), http.StatusMovedPermanently)
+  return server
 }
