@@ -9,21 +9,21 @@ package main
 *** To run the app in a K8s environment, do NOT set the environment variable NOT_K8S. ***
 *****************************************************************************************
 
-To run the app as a standalone HTTP server:
+To run the app as a standalone HTTP/HTTPS servers:
 Compile and run the app.
-$ go build -o finance && NOT_K8S= ./finance
+$ go build -o finance && HTTPS=true ./finance
 
 To change the PORT.
-$ go build -o finance && NOT_K8S= PORT=8181 ./finance
+$ go build -o finance && HTTPS=true PORT=8181 ./finance
 
 Compile and run the app in the background.
-$ go build -o finance && NOT_K8S= ./finance &
+$ go build -o finance && HTTPS=true ./finance &
 
 Force rebuilding of packages.
-$ go build -o finance -a && NOT_K8S= ./finance
+$ go build -o finance -a && HTTPS=true ./finance
 
 Compile and run (in the background) at the same time.
-$ NOT_K8S= go run main.go &
+$ HTTPS=true go run main.go &
 
 ***************************************************************************************************
 
@@ -53,6 +53,7 @@ import (
 	"finance/sessions"
 	"finance/webfinances"
 	"fmt"
+  "golang.org/x/crypto/acme/autocert"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -66,6 +67,7 @@ import (
 )
 
 var (  //Environment variables.
+  K8S bool = false
   MAX_RETRIES int = 10
   SHUTDOWN_TIMEOUT int = 15
   HTTPS bool = false
@@ -75,19 +77,16 @@ var (  //Environment variables.
   SVC_NAME string
   APP_NAME_VER string
   SERVER string = "localhost"
-  USER_NAME = "jct"
-  PASSWORD = "pw"
+  USER_NAME string = "jct"
+  PASSWORD string = "pw"
+)
+
+const (
+  dataDir string = "./dataDir"
+  users string = "user.txt"
 )
 
 var m = misc.Misc{}
-
-/***
-var sessionManager *sessions.SessionManager
-//Initialize the session manager.
-func init() {
-  sessionManager = sessions.NewSessionManager("memory", "session_token", 3600)
-}
-***/
 
 /***
 In Go, a handler is an interface (type Handler interface) that has a method named ServeHTTP with
@@ -163,25 +162,35 @@ func main() {
   }
   //
   if HTTP == false && HTTPS == false {
-    fmt.Println("Select one (HTTP or HTTPS) server or both servers.")
+    fmt.Println("You can run only HTTP (default), only HTTPS (set environment variables to:" +
+                " HTTP=false and HTTPS=true), or both (set environment variable to: HTTPS=true).")
     return
   }
-  _, exists = os.LookupEnv("NOT_K8S")
-  if !exists {
-    SVC_NAME, exists = os.LookupEnv("SVC_NAME")
-    if !exists {
-      fmt.Println("Missing environment parameter: SVC_NAME")
-      return
+  ev, exists = os.LookupEnv("K8S")
+  if exists {
+    b, err := strconv.ParseBool(ev)
+    if err == nil {
+      K8S = b
+    } else {
+      fmt.Printf("'%s' is not a boolean.\n", ev)
     }
-    APP_NAME_VER, exists = os.LookupEnv("APP_NAME_VER")
-    if !exists {
-      fmt.Println("Missing environment parameter: APP_NAME_VER")
-      return
-    }
-    SERVER, exists = os.LookupEnv("SERVER")
-    if !exists {
-      fmt.Println("Missing environment parameter: SERVER")
-      return
+    //
+    if K8S {
+      SVC_NAME, exists = os.LookupEnv("SVC_NAME")
+      if !exists {
+        fmt.Println("Missing environment parameter: SVC_NAME")
+        return
+      }
+      APP_NAME_VER, exists = os.LookupEnv("APP_NAME_VER")
+      if !exists {
+        fmt.Println("Missing environment parameter: APP_NAME_VER")
+        return
+      }
+      SERVER, exists = os.LookupEnv("SERVER")
+      if !exists {
+        fmt.Println("Missing environment parameter: SERVER")
+        return
+      }
     }
   }
   //
@@ -225,33 +234,73 @@ func main() {
   } else {
     fmt.Println("The current user is not running as root.")
   }
-  readUsers(/*"./dataDir", "user.txt"*/"", "")
-  /***
-  A channel is a communication mechanism that lets one goroutine send values to another goroutine.
-  Each channel is a conduit for values of a particular type, called the channel's element type.
-
-  As with maps, a channel is a reference to the data structure created by make. When we copy a
-  channel or pass one as an argument to a function, we are copying a reference, so caller and
-  callee refer to the same data structure. As with other reference types, the zero value of a
-  channel is nil.
-  ***/
-  //Buffered channel capacity 1; notifier will not block.
-  var signalChan1, signalChan2 chan os.Signal = make(chan os.Signal, 1), nil
+  readUsers(dataDir, users)
   /***
   When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return
   ErrServerClosed. Make sure the program doesn't exit and waits instead for Shutdown to return.
   ***/
   var wg sync.WaitGroup
-  var httpServer *http.Server = makeServer(HTTP_PORT, makeHandlers())
+  var httpServer *http.Server
+  if HTTP {
+    httpServer = makeServer(HTTP_PORT, makeHandlers())
+  }
+
+
+  certManager := autocert.Manager{
+    Prompt: autocert.AcceptTOS,
+    HostPolicy: autocert.HostWhitelist("trimino.xyz", "www.trimino.xyz"), //Domain names.
+    Cache: autocert.DirCache(dataDir), //Folder for storing certificates.
+  }
+
+
   if HTTPS {
     wg.Add(1)
-    httpServer.Handler = makeHttpToHttpsRedirectHandler(HTTPS_PORT)
+    /***
+    A channel is a communication mechanism that lets one goroutine send values to another
+    goroutine. Each channel is a conduit for values of a particular type, called the channel's
+    element type.
+
+    As with maps, a channel is a reference to the data structure created by make. When we copy a
+    channel or pass one as an argument to a function, we are copying a reference, so caller and
+    callee refer to the same data structure. As with other reference types, the zero value of a
+    channel is nil.
+    ***/
+    //Buffered channel capacity 1; notifier will not block.
+    var signalChan2 chan os.Signal = make(chan os.Signal, 1)
+
+
+if HTTP {
+//    httpServer.Handler = makeHttpToHttpsRedirectHandler(HTTPS_PORT)
+//The autocert package provides a built-in helper which redirects requests to HTTPS.
+//Additionally, we will use the Manager.HTTPHandler from autocert that implements a handler fallback for requests received on port 80, and redirects it to the ‘https’ port.
+//https://pkg.go.dev/golang.org/x/crypto/acme/autocert#Manager.HTTPHandler
+httpServer.Handler = certManager.HTTPHandler(nil)
+}
+
     signalChan2 = make(chan os.Signal, 1) //Buffered channel capacity 1; notifier will not block.
     go func() {
       httpsServer := makeServer(HTTPS_PORT, makeHandlers())
-      httpsServer.TLSConfig = makeTlsConfig()
+      //httpsServer.TLSConfig = makeTlsConfig()
+
+      httpsServer.TLSConfig = &tls.Config{
+// improves cert reputation score at https://www.ssllabs.com/ssltest/
+MinVersion: tls.VersionTLS13,
+CipherSuites: nil,
+PreferServerCipherSuites: true,
+CurvePreferences: []tls.CurveID{
+  tls.CurveP256,
+  tls.X25519,
+},
+        GetCertificate: certManager.GetCertificate,
+      }
+
+
+
       go waitForServer(httpsServer, signalChan2, &wg)
       fmt.Printf("%s - Starting the server at port %s...\n", m.DTF(), httpsServer.Addr)
+      //Because the paths of the key and cert were set in the TLSConfig field, set the certFile and
+      //keyFile arguments to empty strings.
+//Key and cert are coming from Let's Encrypt
       err := (*httpsServer).ListenAndServeTLS("", "")
       if errors.Is(err, http.ErrServerClosed) {
         fmt.Printf("%s - Server has been closed at port %s.\n", m.DTF(), httpsServer.Addr)
@@ -264,6 +313,7 @@ func main() {
   //
   if HTTP {
     wg.Add(1)
+    signalChan1 := make(chan os.Signal, 1)
     /***
     When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return
     ErrServerClosed. Make sure the program doesn't exit and waits instead for Shutdown to return.
@@ -277,11 +327,7 @@ func main() {
     The web server invokes each handler in a new goroutine, so handlers must take precautions such
     as locking when accessing variables that other goroutines, including other requests to the same
     handler, may be accessing.
-
- Because we already set the paths of the key and cert in the tlsConfig, we can set certFile and keyFile arguments to empty strings.  
- Note that we’re going to add the --insecure flag to our command. This is because we’ve self-signed the certificate and curl rightfully doesn’t trust that.
- curl.exe --verbose --insecure http://localhost:8080
-  ***/
+    ***/
     err := (*httpServer).ListenAndServe()
     if errors.Is(err, http.ErrServerClosed) {
       fmt.Printf("%s - Server has been closed at port %s.\n", m.DTF(), httpServer.Addr)
@@ -428,6 +474,7 @@ func makeHandlers() *handlers {
   h.mux["/debug/pprof/symbol"] = pprof.Symbol
   h.mux["/debug/pprof/trace"] = pprof.Trace
   commonMiddlewares := []middlewares.Middleware{
+    middlewares.SecurityHeaders,
     middlewares.CorrelationId,
     //middlewares.ValidateSessions,
   }
