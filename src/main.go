@@ -68,10 +68,11 @@ import (
 
 var (  //Environment variables.
   K8S bool = false
-  MAX_RETRIES int = 10
-  SHUTDOWN_TIMEOUT int = 15
   HTTPS bool = false
   HTTP bool = true
+  LE_CERT = false
+  MAX_RETRIES int = 10
+  SHUTDOWN_TIMEOUT int = 15
   HTTPS_PORT string = "8443"
   HTTP_PORT string = "8080"
   SVC_NAME string
@@ -166,6 +167,15 @@ func main() {
                 " HTTP=false and HTTPS=true), or both (set environment variable to: HTTPS=true).")
     return
   }
+  ev, exists = os.LookupEnv("LE_CERT")
+  if exists {
+    b, err := strconv.ParseBool(ev)
+    if err == nil {
+      LE_CERT = b
+    } else {
+      fmt.Printf("'%s' is not a boolean.\n", ev)
+    }
+  }
   ev, exists = os.LookupEnv("K8S")
   if exists {
     b, err := strconv.ParseBool(ev)
@@ -244,15 +254,18 @@ func main() {
   if HTTP {
     httpServer = makeServer(HTTP_PORT, makeHandlers())
   }
-
-
-  certManager := autocert.Manager{
-    Prompt: autocert.AcceptTOS,
-    HostPolicy: autocert.HostWhitelist("trimino.xyz", "www.trimino.xyz"), //Domain names.
-    Cache: autocert.DirCache(dataDir), //Folder for storing certificates.
+  //https://pkg.go.dev/golang.org/x/crypto/acme/autocert
+  var certMan autocert.Manager
+  if LE_CERT {
+    certMan = autocert.Manager{
+      //It always returns true to indicate acceptance of the CA's Terms of Service during account
+      //registration.
+      Prompt: autocert.AcceptTOS,
+      HostPolicy: autocert.HostWhitelist("trimino.xyz", "www.trimino.xyz"), //Domain names.
+      Cache: autocert.DirCache(dataDir), //Folder for storing certificates.
+    }
   }
-
-
+  //
   if HTTPS {
     wg.Add(1)
     /***
@@ -267,40 +280,35 @@ func main() {
     ***/
     //Buffered channel capacity 1; notifier will not block.
     var signalChan2 chan os.Signal = make(chan os.Signal, 1)
-
-
-if HTTP {
-//    httpServer.Handler = makeHttpToHttpsRedirectHandler(HTTPS_PORT)
-//The autocert package provides a built-in helper which redirects requests to HTTPS.
-//Additionally, we will use the Manager.HTTPHandler from autocert that implements a handler fallback for requests received on port 80, and redirects it to the ‘https’ port.
-//https://pkg.go.dev/golang.org/x/crypto/acme/autocert#Manager.HTTPHandler
-httpServer.Handler = certManager.HTTPHandler(nil)
-}
-
+    if HTTP {
+      if LE_CERT {
+        //https://pkg.go.dev/golang.org/x/crypto/acme/autocert#Manager.HTTPHandler
+        httpServer.Handler = certMan.HTTPHandler(nil)
+      } else {
+        httpServer.Handler = makeHttpToHttpsRedirectHandler(HTTPS_PORT)
+      }
+    }
     signalChan2 = make(chan os.Signal, 1) //Buffered channel capacity 1; notifier will not block.
     go func() {
       httpsServer := makeServer(HTTPS_PORT, makeHandlers())
-      //httpsServer.TLSConfig = makeTlsConfig()
-
-      httpsServer.TLSConfig = &tls.Config{
-// improves cert reputation score at https://www.ssllabs.com/ssltest/
-MinVersion: tls.VersionTLS13,
-CipherSuites: nil,
-PreferServerCipherSuites: true,
-CurvePreferences: []tls.CurveID{
-  tls.CurveP256,
-  tls.X25519,
-},
-        GetCertificate: certManager.GetCertificate,
+      if LE_CERT {
+        httpsServer.TLSConfig = &tls.Config{
+          MinVersion: tls.VersionTLS13,
+          CipherSuites: nil,
+          PreferServerCipherSuites: true,
+          CurvePreferences: []tls.CurveID{
+            tls.CurveP256,
+            tls.X25519,
+          },
+          GetCertificate: certMan.GetCertificate,
+        }
+      } else {
+        httpsServer.TLSConfig = makeTlsConfig()
       }
-
-
-
       go waitForServer(httpsServer, signalChan2, &wg)
       fmt.Printf("%s - Starting the server at port %s...\n", m.DTF(), httpsServer.Addr)
       //Because the paths of the key and cert were set in the TLSConfig field, set the certFile and
       //keyFile arguments to empty strings.
-//Key and cert are coming from Let's Encrypt
       err := (*httpsServer).ListenAndServeTLS("", "")
       if errors.Is(err, http.ErrServerClosed) {
         fmt.Printf("%s - Server has been closed at port %s.\n", m.DTF(), httpsServer.Addr)
@@ -389,6 +397,7 @@ func makeHandlers() *handlers {
   //}
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
+  h.mux["/public/js/mortgage.js"] = wfpages.PublicMortgageFile
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
   h.mux["/login"] = wfpages.LoginPage
@@ -542,27 +551,26 @@ func makeTlsConfig() *tls.Config {
 //Addr:      ":4443",
 //server would listen on IP address 0.0.0.0 and TCP port 4443.
 
-rootCert, rootCertPEM, rootPrivKey := security.GenRootCA()
-// fmt.Println("rootCert\n", string(rootCertPEM))
-// interCert, interCertPEM, interPrivKey := security.GenIntermediateCA(rootCert, rootPrivKey)
-// fmt.Println("Intermediate Cert CA\n", string(interCertPEM))
-// security.VerifyIntermediateCA(rootCert, interCert)
-// serverCert, serverCertPEM, _ := security.GenServerCert(interCert, interPrivKey)
-// fmt.Println("serverCert\n", string(serverCertPEM))
-// security.VerifyCertificateChain(rootCert, interCert, serverCert)
-
-_, serverCertPEM, serverPrivKeyPEM := security.GenServerCert(rootCert, rootPrivKey)
-// //Generate the TLS keypair for the server.
-serverTlsCert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
-if err != nil {
-  panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
-}
-rootCAs := security.SystemCertPool()
-if ok := rootCAs.AppendCertsFromPEM(rootCertPEM); !ok {
-  panic("Failed to append CA's certificate.\n" + err.Error())
-}
+  rootCert, rootCertPEM, rootPrivKey := security.GenRootCA()
+  _, serverCertPEM, serverPrivKeyPEM := security.GenServerCert(rootCert, rootPrivKey)
 
 
+// fmt.Println(string(serverCertPEM))
+// fmt.Println(string(serverPrivKeyPEM))
+
+  //Generate the key/pair for the server.
+  serverTlsCert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
+  if err != nil {
+    panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
+  }
+
+
+// fmt.Println(string(serverTlsCert.Certificate[0]))
+
+  rootCAs := security.SystemCertPool()
+  if ok := rootCAs.AppendCertsFromPEM(rootCertPEM); !ok {
+    panic("Failed to append CA's certificate.\n" + err.Error())
+  }
   tlsConfig := &tls.Config{
     MinVersion: tls.VersionTLS13,
     /***
@@ -588,26 +596,11 @@ if ok := rootCAs.AppendCertsFromPEM(rootCertPEM); !ok {
       tls.CurveP256,
     },
     Certificates: []tls.Certificate{serverTlsCert},
-    /***
-    GetCertificate: func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
-      cert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
-      if err != nil {
-        panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
-      }
-      return &cert, nil
-    },
-    ***/
-    //For mTLS
-    //ClientAuth: tls.RequireAndVerifyClientCert,
-    // ClientCAs: rootCAs,
     RootCAs: rootCAs,
     // InsecureSkipVerify: true,
   }
   return tlsConfig
 }
-
-
-
 
 func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.WaitGroup) {
   fmt.Printf("%s - Waiting for notification to shut down the server at %s.\n", m.DTF(), server.Addr)
