@@ -320,7 +320,11 @@ func VerifyCertificateChain(rootCert, interCert, serverCert *x509.Certificate) {
 
 //Return a copy of the system cert pool; on error, return an empty pool.
 func SystemCertPool() (*x509.CertPool) {
-  //https://pkg.go.dev/crypto/x509#SystemCertPool
+  /***
+  The x509.SystemCertPool() function returns a copy of the system's certificate pool, and any
+  mutation to it is only held in-memory and not written to disk.
+  https://pkg.go.dev/crypto/x509#SystemCertPool
+  ***/
   certPool, _ := x509.SystemCertPool()
   if certPool == nil {
     return x509.NewCertPool()
