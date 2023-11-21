@@ -68,6 +68,9 @@ src/webfinances/public/*
 !src/webfinances/public/css/
 src/webfinances/public/css/*
 !src/webfinances/public/css/home.css
+!src/webfinances/public/js/
+src/webfinances/public/js/*
+!src/webfinances/public/js/mortgage.js
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
