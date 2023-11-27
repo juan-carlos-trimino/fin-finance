@@ -78,8 +78,8 @@ var (  //Environment variables.
   SVC_NAME string
   APP_NAME_VER string
   SERVER string = "localhost"
-  USER_NAME string = "jct"
-  PASSWORD string = "pw"
+  USER_NAME string = "a"
+  PASSWORD string = "a"
 )
 
 const (
@@ -398,6 +398,7 @@ func makeHandlers() *handlers {
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/mortgage.js"] = wfpages.PublicMortgageFile
+  h.mux["/public/js/getParams.js"] = wfpages.PublicGetParamsFile
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
   h.mux["/login"] = wfpages.LoginPage

@@ -35,7 +35,7 @@ func SecurityHeaders(handler http.HandlerFunc) http.HandlerFunc {
     // res.Header().Add("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self'; base-uri 'self'; form-action 'self'")
     // ////res.Header().Add("Content-Security-Policy", "frame-ancestors 'none'")
     // res.Header().Add("Content-Security-Policy", "default-src 'self'")
-  //res.Header().Add("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; form-action 'self'; frame-ancestors 'none'")
+  res.Header().Add("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; form-action 'self'; frame-ancestors 'none'")
     /***
     In modern browsers, X-XSS-Protection has been deprecated in favor of the
     Content-Security-Policy to disable the use of inline JavaScript. Its use can introduce XSS

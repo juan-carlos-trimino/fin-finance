@@ -146,6 +146,11 @@ func (p WfPages) PublicMortgageFile(res http.ResponseWriter, req *http.Request) 
   http.ServeFile(res, req, "./webfinances/public/js/mortgage.js")
 }
 
+func (p WfPages) PublicGetParamsFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicGetParamsFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/getParams.js")
+}
+
 func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering FinancesPage/webfinances.\n", m.DTF())
   ctxKey := middlewares.MwContextKey{}

@@ -1,24 +1,24 @@
 
+function loadScript(url) {
+  let head = document.getElementsByTagName('head')[0];
+  let script = document.createElement('script');
+  script.type = "text/javascript";
+  script.src = url;
+  head.appendChild(script);
+}
+
 document.addEventListener('DOMContentLoaded', (event) => {
-//  disableElements('{{ .CurrentButton }}');
-  disableElements(currentButton);
-//  setFocus('{{ .CurrentButton }}');
-  setFocus(currentButton);
+  let params = getParams();
+  disableElements(params.cb);
+  setFocus(params.cb);
 });
 
 function setFocus(eid) {
   let tb;
-var audio = new Audio('https://media.geeksforgeeks.org/wp-content/uploads/20190531135120/beep.mp3');
-
   if (eid === "lhs-button1") {
     tb = document.getElementById("fd1-n");
-
- audio.play();
-
   } else if (eid === "lhs-button2") {
     tb = document.getElementById("fd2-n");
- audio.play();
-
   } else if (eid === "lhs-button3") {
     tb = document.getElementById("fd3-mrate");
   }

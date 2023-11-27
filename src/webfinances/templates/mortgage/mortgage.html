@@ -7,10 +7,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Mortgage</title>
-    <script type="text/javascript" src="/public/js/mortgage.js"></script>
-    <script>
-      let currentButton = '{{ .CurrentButton }}'
-    </script>
+    <script type="text/javascript" src="/public/js/getParams.js"></script>
+    <script type="text/javascript" src="/public/js/mortgage.js?cb='{{ .CurrentButton }}'"></script>
     <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
   </head>
   <body>
