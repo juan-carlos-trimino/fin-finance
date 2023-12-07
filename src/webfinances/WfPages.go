@@ -176,6 +176,16 @@ func (p WfPages) PublicOaEqualPeriodicPaymentsFile(res http.ResponseWriter, req 
   http.ServeFile(res, req, "./webfinances/public/js/OaEqualPeriodicPayments.js")
 }
 
+func (p WfPages) PublicOaGrowingAnnuityFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicOaGrowingAnnuityFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/OaGrowingAnnuity.js")
+}
+
+func (p WfPages) PublicOaPerpetuityFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicOaPerpetuityFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/OaPerpetuity.js")
+}
+
 func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering FinancesPage/webfinances.\n", m.DTF())
   ctxKey := middlewares.MwContextKey{}

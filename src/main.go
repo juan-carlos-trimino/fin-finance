@@ -18,6 +18,7 @@ $ go build -o finance && HTTPS=true PORT=8181 ./finance
 
 Compile and run the app in the background.
 $ go build -o finance && HTTPS=true ./finance &
+$ go build -o finance && HTTP=true HTTPS=true LE_CERT=false ./finance
 
 Force rebuilding of packages.
 $ go build -o finance -a && HTTPS=true ./finance
@@ -404,6 +405,8 @@ func makeHandlers() *handlers {
   h.mux["/public/js/OaFutureValue.js"] = wfpages.PublicOaFutureValueFile
   h.mux["/public/js/OaCompoundingPeriods.js"] = wfpages.PublicOaCompoundingPeriodsFile
   h.mux["/public/js/OaEqualPeriodicPayments.js"] = wfpages.PublicOaEqualPeriodicPaymentsFile
+  h.mux["/public/js/OaGrowingAnnuity.js"] = wfpages.PublicOaGrowingAnnuityFile
+  h.mux["/public/js/OaPerpetuity.js"] = wfpages.PublicOaPerpetuityFile
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
   h.mux["/login"] = wfpages.LoginPage
