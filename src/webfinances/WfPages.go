@@ -141,14 +141,39 @@ func (p WfPages) PublicHomeFile(res http.ResponseWriter, req *http.Request) {
   http.ServeFile(res, req, "./webfinances/public/css/home.css")
 }
 
+func (p WfPages) PublicGetParamsFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicGetParamsFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/getParams.js")
+}
+
 func (p WfPages) PublicMortgageFile(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering PublicMortgageFile/webfinances.\n", m.DTF())
   http.ServeFile(res, req, "./webfinances/public/js/mortgage.js")
 }
 
-func (p WfPages) PublicGetParamsFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicGetParamsFile/webfinances.\n", m.DTF())
-  http.ServeFile(res, req, "./webfinances/public/js/getParams.js")
+func (p WfPages) PublicOaInterestRateFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicOaInterestRateFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/OaInterestRate.js")
+}
+
+func (p WfPages) PublicOaPresentValueFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicOaPresentValueFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/OaPresentValue.js")
+}
+
+func (p WfPages) PublicOaFutureValueFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicOaFutureValueFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/OaFutureValue.js")
+}
+
+func (p WfPages) PublicOaCompoundingPeriodsFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicOaCompoundingPeriodsFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/OaCompoundingPeriods.js")
+}
+
+func (p WfPages) PublicOaEqualPeriodicPaymentsFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicOaEqualPeriodicPaymentsFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/OaEqualPeriodicPayments.js")
 }
 
 func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
