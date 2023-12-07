@@ -75,7 +75,9 @@ src/webfinances/public/js/*
 !src/webfinances/public/js/OaCompoundingPeriods.js
 !src/webfinances/public/js/OaEqualPeriodicPayments.js
 !src/webfinances/public/js/OaFutureValue.js
+!src/webfinances/public/js/OaGrowingAnnuity.js
 !src/webfinances/public/js/OaInterestRate.js
+!src/webfinances/public/js/OaPerpetuity.js
 !src/webfinances/public/js/OaPresentValue.js
 !src/webfinances/templates/
 src/webfinances/templates/*
