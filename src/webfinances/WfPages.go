@@ -206,6 +206,31 @@ func (p WfPages) PublicAdPresentValueFile(res http.ResponseWriter, req *http.Req
   http.ServeFile(res, req, "./webfinances/public/js/AdPresentValue.js")
 }
 
+func (p WfPages) PublicBondsFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicBondsFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/bonds.js")
+}
+
+func (p WfPages) PublicMiscellaneousFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicMiscellaneousFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/miscellaneous.js")
+}
+
+func (p WfPages) PublicSimpleInterestAccurateFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicSimpleInterestAccurateFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/SimpleInterestAccurate.js")
+}
+
+func (p WfPages) PublicSimpleInterestBankersFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicSimpleInterestBankersFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/SimpleInterestBankers.js")
+}
+
+func (p WfPages) PublicSimpleInterestOrdinaryFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicSimpleInterestOrdinaryFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/SimpleInterestOrdinary.js")
+}
+
 func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering FinancesPage/webfinances.\n", m.DTF())
   ctxKey := middlewares.MwContextKey{}
