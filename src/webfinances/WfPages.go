@@ -186,6 +186,26 @@ func (p WfPages) PublicOaPerpetuityFile(res http.ResponseWriter, req *http.Reque
   http.ServeFile(res, req, "./webfinances/public/js/OaPerpetuity.js")
 }
 
+func (p WfPages) PublicAdCompoundingPeriodsFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicAdCompoundingPeriodsFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/AdCompoundingPeriods.js")
+}
+
+func (p WfPages) PublicAdEqualPeriodicPaymentsFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicAdEqualPeriodicPaymentsFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/AdEqualPeriodicPayments.js")
+}
+
+func (p WfPages) PublicAdFutureValueFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicAdFutureValueFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/AdFutureValue.js")
+}
+
+func (p WfPages) PublicAdPresentValueFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicAdPresentValueFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/AdPresentValue.js")
+}
+
 func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering FinancesPage/webfinances.\n", m.DTF())
   ctxKey := middlewares.MwContextKey{}

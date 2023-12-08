@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>AD Present Value</title>
-    <script>
+<!--    <script>
       function setFocus(eid) {
         // var audio = new Audio('https://media.geeksforgeeks.org/wp-content/uploads/20190531135120/beep.mp3');
         let tb;
@@ -44,7 +44,9 @@
         disableElements('{{ .CurrentButton }}');
         setFocus('{{ .CurrentButton }}');
       });
-    </script>
+    </script> -->
+    <script type="text/javascript" src="/public/js/getParams.js"></script>
+    <script type="text/javascript" src="/public/js/AdPresentValue.js?cb='{{ .CurrentButton }}'"></script>
     <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
   </head>
   <body>
