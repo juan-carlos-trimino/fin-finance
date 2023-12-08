@@ -74,7 +74,9 @@ src/webfinances/public/js/*
 !src/webfinances/public/js/AdEqualPeriodicPayments.js
 !src/webfinances/public/js/AdFutureValue.js
 !src/webfinances/public/js/AdPresentValue.js
+!src/webfinances/public/js/bonds.js
 !src/webfinances/public/js/getParams.js
+!src/webfinances/public/js/miscellaneous.js
 !src/webfinances/public/js/mortgage.js
 !src/webfinances/public/js/OaCompoundingPeriods.js
 !src/webfinances/public/js/OaEqualPeriodicPayments.js
@@ -83,6 +85,9 @@ src/webfinances/public/js/*
 !src/webfinances/public/js/OaInterestRate.js
 !src/webfinances/public/js/OaPerpetuity.js
 !src/webfinances/public/js/OaPresentValue.js
+!src/webfinances/public/js/SimpleInterestAccurate.js
+!src/webfinances/public/js/SimpleInterestBankers.js
+!src/webfinances/public/js/SimpleInterestOrdinary.js
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
