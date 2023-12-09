@@ -75,6 +75,7 @@ src/webfinances/public/js/*
 !src/webfinances/public/js/AdFutureValue.js
 !src/webfinances/public/js/AdPresentValue.js
 !src/webfinances/public/js/bonds.js
+!src/webfinances/public/js/bondsYTM.js
 !src/webfinances/public/js/getParams.js
 !src/webfinances/public/js/miscellaneous.js
 !src/webfinances/public/js/mortgage.js
