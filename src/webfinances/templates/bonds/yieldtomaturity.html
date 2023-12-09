@@ -56,21 +56,21 @@
          {{ if eq .Fd4Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
     </div>
-    <fieldset style="margin-top: 20px; margin-left: 15px; border: 3px solid rgb(2, 71, 31); border-radius: 8px;">
-      <legend style="font-weight: bold; font-size: 18px;">Select Appropriate Choice</legend>
+    <fieldset class="radio-fieldset">
+      <legend class="radio-legend">Select Appropriate Choice</legend>
       <div>
         <input type="radio" id="fd4-curinterest" name="fd4-choice" value="fd4-curinterest" checked>
-        <label style="color:rgb(2, 71, 31); font-weight: bold; font-size: 18px;" for="fd4-curinterest">
+        <label class="radio-label" for="fd4-curinterest">
           Current Interest (%)
         </label><br>
-        <label class="text-box" style="margin-left: 30px;" for="fd4-ci">Current Interest (%)...</label>
+        <label class="text-box" class="radio-text-box" for="fd4-ci">Current Interest (%)...</label>
         <input class="text-combo" id="fd4-ci" name="fd4-ci" value="{{ .Fd4CurInterest }}"
          type="number" step="any" maxlength="7" required/><br>
         <input type="radio" id="fd4-bondprice" name="fd4-choice" value="fd4-bondprice">
-        <label style="color:rgb(2, 71, 31); font-weight: bold; font-size: 18px;" for="fd4-bondprice">
+        <label class="radio-label" for="fd4-bondprice">
           Bond Price
         </label><br>
-        <label class="text-box" style="margin-left: 30px;" for="fd4-bp">Bond Price....................</label>
+        <label class="text-box" class="radio-text-box" for="fd4-bp">Bond Price....................</label>
         <input class="text-combo" id="fd4-bp" name="fd4-bp" value="{{ .Fd4BondPrice }}"
          type="number" step="any" maxlength="7" required/>
       </div>
@@ -81,20 +81,7 @@
       </button>
     </div>
   </form>
-  <script>
-    function onchangeRadio(radio) {
-      if (radio === 'fd4-curinterest') {
-        document.getElementById("fd4-curinterest").checked = true;
-      } else {
-        document.getElementById("fd4-bondprice").checked = true;
-      }
-      return;
-    }
-
-    document.addEventListener('DOMContentLoaded', (event) => {
-      onchangeRadio('{{ .Fd4CurrentRadio }}');
-    });
-  </script>
+  <script type="text/javascript" src="/public/js/bondsYTM.js?radio='{{ .Fd4CurrentRadio }}'&cb='{{ .CurrentButton }}'"></script>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
     <p class="p-result">{{ .Fd4Result }}</p>

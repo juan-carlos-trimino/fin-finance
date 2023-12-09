@@ -211,6 +211,11 @@ func (p WfPages) PublicBondsFile(res http.ResponseWriter, req *http.Request) {
   http.ServeFile(res, req, "./webfinances/public/js/bonds.js")
 }
 
+func (p WfPages) PublicBondsYTMFile(res http.ResponseWriter, req *http.Request) {
+  fmt.Printf("%s - Entering PublicBondsYTMFile/webfinances.\n", m.DTF())
+  http.ServeFile(res, req, "./webfinances/public/js/bondsYTM.js")
+}
+
 func (p WfPages) PublicMiscellaneousFile(res http.ResponseWriter, req *http.Request) {
   fmt.Printf("%s - Entering PublicMiscellaneousFile/webfinances.\n", m.DTF())
   http.ServeFile(res, req, "./webfinances/public/js/miscellaneous.js")

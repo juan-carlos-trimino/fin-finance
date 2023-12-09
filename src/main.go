@@ -412,6 +412,7 @@ func makeHandlers() *handlers {
   h.mux["/public/js/AdFutureValue.js"] = wfpages.PublicAdFutureValueFile
   h.mux["/public/js/AdPresentValue.js"] = wfpages.PublicAdPresentValueFile
   h.mux["/public/js/bonds.js"] = wfpages.PublicBondsFile
+  h.mux["/public/js/bondsYTM.js"] = wfpages.PublicBondsYTMFile
   h.mux["/public/js/miscellaneous.js"] = wfpages.PublicMiscellaneousFile
   h.mux["/public/js/SimpleInterestAccurate.js"] = wfpages.PublicSimpleInterestAccurateFile
   h.mux["/public/js/SimpleInterestBankers.js"] = wfpages.PublicSimpleInterestBankersFile

@@ -1,8 +1,14 @@
 
 document.addEventListener('DOMContentLoaded', (event) => {
   let params = getParams();
-  disableElements(params.cb);
-  setFocus(params.cb);
+  if (params.hasOwnProperty('radio')) {
+    disableElements(params.cb);
+    setFocus(params.cb);
+    onchangeRadio(params.radio);
+  } else {
+    disableElements(params.cb);
+    setFocus(params.cb);
+  }
 });
 
 function setFocus(eid) {
