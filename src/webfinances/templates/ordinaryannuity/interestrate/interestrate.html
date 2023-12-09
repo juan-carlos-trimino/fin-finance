@@ -9,7 +9,7 @@
     <title>OA Interest Rate</title>
     <script type="text/javascript" src="/public/js/getParams.js"></script>
     <script type="text/javascript" src="/public/js/OaInterestRate.js?cb='{{ .CurrentButton }}'"></script>
-    <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
+    <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
   </head>
   <body>
     <div>
@@ -17,14 +17,14 @@
     </div>
     <div class="split-screen">
       <div class="left-side">
-        <div class="div-center" style="margin-top: 20px">
+        <div class="button-style">
           <a href="/fin/ordinaryannuity/interestrate?compute=rhs-ui1" target="_self">
             <button class="button" id="lhs-button1">
               n, PV, FV
             </button>
           </a>
         </div>
-        <div class="div-center">
+        <div class="button-back-style">
           <a href="/fin/ordinaryannuity" target="_self">
             <button class="button">Back</button>
           </a>

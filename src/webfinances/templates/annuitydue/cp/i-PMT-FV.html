@@ -4,12 +4,12 @@
 <div id="rhs-ui3">
   <form action="/fin/annuitydue/cp" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd3-interest">Interest (%)...................</label>
       <input class="text-combo" id="fd3-interest" name="fd3-interest" value="{{ .Fd3Interest }}"
        type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd3-cp">Compounding Period...</label>
       <select class="text-combo" id="fd3-cp" name="fd3-cp">
         <option class="text-combo" value="annually"
@@ -28,17 +28,17 @@
          {{if eq .Fd3Compound "continuously"}} selected {{end}}>Continuously</option>
       </select>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd3-payment">Payment........................</label>
       <input class="text-combo" id="fd3-payment" name="fd3-payment" value="{{ .Fd3Payment }}"
        type="number" step="any" min="1" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd3-fv">Future Value (FV)........</label>
       <input class="text-combo" id="fd3-fv" name="fd3-fv" value="{{ .Fd3FV }}" type="number"
        step="any" min="1" maxlength="7" required/>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui3" type="submit">
         Compute
       </button>

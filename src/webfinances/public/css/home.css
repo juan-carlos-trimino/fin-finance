@@ -63,6 +63,11 @@ nav ul li:hover {
   color: rgb(2, 71, 31)
 }
 
+.footer-style {
+  color: rgb(2, 71, 31);
+  margin-top: auto;
+}
+
 .footer {
   text-align: center;
   height: 30px;
@@ -74,9 +79,16 @@ nav ul li:hover {
   font-size: 15px;
 }
 
-.div-center {
+.button-style {
   text-align: center;
+  margin-top: 20px;
   margin-bottom: 10px;
+}
+
+.button-back-style {
+  text-align: center;
+  margin-top: 40px;
+  margin-bottom: 0px;
 }
 
 .button {
@@ -121,6 +133,10 @@ button[disabled] {
   width: 80%;
 }
 
+.text-style {
+  margin-top: 20px;
+}
+
 .text-box {
   text-align: left;
   margin-left: 15px;
@@ -155,3 +171,46 @@ button[disabled] {
   /* margin: top, right, bottom, left */
   margin: 10px 0px 0px 20px;
 }
+
+/* Table */
+.amortization-table-style {
+  font-size: 1.0em;
+  font-weight: bold;
+  font-family: sans-serif;
+  border-collapse: collapse;
+  color: rgb(2, 71, 31);
+  margin: 25px auto;
+  width: 90%;
+  border-radius: 5px;
+  /* overflow: hidden; */
+  box-shadow: 0px 10px 30px 5px rgba(0, 0, 0, 0.15);
+}
+/* Header */
+.amortization-table-style thead tr {
+  background-color: rgb(2, 71, 31);
+  color: rgb(185, 241, 163);
+  text-align: center;
+  font-weight: bold;
+}
+/* Cells */
+.amortization-table-style th,
+.amortization-table-style td {
+  /* border: 2px solid #037a13; */
+  text-align: center;
+  padding: 12px 15px;
+}
+/* Rows */
+.amortization-table-style tbody tr {
+  border-bottom: 1px solid rgb(2, 71, 31);
+}
+.amortization-table-style tbody tr:nth-of-type(even) {
+  background-color: rgb(185, 243, 163);
+}
+.amortization-table-style tbody tr:last-of-type {
+  border-bottom: 2px solid rgb(2, 71, 31);
+}
+/*Active row */
+/* .amortization-table-style tbody tr.active-row {
+  font-weight: bold;
+  color: #009879;
+} */

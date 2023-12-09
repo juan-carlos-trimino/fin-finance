@@ -4,17 +4,17 @@
 <div id="rhs-ui5">
   <form action="/fin/bonds" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd5-facevalue">Face Value.....................</label>
       <input class="text-combo" id="fd5-facevalue" name="fd5-facevalue" value="{{ .Fd5FaceValue }}"
        type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd5-time">Time...............................</label>
       <input class="text-combo" id="fd5-time" name="fd5-time" value="{{ .Fd5Time }}" type="number"
        step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd5-tp">Time Period...................</label>
       <select class="text-combo" name="fd5-tp" id="fd5-tp">
         <option class="text-combo" value="year"
@@ -29,17 +29,17 @@
          {{ if eq .Fd5TimePeriod "week" }} selected {{ end }}>Week(s)</option>
       </select>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd5-coupon">Coupon Rate (%)..........</label>
       <input class="text-combo" id="fd5-coupon" name="fd5-coupon" value="{{ .Fd5Coupon }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd5-current">Current Interest (%)....</label>
       <input class="text-combo" id="fd5-current" name="fd5-current" value="{{ .Fd5CurInterest }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd5-compound">Compounding Period...</label>
       <select class="text-combo" id="fd5-compound" name="fd5-compound">
         <option class="text-combo" value="annually"
@@ -56,7 +56,7 @@
          {{ if eq .Fd5Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui5" type="submit">
         Compute
       </button>

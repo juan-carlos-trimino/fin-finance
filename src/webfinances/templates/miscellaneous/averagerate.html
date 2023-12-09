@@ -4,7 +4,7 @@
 <div id="rhs-ui5">
   <form action="/fin/miscellaneous" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd5-values">Values...</label>
       <input class="text-combo" id="fd5-values" name="fd5-values" value="{{ .Fd5Values }}"
        type="string" required/>
@@ -12,7 +12,7 @@
     <div>
       <p class="p-note">{{ index .Fd5Result 0 }}</p>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui5" type="submit">
         Compute
       </button>

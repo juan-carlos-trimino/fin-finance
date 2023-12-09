@@ -4,17 +4,17 @@
 <div id="rhs-ui7">
   <form action="/fin/bonds" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd7-facevalue">Face Value.................................</label>
       <input class="text-combo" id="fd7-facevalue" name="fd7-facevalue" value="{{ .Fd7FaceValue }}"
        type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd7-time">Time...........................................</label>
       <input class="text-combo" id="fd7-time" name="fd7-time" value="{{ .Fd7Time }}" type="number"
        step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd7-tp">Time Period...............................</label>
       <select class="text-combo" name="fd7-tp" id="fd7-tp">
         <option class="text-combo" value="year"
@@ -29,17 +29,17 @@
          {{ if eq .Fd7TimePeriod "week" }} selected {{ end }}>Week(s)</option>
       </select>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd7-coupon">Coupon Rate (%)......................</label>
       <input class="text-combo" id="fd7-coupon" name="fd7-coupon" value="{{ .Fd7Coupon }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd7-current">Current Interest (%)................</label>
       <input class="text-combo" id="fd7-current" name="fd7-current" value="{{ .Fd7CurInterest }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box">Compounding Period or</label><br>
       <label class="text-box" for="fd7-compound">Coupon Payment Frequency...</label>
       <select class="text-combo" id="fd7-compound" name="fd7-compound">
@@ -57,7 +57,7 @@
          {{ if eq .Fd7Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui7" type="submit">
         Compute
       </button>

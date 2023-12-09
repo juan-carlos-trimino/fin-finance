@@ -5,17 +5,17 @@
   <form action="/fin/bonds" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <!-- margin: top, right, bottom, left -->
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd3-facevalue">Face Value.....................</label>
       <input class="text-combo" id="fd3-facevalue" name="fd3-facevalue" value="{{ .Fd3FaceValue }}"
        type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd3-timecall">Time to Call..................</label>
       <input class="text-combo" id="fd3-timecall" name="fd3-timecall" value="{{ .Fd3TimeCall }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd3-tp">Time Period..................</label>
       <select class="text-combo" name="fd3-tp" id="fd3-tp">
         <option class="text-combo" value="year"
@@ -32,12 +32,12 @@
          {{ if eq .Fd3TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd3-coupon">Coupon Rate (%).........</label>
       <input class="text-combo" id="fd3-coupon" name="fd3-coupon" value="{{ .Fd3Coupon }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd3-compound">Compounding Period...</label>
       <select class="text-combo" id="fd3-compound" name="fd3-compound">
         <option class="text-combo" value="annually"
@@ -56,17 +56,17 @@
          {{ if eq .Fd3Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd3-bondprice">Bond Price.....................</label>
       <input class="text-combo" id="fd3-bondprice" name="fd3-bondprice" value="{{ .Fd3BondPrice }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd3-callprice">Call Price.......................</label>
       <input class="text-combo" id="fd3-callprice" name="fd3-callprice" value="{{ .Fd3CallPrice }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui3" type="submit">
         Compute
       </button>

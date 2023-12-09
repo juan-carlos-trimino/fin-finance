@@ -5,12 +5,12 @@
   <form action="/fin/simpleinterest/ordinary" method="post"
    enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd4-interest">Interest (i %).................</label>
       <input class="text-combo" id="fd4-interest" name="fd4-interest" value="{{ .Fd4Interest }}"
        type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd4-compound">Compounding Period...</label>
       <select class="text-combo" id="fd4-compound" name="fd4-compound">
         <option class="text-combo" value="annually"
@@ -28,17 +28,17 @@
         <!-- <option class="text-combo" value="continuously" {{if eq .Fd4Compound "continuously"}} selected {{end}}>Continuously</option> -->
       </select>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd4-amount">Amount of Interest.......</label>
       <input class="text-combo" id="fd4-amount" name="fd4-amount" value="{{ .Fd4Amount }}"
        type="number" step="any" min="0" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd4-pv">Present Value (PV).......</label>
       <input class="text-combo" id="fd4-pv" name="fd4-pv" value="{{ .Fd4PV }}" type="number"
        step="any" min="1" maxlength="7" required/>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">
         Compute
       </button>

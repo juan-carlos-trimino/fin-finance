@@ -14,27 +14,27 @@
   -->
   <form action="/fin/bonds" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd1-taxfree">Tax-Free Yield (%).........................</label>
       <input class="text-combo" id="fd1-taxfree" name="fd1-taxfree" value="{{ .Fd1TaxFree }}"
        type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd1-citytax">City Tax Rate, if applicable (%)....</label>
       <input class="text-combo" id="fd1-citytax" name="fd1-citytax" value="{{ .Fd1CityTax }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd1-statetax">State Tax Rate, if applicable (%)...</label>
       <input class="text-combo" id="fd1-statetax" name="fd1-statetax" value="{{ .Fd1StateTax }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd1-federaltax">Federal Tax Rate (%).....................</label>
       <input class="text-combo" id="fd1-federaltax" name="fd1-federaltax"
        value="{{ .Fd1FederalTax }}" type="number" step="any" maxlength="7" required/>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" value="rhs-ui1" name="compute" type="submit">
         Compute
       </button>

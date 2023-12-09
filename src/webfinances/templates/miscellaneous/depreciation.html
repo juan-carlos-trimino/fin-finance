@@ -4,12 +4,12 @@
 <div id="rhs-ui6">
   <form action="/fin/miscellaneous" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd6-time">Time (n)...........................</label>
       <input class="text-combo" id="fd6-time" name="fd6-time" value="{{ .Fd6Time }}" type="text"
        inputmode="numeric" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd6-tp">Time Period.....................</label>
       <select class="text-combo" name="fd6-tp" id="fd6-tp">
         <option class="text-combo" value="year"
@@ -26,12 +26,12 @@
          {{ if eq .Fd6TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd6-rate">Depreciation Rate (%)...</label>
       <input class="text-combo" id="fd6-rate" name="fd6-rate" value="{{ .Fd6Rate }}" type="number"
        step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd6-compound">Compounding Period.....</label>
       <select class="text-combo" id="fd6-compound" name="fd6-compound">
         <option class="text-combo" value="annually"
@@ -50,12 +50,12 @@
          {{if eq .Fd6Compound "continuously"}} selected {{ end }}>Continuously</option>
       </select>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd6-pv">Present Value (PV).........</label>
       <input class="text-combo" id="fd6-pv" name="fd6-pv" value="{{ .Fd6PV }}" type="number"
        step="any" maxlength="7" required/>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui6" type="submit">
         Compute
       </button>

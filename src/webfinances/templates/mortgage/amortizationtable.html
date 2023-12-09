@@ -1,6 +1,6 @@
 {{ define "mortgage-layout" }}
 
-<style>
+<!-- <style>
   table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
@@ -18,18 +18,18 @@
   tr:nth-child(even) {
     background-color: rgb(185, 243, 163);
   }
-</style>
+</style> -->
 
 <!-- rhs-ui2 -->
 <div id="rhs-ui2">
   <form action="/fin/mortgage" method="POST" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd2-n">Time (n).........................</label>
       <input class="text-combo" id="fd2-n" name="fd2-n" value="{{ .Fd2N }}" type="text"
        inputmode="numeric" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd2-tp">Time Period...................</label>
       <select class="text-combo" id="fd2-tp" name="fd2-tp">
         <option class="text-combo" value="year"
@@ -46,12 +46,12 @@
          {{ if eq .Fd2TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd2-i">Interest (%)...................</label>
       <input class="text-combo" id="fd2-i" name="fd2-i" value="{{ .Fd2Interest }}" type="number"
        step="any" min="1" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd2-compound">Compounding Period...</label>
       <select class="text-combo" id="fd2-compound" name="fd2-compound">
         <option class="text-combo" value="annually"
@@ -70,12 +70,12 @@
          {{if eq .Fd2Compound "continuously"}} selected {{end}}>Continuously</option>
       </select>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd2-amount">Amount.........................</label>
       <input class="text-combo" id="fd2-amount" name="fd2-amount" value="{{ .Fd2Amount }}"
        type="number" step="any" min="1" maxlength="7" required/>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" value="rhs-ui2" name="compute" type="submit">
         Compute
       </button>
@@ -85,24 +85,28 @@
     <hr size="4" width="50%" color="darkgreen"/>
     <p class="p-result">{{ .Fd2TotalCost }}</p>
     <p class="p-result">{{ .Fd2TotalInterest }}</p>
-    <table>
+    <table class="amortization-table-style" align="center">
       <caption>Amortization Table</caption>
-      <tr>
-        <th>Payment No.</th>
-        <th>Payment</th>
-        <th>Principal</th>
-        <th>Interest</th>
-        <th>Declining Balance</th>
-      </tr>
-      {{ range .Fd2Result }}
-      <tr>
-        <td>{{ .PaymentNo }}</td>
-        <td>{{ .Payment }}</td>
-        <td>{{ .PmtPrincipal }}</td>
-        <td>{{ .PmtInterest }}</td>
-        <td>{{ .Balance }}</td>
-      </tr>
-      {{ end }}
+      <thead>
+        <tr>
+          <th>Payment No.</th>
+          <th>Payment</th>
+          <th>Principal</th>
+          <th>Interest</th>
+          <th>Declining Balance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Fd2Result }}
+        <tr> <!-- Row -->
+          <td>{{ .PaymentNo }}</td> <!-- Data -->
+          <td>{{ .Payment }}</td>
+          <td>{{ .PmtPrincipal }}</td>
+          <td>{{ .PmtInterest }}</td>
+          <td>{{ .Balance }}</td>
+        </tr>
+        {{ end }}
+      </tbody>
     </table>
   </div>
 </div>

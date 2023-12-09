@@ -4,17 +4,17 @@
 <div id="rhs-ui1">
   <form action="/fin/ordinaryannuity/ga" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd1-n">Time (n).........................</label>
       <input class="text-combo" id="fd1-n" name="fd1-n" value="{{ .Fd1N }}" type="text"
        inputmode="numeric" step="any" min="1" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd1-interest">Interest (%)...................</label>
       <input class="text-combo" id="fd1-interest" name="fd1-interest" value="{{ .Fd1Interest }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd1-cp">Compounding Period...</label>
       <select class="text-combo" id="fd1-cp" name="fd1-cp">
         <option class="text-combo" value="annually"
@@ -33,17 +33,17 @@
          {{if eq .Fd1Compound "continuously"}} selected {{end}}>Continuously</option>
       </select>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd1-grow">Grow (%)......................</label>
       <input class="text-combo" id="fd1-grow" name="fd1-grow" value="{{ .Fd1Grow }}" type="number"
        step="any" min="1" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd1-pmt">First Payment (P).........</label>
       <input class="text-combo" id="fd1-pmt" name="fd1-pmt" value="{{ .Fd1Pmt }}" type="number"
        step="any" min="1" maxlength="7" required/>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui1" type="submit">
         Compute
       </button>

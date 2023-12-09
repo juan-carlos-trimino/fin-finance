@@ -5,17 +5,17 @@
   <form action="/fin/bonds" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <!-- margin: top, right, bottom, left -->
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd4-facevalue">Face Value.....................</label>
       <input class="text-combo" id="fd4-facevalue" name="fd4-facevalue" value="{{ .Fd4FaceValue }}"
        type="text" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd4-time">Time (n).........................</label>
       <input class="text-combo" id="fd4-time" name="fd4-time" value="{{ .Fd4Time }}" type="number"
        step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd4-tp">Time Period..................</label>
       <select class="text-combo" name="fd4-tp" id="fd4-tp">
         <option class="text-combo" value="year"
@@ -32,12 +32,12 @@
          {{ if eq .Fd4TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd4-coupon">Coupon Rate (%).........</label>
       <input class="text-combo" id="fd4-coupon" name="fd4-coupon" value="{{ .Fd4Coupon }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd4-compound">Compounding Period...</label>
       <select class="text-combo" id="fd4-compound" name="fd4-compound">
         <option class="text-combo" value="annually"
@@ -75,7 +75,7 @@
          type="number" step="any" maxlength="7" required/>
       </div>
     </fieldset>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">
         Compute
       </button>

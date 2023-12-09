@@ -5,7 +5,7 @@
   <form action="/fin/miscellaneous" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <!-- margin: top, right, bottom, left -->
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd3-nominal">Nominal Rate (%)...</label>
       <input class="text-combo" id="fd3-nominal" name="fd3-nominal" value="{{ .Fd3Nominal }}"
        type="text" inputmode="numeric" step="any" maxlength="7" required/>
@@ -13,12 +13,12 @@
     <div>
       <p class="p-note">{{ index .Fd3Result 0 }}</p>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd3-inflation">Inflation Rate (%)...</label>
       <input class="text-combo" id="fd3-inflation" name="fd3-inflation" value="{{ .Fd3Inflation }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui3" type="submit">
         Compute
       </button>

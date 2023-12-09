@@ -4,12 +4,12 @@
 <div id="rhs-ui1">
   <form action="/fin/annuitydue/fv" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd1-n">Time (n).........................</label>
       <input class="text-combo" id="fd1-n" name="fd1-n" value="{{ .Fd1N }}" type="text"
        inputmode="numeric" step="any" min="1" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px">
+    <div class="text-style">
       <label class="text-box" for="fd1-tp">Time Period..................</label>
       <select class="text-combo" id="fd1-tp" name="fd1-tp">
         <option class="text-combo" value="year"
@@ -26,12 +26,12 @@
          {{ if eq .Fd1TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd1-interest">Interest (%)..................</label>
       <input class="text-combo" id="fd1-interest" name="fd1-interest" value="{{ .Fd1Interest }}"
        type="number" step="any" maxlength="7" required/>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd1-cp">Compounding Period...</label>
       <select class="text-combo" id="fd1-cp" name="fd1-cp">
         <option class="text-combo" value="annually"
@@ -50,12 +50,12 @@
          {{if eq .Fd1Compound "continuously"}} selected {{end}}>Continuously</option>
       </select>
     </div>
-    <div style="margin-top: 20px;">
+    <div class="text-style">
       <label class="text-box" for="fd1-fv">Present Value (FV).......</label>
       <input class="text-combo" id="fd1-fv" name="fd1-fv" value="{{ .Fd1FV }}" type="number"
        step="any" min="1" maxlength="7" required/>
     </div>
-    <div class="div-center" style="margin-top: 45px;">
+    <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui1" type="submit">
         Compute
       </button>
