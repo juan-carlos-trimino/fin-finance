@@ -10,7 +10,9 @@ policy from a server to a client.
 
 Send HTTP HEAD request with curl:
 $ curl -I http://localhost:8080
+$ curl -k -I https://localhost:8443
 $ curl --head http://localhost:8080
+$ curl -k --head https://localhost:8443
 ***/
 func SecurityHeaders(handler http.HandlerFunc) http.HandlerFunc {
   return func(res http.ResponseWriter, req *http.Request) {
@@ -27,15 +29,14 @@ func SecurityHeaders(handler http.HandlerFunc) http.HandlerFunc {
     ***/
     res.Header().Add("Strict-Transport-Security", "max-age=31536000; includeSubdomains")
     /***
-    (1) The policy "default-src 'self'" defines that all content should come from the site's own
-        origin, this excludes subdomains.
-    (2) The policy "frame-ancestors 'none'" blocks site from being framed (X-Frame-Options).
-    For an explanation, see https://blog.appcanary.com/2017/http-security-headers.html#csp.
+    For more information about Content Security Policy (HTTP Security Headers), see
+    https://blog.appcanary.com/2017/http-security-headers.html
+    https://web.dev/articles/csp#inline-code-considered-harmful
+    https://content-security-policy.com/
     ***/
-    // res.Header().Add("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self'; base-uri 'self'; form-action 'self'")
-    // ////res.Header().Add("Content-Security-Policy", "frame-ancestors 'none'")
-    // res.Header().Add("Content-Security-Policy", "default-src 'self'")
-  res.Header().Add("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'")
+    res.Header().Add("Content-Security-Policy", "default-src 'none'; script-src 'self'; " +
+      "style-src 'self'; connect-src 'self'; img-src 'self'; frame-src 'self'; base-uri 'self';" +
+      " form-action 'self'; frame-ancestors 'none'")
     /***
     In modern browsers, X-XSS-Protection has been deprecated in favor of the
     Content-Security-Policy to disable the use of inline JavaScript. Its use can introduce XSS
