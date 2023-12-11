@@ -9,10 +9,11 @@ The Content-Security-Policy HTTP response header field is the preferred mechanis
 policy from a server to a client.
 
 Send HTTP HEAD request with curl:
-$ curl -I http://localhost:8080
-$ curl -k -I https://localhost:8443
-$ curl --head http://localhost:8080
-$ curl -k --head https://localhost:8443
+$ curl --verbose -I http://localhost:8080
+$ curl --verbose -k -I https://localhost:8443
+$ curl --verbose --insecure -I https://localhost:8443
+$ curl --verbose --head http://localhost:8080
+$ curl --verbose -k --head https://localhost:8443
 ***/
 func SecurityHeaders(handler http.HandlerFunc) http.HandlerFunc {
   return func(res http.ResponseWriter, req *http.Request) {
@@ -27,7 +28,7 @@ func SecurityHeaders(handler http.HandlerFunc) http.HandlerFunc {
     explanation, see https://blog.appcanary.com/2017/http-security-headers.html#hsts.
     max-age = 365 days.
     ***/
-    res.Header().Add("Strict-Transport-Security", "max-age=31536000; includeSubdomains")
+    res.Header().Add("Strict-Transport-Security", "max-age=31536000; includeSubdomains; preload")
     /***
     For more information about Content Security Policy (HTTP Security Headers), see
     https://blog.appcanary.com/2017/http-security-headers.html
@@ -44,7 +45,7 @@ func SecurityHeaders(handler http.HandlerFunc) http.HandlerFunc {
     older web browsers that don't yet support CSP. For an explanation, see
     https://blog.appcanary.com/2017/http-security-headers.html#x-xss-protection
     ***/
-    res.Header().Add("X-XSS-Protection", "0;")
+    res.Header().Add("X-XSS-Protection", "1; mode=block")
     /***
     X-Frame-Options is an HTTP header that allows sites control over how your site may be framed
     within an iframe. Clickjacking is a practical attack that allows malicious sites to trick users
