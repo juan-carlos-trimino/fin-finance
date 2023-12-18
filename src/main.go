@@ -354,10 +354,10 @@ func faviconHandler(res http.ResponseWriter, req *http.Request) {
 
 func makeHandlers() *handlers {
   var wfpages = webfinances.WfPages{}
-  var wfadcp = webfinances.NewWfAdCpPages()
-  var wfadepp = webfinances.NewWfAdEppPages()
-  var wfadfv = webfinances.NewWfAdFvPages()
-  var wfadpv = webfinances.NewWfAdPvPages()
+  var wfadcp = webfinances.WfAdCpPages{}
+  var wfadepp = webfinances.WfAdEppPages{}
+  var wfadfv = webfinances.WfAdFvPages{}
+  var wfadpv = webfinances.WfAdPvPages{}
   var wfoainterest = webfinances.NewWfOaInterestRatePages()
   var wfoapv = webfinances.NewWfOaPvPages()
   var wfoafv = webfinances.NewWfOaFvPages()

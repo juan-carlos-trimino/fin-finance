@@ -7,6 +7,10 @@ type Fields struct {
   miscellaneous *miscellaneousFields
   mortgage *mortgageFields
   bonds *bondsFields
+  adFv *adFvFields
+  adPv *adPvFields
+  adCp *adCpFields
+  adEpp *adEppFields
 }
 
 type miscellaneousFields struct {
@@ -273,11 +277,187 @@ func newBondsFields() *bondsFields {
   }
 }
 
+type adFvFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1N string
+  fd1TimePeriod string
+  fd1Interest string
+  fd1Compound string
+  fd1FV string
+  fd1Result string
+  //
+  fd2N string
+  fd2TimePeriod string
+  fd2Interest string
+  fd2Compound string
+  fd2PMT string
+  fd2Result string
+}
+
+func newAdFvFields() *adFvFields {
+  return &adFvFields {
+    currentPage: "rhs-ui2",
+    currentButton: "lhs-button2",
+    //
+    fd1N: "1.0",
+    fd1TimePeriod: "year",
+    fd1Interest: "1.00",
+    fd1Compound: "monthly",
+    fd1FV: "1.00",
+    fd1Result: "",
+    //
+    fd2N: "1.0",
+    fd2TimePeriod: "year",
+    fd2Interest: "1.00",
+    fd2Compound: "monthly",
+    fd2PMT: "1.00",
+    fd2Result: "",
+  }
+}
+
+type adPvFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1N string
+  fd1TimePeriod string
+  fd1Interest string
+  fd1Compound string
+  fd1FV string
+  fd1Result string
+  //
+  fd2N string
+  fd2TimePeriod string
+  fd2Interest string
+  fd2Compound string
+  fd2PMT string
+  fd2Result string
+}
+
+func newAdPvFields() *adPvFields {
+  return &adPvFields {
+    currentPage: "rhs-ui2",
+    currentButton: "lhs-button2",
+    //
+    fd1N: "1.0",
+    fd1TimePeriod: "year",
+    fd1Interest: "1.00",
+    fd1Compound: "monthly",
+    fd1FV: "1.00",
+    fd1Result: "",
+    //
+    fd2N: "1.0",
+    fd2TimePeriod: "year",
+    fd2Interest: "1.00",
+    fd2Compound: "monthly",
+    fd2PMT: "1.00",
+    fd2Result: "",
+  }
+}
+
+type adCpFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1Interest string
+  fd1Compound string
+  fd1PV string
+  fd1FV string
+  fd1Result string
+  //
+  fd2Interest string
+  fd2Compound string
+  fd2Payment string
+  fd2PV string
+  fd2Result string
+  //
+  fd3Interest string
+  fd3Compound string
+  fd3Payment string
+  fd3FV string
+  fd3Result string
+}
+
+func newAdCpFields() *adCpFields {
+  return &adCpFields {
+    currentPage: "rhs-ui2",
+    currentButton: "lhs-button2",
+    //
+    fd1Interest: "1.00",
+    fd1Compound: "annually",
+    fd1PV: "1.00",
+    fd1FV: "1.00",
+    fd1Result: "",
+    //
+    fd2Interest: "1.00",
+    fd2Compound: "annually",
+    fd2Payment: "1.00",
+    fd2PV: "1.00",
+    fd2Result: "",
+    //
+    fd3Interest: "1.00",
+    fd3Compound: "annually",
+    fd3Payment: "1.00",
+    fd3FV: "1.00",
+    fd3Result: "",
+  }
+}
+
+type adEppFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1N string
+  fd1TimePeriod string
+  fd1Interest string
+  fd1Compound string
+  fd1FV string
+  fd1Result string
+  //
+  fd2N string
+  fd2TimePeriod string
+  fd2Interest string
+  fd2Compound string
+  fd2PV string
+  fd2Result string
+}
+
+func newAdEppFields() *adEppFields {
+  return &adEppFields {
+    currentPage: "rhs-ui1",
+    currentButton: "lhs-button1",
+    //
+    fd1N: "1.00",
+    fd1TimePeriod: "year",
+    fd1Interest: "1.00",
+    fd1Compound: "annually",
+    fd1FV: "1.00",
+    fd1Result: "",
+    //
+    fd2N: "1.00",
+    fd2TimePeriod: "year",
+    fd2Interest: "1.00",
+    fd2Compound: "annually",
+    fd2PV: "1.00",
+    fd2Result: "",
+  }
+}
+
+
+
+
+
+
 func AddSessionDataPerUser(userName string) {
   fd := Fields{
     miscellaneous: newMiscellaneousFields(),
     mortgage: newMortgageFields(),
     bonds: newBondsFields(),
+    adFv: newAdFvFields(),
+    adPv: newAdPvFields(),
+    adEpp: newAdEppFields(),
   }
   currentFields[userName] = fd
 }
@@ -292,4 +472,20 @@ func GetMortgageFields(userName string) *mortgageFields {
 
 func GetBondsFields(userName string) *bondsFields {
   return currentFields[userName].bonds
+}
+
+func GetAdFvFields(userName string) *adFvFields {
+  return currentFields[userName].adFv
+}
+
+func GetAdPvFields(userName string) *adPvFields {
+  return currentFields[userName].adPv
+}
+
+func GetAdCpFields(userName string) *adCpFields {
+  return currentFields[userName].adCp
+}
+
+func GetAdEppFields(userName string) *adEppFields {
+  return currentFields[userName].adEpp
 }

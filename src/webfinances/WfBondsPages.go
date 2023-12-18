@@ -28,7 +28,7 @@ var bond_notes = [...]string {
 type WfBondsPages struct {
 }
 
-func (bf WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
+func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {

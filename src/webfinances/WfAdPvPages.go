@@ -12,51 +12,10 @@ import (
 	"strings"
 )
 
-type WfAdPvPages interface {
-  AdPvPages(http.ResponseWriter, *http.Request)
+type WfAdPvPages struct {
 }
 
-type wfAdPvPages struct {
-  currentPage string
-  currentButton string
-  //
-  fd1N string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1FV string
-  fd1Result string
-  //
-  fd2N string
-  fd2TimePeriod string
-  fd2Interest string
-  fd2Compound string
-  fd2PMT string
-  fd2Result string
-}
-
-func NewWfAdPvPages() WfAdPvPages {
-  return &wfAdPvPages {
-    currentPage: "rhs-ui2",
-    currentButton: "lhs-button2",
-    //
-    fd1N: "1.0",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "monthly",
-    fd1FV: "1.00",
-    fd1Result: "",
-    //
-    fd2N: "1.0",
-    fd2TimePeriod: "year",
-    fd2Interest: "1.00",
-    fd2Compound: "monthly",
-    fd2PMT: "1.00",
-    fd2Result: "",
-  }
-}
-
-func (p *wfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
+func (a WfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -69,6 +28,7 @@ func (p *wfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
     "Entering AdPvPages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
+    af := GetAdPvFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -86,7 +46,7 @@ func (p *wfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      p.currentPage = ui
+      af.currentPage = ui
     }
     //
     // if strings.EqualFold(p.currentPage, "rhs-ui1") {
@@ -139,43 +99,42 @@ func (p *wfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
       // } { "Annuity Due / Present Value", m.DTF(), p.currentButton,
       //     p.fd1N, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1FV, p.fd1Result,
       //   })
-    /*} else*/ if strings.EqualFold(p.currentPage, "rhs-ui2") {
-      p.currentButton = "lhs-button2"
+    /*} else*/ if strings.EqualFold(af.currentPage, "rhs-ui2") {
+      af.currentButton = "lhs-button2"
       if req.Method == http.MethodPost {
-        p.fd2N = req.FormValue("fd2-n")
-        p.fd2TimePeriod = req.PostFormValue("fd2-tp")
-        p.fd2Interest = req.PostFormValue("fd2-interest")
-        p.fd2Compound = req.PostFormValue("fd2-cp")
-        p.fd2PMT = req.PostFormValue("fd2-pmt")
+        af.fd2N = req.FormValue("fd2-n")
+        af.fd2TimePeriod = req.PostFormValue("fd2-tp")
+        af.fd2Interest = req.PostFormValue("fd2-interest")
+        af.fd2Compound = req.PostFormValue("fd2-cp")
+        af.fd2PMT = req.PostFormValue("fd2-pmt")
         var n float64
         var i float64
         var pmt float64
         var err error
-        if n, err = strconv.ParseFloat(p.fd2N, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2N, err)
-        } else if i, err = strconv.ParseFloat(p.fd2Interest, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Interest, err)
-        } else if pmt, err = strconv.ParseFloat(p.fd2PMT, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2PMT, err)
+        if n, err = strconv.ParseFloat(af.fd2N, 64); err != nil {
+          af.fd2Result = fmt.Sprintf("Error: %s -- %+v", af.fd2N, err)
+        } else if i, err = strconv.ParseFloat(af.fd2Interest, 64); err != nil {
+          af.fd2Result = fmt.Sprintf("Error: %s -- %+v", af.fd2Interest, err)
+        } else if pmt, err = strconv.ParseFloat(af.fd2PMT, 64); err != nil {
+          af.fd2Result = fmt.Sprintf("Error: %s -- %+v", af.fd2PMT, err)
         } else {
           var oa finances.Annuities
-          p.fd2Result = fmt.Sprintf("Present Value: $%.2f", oa.D_PresentValue_PMT(pmt, i / 100.0,
-                                    oa.GetCompoundingPeriod(p.fd2Compound[0], true),
-                                    n, oa.GetTimePeriod(p.fd2TimePeriod[0], true)))
+          af.fd2Result = fmt.Sprintf("Present Value: $%.2f", oa.D_PresentValue_PMT(pmt, i / 100.0,
+            oa.GetCompoundingPeriod(af.fd2Compound[0], true),
+            n, oa.GetTimePeriod(af.fd2TimePeriod[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s",
-                      p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PMT,
-                      p.fd2Result),
+          fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s", af.fd2N,
+            af.fd2TimePeriod, af.fd2Interest, af.fd2Compound, af.fd2PMT, af.fd2Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/pv/pv.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/annuitydue/pv/n-i-PMT.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/annuitydue/pv/n-i-PMT.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "adpresentvalue", struct {
         Header string
         Datetime string
@@ -187,21 +146,21 @@ func (p *wfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
         Fd2Compound string
         Fd2PMT string
         Fd2Result string
-      } { "Annuity Due / Present Value", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd2N, p.fd2TimePeriod, p.fd2Interest, p.fd2Compound, p.fd2PMT, p.fd2Result,
+      } { "Annuity Due / Present Value", m.DTF(), af.currentButton, newSession.CsrfToken,
+          af.fd2N, af.fd2TimePeriod, af.fd2Interest, af.fd2Compound, af.fd2PMT, af.fd2Result,
         })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", af.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       fmt.Println("*** Request timeout ***")
-      if strings.EqualFold(p.currentPage, "rhs-ui1") {
-        p.fd1Result = ""
-      } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
-        p.fd2Result = ""
+      if strings.EqualFold(af.currentPage, "rhs-ui1") {
+        af.fd1Result = ""
+      } else if strings.EqualFold(af.currentPage, "rhs-ui2") {
+        af.fd2Result = ""
       }
     }
   } else {

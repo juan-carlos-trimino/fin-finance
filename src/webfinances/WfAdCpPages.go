@@ -12,59 +12,10 @@ import (
 	"strings"
 )
 
-type WfAdCpPages interface {
-  AdCpPages(http.ResponseWriter, *http.Request)
+type WfAdCpPages struct {
 }
 
-type wfAdCpPages struct {
-  currentPage string
-  currentButton string
-  //
-  fd1Interest string
-  fd1Compound string
-  fd1PV string
-  fd1FV string
-  fd1Result string
-  //
-  fd2Interest string
-  fd2Compound string
-  fd2Payment string
-  fd2PV string
-  fd2Result string
-  //
-  fd3Interest string
-  fd3Compound string
-  fd3Payment string
-  fd3FV string
-  fd3Result string
-}
-
-func NewWfAdCpPages() WfAdCpPages {
-  return &wfAdCpPages {
-    currentPage: "rhs-ui2",
-    currentButton: "lhs-button2",
-    //
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1PV: "1.00",
-    fd1FV: "1.00",
-    fd1Result: "",
-    //
-    fd2Interest: "1.00",
-    fd2Compound: "annually",
-    fd2Payment: "1.00",
-    fd2PV: "1.00",
-    fd2Result: "",
-    //
-    fd3Interest: "1.00",
-    fd3Compound: "annually",
-    fd3Payment: "1.00",
-    fd3FV: "1.00",
-    fd3Result: "",
-  }
-}
-
-func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
+func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -77,6 +28,7 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     "Entering AdCpPages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
+    af := GetAdCpFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -94,7 +46,7 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      p.currentPage = ui
+      af.currentPage = ui
     }
     //
     // if strings.EqualFold(p.currentPage, "rhs-ui1") {
@@ -145,41 +97,41 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     //   } { "Ordinary Annuity / Compounding Periods", m.DTF(), p.currentButton,
     //       p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result,
     //     })
-    /*} else*/ if strings.EqualFold(p.currentPage, "rhs-ui2") {
-      p.currentButton = "lhs-button2"
+    /*} else*/ if strings.EqualFold(af.currentPage, "rhs-ui2") {
+      af.currentButton = "lhs-button2"
       if req.Method == http.MethodPost {
-        p.fd2Interest = req.FormValue("fd2-interest")
-        p.fd2Compound = req.PostFormValue("fd2-cp")
-        p.fd2Payment = req.PostFormValue("fd2-payment")
-        p.fd2PV = req.PostFormValue("fd2-pv")
+        af.fd2Interest = req.FormValue("fd2-interest")
+        af.fd2Compound = req.PostFormValue("fd2-cp")
+        af.fd2Payment = req.PostFormValue("fd2-payment")
+        af.fd2PV = req.PostFormValue("fd2-pv")
         var i float64
         var pmt float64
         var pv float64
         var err error
-        if i, err = strconv.ParseFloat(p.fd2Interest, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Interest, err)
-        } else if pmt, err = strconv.ParseFloat(p.fd2Payment, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Payment, err)
-        } else if pv, err = strconv.ParseFloat(p.fd2PV, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2PV, err)
+        if i, err = strconv.ParseFloat(af.fd2Interest, 64); err != nil {
+          af.fd2Result = fmt.Sprintf("Error: %s -- %+v", af.fd2Interest, err)
+        } else if pmt, err = strconv.ParseFloat(af.fd2Payment, 64); err != nil {
+          af.fd2Result = fmt.Sprintf("Error: %s -- %+v", af.fd2Payment, err)
+        } else if pv, err = strconv.ParseFloat(af.fd2PV, 64); err != nil {
+          af.fd2Result = fmt.Sprintf("Error: %s -- %+v", af.fd2PV, err)
         } else {
           var oa finances.Annuities
-          p.fd2Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_PV(pmt, pv,
-                                    i / 100.0, oa.GetCompoundingPeriod(p.fd2Compound[0], true)),
-                                    oa.TimePeriods(p.fd2Compound))
+          af.fd2Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_PV(pmt, pv,
+            i / 100.0, oa.GetCompoundingPeriod(af.fd2Compound[0], true)),
+            oa.TimePeriods(af.fd2Compound))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("i = %s, cp = %s, pmt = %s, pv = %s, %s",
-                      p.fd2Interest, p.fd2Compound, p.fd2Payment, p.fd2PV, p.fd2Result),
+                      af.fd2Interest, af.fd2Compound, af.fd2Payment, af.fd2PV, af.fd2Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/cp/cp.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/annuitydue/cp/i-PMT-PV.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/annuitydue/cp/i-PMT-PV.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "adcompoundingperiods", struct {
         Header string
         Datetime string
@@ -190,44 +142,44 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Fd2Payment string
         Fd2PV string
         Fd2Result string
-      } { "Annuity Due / Compounding Periods", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd2Interest, p.fd2Compound, p.fd2Payment, p.fd2PV, p.fd2Result,
+      } { "Annuity Due / Compounding Periods", m.DTF(), af.currentButton, newSession.CsrfToken,
+          af.fd2Interest, af.fd2Compound, af.fd2Payment, af.fd2PV, af.fd2Result,
         })
-    } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
-      p.currentButton = "lhs-button3"
+    } else if strings.EqualFold(af.currentPage, "rhs-ui3") {
+      af.currentButton = "lhs-button3"
       if req.Method == http.MethodPost {
-        p.fd3Interest = req.FormValue("fd3-interest")
-        p.fd3Compound = req.PostFormValue("fd3-cp")
-        p.fd3Payment = req.PostFormValue("fd3-payment")
-        p.fd3FV = req.PostFormValue("fd3-fv")
+        af.fd3Interest = req.FormValue("fd3-interest")
+        af.fd3Compound = req.PostFormValue("fd3-cp")
+        af.fd3Payment = req.PostFormValue("fd3-payment")
+        af.fd3FV = req.PostFormValue("fd3-fv")
         var i float64
         var pmt float64
         var fv float64
         var err error
-        if i, err = strconv.ParseFloat(p.fd3Interest, 64); err != nil {
-          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Interest, err)
-        } else if pmt, err = strconv.ParseFloat(p.fd3Payment, 64); err != nil {
-          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Payment, err)
-        } else if fv, err = strconv.ParseFloat(p.fd3FV, 64); err != nil {
-          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3FV, err)
+        if i, err = strconv.ParseFloat(af.fd3Interest, 64); err != nil {
+          af.fd3Result = fmt.Sprintf("Error: %s -- %+v", af.fd3Interest, err)
+        } else if pmt, err = strconv.ParseFloat(af.fd3Payment, 64); err != nil {
+          af.fd3Result = fmt.Sprintf("Error: %s -- %+v", af.fd3Payment, err)
+        } else if fv, err = strconv.ParseFloat(af.fd3FV, 64); err != nil {
+          af.fd3Result = fmt.Sprintf("Error: %s -- %+v", af.fd3FV, err)
         } else {
           var oa finances.Annuities
-          p.fd3Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_FV(pmt, fv,
-                                    i / 100.0, oa.GetCompoundingPeriod(p.fd3Compound[0], true)),
-                                    oa.TimePeriods(p.fd3Compound))
+          af.fd3Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_FV(pmt, fv,
+            i / 100.0, oa.GetCompoundingPeriod(af.fd3Compound[0], true)),
+            oa.TimePeriods(af.fd3Compound))
         }
         logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", p.fd3Interest,
-                      p.fd3Compound, p.fd3Payment, p.fd3FV, p.fd3Result),
+          fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", af.fd3Interest,
+            af.fd3Compound, af.fd3Payment, af.fd3FV, af.fd3Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/cp/cp.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/annuitydue/cp/i-PMT-FV.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/annuitydue/cp/i-PMT-FV.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "adcompoundingperiods", struct {
         Header string
         Datetime string
@@ -238,21 +190,21 @@ func (p *wfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Fd3Payment string
         Fd3FV string
         Fd3Result string
-      } { "Annuity Due / Compounding Periods", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd3Interest, p.fd3Compound, p.fd3Payment, p.fd3FV, p.fd3Result,
+      } { "Annuity Due / Compounding Periods", m.DTF(), af.currentButton, newSession.CsrfToken,
+          af.fd3Interest, af.fd3Compound, af.fd3Payment, af.fd3FV, af.fd3Result,
         })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", af.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       fmt.Println("*** Request timeout ***")
-      if strings.EqualFold(p.currentPage, "rhs-ui2") {
-        p.fd2Result = ""
-      } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
-        p.fd3Result = ""
+      if strings.EqualFold(af.currentPage, "rhs-ui2") {
+        af.fd2Result = ""
+      } else if strings.EqualFold(af.currentPage, "rhs-ui3") {
+        af.fd3Result = ""
       }
     }
   } else {
