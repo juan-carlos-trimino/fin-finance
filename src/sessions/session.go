@@ -70,7 +70,7 @@ func AddEntryToSessions(userName string) (sessionToken string, session session_t
   sessionToken = uuid.NewString()
   sessions[sessionToken] = session_token{
     Username: userName,
-    Expiry: time.Now().Add(120 * time.Second),
+    Expiry: time.Now().Add(300 * time.Minute),
     CsrfToken: uuid.NewString(),
   }
   session = sessions[sessionToken]
@@ -81,7 +81,7 @@ func UpdateEntryInSessions(oldSessionToken string) (newSessionToken string, sess
   newSessionToken = uuid.NewString()
   sessions[newSessionToken] = session_token{
     Username: sessions[oldSessionToken].Username,
-    Expiry: time.Now().Add(120 * time.Second),
+    Expiry: time.Now().Add(300 * time.Minute),
     CsrfToken: uuid.NewString(),
   }
   delete(sessions, oldSessionToken)
@@ -120,4 +120,8 @@ func DeleteSession(sessionToken string) (cookie *http.Cookie) {
     Secure: false,
   }
   return
+}
+
+func GetUserName(sessionToken string) string {
+  return sessions[sessionToken].Username
 }

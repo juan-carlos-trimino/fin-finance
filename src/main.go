@@ -365,12 +365,12 @@ func makeHandlers() *handlers {
   var wfoaepp = webfinances.NewWfOaEppPages()
   var wfoaga = webfinances.NewWfOaGaPages()
   var wfoaperpetuity = webfinances.NewWfOaPerpetuityPages()
-  var wfmortgage = webfinances.NewWfMortgagePages()
-  var wfbonds = webfinances.NewWfBondsPages()
+  var wfmortgage = webfinances.WfMortgagePages{}
+  var wfbonds = webfinances.WfBondsPages{}
   var wfsia = webfinances.NewWfSiAccuratePages()
   var wfsio = webfinances.NewWfSiOrdinaryPages()
   var wfsib = webfinances.NewWfSiBankersPages()
-  var wfmisc = webfinances.NewWfMiscellaneousPages()
+  var wfmisc = webfinances.WfMiscellaneousPages{}
   /***
   The Go web server will route requests to different functions depending on the requested URL.
   ***/
@@ -543,7 +543,7 @@ func readUsers(dir, filename string) {
         } else if err = sessions.AddUserToFile(dir + "/" + filename, USER_NAME, PASSWORD);
                   err != nil {
           panic(err)
-        } else if err = sessions.AddUserToFile(dir + "/" + filename, "jct1", "pw1"); err != nil {
+        } else if err = sessions.AddUserToFile(dir + "/" + filename, "b", "b"); err != nil {
           panic(err)
         }
       } else {
@@ -620,6 +620,16 @@ func makeTlsConfig() *tls.Config {
   }
   return tlsConfig
 }
+
+
+func Timeout(res http.ResponseWriter, req *http.Request) {
+//  time.Sleep(5 * time.Second)
+//  fmt.Println("My func Println")
+  //res.Write().Write("My func!\n")
+  return
+}
+
+
 
 func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.WaitGroup) {
   fmt.Printf("%s - Waiting for notification to shut down the server at %s.\n", m.DTF(), server.Addr)
@@ -700,14 +710,16 @@ func makeServer(port string, h *handlers) *http.Server {
     the specified message; the context passed to the handler will be canceled.
     Note: The http.Server.WriteTimeout is not necessary since http.TimeoutHandler is being used.
     ***/
-    Handler: http.TimeoutHandler(h, 30 * time.Second, "Request timeout."),
+    // Handler: http.TimeoutHandler(h, 30 * time.Second, "Request timeout."),
+    Handler: http.TimeoutHandler(h/*ttp.HandlerFunc(Timeout)*/, 300 * time.Minute, "Request timeout."),
     /***
     It configures the maximum amount of time for the next request when keep-alives are enabled.
     Note that if http.Server.IdleTimeout isn't set, the value of http.Server.ReadTimeout is used
     for the idle timeout. If neither is set, there won't be any timeouts, and connections will
     remain open until they are closed by clients.
     ***/
-    IdleTimeout: 120 * time.Second,
+    // IdleTimeout: 120 * time.Second,
+    IdleTimeout: 120 * time.Minute,
     MaxHeaderBytes: 1 << 20,  //1 MB.
     /***
     Setting TLSNextProto to an empty map will disable HTTP/2 for this server. If you want to enable
