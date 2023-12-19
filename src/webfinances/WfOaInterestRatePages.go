@@ -12,37 +12,10 @@ import (
   "strings"
 )
 
-type WfOaInterestRatePages interface {
-  OaInterestRatePages(http.ResponseWriter, *http.Request)
+type WfOaInterestRatePages struct {
 }
 
-type wfOaInterestRatePages struct {
-  currentPage string
-  currentButton string
-  //
-  fd1N string
-  fd1TimePeriod string
-  fd1Compound string
-  fd1PV string
-  fd1FV string
-  fd1Result string
-}
-
-func NewWfOaInterestRatePages() WfOaInterestRatePages {
-  return &wfOaInterestRatePages {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
-    //
-    fd1N: "1.0",
-    fd1TimePeriod: "year",
-    fd1Compound: "monthly",
-    fd1PV: "1.00",
-    fd1FV: "1.07",
-    fd1Result: "",
-  }
-}
-
-func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req *http.Request) {
+func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -55,6 +28,7 @@ func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req
     "Entering OaInterestRatePages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
+    of := GetOaInterestRateFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -72,37 +46,36 @@ func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      p.currentPage = ui
+      of.currentPage = ui
     }
     //
-    if strings.EqualFold(p.currentPage, "rhs-ui1") {
-      p.currentButton = "lhs-button1"
+    if strings.EqualFold(of.currentPage, "rhs-ui1") {
+      of.currentButton = "lhs-button1"
       if req.Method == http.MethodPost {
-        p.fd1N = req.PostFormValue("fd1-n")
-        p.fd1TimePeriod = req.PostFormValue("fd1-tp")
-        p.fd1Compound = req.PostFormValue("fd1-cp")
-        p.fd1PV = req.PostFormValue("fd1-pv")
-        p.fd1FV = req.PostFormValue("fd1-fv")
+        of.fd1N = req.PostFormValue("fd1-n")
+        of.fd1TimePeriod = req.PostFormValue("fd1-tp")
+        of.fd1Compound = req.PostFormValue("fd1-cp")
+        of.fd1PV = req.PostFormValue("fd1-pv")
+        of.fd1FV = req.PostFormValue("fd1-fv")
         var n float64
         var pv float64
         var fv float64
         var err error
-        if n, err = strconv.ParseFloat(p.fd1N, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1N, err)
-        } else if pv, err = strconv.ParseFloat(p.fd1PV, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1PV, err)
-        } else if fv, err = strconv.ParseFloat(p.fd1FV, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1FV, err)
+        if n, err = strconv.ParseFloat(of.fd1N, 64); err != nil {
+          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1N, err)
+        } else if pv, err = strconv.ParseFloat(of.fd1PV, 64); err != nil {
+          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1PV, err)
+        } else if fv, err = strconv.ParseFloat(of.fd1FV, 64); err != nil {
+          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1FV, err)
         } else {
           var oa finances.Annuities
-          p.fd1Result = fmt.Sprintf("Interest: %.3f%% %s", oa.O_Interest_PV_FV(pv, fv, n,
-                                    oa.GetTimePeriod(p.fd1TimePeriod[0], true),
-                                    oa.GetCompoundingPeriod(p.fd1Compound[0], true)) * 100.0,
-                                    p.fd1Compound)
+          of.fd1Result = fmt.Sprintf("Interest: %.3f%% %s", oa.O_Interest_PV_FV(pv, fv, n,
+            oa.GetTimePeriod(of.fd1TimePeriod[0], true),
+            oa.GetCompoundingPeriod(of.fd1Compound[0], true)) * 100.0, of.fd1Compound)
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, tp = %s, cp = %s, pv = %s, fv = %s, %s",
-                      p.fd1N, p.fd1TimePeriod, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result),
+            of.fd1N, of.fd1TimePeriod, of.fd1Compound, of.fd1PV, of.fd1FV, of.fd1Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -113,9 +86,9 @@ func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req
       and an error, and it panics if the error is not nil.
       ***/
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/interestrate/interestrate.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/ordinaryannuity/interestrate/n-PV-FV.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/ordinaryannuity/interestrate/n-PV-FV.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "oainterestrate", struct {
         Header string
         Datetime string
@@ -127,19 +100,19 @@ func (p *wfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req
         Fd1PV string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Interest Rate", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd1N, p.fd1TimePeriod, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result,
+      } { "Ordinary Annuity / Interest Rate", m.DTF(), of.currentButton, newSession.CsrfToken,
+          of.fd1N, of.fd1TimePeriod, of.fd1Compound, of.fd1PV, of.fd1FV, of.fd1Result,
         })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", of.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       fmt.Println("*** Request timeout ***")
-      if strings.EqualFold(p.currentPage, "rhs-ui1") {
-        p.fd1Result = ""
+      if strings.EqualFold(of.currentPage, "rhs-ui1") {
+        of.fd1Result = ""
       }
     }
   } else {

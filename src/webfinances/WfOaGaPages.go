@@ -12,51 +12,10 @@ import (
   "strings"
 )
 
-type WfOaGaPages interface {
-  OaGaPages(http.ResponseWriter, *http.Request)
+type WfOaGaPages struct {
 }
 
-type wfOaGaPages struct {
-  currentPage string
-  currentButton string
-  //
-  fd1N string
-  fd1Interest string
-  fd1Compound string
-  fd1Grow string
-  fd1Pmt string
-  fd1Result string
-  //
-  fd2N string
-  fd2Interest string
-  fd2Compound string
-  fd2Grow string
-  fd2Pmt string
-  fd2Result string
-}
-
-func NewWfOaGaPages() WfOaGaPages {
-  return &wfOaGaPages {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
-    //
-    fd1N: "1.00",
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1Grow: "1.00",
-    fd1Pmt: "1.00",
-    fd1Result: "",
-    //
-    fd2N: "1.00",
-    fd2Interest: "1.00",
-    fd2Compound: "annually",
-    fd2Grow: "1.00",
-    fd2Pmt: "1.00",
-    fd2Result: "",
-  }
-}
-
-func (p *wfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
+func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -69,6 +28,7 @@ func (p *wfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
     "Entering OaGaPages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
+    of := GetOaGaFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -86,38 +46,38 @@ func (p *wfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      p.currentPage = ui
+      of.currentPage = ui
     }
     //
-    if strings.EqualFold(p.currentPage, "rhs-ui1") {
-      p.currentButton = "lhs-button1"
+    if strings.EqualFold(of.currentPage, "rhs-ui1") {
+      of.currentButton = "lhs-button1"
       if req.Method == http.MethodPost {
-        p.fd1N = req.PostFormValue("fd1-n")
-        p.fd1Interest = req.PostFormValue("fd1-interest")
-        p.fd1Compound = req.PostFormValue("fd1-cp")
-        p.fd1Grow = req.PostFormValue("fd1-grow")
-        p.fd1Pmt = req.PostFormValue("fd1-pmt")
+        of.fd1N = req.PostFormValue("fd1-n")
+        of.fd1Interest = req.PostFormValue("fd1-interest")
+        of.fd1Compound = req.PostFormValue("fd1-cp")
+        of.fd1Grow = req.PostFormValue("fd1-grow")
+        of.fd1Pmt = req.PostFormValue("fd1-pmt")
         var n float64
         var i float64
         var grow float64
         var pmt float64
         var err error
-        if n, err = strconv.ParseFloat(p.fd1N, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1N, err)
-        } else if i, err = strconv.ParseFloat(p.fd1Interest, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1Interest, err)
-        } else if grow, err = strconv.ParseFloat(p.fd1Grow, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1Grow, err)
-        } else if pmt, err = strconv.ParseFloat(p.fd1Pmt, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1Pmt, err)
+        if n, err = strconv.ParseFloat(of.fd1N, 64); err != nil {
+          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1N, err)
+        } else if i, err = strconv.ParseFloat(of.fd1Interest, 64); err != nil {
+          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1Interest, err)
+        } else if grow, err = strconv.ParseFloat(of.fd1Grow, 64); err != nil {
+          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1Grow, err)
+        } else if pmt, err = strconv.ParseFloat(of.fd1Pmt, 64); err != nil {
+          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1Pmt, err)
         } else {
           var oa finances.Annuities
-          p.fd1Result = fmt.Sprintf("Future Value: $%.2f", oa.O_GrowingAnnuityFutureValue(pmt, n,
-                                 grow, i / 100.0, oa.GetCompoundingPeriod(p.fd1Compound[0], true)))
+          of.fd1Result = fmt.Sprintf("Future Value: $%.2f", oa.O_GrowingAnnuityFutureValue(pmt, n,
+            grow, i / 100.0, oa.GetCompoundingPeriod(of.fd1Compound[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s",
-                      p.fd1N, p.fd1Interest, p.fd1Compound, p.fd1Grow, p.fd1Pmt, p.fd1Result),
+            of.fd1N, of.fd1Interest, of.fd1Compound, of.fd1Grow, of.fd1Pmt, of.fd1Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -128,9 +88,9 @@ func (p *wfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
       and an error, and it panics if the error is not nil.
       ***/
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/ga/ga.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/ordinaryannuity/ga/FV.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/ordinaryannuity/ga/FV.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "oagrowingannuity", struct {
         Header string
         Datetime string
@@ -142,47 +102,47 @@ func (p *wfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
         Fd1Grow string
         Fd1Pmt string
         Fd1Result string
-      } { "Ordinary Annuity / Growing Annuity", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd1N, p.fd1Interest, p.fd1Compound, p.fd1Grow, p.fd1Pmt, p.fd1Result,
+      } { "Ordinary Annuity / Growing Annuity", m.DTF(), of.currentButton, newSession.CsrfToken,
+          of.fd1N, of.fd1Interest, of.fd1Compound, of.fd1Grow, of.fd1Pmt, of.fd1Result,
         })
-    } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
-      p.currentButton = "lhs-button2"
+    } else if strings.EqualFold(of.currentPage, "rhs-ui2") {
+      of.currentButton = "lhs-button2"
       if req.Method == http.MethodPost {
-        p.fd2N = req.PostFormValue("fd2-n")
-        p.fd2Interest = req.PostFormValue("fd2-interest")
-        p.fd2Compound = req.PostFormValue("fd2-cp")
-        p.fd2Grow = req.PostFormValue("fd2-grow")
-        p.fd2Pmt = req.PostFormValue("fd2-pmt")
+        of.fd2N = req.PostFormValue("fd2-n")
+        of.fd2Interest = req.PostFormValue("fd2-interest")
+        of.fd2Compound = req.PostFormValue("fd2-cp")
+        of.fd2Grow = req.PostFormValue("fd2-grow")
+        of.fd2Pmt = req.PostFormValue("fd2-pmt")
         var n float64
         var i float64
         var grow float64
         var pmt float64
         var err error
-        if n, err = strconv.ParseFloat(p.fd2N, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2N, err)
-        } else if i, err = strconv.ParseFloat(p.fd2Interest, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Interest, err)
-        } else if grow, err = strconv.ParseFloat(p.fd2Grow, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Grow, err)
-        } else if pmt, err = strconv.ParseFloat(p.fd2Pmt, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Pmt, err)
+        if n, err = strconv.ParseFloat(of.fd2N, 64); err != nil {
+          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2N, err)
+        } else if i, err = strconv.ParseFloat(of.fd2Interest, 64); err != nil {
+          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2Interest, err)
+        } else if grow, err = strconv.ParseFloat(of.fd2Grow, 64); err != nil {
+          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2Grow, err)
+        } else if pmt, err = strconv.ParseFloat(of.fd2Pmt, 64); err != nil {
+          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2Pmt, err)
         } else {
           var oa finances.Annuities
-          p.fd2Result = fmt.Sprintf("Present Value: $%.2f", oa.O_GrowingAnnuityPresentValue(pmt, n,
-                                 grow, i / 100.0, oa.GetCompoundingPeriod(p.fd2Compound[0], true)))
+          of.fd2Result = fmt.Sprintf("Present Value: $%.2f", oa.O_GrowingAnnuityPresentValue(pmt,
+            n, grow, i / 100.0, oa.GetCompoundingPeriod(of.fd2Compound[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s",
-                      p.fd2N, p.fd2Interest, p.fd2Compound, p.fd2Grow, p.fd2Pmt, p.fd2Result),
+            of.fd2N, of.fd2Interest, of.fd2Compound, of.fd2Grow, of.fd2Pmt, of.fd2Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/ga/ga.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/ordinaryannuity/ga/PV.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/ordinaryannuity/ga/PV.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "oagrowingannuity", struct {
         Header string
         Datetime string
@@ -194,21 +154,21 @@ func (p *wfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
         Fd2Grow string
         Fd2Pmt string
         Fd2Result string
-      } { "Ordinary Annuity / Growing Annuity", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd2N, p.fd2Interest, p.fd2Compound, p.fd2Grow, p.fd2Pmt, p.fd2Result,
+      } { "Ordinary Annuity / Growing Annuity", m.DTF(), of.currentButton, newSession.CsrfToken,
+          of.fd2N, of.fd2Interest, of.fd2Compound, of.fd2Grow, of.fd2Pmt, of.fd2Result,
         })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", of.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       fmt.Println("*** Request timeout ***")
-      if strings.EqualFold(p.currentPage, "rhs-ui1") {
-        p.fd1Result = ""
-      } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
-        p.fd2Result = ""
+      if strings.EqualFold(of.currentPage, "rhs-ui1") {
+        of.fd1Result = ""
+      } else if strings.EqualFold(of.currentPage, "rhs-ui2") {
+        of.fd2Result = ""
       }
     }
   } else {

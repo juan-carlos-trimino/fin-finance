@@ -12,6 +12,10 @@ import (
   "strings"
 )
 
+type WfOaPerpetuityPages struct {
+}
+
+/***
 type WfOaPerpetuityPages interface {
   OaPerpetuityPages(http.ResponseWriter, *http.Request)
 }
@@ -49,8 +53,9 @@ func NewWfOaPerpetuityPages() WfOaPerpetuityPages {
     fd2Result: "",
   }
 }
+***/
 
-func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *http.Request) {
+func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -63,6 +68,7 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
     "Entering OaPerpetuityPages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
+    of := GetOaPerpetuityFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -80,30 +86,30 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      p.currentPage = ui
+      of.currentPage = ui
     }
     //
-    if strings.EqualFold(p.currentPage, "rhs-ui1") {
-      p.currentButton = "lhs-button1"
+    if strings.EqualFold(of.currentPage, "rhs-ui1") {
+      of.currentButton = "lhs-button1"
       if req.Method == http.MethodPost {
-        p.fd1Interest = req.PostFormValue("fd1-interest")
-        p.fd1Compound = req.PostFormValue("fd1-cp")
-        p.fd1Pmt = req.PostFormValue("fd1-pmt")
+        of.fd1Interest = req.PostFormValue("fd1-interest")
+        of.fd1Compound = req.PostFormValue("fd1-cp")
+        of.fd1Pmt = req.PostFormValue("fd1-pmt")
         var i float64
         var pmt float64
         var err error
-        if i, err = strconv.ParseFloat(p.fd1Interest, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1Interest, err)
-        } else if pmt, err = strconv.ParseFloat(p.fd1Pmt, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1Pmt, err)
+        if i, err = strconv.ParseFloat(of.fd1Interest, 64); err != nil {
+          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1Interest, err)
+        } else if pmt, err = strconv.ParseFloat(of.fd1Pmt, 64); err != nil {
+          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1Pmt, err)
         } else {
           var oa finances.Annuities
-          p.fd1Result = fmt.Sprintf("Present Value of Perpetuity: $%.2f", oa.O_Perpetuity(
-                                  i / 100.0, pmt, oa.GetCompoundingPeriod(p.fd1Compound[0], true)))
+          of.fd1Result = fmt.Sprintf("Present Value of Perpetuity: $%.2f",
+            oa.O_Perpetuity(i / 100.0, pmt, oa.GetCompoundingPeriod(of.fd1Compound[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("i = %s, cp = %s, pmt = %s, %s",
-                      p.fd1Interest, p.fd1Compound, p.fd1Pmt, p.fd1Result),
+            of.fd1Interest, of.fd1Compound, of.fd1Pmt, of.fd1Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -114,9 +120,9 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
       and an error, and it panics if the error is not nil.
       ***/
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/perpetuity/perpetuity.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/ordinaryannuity/perpetuity/p.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/ordinaryannuity/perpetuity/p.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "oaperpetuity", struct {
         Header string
         Datetime string
@@ -126,43 +132,44 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
         Fd1Compound string
         Fd1Pmt string
         Fd1Result string
-      } { "Ordinary Annuity / Perpetuities", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd1Interest, p.fd1Compound, p.fd1Pmt, p.fd1Result,
+      } { "Ordinary Annuity / Perpetuities", m.DTF(), of.currentButton, newSession.CsrfToken,
+          of.fd1Interest, of.fd1Compound, of.fd1Pmt, of.fd1Result,
         })
-    } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
-      p.currentButton = "lhs-button2"
+    } else if strings.EqualFold(of.currentPage, "rhs-ui2") {
+      of.currentButton = "lhs-button2"
       if req.Method == http.MethodPost {
-        p.fd2Interest = req.FormValue("fd2-interest")
-        p.fd2Compound = req.PostFormValue("fd2-cp")
-        p.fd2Grow = req.PostFormValue("fd2-grow")
-        p.fd2Pmt = req.PostFormValue("fd2-pmt")
+        of.fd2Interest = req.FormValue("fd2-interest")
+        of.fd2Compound = req.PostFormValue("fd2-cp")
+        of.fd2Grow = req.PostFormValue("fd2-grow")
+        of.fd2Pmt = req.PostFormValue("fd2-pmt")
         var i float64
         var grow float64
         var pmt float64
         var err error
-        if i, err = strconv.ParseFloat(p.fd2Interest, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Interest, err)
-        } else if grow, err = strconv.ParseFloat(p.fd2Grow, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Grow, err)
-        } else if pmt, err = strconv.ParseFloat(p.fd2Pmt, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Pmt, err)
+        if i, err = strconv.ParseFloat(of.fd2Interest, 64); err != nil {
+          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2Interest, err)
+        } else if grow, err = strconv.ParseFloat(of.fd2Grow, 64); err != nil {
+          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2Grow, err)
+        } else if pmt, err = strconv.ParseFloat(of.fd2Pmt, 64); err != nil {
+          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2Pmt, err)
         } else {
           var oa finances.Annuities
-          p.fd2Result = fmt.Sprintf("Present Value of Perpetuity: $%.2f", oa.O_GrowingPerpetuity(
-                            i / 100.0, grow, pmt, oa.GetCompoundingPeriod(p.fd2Compound[0], true)))
+          of.fd2Result = fmt.Sprintf("Present Value of Perpetuity: $%.2f",
+            oa.O_GrowingPerpetuity(i / 100.0, grow, pmt,
+            oa.GetCompoundingPeriod(of.fd2Compound[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("i = %s, cp = %s, grow = %s, pmt = %s, %s",
-                      p.fd2Interest, p.fd2Compound, p.fd2Grow, p.fd2Pmt, p.fd2Result),
+            of.fd2Interest, of.fd2Compound, of.fd2Grow, of.fd2Pmt, of.fd2Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/perpetuity/perpetuity.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/ordinaryannuity/perpetuity/gp.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/ordinaryannuity/perpetuity/gp.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "oaperpetuity", struct {
         Header string
         Datetime string
@@ -173,21 +180,21 @@ func (p *wfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *ht
         Fd2Grow string
         Fd2Pmt string
         Fd2Result string
-      } { "Ordinary Annuity / Perpetuities", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd2Interest, p.fd2Compound, p.fd2Grow, p.fd2Pmt, p.fd2Result,
+      } { "Ordinary Annuity / Perpetuities", m.DTF(), of.currentButton, newSession.CsrfToken,
+          of.fd2Interest, of.fd2Compound, of.fd2Grow, of.fd2Pmt, of.fd2Result,
         })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", of.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       fmt.Println("*** Request timeout ***")
-      if strings.EqualFold(p.currentPage, "rhs-ui1") {
-        p.fd1Result = ""
-      } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
-        p.fd2Result = ""
+      if strings.EqualFold(of.currentPage, "rhs-ui1") {
+        of.fd1Result = ""
+      } else if strings.EqualFold(of.currentPage, "rhs-ui2") {
+        of.fd2Result = ""
       }
     }
   } else {

@@ -12,6 +12,10 @@ import (
   "strings"
 )
 
+type WfSiOrdinaryPages struct {
+}
+
+/***
 type WfSiOrdinaryPages interface {
   SimpleInterestOrdinaryPages(http.ResponseWriter, *http.Request)
 }
@@ -79,8 +83,9 @@ func NewWfSiOrdinaryPages() WfSiOrdinaryPages {
     fd4Result: "",
   }
 }
+**/
 
-func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, req *http.Request) {
+func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -89,6 +94,7 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
   }
   fmt.Printf("%s - Entering SimpleInterestOrdinaryPages/webfinances.\n", m.DTF())
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
+    sif := GetSiOrdinaryFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -106,44 +112,44 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      p.currentPage = ui
+      sif.currentPage = ui
     }
     //
-    if strings.EqualFold(p.currentPage, "rhs-ui1") {
-      p.currentButton = "lhs-button1"
+    if strings.EqualFold(sif.currentPage, "rhs-ui1") {
+      sif.currentButton = "lhs-button1"
       if req.Method == http.MethodPost {
-        p.fd1Time = req.PostFormValue("fd1-time")
-        p.fd1TimePeriod = req.PostFormValue("fd1-tp")
-        p.fd1Interest = req.PostFormValue("fd1-interest")
-        p.fd1Compound = req.PostFormValue("fd1-compound")
-        p.fd1PV = req.PostFormValue("fd1-pv")
+        sif.fd1Time = req.PostFormValue("fd1-time")
+        sif.fd1TimePeriod = req.PostFormValue("fd1-tp")
+        sif.fd1Interest = req.PostFormValue("fd1-interest")
+        sif.fd1Compound = req.PostFormValue("fd1-compound")
+        sif.fd1PV = req.PostFormValue("fd1-pv")
         var n float64
         var i float64
         var pv float64
         var err error
-        if n, err = strconv.ParseFloat(p.fd1Time, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1Time, err)
-        } else if i, err = strconv.ParseFloat(p.fd1Interest, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1Interest, err)
-        } else if pv, err = strconv.ParseFloat(p.fd1PV, 64); err != nil {
-          p.fd1Result = fmt.Sprintf("Error: %s -- %+v", p.fd1PV, err)
+        if n, err = strconv.ParseFloat(sif.fd1Time, 64); err != nil {
+          sif.fd1Result = fmt.Sprintf("Error: %s -- %+v", sif.fd1Time, err)
+        } else if i, err = strconv.ParseFloat(sif.fd1Interest, 64); err != nil {
+          sif.fd1Result = fmt.Sprintf("Error: %s -- %+v", sif.fd1Interest, err)
+        } else if pv, err = strconv.ParseFloat(sif.fd1PV, 64); err != nil {
+          sif.fd1Result = fmt.Sprintf("Error: %s -- %+v", sif.fd1PV, err)
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd1Result = fmt.Sprintf("Amount of Interest: $%.2f", si.OrdinaryInterest(pv, i / 100.0,
-                                    periods.GetCompoundingPeriod(p.fd1Compound[0], false), n,
-                                    periods.GetTimePeriod(p.fd1TimePeriod[0], false)))
+          sif.fd1Result = fmt.Sprintf("Amount of Interest: $%.2f", si.OrdinaryInterest(pv,
+            i / 100.0, periods.GetCompoundingPeriod(sif.fd1Compound[0], false), n,
+            periods.GetTimePeriod(sif.fd1TimePeriod[0], false)))
         }
-        fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s\n", m.DTF(), p.fd1Time,
-                   p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1Result)
+        fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s\n", m.DTF(), sif.fd1Time,
+          sif.fd1TimePeriod, sif.fd1Interest, sif.fd1Compound, sif.fd1PV, sif.fd1Result)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestordinary/ordinary.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/simpleinterestordinary/amountofinterest.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/simpleinterestordinary/amountofinterest.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestordinary", struct {
         Header string
         Datetime string
@@ -155,42 +161,43 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd1Compound string
         Fd1PV string
         Fd1Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd1Time, p.fd1TimePeriod, p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1Result,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), sif.currentButton, newSession.CsrfToken,
+          sif.fd1Time, sif.fd1TimePeriod, sif.fd1Interest, sif.fd1Compound, sif.fd1PV,
+          sif.fd1Result,
         })
-    } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
-      p.currentButton = "lhs-button2"
+    } else if strings.EqualFold(sif.currentPage, "rhs-ui2") {
+      sif.currentButton = "lhs-button2"
       if req.Method == http.MethodPost {
-        p.fd2Time = req.PostFormValue("fd2-time")
-        p.fd2TimePeriod = req.PostFormValue("fd2-tp")
-        p.fd2Amount = req.PostFormValue("fd2-amount")
-        p.fd2PV = req.PostFormValue("fd2-pv")
+        sif.fd2Time = req.PostFormValue("fd2-time")
+        sif.fd2TimePeriod = req.PostFormValue("fd2-tp")
+        sif.fd2Amount = req.PostFormValue("fd2-amount")
+        sif.fd2PV = req.PostFormValue("fd2-pv")
         var n float64
         var a float64
         var pv float64
         var err error
-        if n, err = strconv.ParseFloat(p.fd2Time, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Time, err)
-        } else if a, err = strconv.ParseFloat(p.fd2Amount, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2Amount, err)
-        } else if pv, err = strconv.ParseFloat(p.fd2PV, 64); err != nil {
-          p.fd2Result = fmt.Sprintf("Error: %s -- %+v", p.fd2PV, err)
+        if n, err = strconv.ParseFloat(sif.fd2Time, 64); err != nil {
+          sif.fd2Result = fmt.Sprintf("Error: %s -- %+v", sif.fd2Time, err)
+        } else if a, err = strconv.ParseFloat(sif.fd2Amount, 64); err != nil {
+          sif.fd2Result = fmt.Sprintf("Error: %s -- %+v", sif.fd2Amount, err)
+        } else if pv, err = strconv.ParseFloat(sif.fd2PV, 64); err != nil {
+          sif.fd2Result = fmt.Sprintf("Error: %s -- %+v", sif.fd2PV, err)
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd2Result = fmt.Sprintf("Interest Rate: %.3f%%", si.OrdinaryRate(pv, a,
-                                    n, periods.GetTimePeriod(p.fd2TimePeriod[0], false)) * 100.0)
+          sif.fd2Result = fmt.Sprintf("Interest Rate: %.3f%%",
+            si.OrdinaryRate(pv, a, n, periods.GetTimePeriod(sif.fd2TimePeriod[0], false)) * 100.0)
         }
-        fmt.Printf("%s - n = %s, tp = %s, a = %s, pv = %s, %s\n", m.DTF(), p.fd2Time,
-                  p.fd2TimePeriod, p.fd2Amount, p.fd2PV, p.fd2Result)
+        fmt.Printf("%s - n = %s, tp = %s, a = %s, pv = %s, %s\n", m.DTF(), sif.fd2Time,
+          sif.fd2TimePeriod, sif.fd2Amount, sif.fd2PV, sif.fd2Result)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestordinary/ordinary.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/simpleinterestordinary/interestrate.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/simpleinterestordinary/interestrate.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestordinary", struct {
         Header string
         Datetime string
@@ -201,44 +208,44 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd2Amount string
         Fd2PV string
         Fd2Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd2Time, p.fd2TimePeriod, p.fd2Amount, p.fd2PV, p.fd2Result,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), sif.currentButton, newSession.CsrfToken,
+          sif.fd2Time, sif.fd2TimePeriod, sif.fd2Amount, sif.fd2PV, sif.fd2Result,
         })
-    } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
-      p.currentButton = "lhs-button3"
+    } else if strings.EqualFold(sif.currentPage, "rhs-ui3") {
+      sif.currentButton = "lhs-button3"
       if req.Method == http.MethodPost {
-        p.fd3Time = req.PostFormValue("fd3-time")
-        p.fd3TimePeriod = req.PostFormValue("fd3-tp")
-        p.fd3Interest = req.PostFormValue("fd3-interest")
-        p.fd3Compound = req.PostFormValue("fd3-compound")
-        p.fd3Amount = req.PostFormValue("fd3-amount")
+        sif.fd3Time = req.PostFormValue("fd3-time")
+        sif.fd3TimePeriod = req.PostFormValue("fd3-tp")
+        sif.fd3Interest = req.PostFormValue("fd3-interest")
+        sif.fd3Compound = req.PostFormValue("fd3-compound")
+        sif.fd3Amount = req.PostFormValue("fd3-amount")
         var n float64
         var i float64
         var a float64
         var err error
-        if n, err = strconv.ParseFloat(p.fd3Time, 64); err != nil {
-          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Time, err)
-        } else if i, err = strconv.ParseFloat(p.fd3Interest, 64); err != nil {
-          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Interest, err)
-        } else if a, err = strconv.ParseFloat(p.fd3Amount, 64); err != nil {
-          p.fd3Result = fmt.Sprintf("Error: %s -- %+v", p.fd3Amount, err)
+        if n, err = strconv.ParseFloat(sif.fd3Time, 64); err != nil {
+          sif.fd3Result = fmt.Sprintf("Error: %s -- %+v", sif.fd3Time, err)
+        } else if i, err = strconv.ParseFloat(sif.fd3Interest, 64); err != nil {
+          sif.fd3Result = fmt.Sprintf("Error: %s -- %+v", sif.fd3Interest, err)
+        } else if a, err = strconv.ParseFloat(sif.fd3Amount, 64); err != nil {
+          sif.fd3Result = fmt.Sprintf("Error: %s -- %+v", sif.fd3Amount, err)
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd3Result = fmt.Sprintf("Principal: $%.2f", si.OrdinaryPrincipal(a, i / 100.0,
-                                    periods.GetCompoundingPeriod(p.fd3Compound[0], false), n,
-                                    periods.GetTimePeriod(p.fd3TimePeriod[0], false)))
+          sif.fd3Result = fmt.Sprintf("Principal: $%.2f", si.OrdinaryPrincipal(a, i / 100.0,
+            periods.GetCompoundingPeriod(sif.fd3Compound[0], false), n,
+            periods.GetTimePeriod(sif.fd3TimePeriod[0], false)))
         }
-        fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, a = %s, %s\n", m.DTF(), p.fd3Time,
-                   p.fd3TimePeriod, p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result)
+        fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, a = %s, %s\n", m.DTF(), sif.fd3Time,
+          sif.fd3TimePeriod, sif.fd3Interest, sif.fd3Compound, sif.fd3Amount, sif.fd3Result)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestordinary/ordinary.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/simpleinterestordinary/principal.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/simpleinterestordinary/principal.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestordinary", struct {
         Header string
         Datetime string
@@ -250,43 +257,44 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd3Compound string
         Fd3Amount string
         Fd3Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd3Time, p.fd3TimePeriod, p.fd3Interest, p.fd3Compound, p.fd3Amount, p.fd3Result,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), sif.currentButton, newSession.CsrfToken,
+          sif.fd3Time, sif.fd3TimePeriod, sif.fd3Interest, sif.fd3Compound, sif.fd3Amount,
+          sif.fd3Result,
         })
-    } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
-      p.currentButton = "lhs-button4"
+    } else if strings.EqualFold(sif.currentPage, "rhs-ui4") {
+      sif.currentButton = "lhs-button4"
       if req.Method == http.MethodPost {
-        p.fd4Interest = req.PostFormValue("fd4-interest")
-        p.fd4Compound = req.PostFormValue("fd4-compound")
-        p.fd4Amount = req.PostFormValue("fd4-amount")
-        p.fd4PV = req.PostFormValue("fd4-pv")
+        sif.fd4Interest = req.PostFormValue("fd4-interest")
+        sif.fd4Compound = req.PostFormValue("fd4-compound")
+        sif.fd4Amount = req.PostFormValue("fd4-amount")
+        sif.fd4PV = req.PostFormValue("fd4-pv")
         var i float64
         var a float64
         var pv float64
         var err error
-        if i, err = strconv.ParseFloat(p.fd4Interest, 64); err != nil {
-          p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4Interest, err)
-        } else if a, err = strconv.ParseFloat(p.fd4Amount, 64); err != nil {
-          p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4Amount, err)
-        } else if pv, err = strconv.ParseFloat(p.fd4PV, 64); err != nil {
-          p.fd4Result = fmt.Sprintf("Error: %s -- %+v", p.fd4PV, err)
+        if i, err = strconv.ParseFloat(sif.fd4Interest, 64); err != nil {
+          sif.fd4Result = fmt.Sprintf("Error: %s -- %+v", sif.fd4Interest, err)
+        } else if a, err = strconv.ParseFloat(sif.fd4Amount, 64); err != nil {
+          sif.fd4Result = fmt.Sprintf("Error: %s -- %+v", sif.fd4Amount, err)
+        } else if pv, err = strconv.ParseFloat(sif.fd4PV, 64); err != nil {
+          sif.fd4Result = fmt.Sprintf("Error: %s -- %+v", sif.fd4PV, err)
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          p.fd4Result = fmt.Sprintf("Time: %.2f %s", si.OrdinaryTime(pv, a, i / 100.0,
-                                    periods.GetCompoundingPeriod(p.fd4Compound[0], false)),
-                                    periods.TimePeriods(p.fd4Compound))
+          sif.fd4Result = fmt.Sprintf("Time: %.2f %s", si.OrdinaryTime(pv, a, i / 100.0,
+            periods.GetCompoundingPeriod(sif.fd4Compound[0], false)),
+            periods.TimePeriods(sif.fd4Compound))
         }
         fmt.Printf("%s - i = %s, cp = %s, a = %s, pv = %s, %s\n", m.DTF(),
-                   p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result)
+          sif.fd4Interest, sif.fd4Compound, sif.fd4Amount, sif.fd4PV, sif.fd4Result)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestordinary/ordinary.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/simpleinterestordinary/time.html",
-                                             "webfinances/templates/footer.html"))
+        "webfinances/templates/header.html",
+        "webfinances/templates/simpleinterestordinary/time.html",
+        "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestordinary", struct {
         Header string
         Datetime string
@@ -297,25 +305,25 @@ func (p *wfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter,
         Fd4Amount string
         Fd4PV string
         Fd4Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), p.currentButton, newSession.CsrfToken,
-          p.fd4Interest, p.fd4Compound, p.fd4Amount, p.fd4PV, p.fd4Result,
+      } { "Simple Interest / Ordinary Interest", m.DTF(), sif.currentButton, newSession.CsrfToken,
+          sif.fd4Interest, sif.fd4Compound, sif.fd4Amount, sif.fd4PV, sif.fd4Result,
         })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", p.currentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", sif.currentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       fmt.Println("*** Request timeout ***")
-      if strings.EqualFold(p.currentPage, "rhs-ui1") {
-        p.fd1Result = ""
-      } else if strings.EqualFold(p.currentPage, "rhs-ui2") {
-        p.fd2Result = ""
-      } else if strings.EqualFold(p.currentPage, "rhs-ui3") {
-        p.fd3Result = ""
-      } else if strings.EqualFold(p.currentPage, "rhs-ui4") {
-        p.fd4Result = ""
+      if strings.EqualFold(sif.currentPage, "rhs-ui1") {
+        sif.fd1Result = ""
+      } else if strings.EqualFold(sif.currentPage, "rhs-ui2") {
+        sif.fd2Result = ""
+      } else if strings.EqualFold(sif.currentPage, "rhs-ui3") {
+        sif.fd3Result = ""
+      } else if strings.EqualFold(sif.currentPage, "rhs-ui4") {
+        sif.fd4Result = ""
       }
     }
   } else {

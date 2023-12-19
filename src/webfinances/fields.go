@@ -11,6 +11,16 @@ type Fields struct {
   adPv *adPvFields
   adCp *adCpFields
   adEpp *adEppFields
+  oaCp *oaCpFields
+  oaEpp *oaEppFields
+  oaFv *oaFvFields
+  oaGa *oaGaFields
+  oaInterestRate *oaInterestRateFields
+  oaPerpetuity *oaPerpetuityFields
+  oaPv *oaPvFields
+  siAccurate *siAccurateFields
+  siBankers *siBankersFields
+  siOrdinary *siOrdinaryFields
 }
 
 type miscellaneousFields struct {
@@ -445,10 +455,465 @@ func newAdEppFields() *adEppFields {
   }
 }
 
+type oaCpFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1Interest string
+  fd1Compound string
+  fd1PV string
+  fd1FV string
+  fd1Result string
+  //
+  fd2Interest string
+  fd2Compound string
+  fd2Payment string
+  fd2PV string
+  fd2Result string
+  //
+  fd3Interest string
+  fd3Compound string
+  fd3Payment string
+  fd3FV string
+  fd3Result string
+}
 
+func newOaCpFields() *oaCpFields {
+  return &oaCpFields {
+    currentPage: "rhs-ui1",
+    currentButton: "lhs-button1",
+    //
+    fd1Interest: "1.00",
+    fd1Compound: "annually",
+    fd1PV: "1.00",
+    fd1FV: "1.00",
+    fd1Result: "",
+    //
+    fd2Interest: "1.00",
+    fd2Compound: "annually",
+    fd2Payment: "1.00",
+    fd2PV: "1.00",
+    fd2Result: "",
+    //
+    fd3Interest: "1.00",
+    fd3Compound: "annually",
+    fd3Payment: "1.00",
+    fd3FV: "1.00",
+    fd3Result: "",
+  }
+}
 
+type oaEppFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1N string
+  fd1TimePeriod string
+  fd1Interest string
+  fd1Compound string
+  fd1FV string
+  fd1Result string
+  //
+  fd2N string
+  fd2TimePeriod string
+  fd2Interest string
+  fd2Compound string
+  fd2PV string
+  fd2Result string
+}
 
+func newOaEppFields() *oaEppFields {
+  return &oaEppFields {
+    currentPage: "rhs-ui1",
+    currentButton: "lhs-button1",
+    //
+    fd1N: "1.00",
+    fd1TimePeriod: "year",
+    fd1Interest: "1.00",
+    fd1Compound: "annually",
+    fd1FV: "1.00",
+    fd1Result: "",
+    //
+    fd2N: "1.00",
+    fd2TimePeriod: "year",
+    fd2Interest: "1.00",
+    fd2Compound: "annually",
+    fd2PV: "1.00",
+    fd2Result: "",
+  }
+}
 
+type oaFvFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1N string
+  fd1TimePeriod string
+  fd1Interest string
+  fd1Compound string
+  fd1FV string
+  fd1Result string
+  //
+  fd2N string
+  fd2TimePeriod string
+  fd2Interest string
+  fd2Compound string
+  fd2PMT string
+  fd2Result string
+}
+
+func newOaFvFields() *oaFvFields {
+  return &oaFvFields {
+    currentPage: "rhs-ui1",
+    currentButton: "lhs-button1",
+    //
+    fd1N: "1.0",
+    fd1TimePeriod: "year",
+    fd1Interest: "1.00",
+    fd1Compound: "monthly",
+    fd1FV: "1.00",
+    fd1Result: "",
+    //
+    fd2N: "1.0",
+    fd2TimePeriod: "year",
+    fd2Interest: "1.00",
+    fd2Compound: "monthly",
+    fd2PMT: "1.00",
+    fd2Result: "",
+  }
+}
+
+type oaGaFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1N string
+  fd1Interest string
+  fd1Compound string
+  fd1Grow string
+  fd1Pmt string
+  fd1Result string
+  //
+  fd2N string
+  fd2Interest string
+  fd2Compound string
+  fd2Grow string
+  fd2Pmt string
+  fd2Result string
+}
+
+func newOaGaFields() *oaGaFields {
+  return &oaGaFields {
+    currentPage: "rhs-ui1",
+    currentButton: "lhs-button1",
+    //
+    fd1N: "1.00",
+    fd1Interest: "1.00",
+    fd1Compound: "annually",
+    fd1Grow: "1.00",
+    fd1Pmt: "1.00",
+    fd1Result: "",
+    //
+    fd2N: "1.00",
+    fd2Interest: "1.00",
+    fd2Compound: "annually",
+    fd2Grow: "1.00",
+    fd2Pmt: "1.00",
+    fd2Result: "",
+  }
+}
+
+type oaInterestRateFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1N string
+  fd1TimePeriod string
+  fd1Compound string
+  fd1PV string
+  fd1FV string
+  fd1Result string
+}
+
+func newOaInterestRateFields() *oaInterestRateFields {
+  return &oaInterestRateFields {
+    currentPage: "rhs-ui1",
+    currentButton: "lhs-button1",
+    //
+    fd1N: "1.0",
+    fd1TimePeriod: "year",
+    fd1Compound: "monthly",
+    fd1PV: "1.00",
+    fd1FV: "1.07",
+    fd1Result: "",
+  }
+}
+
+type oaPerpetuityFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1Interest string
+  fd1Compound string
+  fd1Pmt string
+  fd1Result string
+  //
+  fd2Interest string
+  fd2Compound string
+  fd2Grow string
+  fd2Pmt string
+  fd2Result string
+}
+
+func newOaPerpetuityFields() *oaPerpetuityFields {
+  return &oaPerpetuityFields {
+    currentPage: "rhs-ui1",
+    currentButton: "lhs-button1",
+    //
+    fd1Interest: "1.00",
+    fd1Compound: "annually",
+    fd1Pmt: "1.00",
+    fd1Result: "",
+    //
+    fd2Interest: "1.00",
+    fd2Compound: "annually",
+    fd2Grow: "1.00",
+    fd2Pmt: "1.00",
+    fd2Result: "",
+  }
+}
+
+type oaPvFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1N string
+  fd1TimePeriod string
+  fd1Interest string
+  fd1Compound string
+  fd1FV string
+  fd1Result string
+  //
+  fd2N string
+  fd2TimePeriod string
+  fd2Interest string
+  fd2Compound string
+  fd2PMT string
+  fd2Result string
+}
+
+func newOaPvFields() *oaPvFields {
+  return &oaPvFields {
+    currentPage: "rhs-ui1",
+    currentButton: "lhs-button1",
+    //
+    fd1N: "1.0",
+    fd1TimePeriod: "year",
+    fd1Interest: "1.00",
+    fd1Compound: "monthly",
+    fd1FV: "1.00",
+    fd1Result: "",
+    //
+    fd2N: "1.0",
+    fd2TimePeriod: "year",
+    fd2Interest: "1.00",
+    fd2Compound: "monthly",
+    fd2PMT: "1.00",
+    fd2Result: "",
+  }
+}
+
+type siAccurateFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1Time string
+  fd1TimePeriod string
+  fd1Interest string
+  fd1Compound string
+  fd1PV string
+  fd1Result string
+  //
+  fd2Time string
+  fd2TimePeriod string
+  fd2Amount string
+  fd2PV string
+  fd2Result string
+  //
+  fd3Time string
+  fd3TimePeriod string
+  fd3Interest string
+  fd3Compound string
+  fd3Amount string
+  fd3Result string
+  //
+  fd4Interest string
+  fd4Compound string
+  fd4Amount string
+  fd4PV string
+  fd4Result string
+}
+
+func newSiAccurateFields() *siAccurateFields {
+  return &siAccurateFields {
+    currentPage: "rhs-ui1",
+    currentButton: "lhs-button1",
+    //
+    fd1Time: "1",
+    fd1TimePeriod: "year",
+    fd1Interest: "1.00",
+    fd1Compound: "annually",
+    fd1PV: "1.00",
+    fd1Result: "",
+    //
+    fd2Time: "1",
+    fd2TimePeriod: "year",
+    fd2Amount: "1.00",
+    fd2PV: "1.00",
+    fd2Result: "",
+    //
+    fd3Time: "1",
+    fd3TimePeriod: "year",
+    fd3Interest: "1.0",
+    fd3Compound: "annually",
+    fd3Amount: "1.00",
+    fd3Result: "",
+    //
+    fd4Interest: "1.00",
+    fd4Compound: "annually",
+    fd4Amount: "1.00",
+    fd4PV: "1.00",
+    fd4Result: "",
+  }
+}
+
+type siBankersFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1Time string
+  fd1TimePeriod string
+  fd1Interest string
+  fd1Compound string
+  fd1PV string
+  fd1Result string
+  //
+  fd2Time string
+  fd2TimePeriod string
+  fd2Amount string
+  fd2PV string
+  fd2Result string
+  //
+  fd3Time string
+  fd3TimePeriod string
+  fd3Interest string
+  fd3Compound string
+  fd3Amount string
+  fd3Result string
+  //
+  fd4Interest string
+  fd4Compound string
+  fd4Amount string
+  fd4PV string
+  fd4Result string
+}
+
+func newSiBankersFields() *siBankersFields {
+  return &siBankersFields {
+    currentPage: "rhs-ui1",
+    currentButton: "lhs-button1",
+    //
+    fd1Time: "1",
+    fd1TimePeriod: "year",
+    fd1Interest: "1.00",
+    fd1Compound: "annually",
+    fd1PV: "1.00",
+    fd1Result: "",
+    //
+    fd2Time: "1",
+    fd2TimePeriod: "year",
+    fd2Amount: "1.00",
+    fd2PV: "1.00",
+    fd2Result: "",
+    //
+    fd3Time: "1",
+    fd3TimePeriod: "year",
+    fd3Interest: "1.0",
+    fd3Compound: "annually",
+    fd3Amount: "1.00",
+    fd3Result: "",
+    //
+    fd4Interest: "1.00",
+    fd4Compound: "annually",
+    fd4Amount: "1.00",
+    fd4PV: "1.00",
+    fd4Result: "",
+  }
+}
+
+type siOrdinaryFields struct {
+  currentPage string
+  currentButton string
+  //
+  fd1Time string
+  fd1TimePeriod string
+  fd1Interest string
+  fd1Compound string
+  fd1PV string
+  fd1Result string
+  //
+  fd2Time string
+  fd2TimePeriod string
+  fd2Amount string
+  fd2PV string
+  fd2Result string
+  //
+  fd3Time string
+  fd3TimePeriod string
+  fd3Interest string
+  fd3Compound string
+  fd3Amount string
+  fd3Result string
+  //
+  fd4Interest string
+  fd4Compound string
+  fd4Amount string
+  fd4PV string
+  fd4Result string
+}
+
+func newSiOrdinaryFields() *siOrdinaryFields {
+  return &siOrdinaryFields {
+    currentPage: "rhs-ui1",
+    currentButton: "lhs-button1",
+    //
+    fd1Time: "1",
+    fd1TimePeriod: "year",
+    fd1Interest: "1.00",
+    fd1Compound: "annually",
+    fd1PV: "1.00",
+    fd1Result: "",
+    //
+    fd2Time: "1",
+    fd2TimePeriod: "year",
+    fd2Amount: "1.00",
+    fd2PV: "1.00",
+    fd2Result: "",
+    //
+    fd3Time: "1",
+    fd3TimePeriod: "year",
+    fd3Interest: "1.0",
+    fd3Compound: "annually",
+    fd3Amount: "1.00",
+    fd3Result: "",
+    //
+    fd4Interest: "1.00",
+    fd4Compound: "annually",
+    fd4Amount: "1.00",
+    fd4PV: "1.00",
+    fd4Result: "",
+  }
+}
 
 func AddSessionDataPerUser(userName string) {
   fd := Fields{
@@ -457,7 +922,18 @@ func AddSessionDataPerUser(userName string) {
     bonds: newBondsFields(),
     adFv: newAdFvFields(),
     adPv: newAdPvFields(),
+    adCp: newAdCpFields(),
     adEpp: newAdEppFields(),
+    oaCp: newOaCpFields(),
+    oaEpp: newOaEppFields(),
+    oaFv: newOaFvFields(),
+    oaGa: newOaGaFields(),
+    oaInterestRate: newOaInterestRateFields(),
+    oaPerpetuity: newOaPerpetuityFields(),
+    oaPv: newOaPvFields(),
+    siAccurate: newSiAccurateFields(),
+    siBankers: newSiBankersFields(),
+    siOrdinary: newSiOrdinaryFields(),
   }
   currentFields[userName] = fd
 }
@@ -488,4 +964,44 @@ func GetAdCpFields(userName string) *adCpFields {
 
 func GetAdEppFields(userName string) *adEppFields {
   return currentFields[userName].adEpp
+}
+
+func GetOaCpFields(userName string) *oaCpFields {
+  return currentFields[userName].oaCp
+}
+
+func GetOaEppFields(userName string) *oaEppFields {
+  return currentFields[userName].oaEpp
+}
+
+func GetOaFvFields(userName string) *oaFvFields {
+  return currentFields[userName].oaFv
+}
+
+func GetOaGaFields(userName string) *oaGaFields {
+  return currentFields[userName].oaGa
+}
+
+func GetOaInterestRateFields(userName string) *oaInterestRateFields {
+  return currentFields[userName].oaInterestRate
+}
+
+func GetOaPerpetuityFields(userName string) *oaPerpetuityFields {
+  return currentFields[userName].oaPerpetuity
+}
+
+func GetOaPvFields(userName string) *oaPvFields {
+  return currentFields[userName].oaPv
+}
+
+func GetSiAccurateFields(userName string) *siAccurateFields {
+  return currentFields[userName].siAccurate
+}
+
+func GetSiBankersFields(userName string) *siBankersFields {
+  return currentFields[userName].siBankers
+}
+
+func GetSiOrdinaryFields(userName string) *siOrdinaryFields {
+  return currentFields[userName].siOrdinary
 }

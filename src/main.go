@@ -358,18 +358,18 @@ func makeHandlers() *handlers {
   var wfadepp = webfinances.WfAdEppPages{}
   var wfadfv = webfinances.WfAdFvPages{}
   var wfadpv = webfinances.WfAdPvPages{}
-  var wfoainterest = webfinances.NewWfOaInterestRatePages()
-  var wfoapv = webfinances.NewWfOaPvPages()
-  var wfoafv = webfinances.NewWfOaFvPages()
-  var wfoacp = webfinances.NewWfOaCpPages()
-  var wfoaepp = webfinances.NewWfOaEppPages()
-  var wfoaga = webfinances.NewWfOaGaPages()
-  var wfoaperpetuity = webfinances.NewWfOaPerpetuityPages()
+  var wfoainterest = webfinances.WfOaInterestRatePages{}
+  var wfoapv = webfinances.WfOaPvPages{}
+  var wfoafv = webfinances.WfOaFvPages{}
+  var wfoacp = webfinances.WfOaCpPages{}
+  var wfoaepp = webfinances.WfOaEppPages{}
+  var wfoaga = webfinances.WfOaGaPages{}
+  var wfoaperpetuity = webfinances.WfOaPerpetuityPages{}
   var wfmortgage = webfinances.WfMortgagePages{}
   var wfbonds = webfinances.WfBondsPages{}
-  var wfsia = webfinances.NewWfSiAccuratePages()
-  var wfsio = webfinances.NewWfSiOrdinaryPages()
-  var wfsib = webfinances.NewWfSiBankersPages()
+  var wfsia = webfinances.WfSiAccuratePages{}
+  var wfsio = webfinances.WfSiOrdinaryPages{}
+  var wfsib = webfinances.WfSiBankersPages{}
   var wfmisc = webfinances.WfMiscellaneousPages{}
   /***
   The Go web server will route requests to different functions depending on the requested URL.
