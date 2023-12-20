@@ -38,7 +38,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
     "Entering MortgagePages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    mf := GetMortgageFields(sessions.GetUserName(sessionToken))
+    mf := getMortgageFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.

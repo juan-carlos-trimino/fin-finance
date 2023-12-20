@@ -28,7 +28,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
     "Entering SimpleInterestAccuratePages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    sif := GetSiAccurateFields(sessions.GetUserName(sessionToken))
+    sif := getSiAccurateFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.

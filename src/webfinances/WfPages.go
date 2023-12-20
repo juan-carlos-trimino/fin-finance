@@ -85,6 +85,7 @@ func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
   if sessionToken == "" {
     invalidSession(res)
   } else {
+    DeleteSessionDataPerUser(sessions.GetUserName(sessionToken))
     cookie := sessions.DeleteSession(sessionToken)
     http.SetCookie(res, cookie)
     http.Redirect(res, req, "/", http.StatusSeeOther)

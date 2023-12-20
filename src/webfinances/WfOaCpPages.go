@@ -28,7 +28,7 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
     "Entering OaCpPages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    of := GetOaCpFields(sessions.GetUserName(sessionToken))
+    of := getOaCpFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.

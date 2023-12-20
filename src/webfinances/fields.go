@@ -1,9 +1,11 @@
 package webfinances
 
 //Store the fields for each user in memory.
-var currentFields = map[string]Fields{}  //key: user, value: fields
+var currentFields = map[string]fields{}  //key: user, value: fields
 
-type Fields struct {
+type fields struct {
+  //Make the pointers unexported so that clients can't interact with them directly but only via
+  //exported methods.
   miscellaneous *miscellaneousFields
   mortgage *mortgageFields
   bonds *bondsFields
@@ -89,6 +91,10 @@ func newMiscellaneousFields() *miscellaneousFields {
   }
 }
 
+func getMiscellaneousFields(userName string) *miscellaneousFields {
+  return currentFields[userName].miscellaneous
+}
+
 type mortgageFields struct {
   currentPage string
   currentButton string
@@ -143,6 +149,10 @@ func newMortgageFields() *mortgageFields {
     fd3Hbalance: "100000.00",
     fd3Result: [3]string { mortgage_notes[0], mortgage_notes[1], "" },
   }
+}
+
+func getMortgageFields(userName string) *mortgageFields {
+  return currentFields[userName].mortgage
 }
 
 type bondsFields struct {
@@ -287,6 +297,10 @@ func newBondsFields() *bondsFields {
   }
 }
 
+func getBondsFields(userName string) *bondsFields {
+  return currentFields[userName].bonds
+}
+
 type adFvFields struct {
   currentPage string
   currentButton string
@@ -327,6 +341,10 @@ func newAdFvFields() *adFvFields {
   }
 }
 
+func getAdFvFields(userName string) *adFvFields {
+  return currentFields[userName].adFv
+}
+
 type adPvFields struct {
   currentPage string
   currentButton string
@@ -365,6 +383,10 @@ func newAdPvFields() *adPvFields {
     fd2PMT: "1.00",
     fd2Result: "",
   }
+}
+
+func getAdPvFields(userName string) *adPvFields {
+  return currentFields[userName].adPv
 }
 
 type adCpFields struct {
@@ -415,6 +437,10 @@ func newAdCpFields() *adCpFields {
   }
 }
 
+func getAdCpFields(userName string) *adCpFields {
+  return currentFields[userName].adCp
+}
+
 type adEppFields struct {
   currentPage string
   currentButton string
@@ -455,6 +481,10 @@ func newAdEppFields() *adEppFields {
   }
 }
 
+func getAdEppFields(userName string) *adEppFields {
+  return currentFields[userName].adEpp
+}
+
 type oaCpFields struct {
   currentPage string
   currentButton string
@@ -476,6 +506,10 @@ type oaCpFields struct {
   fd3Payment string
   fd3FV string
   fd3Result string
+}
+
+func getOaCpFields(userName string) *oaCpFields {
+  return currentFields[userName].oaCp
 }
 
 func newOaCpFields() *oaCpFields {
@@ -520,6 +554,10 @@ type oaEppFields struct {
   fd2Compound string
   fd2PV string
   fd2Result string
+}
+
+func getOaEppFields(userName string) *oaEppFields {
+  return currentFields[userName].oaEpp
 }
 
 func newOaEppFields() *oaEppFields {
@@ -583,6 +621,10 @@ func newOaFvFields() *oaFvFields {
   }
 }
 
+func getOaFvFields(userName string) *oaFvFields {
+  return currentFields[userName].oaFv
+}
+
 type oaGaFields struct {
   currentPage string
   currentButton string
@@ -623,6 +665,10 @@ func newOaGaFields() *oaGaFields {
   }
 }
 
+func getOaGaFields(userName string) *oaGaFields {
+  return currentFields[userName].oaGa
+}
+
 type oaInterestRateFields struct {
   currentPage string
   currentButton string
@@ -647,6 +693,10 @@ func newOaInterestRateFields() *oaInterestRateFields {
     fd1FV: "1.07",
     fd1Result: "",
   }
+}
+
+func getOaInterestRateFields(userName string) *oaInterestRateFields {
+  return currentFields[userName].oaInterestRate
 }
 
 type oaPerpetuityFields struct {
@@ -681,6 +731,10 @@ func newOaPerpetuityFields() *oaPerpetuityFields {
     fd2Pmt: "1.00",
     fd2Result: "",
   }
+}
+
+func getOaPerpetuityFields(userName string) *oaPerpetuityFields {
+  return currentFields[userName].oaPerpetuity
 }
 
 type oaPvFields struct {
@@ -721,6 +775,10 @@ func newOaPvFields() *oaPvFields {
     fd2PMT: "1.00",
     fd2Result: "",
   }
+}
+
+func getOaPvFields(userName string) *oaPvFields {
+  return currentFields[userName].oaPv
 }
 
 type siAccurateFields struct {
@@ -787,6 +845,10 @@ func newSiAccurateFields() *siAccurateFields {
   }
 }
 
+func getSiAccurateFields(userName string) *siAccurateFields {
+  return currentFields[userName].siAccurate
+}
+
 type siBankersFields struct {
   currentPage string
   currentButton string
@@ -849,6 +911,10 @@ func newSiBankersFields() *siBankersFields {
     fd4PV: "1.00",
     fd4Result: "",
   }
+}
+
+func getSiBankersFields(userName string) *siBankersFields {
+  return currentFields[userName].siBankers
 }
 
 type siOrdinaryFields struct {
@@ -915,93 +981,35 @@ func newSiOrdinaryFields() *siOrdinaryFields {
   }
 }
 
-func AddSessionDataPerUser(userName string) {
-  fd := Fields{
-    miscellaneous: newMiscellaneousFields(),
-    mortgage: newMortgageFields(),
-    bonds: newBondsFields(),
-    adFv: newAdFvFields(),
-    adPv: newAdPvFields(),
-    adCp: newAdCpFields(),
-    adEpp: newAdEppFields(),
-    oaCp: newOaCpFields(),
-    oaEpp: newOaEppFields(),
-    oaFv: newOaFvFields(),
-    oaGa: newOaGaFields(),
-    oaInterestRate: newOaInterestRateFields(),
-    oaPerpetuity: newOaPerpetuityFields(),
-    oaPv: newOaPvFields(),
-    siAccurate: newSiAccurateFields(),
-    siBankers: newSiBankersFields(),
-    siOrdinary: newSiOrdinaryFields(),
-  }
-  currentFields[userName] = fd
-}
-
-func GetMiscellaneousFields(userName string) *miscellaneousFields {
-  return currentFields[userName].miscellaneous
-}
-
-func GetMortgageFields(userName string) *mortgageFields {
-  return currentFields[userName].mortgage
-}
-
-func GetBondsFields(userName string) *bondsFields {
-  return currentFields[userName].bonds
-}
-
-func GetAdFvFields(userName string) *adFvFields {
-  return currentFields[userName].adFv
-}
-
-func GetAdPvFields(userName string) *adPvFields {
-  return currentFields[userName].adPv
-}
-
-func GetAdCpFields(userName string) *adCpFields {
-  return currentFields[userName].adCp
-}
-
-func GetAdEppFields(userName string) *adEppFields {
-  return currentFields[userName].adEpp
-}
-
-func GetOaCpFields(userName string) *oaCpFields {
-  return currentFields[userName].oaCp
-}
-
-func GetOaEppFields(userName string) *oaEppFields {
-  return currentFields[userName].oaEpp
-}
-
-func GetOaFvFields(userName string) *oaFvFields {
-  return currentFields[userName].oaFv
-}
-
-func GetOaGaFields(userName string) *oaGaFields {
-  return currentFields[userName].oaGa
-}
-
-func GetOaInterestRateFields(userName string) *oaInterestRateFields {
-  return currentFields[userName].oaInterestRate
-}
-
-func GetOaPerpetuityFields(userName string) *oaPerpetuityFields {
-  return currentFields[userName].oaPerpetuity
-}
-
-func GetOaPvFields(userName string) *oaPvFields {
-  return currentFields[userName].oaPv
-}
-
-func GetSiAccurateFields(userName string) *siAccurateFields {
-  return currentFields[userName].siAccurate
-}
-
-func GetSiBankersFields(userName string) *siBankersFields {
-  return currentFields[userName].siBankers
-}
-
-func GetSiOrdinaryFields(userName string) *siOrdinaryFields {
+func getSiOrdinaryFields(userName string) *siOrdinaryFields {
   return currentFields[userName].siOrdinary
+}
+
+func AddSessionDataPerUser(userName string) {
+  if _, ok := currentFields[userName]; !ok {
+    fd := fields{
+      miscellaneous: newMiscellaneousFields(),
+      mortgage: newMortgageFields(),
+      bonds: newBondsFields(),
+      adFv: newAdFvFields(),
+      adPv: newAdPvFields(),
+      adCp: newAdCpFields(),
+      adEpp: newAdEppFields(),
+      oaCp: newOaCpFields(),
+      oaEpp: newOaEppFields(),
+      oaFv: newOaFvFields(),
+      oaGa: newOaGaFields(),
+      oaInterestRate: newOaInterestRateFields(),
+      oaPerpetuity: newOaPerpetuityFields(),
+      oaPv: newOaPvFields(),
+      siAccurate: newSiAccurateFields(),
+      siBankers: newSiBankersFields(),
+      siOrdinary: newSiOrdinaryFields(),
+    }
+    currentFields[userName] = fd
+  }
+}
+
+func DeleteSessionDataPerUser(userName string) {
+  delete(currentFields, userName)
 }

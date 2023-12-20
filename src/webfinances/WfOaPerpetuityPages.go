@@ -15,46 +15,6 @@ import (
 type WfOaPerpetuityPages struct {
 }
 
-/***
-type WfOaPerpetuityPages interface {
-  OaPerpetuityPages(http.ResponseWriter, *http.Request)
-}
-
-type wfOaPerpetuityPages struct {
-  currentPage string
-  currentButton string
-  //
-  fd1Interest string
-  fd1Compound string
-  fd1Pmt string
-  fd1Result string
-  //
-  fd2Interest string
-  fd2Compound string
-  fd2Grow string
-  fd2Pmt string
-  fd2Result string
-}
-
-func NewWfOaPerpetuityPages() WfOaPerpetuityPages {
-  return &wfOaPerpetuityPages {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
-    //
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1Pmt: "1.00",
-    fd1Result: "",
-    //
-    fd2Interest: "1.00",
-    fd2Compound: "annually",
-    fd2Grow: "1.00",
-    fd2Pmt: "1.00",
-    fd2Result: "",
-  }
-}
-***/
-
 func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
@@ -68,7 +28,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
     "Entering OaPerpetuityPages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    of := GetOaPerpetuityFields(sessions.GetUserName(sessionToken))
+    of := getOaPerpetuityFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.

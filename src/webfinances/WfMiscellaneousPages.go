@@ -36,7 +36,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     "Entering MiscellaneousPages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    mf := GetMiscellaneousFields(sessions.GetUserName(sessionToken))
+    mf := getMiscellaneousFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.

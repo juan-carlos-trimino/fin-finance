@@ -15,76 +15,6 @@ import (
 type WfSiOrdinaryPages struct {
 }
 
-/***
-type WfSiOrdinaryPages interface {
-  SimpleInterestOrdinaryPages(http.ResponseWriter, *http.Request)
-}
-
-type wfSiOrdinaryPages struct {
-  currentPage string
-  currentButton string
-  //
-  fd1Time string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1PV string
-  fd1Result string
-  //
-  fd2Time string
-  fd2TimePeriod string
-  fd2Amount string
-  fd2PV string
-  fd2Result string
-  //
-  fd3Time string
-  fd3TimePeriod string
-  fd3Interest string
-  fd3Compound string
-  fd3Amount string
-  fd3Result string
-  //
-  fd4Interest string
-  fd4Compound string
-  fd4Amount string
-  fd4PV string
-  fd4Result string
-}
-
-func NewWfSiOrdinaryPages() WfSiOrdinaryPages {
-  return &wfSiOrdinaryPages {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
-    //
-    fd1Time: "1",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1PV: "1.00",
-    fd1Result: "",
-    //
-    fd2Time: "1",
-    fd2TimePeriod: "year",
-    fd2Amount: "1.00",
-    fd2PV: "1.00",
-    fd2Result: "",
-    //
-    fd3Time: "1",
-    fd3TimePeriod: "year",
-    fd3Interest: "1.0",
-    fd3Compound: "annually",
-    fd3Amount: "1.00",
-    fd3Result: "",
-    //
-    fd4Interest: "1.00",
-    fd4Compound: "annually",
-    fd4Amount: "1.00",
-    fd4PV: "1.00",
-    fd4Result: "",
-  }
-}
-**/
-
 func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
@@ -94,7 +24,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
   }
   fmt.Printf("%s - Entering SimpleInterestOrdinaryPages/webfinances.\n", m.DTF())
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    sif := GetSiOrdinaryFields(sessions.GetUserName(sessionToken))
+    sif := getSiOrdinaryFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.

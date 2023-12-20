@@ -15,52 +15,6 @@ import (
 type WfOaPvPages struct {
 }
 
-/***
-type WfOaPvPages interface {
-  OaPvPages(http.ResponseWriter, *http.Request)
-}
-
-type wfOaPvPages struct {
-  currentPage string
-  currentButton string
-  //
-  fd1N string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1FV string
-  fd1Result string
-  //
-  fd2N string
-  fd2TimePeriod string
-  fd2Interest string
-  fd2Compound string
-  fd2PMT string
-  fd2Result string
-}
-
-func NewWfOaPvPages() WfOaPvPages {
-  return &wfOaPvPages {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
-    //
-    fd1N: "1.0",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "monthly",
-    fd1FV: "1.00",
-    fd1Result: "",
-    //
-    fd2N: "1.0",
-    fd2TimePeriod: "year",
-    fd2Interest: "1.00",
-    fd2Compound: "monthly",
-    fd2PMT: "1.00",
-    fd2Result: "",
-  }
-}
-***/
-
 func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
@@ -74,7 +28,7 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
     "Entering OaPvPages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    of := GetOaPvFields(sessions.GetUserName(sessionToken))
+    of := getOaPvFields(sessions.GetUserName(sessionToken))
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
