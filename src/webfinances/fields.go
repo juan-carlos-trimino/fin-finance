@@ -1,8 +1,38 @@
 package webfinances
 
-//Store the fields for each user in memory.
-var currentFields = map[string]fields{}  //key: user, value: fields
+/*#28: Maps and memory leaks
+#27: Inefficient map initialization
 
+the number of buckets in a map cannot shrink. Therefore, removing
+elements from a map doesn’t impact the number of existing buckets; it just zeroes
+the slots in the buckets. A map can only grow and have more buckets; it never shrinks.
+
+Another solution would be to change the map type to store an array pointer:
+map[int]*[128]byte. It doesn’t solve the fact that we will have a significant number of
+buckets; however, each bucket entry will reserve the size of a pointer for the value
+instead of 128 bytes (8 bytes on 64-bit systems and 4 bytes on 32-bit systems).
+
+As we have seen, adding n elements to a map and then deleting all the elements
+means keeping the same number of buckets in memory. So, we must remember that
+because a Go map can only grow in size, so does its memory consumption. There is no
+automated strategy to shrink it. If this leads to high memory consumption, we can try
+different options such as forcing Go to re-create the map or using pointers to check if
+it can be optimized.
+
+NOTE If a key or a value is over 128 bytes, Go won’t store it directly in the
+map bucket. Instead, Go stores a pointer to reference the key or the value.
+*/
+//Store the fields for each user in memory.
+var currentFields = map[string]*fields{}  //key: user, value: fields
+
+/***
+Browsers default to use the same collection of cookies regardless of whether you are opening a
+duplicate web page in a new tab or a new browser instance. Hence, two different tabs or two
+instances of the same browser will look like the same session to the server.
+
+Because multiple instances use the same cookies, the server cannot tell requests from them apart,
+and it will associate them with the same Session data because they all have the same SessionID.
+***/
 type fields struct {
   //Make the pointers unexported so that clients can't interact with them directly but only via
   //exported methods.
@@ -987,7 +1017,7 @@ func getSiOrdinaryFields(userName string) *siOrdinaryFields {
 
 func AddSessionDataPerUser(userName string) {
   if _, ok := currentFields[userName]; !ok {
-    fd := fields{
+    fd := &fields{
       miscellaneous: newMiscellaneousFields(),
       mortgage: newMortgageFields(),
       bonds: newBondsFields(),

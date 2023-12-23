@@ -46,7 +46,7 @@ func HashSecret(secret string) ([]byte, error) {
   return hashedSecret, err
 }
 
-func CompareHashAndPassword(hashedPassword, password []byte) (bool, error) {
+func CompareHashAndPassword(hashedPassword[]byte, password []byte) (bool, error) {
   err := bcrypt.CompareHashAndPassword(hashedPassword, password)
   return err == nil, err
 }

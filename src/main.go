@@ -220,7 +220,6 @@ func main() {
     }
     fmt.Printf("Using HTTPS PORT: %s\n", HTTPS_PORT)
   }
-  //SERVER += ":" + PORT
   ev, exists = os.LookupEnv("SHUTDOWN_TIMEOUT")
   if exists {
     tm, err := strconv.Atoi(ev)
@@ -554,9 +553,9 @@ func readUsers(dir, filename string) {
     if err := sessions.ReadUsersFromFile(dir + "/" + filename); err != nil {
       panic(err)
     }
-  } else {
-    sessions.AddFromMemory(USER_NAME, PASSWORD)
-  }
+  }// else {
+//    sessions.AddFromMemory(USER_NAME, PASSWORD)
+//  }
 }
 
 
