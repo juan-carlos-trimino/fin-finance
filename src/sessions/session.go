@@ -12,24 +12,22 @@ import (
   "time"
 )
 
-//Store the session information for each user in memory.
-var sessions = map[string]session_token{}  //key: sessionToken, value: session
-
 type session_token struct {
   Username string
   Expiry time.Time  //Enforce periodic session termination as a way to prevent session hijacking.
-//  lock sync.Mutex  //Protect session
   CsrfToken string
 }
 
 //Determine if a session has expired.
 func IsSessionExpired(sessionToken string) bool {
-  s, exists := sessions[sessionToken]
+  shr.slock.Lock()  //Writer lock.
+  defer shr.slock.Unlock()
+  s, exists := shr.sessions[sessionToken]
   if exists {
     var expired bool = s.Expiry.Before(time.Now())
     if expired {
       //Delete the session.
-      delete(sessions, sessionToken)
+      delete(shr.sessions, sessionToken)
     }
     return expired
   }
@@ -37,7 +35,9 @@ func IsSessionExpired(sessionToken string) bool {
 }
 
 func SessionExists(sessionToken string) bool {
-  _, exists := sessions[sessionToken]
+  shr.slock.RLock()  //Readers lock.
+  _, exists := shr.sessions[sessionToken]
+  shr.slock.RUnlock()
   return exists
 }
 
@@ -52,7 +52,9 @@ func CompareHashAndPassword(hashedPassword[]byte, password []byte) (bool, error)
 }
 
 func CompareUuids(csrf, sessionToken string) bool {
-  session, exists := sessions[sessionToken]
+  shr.slock.RLock()
+  defer shr.slock.RUnlock()
+  session, exists := shr.sessions[sessionToken]
   if exists {
     return strings.EqualFold(csrf, session.CsrfToken)
   }
@@ -68,24 +70,28 @@ func AddEntryToSessions(userName string) (sessionToken string, session session_t
      why the expiry time is restricted to small intervals (a few seconds to a couple of minutes).
   ***/
   sessionToken = uuid.NewString()
-  sessions[sessionToken] = session_token{
+  shr.slock.Lock()
+  defer shr.slock.Unlock()
+  shr.sessions[sessionToken] = session_token{
     Username: userName,
     Expiry: time.Now().Add(300 * time.Minute),
     CsrfToken: uuid.NewString(),
   }
-  session = sessions[sessionToken]
+  session = shr.sessions[sessionToken]
   return
 }
 
 func UpdateEntryInSessions(oldSessionToken string) (newSessionToken string, session session_token) {
   newSessionToken = uuid.NewString()
-  sessions[newSessionToken] = session_token{
-    Username: sessions[oldSessionToken].Username,
+  shr.slock.Lock()
+  defer shr.slock.Unlock()
+  shr.sessions[newSessionToken] = session_token{
+    Username: shr.sessions[oldSessionToken].Username,
     Expiry: time.Now().Add(300 * time.Minute),
     CsrfToken: uuid.NewString(),
   }
-  delete(sessions, oldSessionToken)
-  session = sessions[newSessionToken]
+  delete(shr.sessions, oldSessionToken)
+  session = shr.sessions[newSessionToken]
   return
 }
 
@@ -109,7 +115,9 @@ func CreateCookie(sessionToken string) (cookie *http.Cookie) {
 }
 
 func DeleteSession(sessionToken string) (cookie *http.Cookie) {
-  delete(sessions, sessionToken)
+  shr.slock.Lock()
+  delete(shr.sessions, sessionToken)
+  shr.slock.Unlock()
   cookie = &http.Cookie{
     Name: "session_token",
     Value: "",
@@ -123,5 +131,7 @@ func DeleteSession(sessionToken string) (cookie *http.Cookie) {
 }
 
 func GetUserName(sessionToken string) string {
-  return sessions[sessionToken].Username
+  shr.slock.RLock()
+  defer shr.slock.RUnlock()
+  return shr.sessions[sessionToken].Username
 }
