@@ -374,7 +374,32 @@ func makeHandlers() *handlers {
   The Go web server will route requests to different functions depending on the requested URL.
   ***/
   h := &handlers{}
-  h.mux = make(map[string]http.HandlerFunc, 64)
+  /***
+  With a map, we can give the built-in function make only an initial size and not a capacity, as
+  with slices: hence, a single argument. Just like with slices, if we know up front the number of
+  elements a map will contain, we should create it by providing an initial size. Doing this avoids
+  potential map growth, which is quite heavy computation-wise because it requires reallocating
+  enough space and rebalancing all the elements. Also, specifying a size n doesn't mean making a
+  map with a maximum number of n elements. We can still add more than n elements if needed.
+  (Instead, it means asking the Go runtime to allocate a map with room for at least n elements,
+  which is helpful if we already know the size up front.)
+
+  Maps and memory usage
+  ---------------------
+  A map is composed of eight-element buckets. Under the hood, a Go map is a pointer to a
+  runtime.hmap struct. The number of buckets in a map cannot shrink. Therefore, removing elements
+  from a map doesn't impact the number of existing buckets; it just zeroes the slots in the
+  buckets. A map can only grow and have more buckets; it never shrinks.
+
+  If we don't want to manually restart our service to clean the amount of memory consumed by the
+  map, a solution would be to change the map type to store an array pointer; e.g., change
+  map[int][128]byte to map[int]*[128]byte. It doesn't solve the fact that we will have a
+  significant number of buckets; however, each bucket entry will reserve the size of a pointer for
+  the value instead of 128 bytes (8 bytes on 64-bit systems and 4 bytes on 32-bit systems). Of
+  course, with this solution the array of [128]byte will be stored on the heap; this can lead to
+  fragmentation of the heap as well as putting pressure on the GC.
+  ***/
+  h.mux = make(map[string]http.HandlerFunc, 128)
   //h.mux["/readiness"] =
   //func (res http.ResponseWriter, req *http.Request){
   //  fmt.Printf("\naaaaaaServer not ready. %s\n", SERVER)
