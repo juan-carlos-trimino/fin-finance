@@ -1,9 +1,13 @@
 package misc
 
 import (
-  "os/user"
-  "runtime"
-  "strings"
+	"io"
+	"os"
+	"os/user"
+	"runtime"
+	"strings"
+	"syscall"
+	// "time"
 )
 
 //Is the current user running as root?
@@ -72,3 +76,68 @@ $ ls -l file_name.txt
 And to get the permissions for a directory:
 $ ls -ld directory_name
 ***/
+func CreateDirs(umask int, perm os.FileMode, dirs ...string) (string, error) {
+  sb := strings.Builder{}
+  //Grow to a larger size to reduce future resizes of the buffer.
+  sb.Grow(1024)
+  for _, dir := range dirs {
+    sb.WriteString(dir)
+    if !strings.HasSuffix(sb.String(), "/") {
+      sb.WriteString("/")
+    }
+    if _, err := os.Stat(sb.String()); err != nil {
+      if os.IsNotExist(err) {
+        oldMask := syscall.Umask(umask)
+        err := os.Mkdir(sb.String(), perm)
+        syscall.Umask(oldMask)
+        if err != nil {
+          return "", err
+        }
+      } else {
+        return "", err
+      }
+    }
+  }
+  return sb.String(), nil
+}
+
+func ReadAllShareLock(filePath string, flag int, perm os.FileMode) ([]byte, error) {
+  file, err := os.OpenFile(filePath, flag, perm)
+  if err != nil {
+    return nil, err
+  }
+  //Deferred function calls are pushed onto a stack. When a function returns, its deferred calls
+  //are executed in last-in-first-out order.
+  defer file.Close()
+  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_SH); err != nil {  //Share reads.
+    return nil, err
+  }
+  defer syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+  obj, err := io.ReadAll(file)
+  if err != nil {
+    return nil, err
+  }
+  return obj, nil
+}
+
+
+
+func WriteAllExclusiveLock(filePath string, data []byte, flag int, perm os.FileMode) (int, error) {
+  file, err := os.OpenFile(filePath, flag, perm)
+  if err != nil {
+    return -1, err
+  }
+  //Deferred function calls are pushed onto a stack. When a function returns, its deferred calls
+  //are executed in last-in-first-out order.
+  defer file.Close()
+  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX); err != nil {  //Exclusive write.
+    return -1, err
+  }
+  defer syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+  n, err := file.Write(data)
+  if err != nil {
+    return -1, err
+  }
+  //time.Sleep(30 * time.Hour)
+  return n, nil
+}
