@@ -120,8 +120,6 @@ func ReadAllShareLock(filePath string, flag int, perm os.FileMode) ([]byte, erro
   return obj, nil
 }
 
-
-
 func WriteAllExclusiveLock(filePath string, data []byte, flag int, perm os.FileMode) (int, error) {
   file, err := os.OpenFile(filePath, flag, perm)
   if err != nil {
@@ -138,6 +136,5 @@ func WriteAllExclusiveLock(filePath string, data []byte, flag int, perm os.FileM
   if err != nil {
     return -1, err
   }
-  //time.Sleep(30 * time.Hour)
   return n, nil
 }

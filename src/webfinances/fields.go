@@ -149,7 +149,7 @@ func newMortgageFields(dir1, dir2 string) *mortgageFields {
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
-  obj, err := readFields(dir + "mortgage.bin")
+  obj, err := readFields(dir + "mortgage.txt")
   if obj != nil {
     var m mortgageFields
     err := json.Unmarshal(obj, &m)

@@ -275,19 +275,15 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         mf.Fd3Result[2] = ""
       }
     }
-
-    /////////////
-    
+    //
     if data, err := json.Marshal(mf); err != nil {
       fmt.Printf("%s - %s\n", m.DTF(), err)
     } else {
-      filePath := fmt.Sprintf("%s/%s/mortgage.bin", mainDir, userName)
-      if _, err = misc.WriteAllExclusiveLock(filePath, data, os.O_WRONLY, 0o220); err != nil {
+      filePath := fmt.Sprintf("%s/%s/mortgage.txt", mainDir, userName)
+      if _, err := misc.WriteAllExclusiveLock(filePath, data, os.O_WRONLY, 0o220); err != nil {
         fmt.Printf("%s - %s\n", m.DTF(), err)
       }
     }
-/////////////////
-
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
     fmt.Printf("%s - %s\n", m.DTF(), errString)
