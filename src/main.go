@@ -1,5 +1,4 @@
-//go:build !windows
-// +build !windows
+// +build linux,!windows
 
 // HTTP server.
 package main
@@ -558,9 +557,9 @@ func readUsers(dir, filename string) {
   if dir != "" && filename != "" {
     if _, err := os.Stat(dir); err != nil {
       if os.IsNotExist(err) {
-        oldMask := syscall.Umask(0017)
+        oldMask := syscall.Umask(0o017)
         fmt.Printf("Default mask: %04o\nUsing mask: 0017\n", oldMask)
-        err = os.Mkdir(dir, 0777)
+        err = os.Mkdir(dir, 0o777)
         syscall.Umask(oldMask)
         if err != nil {
           panic("Cannot create dir.\n" + err.Error())
