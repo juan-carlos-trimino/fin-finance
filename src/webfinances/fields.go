@@ -1,27 +1,19 @@
 package webfinances
 
-/*#28: Maps and memory leaks
-#27: Inefficient map initialization
+import (
+	"encoding/json"
+	"errors"
+	"finance/misc"
+	"fmt"
+	"os"
+)
 
-the number of buckets in a map cannot shrink. Therefore, removing
-elements from a map doesn’t impact the number of existing buckets; it just zeroes
-the slots in the buckets. A map can only grow and have more buckets; it never shrinks.
+const (
+  mainDir string = "./dataDir/fields"
+)
 
-Another solution would be to change the map type to store an array pointer:
-map[int]*[128]byte. It doesn’t solve the fact that we will have a significant number of
-buckets; however, each bucket entry will reserve the size of a pointer for the value
-instead of 128 bytes (8 bytes on 64-bit systems and 4 bytes on 32-bit systems).
+var mt = misc.Misc{}
 
-As we have seen, adding n elements to a map and then deleting all the elements
-means keeping the same number of buckets in memory. So, we must remember that
-because a Go map can only grow in size, so does its memory consumption. There is no
-automated strategy to shrink it. If this leads to high memory consumption, we can try
-different options such as forcing Go to re-create the map or using pointers to check if
-it can be optimized.
-
-NOTE If a key or a value is over 128 bytes, Go won’t store it directly in the
-map bucket. Instead, Go stores a pointer to reference the key or the value.
-*/
 //Store the fields for each user in memory.
 var currentFields = map[string]*fields{}  //key: user, value: fields
 
@@ -126,58 +118,75 @@ func getMiscellaneousFields(userName string) *miscellaneousFields {
 }
 
 type mortgageFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  fd1N string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1Amount string
-  fd1Result [3]string
+  Fd1N string `json:"fd1N"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1Amount string `json:"fd1Amount"`
+  Fd1Result [3]string `json:"fd1Result"`
   //
-  fd2N string
-  fd2TimePeriod string
-  fd2Interest string
-  fd2Compound string
-  fd2Amount string
-  fd2TotalCost string
-  fd2TotalInterest string
-  fd2Result []Row
+  Fd2N string `json:"fd2N"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2Amount string `json:"fd2Amount"`
+  Fd2TotalCost string `json:"fd2TotalCost"`
+  Fd2TotalInterest string `json:"fd2TotalInterest"`
+  Fd2Result []Row `json:"fd2Result"`
   //
-  fd3Mrate string
-  fd3Mbalance string
-  fd3Hrate string
-  fd3Hbalance string
-  fd3Result [3]string
+  Fd3Mrate string `json:"fd3Mrate"`
+  Fd3Mbalance string `json:"fd3Mbalance"`
+  Fd3Hrate string `json:"fd3Hrate"`
+  Fd3Hbalance string `json:"fd3Hbalance"`
+  Fd3Result [3]string `json:"fd3Result"`
 }
 
-func newMortgageFields() *mortgageFields {
+func newMortgageFields(dir1, dir2 string) *mortgageFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "mortgage.bin")
+  if obj != nil {
+    var m mortgageFields
+    err := json.Unmarshal(obj, &m)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &m
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &mortgageFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1N: "30.0",
-    fd1TimePeriod: "year",
-    fd1Interest: "7.50",
-    fd1Compound: "monthly",
-    fd1Amount: "100000.00",
-    fd1Result: [3]string { "", "", "" },
+    Fd1N: "30.0",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "7.50",
+    Fd1Compound: "monthly",
+    Fd1Amount: "100000.00",
+    Fd1Result: [3]string { "", "", "" },
     //
-    fd2N: "30.0",
-    fd2TimePeriod: "year",
-    fd2Interest: "3.00",
-    fd2Compound: "monthly",
-    fd2Amount: "100000.00",
-    fd2TotalCost: "",
-    fd2TotalInterest: "",
-    fd2Result: []Row{},
+    Fd2N: "30.0",
+    Fd2TimePeriod: "year",
+    Fd2Interest: "3.00",
+    Fd2Compound: "monthly",
+    Fd2Amount: "100000.00",
+    Fd2TotalCost: "",
+    Fd2TotalInterest: "",
+    Fd2Result: []Row{},
     //
-    fd3Mrate: "3.375",
-    fd3Mbalance: "300000.00",
-    fd3Hrate: "2.875",
-    fd3Hbalance: "100000.00",
-    fd3Result: [3]string { mortgage_notes[0], mortgage_notes[1], "" },
+    Fd3Mrate: "3.375",
+    Fd3Mbalance: "300000.00",
+    Fd3Hrate: "2.875",
+    Fd3Hbalance: "100000.00",
+    Fd3Result: [3]string { mortgage_notes[0], mortgage_notes[1], "" },
   }
 }
 
@@ -1019,7 +1028,7 @@ func AddSessionDataPerUser(userName string) {
   if _, ok := currentFields[userName]; !ok {
     fd := &fields{
       miscellaneous: newMiscellaneousFields(),
-      mortgage: newMortgageFields(),
+      mortgage: newMortgageFields(mainDir, userName),
       bonds: newBondsFields(),
       adFv: newAdFvFields(),
       adPv: newAdPvFields(),
@@ -1042,4 +1051,25 @@ func AddSessionDataPerUser(userName string) {
 
 func DeleteSessionDataPerUser(userName string) {
   delete(currentFields, userName)
+}
+
+func readFields(filePath string) ([]byte, error) {
+  exists, err := misc.CheckFileExists(filePath)
+  if exists {
+    obj, err := misc.ReadAllShareLock(filePath, os.O_RDONLY, 0o660)
+    if err != nil {
+      return nil, errors.New(fmt.Sprintf("Couldn't open file %s: ", filePath) + err.Error())
+    }
+    return obj, nil
+  } else if err == nil {
+    //File doesn't exist, create it.
+    f, err := os.OpenFile(filePath, os.O_CREATE | os.O_RDWR, 0o660)
+    if err != nil {
+      return nil, errors.New(fmt.Sprintf("Couldn't create file %s: ", filePath) + err.Error())
+    }
+    f.Close()
+    return nil, nil
+  } else {
+    return nil, err
+  }
 }
