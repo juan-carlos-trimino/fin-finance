@@ -1212,66 +1212,83 @@ func getSiBankersFields(userName string) *siBankersFields {
 }
 
 type siOrdinaryFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  fd1Time string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1PV string
-  fd1Result string
+  Fd1Time string `json:"fd1Time"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1PV string `json:"fd1PV"`
+  Fd1Result string `json:"fd1Result"`
   //
-  fd2Time string
-  fd2TimePeriod string
-  fd2Amount string
-  fd2PV string
-  fd2Result string
+  Fd2Time string `json:"fd2Time"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Amount string `json:"fd2Amount"`
+  Fd2PV string `json:"fd2PV"`
+  Fd2Result string `json:"fd2Result"`
   //
-  fd3Time string
-  fd3TimePeriod string
-  fd3Interest string
-  fd3Compound string
-  fd3Amount string
-  fd3Result string
+  Fd3Time string `json:"fd3Time"`
+  Fd3TimePeriod string `json:"fd3TimePeriod"`
+  Fd3Interest string `json:"fd3Interest"`
+  Fd3Compound string `json:"fd3Compound"`
+  Fd3Amount string `json:"fd3Amount"`
+  Fd3Result string `json:"fd3Result"`
   //
-  fd4Interest string
-  fd4Compound string
-  fd4Amount string
-  fd4PV string
-  fd4Result string
+  Fd4Interest string `json:"fd4Interest"`
+  Fd4Compound string `json:"fd4Compound"`
+  Fd4Amount string `json:"fd4Amount"`
+  Fd4PV string `json:"fd4PV"`
+  Fd4Result string `json:"fd4Result"`
 }
 
-func newSiOrdinaryFields() *siOrdinaryFields {
+func newSiOrdinaryFields(dir1, dir2 string) *siOrdinaryFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "siordinary.txt")
+  if obj != nil {
+    var s siOrdinaryFields
+    err := json.Unmarshal(obj, &s)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &s
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &siOrdinaryFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1Time: "1",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1PV: "1.00",
-    fd1Result: "",
+    Fd1Time: "1",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1PV: "1.00",
+    Fd1Result: "",
     //
-    fd2Time: "1",
-    fd2TimePeriod: "year",
-    fd2Amount: "1.00",
-    fd2PV: "1.00",
-    fd2Result: "",
+    Fd2Time: "1",
+    Fd2TimePeriod: "year",
+    Fd2Amount: "1.00",
+    Fd2PV: "1.00",
+    Fd2Result: "",
     //
-    fd3Time: "1",
-    fd3TimePeriod: "year",
-    fd3Interest: "1.0",
-    fd3Compound: "annually",
-    fd3Amount: "1.00",
-    fd3Result: "",
+    Fd3Time: "1",
+    Fd3TimePeriod: "year",
+    Fd3Interest: "1.0",
+    Fd3Compound: "annually",
+    Fd3Amount: "1.00",
+    Fd3Result: "",
     //
-    fd4Interest: "1.00",
-    fd4Compound: "annually",
-    fd4Amount: "1.00",
-    fd4PV: "1.00",
-    fd4Result: "",
+    Fd4Interest: "1.00",
+    Fd4Compound: "annually",
+    Fd4Amount: "1.00",
+    Fd4PV: "1.00",
+    Fd4Result: "",
   }
 }
 
@@ -1298,7 +1315,7 @@ func AddSessionDataPerUser(userName string) {
       oaPv: newOaPvFields(mainDir, userName),
       siAccurate: newSiAccurateFields(mainDir, userName),
       siBankers: newSiBankersFields(mainDir, userName),
-      siOrdinary: newSiOrdinaryFields(),
+      siOrdinary: newSiOrdinaryFields(mainDir, userName),
     }
     currentFields[userName] = fd
   }
