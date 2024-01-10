@@ -583,7 +583,7 @@ func readUsers(dir, filename string) {
 }
 
 
-
+//////////////
 func makeTlsConfig() *tls.Config {
 
 // see Certificate structure at
@@ -651,7 +651,7 @@ func Timeout(res http.ResponseWriter, req *http.Request) {
   //res.Write().Write("My func!\n")
   return
 }
-
+//////////////////////////
 
 
 func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.WaitGroup) {
@@ -722,27 +722,25 @@ func makeServer(port string, h *handlers) *http.Server {
       The five steps of an HTTP response and the related timeouts.
     ***/
     //It specifies the maximum amount of time to read the request headers.
-    ReadHeaderTimeout: 3 * time.Second,
+    ReadHeaderTimeout: 5 * time.Second,
     /***
     It specifies the maximum amount of time to read the entire request.
     ReadTimeout = ReadHeaderTimeout + TimeoutHandler + Extra time
     **/
-    ReadTimeout: 6 * time.Second,
+    ReadTimeout: 9 * time.Second,
     /***
     If a handler fails to respond on time, the server will reply with "503 Service Unavailable" and
     the specified message; the context passed to the handler will be canceled.
     Note: The http.Server.WriteTimeout is not necessary since http.TimeoutHandler is being used.
     ***/
-    // Handler: http.TimeoutHandler(h, 30 * time.Second, "Request timeout."),
-    Handler: http.TimeoutHandler(h/*ttp.HandlerFunc(Timeout)*/, 300 * time.Minute, "Request timeout."),
+    Handler: http.TimeoutHandler(h, 5 * time.Minute, "Request timeout."),
     /***
     It configures the maximum amount of time for the next request when keep-alives are enabled.
     Note that if http.Server.IdleTimeout isn't set, the value of http.Server.ReadTimeout is used
     for the idle timeout. If neither is set, there won't be any timeouts, and connections will
     remain open until they are closed by clients.
     ***/
-    // IdleTimeout: 120 * time.Second,
-    IdleTimeout: 120 * time.Minute,
+    IdleTimeout: 180 * time.Second,
     MaxHeaderBytes: 1 << 20,  //1 MB.
     /***
     Setting TLSNextProto to an empty map will disable HTTP/2 for this server. If you want to enable
