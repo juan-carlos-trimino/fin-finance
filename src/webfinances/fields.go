@@ -128,8 +128,8 @@ type mortgageFields struct {
   Fd1Amount string `json:"fd1Amount"`
   Fd1Result [3]string `json:"fd1Result"`
   //
-  Fd2N string `json:"fd2N"`
-  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2N string `json:"Fd2N"`
+  Fd2TimePeriod string `json:"Fd2TimePeriod"`
   Fd2Interest string `json:"fd2Interest"`
   Fd2Compound string `json:"fd2Compound"`
   Fd2Amount string `json:"fd2Amount"`
@@ -195,144 +195,161 @@ func getMortgageFields(userName string) *mortgageFields {
 }
 
 type bondsFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  fd1TaxFree string
-  fd1CityTax string
-  fd1StateTax string
-  fd1FederalTax string
-  fd1Result string
+  Fd1TaxFree string `json:"fd1TaxFree"`
+  Fd1CityTax string `json:"fd1CityTax"`
+  Fd1StateTax string `json:"fd1StateTax"`
+  Fd1FederalTax string `json:"fd1FederalTax"`
+  Fd1Result string `json:"fd1Result"`
   //
-  fd2FaceValue string
-  fd2Time string
-  fd2TimePeriod string
-  fd2Coupon string
-  fd2Current string
-  fd2Compound string
-  fd2Result string
+  Fd2FaceValue string `json:"fd2FaceValue"`
+  Fd2Time string `json:"fd2Time"`
+  Fd2TimePeriod string `json:"Fd2TimePeriod"`
+  Fd2Coupon string `json:"fd2Coupon"`
+  Fd2Current string `json:"fd2Current"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2Result string `json:"fd2Result"`
   //
-  fd3FaceValue string
-  fd3TimeCall string
-  fd3TimePeriod string
-  fd3Coupon string
-  fd3Compound string
-  fd3BondPrice string
-  fd3CallPrice string
-  fd3Result string
+  Fd3FaceValue string `json:"fd3FaceValue"`
+  Fd3TimeCall string `json:"fd3TimeCall"`
+  Fd3TimePeriod string `json:"fd3TimePeriod"`
+  Fd3Coupon string `json:"fd3Coupon"`
+  Fd3Compound string `json:"fd3Compound"`
+  Fd3BondPrice string `json:"fd3BondPrice"`
+  Fd3CallPrice string `json:"fd3CallPrice"`
+  Fd3Result string `json:"fd3Result"`
   //
-  fd4FaceValue string
-  fd4Time string
-  fd4TimePeriod string
-  fd4Coupon string
-  fd4Compound string
-  fd4CurrentRadio string
-  fd4CurInterest string
-  fd4BondPrice string
-  fd4Result string
+  Fd4FaceValue string `json:"fd4FaceValue"`
+  Fd4Time string `json:"fd4Time"`
+  Fd4TimePeriod string `json:"fd4TimePeriod"`
+  Fd4Coupon string `json:"fd4Coupon"`
+  Fd4Compound string `json:"fd4Compound"`
+  Fd4CurrentRadio string `json:"fd4CurrentRadio"`
+  Fd4CurInterest string `json:"fd4CurInterest"`
+  Fd4BondPrice string `json:"fd4BondPrice"`
+  Fd4Result string `json:"fd4Result"`
   //
-  fd5FaceValue string
-  fd5Time string
-  fd5TimePeriod string
-  fd5Coupon string
-  fd5CurInterest string
-  fd5Compound string
-  fd5Result string
+  Fd5FaceValue string `json:"fd5FaceValue"`
+  Fd5Time string `json:"fd5Time"`
+  Fd5TimePeriod string `json:"fd5TimePeriod"`
+  Fd5Coupon string `json:"fd5Coupon"`
+  Fd5CurInterest string `json:"fd5CurInterest"`
+  Fd5Compound string `json:"fd5Compound"`
+  Fd5Result string `json:"fd5Result"`
   //
-  fd6FaceValue string
-  fd6Time string
-  fd6TimePeriod string
-  fd6Coupon string
-  fd6CurInterest string
-  fd6Compound string
-  fd6Result [2]string
+  Fd6FaceValue string `json:"fd6FaceValue"`
+  Fd6Time string `json:"fd6Time"`
+  Fd6TimePeriod string `json:"fd6TimePeriod"`
+  Fd6Coupon string `json:"fd6Coupon"`
+  Fd6CurInterest string `json:"fd6CurInterest"`
+  Fd6Compound string `json:"fd6Compound"`
+  Fd6Result [2]string `json:"fd6Result"`
   //
-  fd7FaceValue string
-  fd7Time string
-  fd7TimePeriod string
-  fd7Coupon string
-  fd7CurInterest string
-  fd7Compound string
-  fd7Result [2]string
+  Fd7FaceValue string `json:"fd7FaceValue"`
+  Fd7Time string `json:"fd7Time"`
+  Fd7TimePeriod string `json:"fd7TimePeriod"`
+  Fd7Coupon string `json:"fd7Coupon"`
+  Fd7CurInterest string `json:"fd7CurInterest"`
+  Fd7Compound string `json:"fd7Compound"`
+  Fd7Result [2]string `json:"fd7Result"`
   //
-  fd8FaceValue string
-  fd8Time string
-  fd8TimePeriod string
-  fd8Coupon string
-  fd8CurInterest string
-  fd8Compound string
-  fd8Result [2]string
+  Fd8FaceValue string `json:"fd8FaceValue"`
+  Fd8Time string `json:"fd8Time"`
+  Fd8TimePeriod string `json:"fd8TimePeriod"`
+  Fd8Coupon string `json:"fd8Coupon"`
+  Fd8CurInterest string `json:"fd8CurInterest"`
+  Fd8Compound string `json:"fd8Compound"`
+  Fd8Result [2]string `json:"fd8Result"`
 }
 
-func newBondsFields() *bondsFields {
+func newBondsFields(dir1, dir2 string) *bondsFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "bonds.txt")
+  if obj != nil {
+    var b bondsFields
+    err := json.Unmarshal(obj, &b)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &b
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &bondsFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1TaxFree: "3.5",
-    fd1CityTax: "0.0",
-    fd1StateTax: "1.0",
-    fd1FederalTax: "23.0",
-    fd1Result: "",
+    Fd1TaxFree: "3.5",
+    Fd1CityTax: "0.0",
+    Fd1StateTax: "1.0",
+    Fd1FederalTax: "23.0",
+    Fd1Result: "",
     //
-    fd2FaceValue: "1000.00",
-    fd2Time: "5",
-    fd2TimePeriod: "year",
-    fd2Coupon: "3.00",
-    fd2Current: "3.5",
-    fd2Compound: "semiannually",
-    fd2Result: "",
+    Fd2FaceValue: "1000.00",
+    Fd2Time: "5",
+    Fd2TimePeriod: "year",
+    Fd2Coupon: "3.00",
+    Fd2Current: "3.5",
+    Fd2Compound: "semiannually",
+    Fd2Result: "",
     //
-    fd3FaceValue: "1000.00",
-    fd3TimeCall: "2",
-    fd3TimePeriod: "year",
-    fd3Coupon: "2.0",
-    fd3Compound: "semiannually",
-    fd3BondPrice: "990.00",
-    fd3CallPrice: "1050.00",
-    fd3Result: "",
+    Fd3FaceValue: "1000.00",
+    Fd3TimeCall: "2",
+    Fd3TimePeriod: "year",
+    Fd3Coupon: "2.0",
+    Fd3Compound: "semiannually",
+    Fd3BondPrice: "990.00",
+    Fd3CallPrice: "1050.00",
+    Fd3Result: "",
     //
-    fd4FaceValue: "1000.00",
-    fd4Time: "3",
-    fd4TimePeriod: "year",
-    fd4Coupon: "2.5",
-    fd4Compound: "semiannually",
-    fd4CurrentRadio: "fd4-curinterest",
-    fd4CurInterest: "2.3",
-    fd4BondPrice: "1000.00",
-    fd4Result: "",
+    Fd4FaceValue: "1000.00",
+    Fd4Time: "3",
+    Fd4TimePeriod: "year",
+    Fd4Coupon: "2.5",
+    Fd4Compound: "semiannually",
+    Fd4CurrentRadio: "fd4-curinterest",
+    Fd4CurInterest: "2.3",
+    Fd4BondPrice: "1000.00",
+    Fd4Result: "",
     //
-    fd5FaceValue: "1000.00",
-    fd5Time: "5",
-    fd5TimePeriod: "year",
-    fd5Coupon: "5.4",
-    fd5CurInterest: "7.5",
-    fd5Compound: "semiannually",
-    fd5Result: "",
+    Fd5FaceValue: "1000.00",
+    Fd5Time: "5",
+    Fd5TimePeriod: "year",
+    Fd5Coupon: "5.4",
+    Fd5CurInterest: "7.5",
+    Fd5Compound: "semiannually",
+    Fd5Result: "",
     //
-    fd6FaceValue: "1000.00",
-    fd6Time: "5",
-    fd6TimePeriod: "year",
-    fd6Coupon: "5.4",
-    fd6CurInterest: "7.5",
-    fd6Compound: "semiannually",
-    fd6Result: [2]string { bond_notes[1], "" },
+    Fd6FaceValue: "1000.00",
+    Fd6Time: "5",
+    Fd6TimePeriod: "year",
+    Fd6Coupon: "5.4",
+    Fd6CurInterest: "7.5",
+    Fd6Compound: "semiannually",
+    Fd6Result: [2]string { bond_notes[1], "" },
     //
-    fd7FaceValue: "1000.00",
-    fd7Time: "5",
-    fd7TimePeriod: "year",
-    fd7Coupon: "5.4",
-    fd7CurInterest: "7.5",
-    fd7Compound: "semiannually",
-    fd7Result: [2]string { bond_notes[0], "" },
+    Fd7FaceValue: "1000.00",
+    Fd7Time: "5",
+    Fd7TimePeriod: "year",
+    Fd7Coupon: "5.4",
+    Fd7CurInterest: "7.5",
+    Fd7Compound: "semiannually",
+    Fd7Result: [2]string { bond_notes[0], "" },
     //
-    fd8FaceValue: "1000.00",
-    fd8Time: "5",
-    fd8TimePeriod: "year",
-    fd8Coupon: "5.4",
-    fd8CurInterest: "7.5",
-    fd8Compound: "semiannually",
-    fd8Result: [2]string { bond_notes[2], "" },
+    Fd8FaceValue: "1000.00",
+    Fd8Time: "5",
+    Fd8TimePeriod: "year",
+    Fd8Coupon: "5.4",
+    Fd8CurInterest: "7.5",
+    Fd8Compound: "semiannually",
+    Fd8Result: [2]string { bond_notes[2], "" },
   }
 }
 
@@ -341,42 +358,59 @@ func getBondsFields(userName string) *bondsFields {
 }
 
 type adFvFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string
+  CurrentButton string
   //
-  fd1N string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1FV string
-  fd1Result string
+  Fd1N string
+  Fd1TimePeriod string
+  Fd1Interest string
+  Fd1Compound string
+  Fd1FV string
+  Fd1Result string
   //
-  fd2N string
-  fd2TimePeriod string
-  fd2Interest string
-  fd2Compound string
-  fd2PMT string
-  fd2Result string
+  Fd2N string
+  Fd2TimePeriod string
+  Fd2Interest string
+  Fd2Compound string
+  Fd2PMT string
+  Fd2Result string
 }
 
-func newAdFvFields() *adFvFields {
+func newAdFvFields(dir1, dir2 string) *adFvFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "adfv.txt")
+  if obj != nil {
+    var a adFvFields
+    err := json.Unmarshal(obj, &a)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &a
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &adFvFields {
-    currentPage: "rhs-ui2",
-    currentButton: "lhs-button2",
+    CurrentPage: "rhs-ui2",
+    CurrentButton: "lhs-button2",
     //
-    fd1N: "1.0",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "monthly",
-    fd1FV: "1.00",
-    fd1Result: "",
+    Fd1N: "1.0",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "monthly",
+    Fd1FV: "1.00",
+    Fd1Result: "",
     //
-    fd2N: "1.0",
-    fd2TimePeriod: "year",
-    fd2Interest: "1.00",
-    fd2Compound: "monthly",
-    fd2PMT: "1.00",
-    fd2Result: "",
+    Fd2N: "1.0",
+    Fd2TimePeriod: "year",
+    Fd2Interest: "1.00",
+    Fd2Compound: "monthly",
+    Fd2PMT: "1.00",
+    Fd2Result: "",
   }
 }
 
@@ -385,42 +419,59 @@ func getAdFvFields(userName string) *adFvFields {
 }
 
 type adPvFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string
+  CurrentButton string
   //
-  fd1N string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1FV string
-  fd1Result string
+  Fd1N string
+  Fd1TimePeriod string
+  Fd1Interest string
+  Fd1Compound string
+  Fd1FV string
+  Fd1Result string
   //
-  fd2N string
-  fd2TimePeriod string
-  fd2Interest string
-  fd2Compound string
-  fd2PMT string
-  fd2Result string
+  Fd2N string
+  Fd2TimePeriod string
+  Fd2Interest string
+  Fd2Compound string
+  Fd2PMT string
+  Fd2Result string
 }
 
-func newAdPvFields() *adPvFields {
+func newAdPvFields(dir1, dir2 string) *adPvFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "adpv.txt")
+  if obj != nil {
+    var a adPvFields
+    err := json.Unmarshal(obj, &a)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &a
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &adPvFields {
-    currentPage: "rhs-ui2",
-    currentButton: "lhs-button2",
+    CurrentPage: "rhs-ui2",
+    CurrentButton: "lhs-button2",
     //
-    fd1N: "1.0",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "monthly",
-    fd1FV: "1.00",
-    fd1Result: "",
+    Fd1N: "1.0",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "monthly",
+    Fd1FV: "1.00",
+    Fd1Result: "",
     //
-    fd2N: "1.0",
-    fd2TimePeriod: "year",
-    fd2Interest: "1.00",
-    fd2Compound: "monthly",
-    fd2PMT: "1.00",
-    fd2Result: "",
+    Fd2N: "1.0",
+    Fd2TimePeriod: "year",
+    Fd2Interest: "1.00",
+    Fd2Compound: "monthly",
+    Fd2PMT: "1.00",
+    Fd2Result: "",
   }
 }
 
@@ -429,50 +480,67 @@ func getAdPvFields(userName string) *adPvFields {
 }
 
 type adCpFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string
+  CurrentButton string
   //
-  fd1Interest string
-  fd1Compound string
-  fd1PV string
-  fd1FV string
-  fd1Result string
+  Fd1Interest string
+  Fd1Compound string
+  Fd1PV string
+  Fd1FV string
+  Fd1Result string
   //
-  fd2Interest string
-  fd2Compound string
-  fd2Payment string
-  fd2PV string
-  fd2Result string
+  Fd2Interest string
+  Fd2Compound string
+  Fd2Payment string
+  Fd2PV string
+  Fd2Result string
   //
-  fd3Interest string
-  fd3Compound string
-  fd3Payment string
-  fd3FV string
-  fd3Result string
+  Fd3Interest string
+  Fd3Compound string
+  Fd3Payment string
+  Fd3FV string
+  Fd3Result string
 }
 
-func newAdCpFields() *adCpFields {
+func newAdCpFields(dir1, dir2 string) *adCpFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "adcp.txt")
+  if obj != nil {
+    var a adCpFields
+    err := json.Unmarshal(obj, &a)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &a
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &adCpFields {
-    currentPage: "rhs-ui2",
-    currentButton: "lhs-button2",
+    CurrentPage: "rhs-ui2",
+    CurrentButton: "lhs-button2",
     //
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1PV: "1.00",
-    fd1FV: "1.00",
-    fd1Result: "",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1PV: "1.00",
+    Fd1FV: "1.00",
+    Fd1Result: "",
     //
-    fd2Interest: "1.00",
-    fd2Compound: "annually",
-    fd2Payment: "1.00",
-    fd2PV: "1.00",
-    fd2Result: "",
+    Fd2Interest: "1.00",
+    Fd2Compound: "annually",
+    Fd2Payment: "1.00",
+    Fd2PV: "1.00",
+    Fd2Result: "",
     //
-    fd3Interest: "1.00",
-    fd3Compound: "annually",
-    fd3Payment: "1.00",
-    fd3FV: "1.00",
-    fd3Result: "",
+    Fd3Interest: "1.00",
+    Fd3Compound: "annually",
+    Fd3Payment: "1.00",
+    Fd3FV: "1.00",
+    Fd3Result: "",
   }
 }
 
@@ -481,42 +549,59 @@ func getAdCpFields(userName string) *adCpFields {
 }
 
 type adEppFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string
+  CurrentButton string
   //
-  fd1N string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1FV string
-  fd1Result string
+  Fd1N string
+  Fd1TimePeriod string
+  Fd1Interest string
+  Fd1Compound string
+  Fd1FV string
+  Fd1Result string
   //
-  fd2N string
-  fd2TimePeriod string
-  fd2Interest string
-  fd2Compound string
-  fd2PV string
-  fd2Result string
+  Fd2N string
+  Fd2TimePeriod string
+  Fd2Interest string
+  Fd2Compound string
+  Fd2PV string
+  Fd2Result string
 }
 
-func newAdEppFields() *adEppFields {
+func newAdEppFields(dir1, dir2 string) *adEppFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "adepp.txt")
+  if obj != nil {
+    var a adEppFields
+    err := json.Unmarshal(obj, &a)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &a
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &adEppFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1N: "1.00",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1FV: "1.00",
-    fd1Result: "",
+    Fd1N: "1.00",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1FV: "1.00",
+    Fd1Result: "",
     //
-    fd2N: "1.00",
-    fd2TimePeriod: "year",
-    fd2Interest: "1.00",
-    fd2Compound: "annually",
-    fd2PV: "1.00",
-    fd2Result: "",
+    Fd2N: "1.00",
+    Fd2TimePeriod: "year",
+    Fd2Interest: "1.00",
+    Fd2Compound: "annually",
+    Fd2PV: "1.00",
+    Fd2Result: "",
   }
 }
 
@@ -525,98 +610,132 @@ func getAdEppFields(userName string) *adEppFields {
 }
 
 type oaCpFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string
+  CurrentButton string
   //
-  fd1Interest string
-  fd1Compound string
-  fd1PV string
-  fd1FV string
-  fd1Result string
+  Fd1Interest string
+  Fd1Compound string
+  Fd1PV string
+  Fd1FV string
+  Fd1Result string
   //
-  fd2Interest string
-  fd2Compound string
-  fd2Payment string
-  fd2PV string
-  fd2Result string
+  Fd2Interest string
+  Fd2Compound string
+  Fd2Payment string
+  Fd2PV string
+  Fd2Result string
   //
-  fd3Interest string
-  fd3Compound string
-  fd3Payment string
-  fd3FV string
-  fd3Result string
+  Fd3Interest string
+  Fd3Compound string
+  Fd3Payment string
+  Fd3FV string
+  Fd3Result string
 }
 
 func getOaCpFields(userName string) *oaCpFields {
   return currentFields[userName].oaCp
 }
 
-func newOaCpFields() *oaCpFields {
+func newOaCpFields(dir1, dir2 string) *oaCpFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "oacp.txt")
+  if obj != nil {
+    var o oaCpFields
+    err := json.Unmarshal(obj, &o)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &o
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &oaCpFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1PV: "1.00",
-    fd1FV: "1.00",
-    fd1Result: "",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1PV: "1.00",
+    Fd1FV: "1.00",
+    Fd1Result: "",
     //
-    fd2Interest: "1.00",
-    fd2Compound: "annually",
-    fd2Payment: "1.00",
-    fd2PV: "1.00",
-    fd2Result: "",
+    Fd2Interest: "1.00",
+    Fd2Compound: "annually",
+    Fd2Payment: "1.00",
+    Fd2PV: "1.00",
+    Fd2Result: "",
     //
-    fd3Interest: "1.00",
-    fd3Compound: "annually",
-    fd3Payment: "1.00",
-    fd3FV: "1.00",
-    fd3Result: "",
+    Fd3Interest: "1.00",
+    Fd3Compound: "annually",
+    Fd3Payment: "1.00",
+    Fd3FV: "1.00",
+    Fd3Result: "",
   }
 }
 
 type oaEppFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string
+  CurrentButton string
   //
-  fd1N string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1FV string
-  fd1Result string
+  Fd1N string
+  Fd1TimePeriod string
+  Fd1Interest string
+  Fd1Compound string
+  Fd1FV string
+  Fd1Result string
   //
-  fd2N string
-  fd2TimePeriod string
-  fd2Interest string
-  fd2Compound string
-  fd2PV string
-  fd2Result string
+  Fd2N string
+  Fd2TimePeriod string
+  Fd2Interest string
+  Fd2Compound string
+  Fd2PV string
+  Fd2Result string
 }
 
 func getOaEppFields(userName string) *oaEppFields {
   return currentFields[userName].oaEpp
 }
 
-func newOaEppFields() *oaEppFields {
+func newOaEppFields(dir1, dir2 string) *oaEppFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "oaepp.txt")
+  if obj != nil {
+    var o oaEppFields
+    err := json.Unmarshal(obj, &o)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &o
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &oaEppFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1N: "1.00",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1FV: "1.00",
-    fd1Result: "",
+    Fd1N: "1.00",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1FV: "1.00",
+    Fd1Result: "",
     //
-    fd2N: "1.00",
-    fd2TimePeriod: "year",
-    fd2Interest: "1.00",
-    fd2Compound: "annually",
-    fd2PV: "1.00",
-    fd2Result: "",
+    Fd2N: "1.00",
+    Fd2TimePeriod: "year",
+    Fd2Interest: "1.00",
+    Fd2Compound: "annually",
+    Fd2PV: "1.00",
+    Fd2Result: "",
   }
 }
 
@@ -1029,13 +1148,13 @@ func AddSessionDataPerUser(userName string) {
     fd := &fields{
       miscellaneous: newMiscellaneousFields(),
       mortgage: newMortgageFields(mainDir, userName),
-      bonds: newBondsFields(),
-      adFv: newAdFvFields(),
-      adPv: newAdPvFields(),
-      adCp: newAdCpFields(),
-      adEpp: newAdEppFields(),
-      oaCp: newOaCpFields(),
-      oaEpp: newOaEppFields(),
+      bonds: newBondsFields(mainDir, userName),
+      adFv: newAdFvFields(mainDir, userName),
+      adPv: newAdPvFields(mainDir, userName),
+      adCp: newAdCpFields(mainDir, userName),
+      adEpp: newAdEppFields(mainDir, userName),
+      oaCp: newOaCpFields(mainDir, userName),
+      oaEpp: newOaEppFields(mainDir, userName),
       oaFv: newOaFvFields(),
       oaGa: newOaGaFields(),
       oaInterestRate: newOaInterestRateFields(),
