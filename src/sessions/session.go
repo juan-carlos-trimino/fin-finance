@@ -1,15 +1,19 @@
 package sessions
 
 import (
-  //The option -u instructs 'get' to update the module with dependencies.
-  //go get -u github.com/google/uuid
-  "github.com/google/uuid"
-  //The option -u instructs 'get' to update the module with dependencies.
-  //go get -u golang.org/x/crypto/bcrypt
-  "golang.org/x/crypto/bcrypt"
-  "net/http"
-  "strings"
-  "time"
+	//The option -u instructs 'get' to update the module with dependencies.
+	//go get -u github.com/google/uuid
+	"github.com/google/uuid"
+	//The option -u instructs 'get' to update the module with dependencies.
+	//go get -u golang.org/x/crypto/bcrypt
+	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"strings"
+	"time"
+)
+
+const (
+ sessionTimeout time.Duration = 43 * time.Second
 )
 
 type session_token struct {
@@ -74,7 +78,7 @@ func AddEntryToSessions(userName string) (sessionToken string, session session_t
   defer shr.slock.Unlock()
   shr.sessions[sessionToken] = session_token{
     Username: userName,
-    Expiry: time.Now().Add(300 * time.Minute),
+    Expiry: time.Now().Add(sessionTimeout),
     CsrfToken: uuid.NewString(),
   }
   session = shr.sessions[sessionToken]
@@ -87,7 +91,7 @@ func UpdateEntryInSessions(oldSessionToken string) (newSessionToken string, sess
   defer shr.slock.Unlock()
   shr.sessions[newSessionToken] = session_token{
     Username: shr.sessions[oldSessionToken].Username,
-    Expiry: time.Now().Add(300 * time.Minute),
+    Expiry: time.Now().Add(sessionTimeout),
     CsrfToken: uuid.NewString(),
   }
   delete(shr.sessions, oldSessionToken)
