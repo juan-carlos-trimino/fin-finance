@@ -740,42 +740,59 @@ func newOaEppFields(dir1, dir2 string) *oaEppFields {
 }
 
 type oaFvFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  fd1N string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1FV string
-  fd1Result string
+  Fd1N string `json:"fd1N"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
   //
-  fd2N string
-  fd2TimePeriod string
-  fd2Interest string
-  fd2Compound string
-  fd2PMT string
-  fd2Result string
+  Fd2N string `json:"fd2N"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2PMT string `json:"fd2PMT"`
+  Fd2Result string `json:"fd2Result"`
 }
 
-func newOaFvFields() *oaFvFields {
+func newOaFvFields(dir1, dir2 string) *oaFvFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "oafv.txt")
+  if obj != nil {
+    var o oaFvFields
+    err := json.Unmarshal(obj, &o)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &o
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &oaFvFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1N: "1.0",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "monthly",
-    fd1FV: "1.00",
-    fd1Result: "",
+    Fd1N: "1.0",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "monthly",
+    Fd1FV: "1.00",
+    Fd1Result: "",
     //
-    fd2N: "1.0",
-    fd2TimePeriod: "year",
-    fd2Interest: "1.00",
-    fd2Compound: "monthly",
-    fd2PMT: "1.00",
-    fd2Result: "",
+    Fd2N: "1.0",
+    Fd2TimePeriod: "year",
+    Fd2Interest: "1.00",
+    Fd2Compound: "monthly",
+    Fd2PMT: "1.00",
+    Fd2Result: "",
   }
 }
 
@@ -784,42 +801,59 @@ func getOaFvFields(userName string) *oaFvFields {
 }
 
 type oaGaFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  fd1N string
-  fd1Interest string
-  fd1Compound string
-  fd1Grow string
-  fd1Pmt string
-  fd1Result string
+  Fd1N string `json:"fd1N"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1Grow string `json:"fd1Grow"`
+  Fd1Pmt string `json:"fd1Pmt"`
+  Fd1Result string `json:"fd1Result"`
   //
-  fd2N string
-  fd2Interest string
-  fd2Compound string
-  fd2Grow string
-  fd2Pmt string
-  fd2Result string
+  Fd2N string `json:"fd2N"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2Grow string `json:"fd2Grow"`
+  Fd2Pmt string `json:"fd2Pmt"`
+  Fd2Result string `json:"fd2Result"`
 }
 
-func newOaGaFields() *oaGaFields {
+func newOaGaFields(dir1, dir2 string) *oaGaFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "oaga.txt")
+  if obj != nil {
+    var o oaGaFields
+    err := json.Unmarshal(obj, &o)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &o
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &oaGaFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1N: "1.00",
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1Grow: "1.00",
-    fd1Pmt: "1.00",
-    fd1Result: "",
+    Fd1N: "1.00",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1Grow: "1.00",
+    Fd1Pmt: "1.00",
+    Fd1Result: "",
     //
-    fd2N: "1.00",
-    fd2Interest: "1.00",
-    fd2Compound: "annually",
-    fd2Grow: "1.00",
-    fd2Pmt: "1.00",
-    fd2Result: "",
+    Fd2N: "1.00",
+    Fd2Interest: "1.00",
+    Fd2Compound: "annually",
+    Fd2Grow: "1.00",
+    Fd2Pmt: "1.00",
+    Fd2Result: "",
   }
 }
 
@@ -1156,7 +1190,7 @@ func AddSessionDataPerUser(userName string) {
       oaCp: newOaCpFields(mainDir, userName),
       oaEpp: newOaEppFields(mainDir, userName),
       oaFv: newOaFvFields(mainDir, userName),
-      oaGa: newOaGaFields(),
+      oaGa: newOaGaFields(mainDir, userName),
       oaInterestRate: newOaInterestRateFields(),
       oaPerpetuity: newOaPerpetuityFields(),
       oaPv: newOaPvFields(),
