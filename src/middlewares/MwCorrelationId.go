@@ -18,6 +18,6 @@ func CorrelationId(handler http.HandlerFunc) http.HandlerFunc {
     //Calling the handler with the new context.
     handler.ServeHTTP(res, req.WithContext(ctx))
     fmt.Printf("Request took %vms\nRequest correlation id: %s\n",
-                time.Since(start).Microseconds(), uuid)
+      time.Since(start).Microseconds(), uuid)
   }
 }
