@@ -358,22 +358,22 @@ func getBondsFields(userName string) *bondsFields {
 }
 
 type adFvFields struct {
-  CurrentPage string
-  CurrentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  Fd1N string
-  Fd1TimePeriod string
-  Fd1Interest string
-  Fd1Compound string
-  Fd1FV string
-  Fd1Result string
+  Fd1N string `json:"fd1N"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
   //
-  Fd2N string
-  Fd2TimePeriod string
-  Fd2Interest string
-  Fd2Compound string
-  Fd2PMT string
-  Fd2Result string
+  Fd2N string `json:"fd2N"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2PMT string `json:"fd2PMT"`
+  Fd2Result string `json:"fd2Result"`
 }
 
 func newAdFvFields(dir1, dir2 string) *adFvFields {
@@ -419,22 +419,22 @@ func getAdFvFields(userName string) *adFvFields {
 }
 
 type adPvFields struct {
-  CurrentPage string
-  CurrentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  Fd1N string
-  Fd1TimePeriod string
-  Fd1Interest string
-  Fd1Compound string
-  Fd1FV string
-  Fd1Result string
+  Fd1N string `json:"fd1N"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
   //
-  Fd2N string
-  Fd2TimePeriod string
-  Fd2Interest string
-  Fd2Compound string
-  Fd2PMT string
-  Fd2Result string
+  Fd2N string `json:"fd2N"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2PMT string `json:"fd2PMT"`
+  Fd2Result string `json:"fd2Result"`
 }
 
 func newAdPvFields(dir1, dir2 string) *adPvFields {
@@ -480,26 +480,26 @@ func getAdPvFields(userName string) *adPvFields {
 }
 
 type adCpFields struct {
-  CurrentPage string
-  CurrentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  Fd1Interest string
-  Fd1Compound string
-  Fd1PV string
-  Fd1FV string
-  Fd1Result string
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1PV string `json:"fd1PV"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
   //
-  Fd2Interest string
-  Fd2Compound string
-  Fd2Payment string
-  Fd2PV string
-  Fd2Result string
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2Payment string `json:"fd2Payment"`
+  Fd2PV string `json:"fd2PV"`
+  Fd2Result string `json:"fd2Result"`
   //
-  Fd3Interest string
-  Fd3Compound string
-  Fd3Payment string
-  Fd3FV string
-  Fd3Result string
+  Fd3Interest string `json:"fd3Interest"`
+  Fd3Compound string `json:"fd3Compound"`
+  Fd3Payment string `json:"fd3Payment"`
+  Fd3FV string `json:"fd3FV"`
+  Fd3Result string `json:"fd3Result"`
 }
 
 func newAdCpFields(dir1, dir2 string) *adCpFields {
@@ -549,22 +549,22 @@ func getAdCpFields(userName string) *adCpFields {
 }
 
 type adEppFields struct {
-  CurrentPage string
-  CurrentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  Fd1N string
-  Fd1TimePeriod string
-  Fd1Interest string
-  Fd1Compound string
-  Fd1FV string
-  Fd1Result string
+  Fd1N string `json:"fd1N"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
   //
-  Fd2N string
-  Fd2TimePeriod string
-  Fd2Interest string
-  Fd2Compound string
-  Fd2PV string
-  Fd2Result string
+  Fd2N string `json:"fd2N"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2PV string `json:"fd2PV"`
+  Fd2Result string `json:"fd2Result"`
 }
 
 func newAdEppFields(dir1, dir2 string) *adEppFields {
@@ -610,26 +610,26 @@ func getAdEppFields(userName string) *adEppFields {
 }
 
 type oaCpFields struct {
-  CurrentPage string
-  CurrentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  Fd1Interest string
-  Fd1Compound string
-  Fd1PV string
-  Fd1FV string
-  Fd1Result string
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1PV string `json:"fd1PV"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
   //
-  Fd2Interest string
-  Fd2Compound string
-  Fd2Payment string
-  Fd2PV string
-  Fd2Result string
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2Payment string `json:"fd2Payment"`
+  Fd2PV string `json:"fd2PV"`
+  Fd2Result string `json:"fd2Result"`
   //
-  Fd3Interest string
-  Fd3Compound string
-  Fd3Payment string
-  Fd3FV string
-  Fd3Result string
+  Fd3Interest string `json:"fd3Interest"`
+  Fd3Compound string `json:"fd3Compound"`
+  Fd3Payment string `json:"fd3Payment"`
+  Fd3FV string `json:"fd3FV"`
+  Fd3Result string `json:"fd3Result"`
 }
 
 func getOaCpFields(userName string) *oaCpFields {
@@ -679,22 +679,22 @@ func newOaCpFields(dir1, dir2 string) *oaCpFields {
 }
 
 type oaEppFields struct {
-  CurrentPage string
-  CurrentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  Fd1N string
-  Fd1TimePeriod string
-  Fd1Interest string
-  Fd1Compound string
-  Fd1FV string
-  Fd1Result string
+  Fd1N string `json:"fd1N"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
   //
-  Fd2N string
-  Fd2TimePeriod string
-  Fd2Interest string
-  Fd2Compound string
-  Fd2PV string
-  Fd2Result string
+  Fd2N string `json:"fd2N"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2PV string `json:"fd2PV"`
+  Fd2Result string `json:"fd2Result"`
 }
 
 func getOaEppFields(userName string) *oaEppFields {
@@ -1155,7 +1155,7 @@ func AddSessionDataPerUser(userName string) {
       adEpp: newAdEppFields(mainDir, userName),
       oaCp: newOaCpFields(mainDir, userName),
       oaEpp: newOaEppFields(mainDir, userName),
-      oaFv: newOaFvFields(),
+      oaFv: newOaFvFields(mainDir, userName),
       oaGa: newOaGaFields(),
       oaInterestRate: newOaInterestRateFields(),
       oaPerpetuity: newOaPerpetuityFields(),
