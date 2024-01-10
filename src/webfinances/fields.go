@@ -48,68 +48,85 @@ type fields struct {
 }
 
 type miscellaneousFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  fd1Nominal string
-  fd1Compound string
-  fd1Result [2]string
+  Fd1Nominal string `json:"fd1Nominal"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1Result [2]string `json:"fd1Result"`
   //
-  fd2Effective string
-  fd2Compound string
-  fd2Result [3]string
+  Fd2Effective string `json:"fd2Effective"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2Result [3]string `json:"fd2Result"`
   //
-  fd3Nominal string
-  fd3Inflation string
-  fd3Result [4]string
+  Fd3Nominal string `json:"fd3Nominal"`
+  Fd3Inflation string `json:"fd3Inflation"`
+  Fd3Result [4]string `json:"fd3Result"`
   //
-  fd4Interest string
-  fd4Compound string
-  fd4Factor string
-  fd4Result string
+  Fd4Interest string `json:"fd4Interest"`
+  Fd4Compound string `json:"fd4Compound"`
+  Fd4Factor string `json:"fd4Factor"`
+  Fd4Result string `json:"fd4Result"`
   //
-  fd5Values string
-  fd5Result [2]string
+  Fd5Values string `json:"fd5Values"`
+  Fd5Result [2]string `json:"fd5Result"`
   //
-  fd6Time string
-  fd6TimePeriod string
-  fd6Rate string
-  fd6Compound string
-  fd6PV string
-  fd6Result string
+  Fd6Time string `json:"fd6Time"`
+  Fd6TimePeriod string `json:"fd6TimePeriod"`
+  Fd6Rate string `json:"fd6Rate"`
+  Fd6Compound string `json:"fd6Compound"`
+  Fd6PV string `json:"fd6PV"`
+  Fd6Result string `json:"fd6Result"`
 }
 
-func newMiscellaneousFields() *miscellaneousFields {
+func newMiscellaneousFields(dir1, dir2 string) *miscellaneousFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "miscellaneous.txt")
+  if obj != nil {
+    var m miscellaneousFields
+    err := json.Unmarshal(obj, &m)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &m
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &miscellaneousFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1Nominal: "3.5",
-    fd1Compound: "monthly",
-    fd1Result: [2]string { misc_notes[0], "" },
+    Fd1Nominal: "3.5",
+    Fd1Compound: "monthly",
+    Fd1Result: [2]string { misc_notes[0], "" },
     //
-    fd2Effective: "3.5",
-    fd2Compound: "monthly",
-    fd2Result: [3]string { misc_notes[0], misc_notes[1], "" },
+    Fd2Effective: "3.5",
+    Fd2Compound: "monthly",
+    Fd2Result: [3]string { misc_notes[0], misc_notes[1], "" },
     //
-    fd3Nominal: "2.0",
-    fd3Inflation: "2.0",
-    fd3Result: [4]string { misc_notes[1], misc_notes[2], misc_notes[3], "" },
+    Fd3Nominal: "2.0",
+    Fd3Inflation: "2.0",
+    Fd3Result: [4]string { misc_notes[1], misc_notes[2], misc_notes[3], "" },
     //
-    fd4Interest: "14.87",
-    fd4Compound: "annually",
-    fd4Factor: "2.0",
-    fd4Result: "",
+    Fd4Interest: "14.87",
+    Fd4Compound: "annually",
+    Fd4Factor: "2.0",
+    Fd4Result: "",
     //
-    fd5Values: "2.0;1.5",
-    fd5Result: [2]string { misc_notes[4], "" },
+    Fd5Values: "2.0;1.5",
+    Fd5Result: [2]string { misc_notes[4], "" },
     //
-    fd6Time: "1.0",
-    fd6TimePeriod: "year",
-    fd6Rate: "15.0",
-    fd6Compound: "annually",
-    fd6PV: "1.00",
-    fd6Result: "",
+    Fd6Time: "1.0",
+    Fd6TimePeriod: "year",
+    Fd6Rate: "15.0",
+    Fd6Compound: "annually",
+    Fd6PV: "1.00",
+    Fd6Result: "",
   }
 }
 
@@ -862,28 +879,45 @@ func getOaGaFields(userName string) *oaGaFields {
 }
 
 type oaInterestRateFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  fd1N string
-  fd1TimePeriod string
-  fd1Compound string
-  fd1PV string
-  fd1FV string
-  fd1Result string
+  Fd1N string `json:"fd1N"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1PV string `json:"fd1PV"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
 }
 
-func newOaInterestRateFields() *oaInterestRateFields {
+func newOaInterestRateFields(dir1, dir2 string) *oaInterestRateFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "oainterestrate.txt")
+  if obj != nil {
+    var o oaInterestRateFields
+    err := json.Unmarshal(obj, &o)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &o
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &oaInterestRateFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1N: "1.0",
-    fd1TimePeriod: "year",
-    fd1Compound: "monthly",
-    fd1PV: "1.00",
-    fd1FV: "1.07",
-    fd1Result: "",
+    Fd1N: "1.0",
+    Fd1TimePeriod: "year",
+    Fd1Compound: "monthly",
+    Fd1PV: "1.00",
+    Fd1FV: "1.07",
+    Fd1Result: "",
   }
 }
 
@@ -892,36 +926,53 @@ func getOaInterestRateFields(userName string) *oaInterestRateFields {
 }
 
 type oaPerpetuityFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  fd1Interest string
-  fd1Compound string
-  fd1Pmt string
-  fd1Result string
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1Pmt string `json:"fd1Pmt"`
+  Fd1Result string `json:"fd1Result"`
   //
-  fd2Interest string
-  fd2Compound string
-  fd2Grow string
-  fd2Pmt string
-  fd2Result string
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2Grow string `json:"fd2Grow"`
+  Fd2Pmt string `json:"fd2Pmt"`
+  Fd2Result string `json:"fd2Result"`
 }
 
-func newOaPerpetuityFields() *oaPerpetuityFields {
+func newOaPerpetuityFields(dir1, dir2 string) *oaPerpetuityFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "oaperpetuity.txt")
+  if obj != nil {
+    var o oaPerpetuityFields
+    err := json.Unmarshal(obj, &o)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &o
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &oaPerpetuityFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1Pmt: "1.00",
-    fd1Result: "",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1Pmt: "1.00",
+    Fd1Result: "",
     //
-    fd2Interest: "1.00",
-    fd2Compound: "annually",
-    fd2Grow: "1.00",
-    fd2Pmt: "1.00",
-    fd2Result: "",
+    Fd2Interest: "1.00",
+    Fd2Compound: "annually",
+    Fd2Grow: "1.00",
+    Fd2Pmt: "1.00",
+    Fd2Result: "",
   }
 }
 
@@ -930,42 +981,59 @@ func getOaPerpetuityFields(userName string) *oaPerpetuityFields {
 }
 
 type oaPvFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  fd1N string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1FV string
-  fd1Result string
+  Fd1N string `json:"fd1N"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
   //
-  fd2N string
-  fd2TimePeriod string
-  fd2Interest string
-  fd2Compound string
-  fd2PMT string
-  fd2Result string
+  Fd2N string `json:"fd2N"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2PMT string `json:"fd2PMT"`
+  Fd2Result string `json:"fd2Result"`
 }
 
-func newOaPvFields() *oaPvFields {
+func newOaPvFields(dir1, dir2 string) *oaPvFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "oapv.txt")
+  if obj != nil {
+    var o oaPvFields
+    err := json.Unmarshal(obj, &o)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &o
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &oaPvFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1N: "1.0",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "monthly",
-    fd1FV: "1.00",
-    fd1Result: "",
+    Fd1N: "1.0",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "monthly",
+    Fd1FV: "1.00",
+    Fd1Result: "",
     //
-    fd2N: "1.0",
-    fd2TimePeriod: "year",
-    fd2Interest: "1.00",
-    fd2Compound: "monthly",
-    fd2PMT: "1.00",
-    fd2Result: "",
+    Fd2N: "1.0",
+    Fd2TimePeriod: "year",
+    Fd2Interest: "1.00",
+    Fd2Compound: "monthly",
+    Fd2PMT: "1.00",
+    Fd2Result: "",
   }
 }
 
@@ -974,66 +1042,83 @@ func getOaPvFields(userName string) *oaPvFields {
 }
 
 type siAccurateFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  fd1Time string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1PV string
-  fd1Result string
+  Fd1Time string `json:"fd1Time"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1PV string `json:"fd1PV"`
+  Fd1Result string `json:"fd1Result"`
   //
-  fd2Time string
-  fd2TimePeriod string
-  fd2Amount string
-  fd2PV string
-  fd2Result string
+  Fd2Time string `json:"fd2Time"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Amount string `json:"fd2Amount"`
+  Fd2PV string `json:"fd2PV"`
+  Fd2Result string `json:"fd2Result"`
   //
-  fd3Time string
-  fd3TimePeriod string
-  fd3Interest string
-  fd3Compound string
-  fd3Amount string
-  fd3Result string
+  Fd3Time string `json:"fd3Time"`
+  Fd3TimePeriod string `json:"fd3TimePeriod"`
+  Fd3Interest string `json:"fd3Interest"`
+  Fd3Compound string `json:"fd3Compound"`
+  Fd3Amount string `json:"fd3Amount"`
+  Fd3Result string `json:"fd3Result"`
   //
-  fd4Interest string
-  fd4Compound string
-  fd4Amount string
-  fd4PV string
-  fd4Result string
+  Fd4Interest string `json:"fd4Interest"`
+  Fd4Compound string `json:"fd4Compound"`
+  Fd4Amount string `json:"fd4Amount"`
+  Fd4PV string `json:"fd4PV"`
+  Fd4Result string `json:"fd4Result"`
 }
 
-func newSiAccurateFields() *siAccurateFields {
+func newSiAccurateFields(dir1, dir2 string) *siAccurateFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "siaccurate.txt")
+  if obj != nil {
+    var s siAccurateFields
+    err := json.Unmarshal(obj, &s)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &s
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &siAccurateFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1Time: "1",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1PV: "1.00",
-    fd1Result: "",
+    Fd1Time: "1",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1PV: "1.00",
+    Fd1Result: "",
     //
-    fd2Time: "1",
-    fd2TimePeriod: "year",
-    fd2Amount: "1.00",
-    fd2PV: "1.00",
-    fd2Result: "",
+    Fd2Time: "1",
+    Fd2TimePeriod: "year",
+    Fd2Amount: "1.00",
+    Fd2PV: "1.00",
+    Fd2Result: "",
     //
-    fd3Time: "1",
-    fd3TimePeriod: "year",
-    fd3Interest: "1.0",
-    fd3Compound: "annually",
-    fd3Amount: "1.00",
-    fd3Result: "",
+    Fd3Time: "1",
+    Fd3TimePeriod: "year",
+    Fd3Interest: "1.0",
+    Fd3Compound: "annually",
+    Fd3Amount: "1.00",
+    Fd3Result: "",
     //
-    fd4Interest: "1.00",
-    fd4Compound: "annually",
-    fd4Amount: "1.00",
-    fd4PV: "1.00",
-    fd4Result: "",
+    Fd4Interest: "1.00",
+    Fd4Compound: "annually",
+    Fd4Amount: "1.00",
+    Fd4PV: "1.00",
+    Fd4Result: "",
   }
 }
 
@@ -1042,66 +1127,83 @@ func getSiAccurateFields(userName string) *siAccurateFields {
 }
 
 type siBankersFields struct {
-  currentPage string
-  currentButton string
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
   //
-  fd1Time string
-  fd1TimePeriod string
-  fd1Interest string
-  fd1Compound string
-  fd1PV string
-  fd1Result string
+  Fd1Time string `json:"fd1Time"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1PV string `json:"fd1PV"`
+  Fd1Result string `json:"fd1Result"`
   //
-  fd2Time string
-  fd2TimePeriod string
-  fd2Amount string
-  fd2PV string
-  fd2Result string
+  Fd2Time string `json:"fd2Time"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Amount string `json:"fd2Amount"`
+  Fd2PV string `json:"fd2PV"`
+  Fd2Result string `json:"fd2Result"`
   //
-  fd3Time string
-  fd3TimePeriod string
-  fd3Interest string
-  fd3Compound string
-  fd3Amount string
-  fd3Result string
+  Fd3Time string `json:"fd3Time"`
+  Fd3TimePeriod string `json:"fd3TimePeriod"`
+  Fd3Interest string `json:"fd3Interest"`
+  Fd3Compound string `json:"fd3Compound"`
+  Fd3Amount string `json:"fd3Amount"`
+  Fd3Result string `json:"fd3Result"`
   //
-  fd4Interest string
-  fd4Compound string
-  fd4Amount string
-  fd4PV string
-  fd4Result string
+  Fd4Interest string `json:"fd4Interest"`
+  Fd4Compound string `json:"fd4Compound"`
+  Fd4Amount string `json:"fd4Amount"`
+  Fd4PV string `json:"fd4PV"`
+  Fd4Result string `json:"fd4Result"`
 }
 
-func newSiBankersFields() *siBankersFields {
+func newSiBankersFields(dir1, dir2 string) *siBankersFields {
+  dir, err := misc.CreateDirs(0o017, 0o770, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "sibankers.txt")
+  if obj != nil {
+    var s siBankersFields
+    err := json.Unmarshal(obj, &s)
+    if err != nil {
+      //Write error, but continue with default values.
+      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    } else {
+      return &s
+    }
+  } else {
+    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+  }
   return &siBankersFields {
-    currentPage: "rhs-ui1",
-    currentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
     //
-    fd1Time: "1",
-    fd1TimePeriod: "year",
-    fd1Interest: "1.00",
-    fd1Compound: "annually",
-    fd1PV: "1.00",
-    fd1Result: "",
+    Fd1Time: "1",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1PV: "1.00",
+    Fd1Result: "",
     //
-    fd2Time: "1",
-    fd2TimePeriod: "year",
-    fd2Amount: "1.00",
-    fd2PV: "1.00",
-    fd2Result: "",
+    Fd2Time: "1",
+    Fd2TimePeriod: "year",
+    Fd2Amount: "1.00",
+    Fd2PV: "1.00",
+    Fd2Result: "",
     //
-    fd3Time: "1",
-    fd3TimePeriod: "year",
-    fd3Interest: "1.0",
-    fd3Compound: "annually",
-    fd3Amount: "1.00",
-    fd3Result: "",
+    Fd3Time: "1",
+    Fd3TimePeriod: "year",
+    Fd3Interest: "1.0",
+    Fd3Compound: "annually",
+    Fd3Amount: "1.00",
+    Fd3Result: "",
     //
-    fd4Interest: "1.00",
-    fd4Compound: "annually",
-    fd4Amount: "1.00",
-    fd4PV: "1.00",
-    fd4Result: "",
+    Fd4Interest: "1.00",
+    Fd4Compound: "annually",
+    Fd4Amount: "1.00",
+    Fd4PV: "1.00",
+    Fd4Result: "",
   }
 }
 
@@ -1180,7 +1282,7 @@ func getSiOrdinaryFields(userName string) *siOrdinaryFields {
 func AddSessionDataPerUser(userName string) {
   if _, ok := currentFields[userName]; !ok {
     fd := &fields{
-      miscellaneous: newMiscellaneousFields(),
+      miscellaneous: newMiscellaneousFields(mainDir, userName),
       mortgage: newMortgageFields(mainDir, userName),
       bonds: newBondsFields(mainDir, userName),
       adFv: newAdFvFields(mainDir, userName),
@@ -1191,11 +1293,11 @@ func AddSessionDataPerUser(userName string) {
       oaEpp: newOaEppFields(mainDir, userName),
       oaFv: newOaFvFields(mainDir, userName),
       oaGa: newOaGaFields(mainDir, userName),
-      oaInterestRate: newOaInterestRateFields(),
-      oaPerpetuity: newOaPerpetuityFields(),
-      oaPv: newOaPvFields(),
-      siAccurate: newSiAccurateFields(),
-      siBankers: newSiBankersFields(),
+      oaInterestRate: newOaInterestRateFields(mainDir, userName),
+      oaPerpetuity: newOaPerpetuityFields(mainDir, userName),
+      oaPv: newOaPvFields(mainDir, userName),
+      siAccurate: newSiAccurateFields(mainDir, userName),
+      siBankers: newSiBankersFields(mainDir, userName),
       siOrdinary: newSiOrdinaryFields(),
     }
     currentFields[userName] = fd

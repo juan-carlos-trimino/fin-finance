@@ -2,12 +2,15 @@ package webfinances
 
 import (
   "context"
-  "finance/middlewares"
+	"encoding/json"
   "finance/finances"
+  "finance/middlewares"
+	"finance/misc"
 	"finance/sessions"
   "fmt"
   "html/template"
   "net/http"
+	"os"
   "strconv"
   "strings"
 )
@@ -28,7 +31,8 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
     "Entering OaPvPages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    of := getOaPvFields(sessions.GetUserName(sessionToken))
+    userName := sessions.GetUserName(sessionToken)
+    of := getOaPvFields(userName)
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -46,36 +50,36 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      of.currentPage = ui
+      of.CurrentPage = ui
     }
     //
-    if strings.EqualFold(of.currentPage, "rhs-ui1") {
-      of.currentButton = "lhs-button1"
+    if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+      of.CurrentButton = "lhs-button1"
       if req.Method == http.MethodPost {
-        of.fd1N = req.PostFormValue("fd1-n")
-        of.fd1TimePeriod = req.PostFormValue("fd1-tp")
-        of.fd1Interest = req.PostFormValue("fd1-interest")
-        of.fd1Compound = req.PostFormValue("fd1-cp")
-        of.fd1FV = req.PostFormValue("fd1-fv")
+        of.Fd1N = req.PostFormValue("fd1-n")
+        of.Fd1TimePeriod = req.PostFormValue("fd1-tp")
+        of.Fd1Interest = req.PostFormValue("fd1-interest")
+        of.Fd1Compound = req.PostFormValue("fd1-cp")
+        of.Fd1FV = req.PostFormValue("fd1-fv")
         var n float64
         var i float64
         var fv float64
         var err error
-        if n, err = strconv.ParseFloat(of.fd1N, 64); err != nil {
-          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1N, err)
-        } else if i, err = strconv.ParseFloat(of.fd1Interest, 64); err != nil {
-          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1Interest, err)
-        } else if fv, err = strconv.ParseFloat(of.fd1FV, 64); err != nil {
-          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1FV, err)
+        if n, err = strconv.ParseFloat(of.Fd1N, 64); err != nil {
+          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1N, err)
+        } else if i, err = strconv.ParseFloat(of.Fd1Interest, 64); err != nil {
+          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1Interest, err)
+        } else if fv, err = strconv.ParseFloat(of.Fd1FV, 64); err != nil {
+          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1FV, err)
         } else {
           var oa finances.Annuities
-          of.fd1Result = fmt.Sprintf("Present Value: $%.2f", oa.O_PresentValue_FV(fv, i / 100.0,
-            oa.GetCompoundingPeriod(of.fd1Compound[0], true), n,
-            oa.GetTimePeriod(of.fd1TimePeriod[0], true)))
+          of.Fd1Result = fmt.Sprintf("Present Value: $%.2f", oa.O_PresentValue_FV(fv, i / 100.0,
+            oa.GetCompoundingPeriod(of.Fd1Compound[0], true), n,
+            oa.GetTimePeriod(of.Fd1TimePeriod[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, fv = %s, %s",
-            of.fd1N, of.fd1TimePeriod, of.fd1Interest, of.fd1Compound, of.fd1FV, of.fd1Result),
+            of.Fd1N, of.Fd1TimePeriod, of.Fd1Interest, of.Fd1Compound, of.Fd1FV, of.Fd1Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -100,36 +104,36 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
         Fd1Compound string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Present Value", m.DTF(), of.currentButton, newSession.CsrfToken,
-          of.fd1N, of.fd1TimePeriod, of.fd1Interest, of.fd1Compound, of.fd1FV, of.fd1Result,
+      } { "Ordinary Annuity / Present Value", m.DTF(), of.CurrentButton, newSession.CsrfToken,
+          of.Fd1N, of.Fd1TimePeriod, of.Fd1Interest, of.Fd1Compound, of.Fd1FV, of.Fd1Result,
         })
-    } else if strings.EqualFold(of.currentPage, "rhs-ui2") {
-      of.currentButton = "lhs-button2"
+    } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
+      of.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
-        of.fd2N = req.FormValue("fd2-n")
-        of.fd2TimePeriod = req.PostFormValue("fd2-tp")
-        of.fd2Interest = req.PostFormValue("fd2-interest")
-        of.fd2Compound = req.PostFormValue("fd2-cp")
-        of.fd2PMT = req.PostFormValue("fd2-pmt")
+        of.Fd2N = req.FormValue("fd2-n")
+        of.Fd2TimePeriod = req.PostFormValue("fd2-tp")
+        of.Fd2Interest = req.PostFormValue("fd2-interest")
+        of.Fd2Compound = req.PostFormValue("fd2-cp")
+        of.Fd2PMT = req.PostFormValue("fd2-pmt")
         var n float64
         var i float64
         var pmt float64
         var err error
-        if n, err = strconv.ParseFloat(of.fd2N, 64); err != nil {
-          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2N, err)
-        } else if i, err = strconv.ParseFloat(of.fd2Interest, 64); err != nil {
-          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2Interest, err)
-        } else if pmt, err = strconv.ParseFloat(of.fd2PMT, 64); err != nil {
-          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2PMT, err)
+        if n, err = strconv.ParseFloat(of.Fd2N, 64); err != nil {
+          of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2N, err)
+        } else if i, err = strconv.ParseFloat(of.Fd2Interest, 64); err != nil {
+          of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2Interest, err)
+        } else if pmt, err = strconv.ParseFloat(of.Fd2PMT, 64); err != nil {
+          of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2PMT, err)
         } else {
           var oa finances.Annuities
-          of.fd2Result = fmt.Sprintf("Present Value: $%.2f", oa.O_PresentValue_PMT(pmt, i / 100.0,
-            oa.GetCompoundingPeriod(of.fd2Compound[0], true), n,
-            oa.GetTimePeriod(of.fd2TimePeriod[0], true)))
+          of.Fd2Result = fmt.Sprintf("Present Value: $%.2f", oa.O_PresentValue_PMT(pmt, i / 100.0,
+            oa.GetCompoundingPeriod(of.Fd2Compound[0], true), n,
+            oa.GetTimePeriod(of.Fd2TimePeriod[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s",
-            of.fd2N, of.fd2TimePeriod, of.fd2Interest, of.fd2Compound, of.fd2PMT, of.fd2Result),
+            of.Fd2N, of.Fd2TimePeriod, of.Fd2Interest, of.Fd2Compound, of.Fd2PMT, of.Fd2Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -150,21 +154,30 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
         Fd2Compound string
         Fd2PMT string
         Fd2Result string
-      } { "Ordinary Annuity / Present Value", m.DTF(), of.currentButton, newSession.CsrfToken,
-          of.fd2N, of.fd2TimePeriod, of.fd2Interest, of.fd2Compound, of.fd2PMT, of.fd2Result,
+      } { "Ordinary Annuity / Present Value", m.DTF(), of.CurrentButton, newSession.CsrfToken,
+          of.Fd2N, of.Fd2TimePeriod, of.Fd2Interest, of.Fd2Compound, of.Fd2PMT, of.Fd2Result,
         })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", of.currentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       fmt.Println("*** Request timeout ***")
-      if strings.EqualFold(of.currentPage, "rhs-ui1") {
-        of.fd1Result = ""
-      } else if strings.EqualFold(of.currentPage, "rhs-ui2") {
-        of.fd2Result = ""
+      if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+        of.Fd1Result = ""
+      } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
+        of.Fd2Result = ""
+      }
+    }
+    //
+    if data, err := json.Marshal(of); err != nil {
+      fmt.Printf("%s - %s\n", m.DTF(), err)
+    } else {
+      filePath := fmt.Sprintf("%s/%s/oapv.txt", mainDir, userName)
+      if _, err := misc.WriteAllExclusiveLock(filePath, data, os.O_WRONLY, 0o220); err != nil {
+        fmt.Printf("%s - %s\n", m.DTF(), err)
       }
     }
   } else {

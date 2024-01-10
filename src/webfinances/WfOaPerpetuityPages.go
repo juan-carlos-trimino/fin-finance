@@ -2,12 +2,15 @@ package webfinances
 
 import (
   "context"
-  "finance/middlewares"
+	"encoding/json"
   "finance/finances"
+  "finance/middlewares"
+	"finance/misc"
 	"finance/sessions"
   "fmt"
   "html/template"
   "net/http"
+	"os"
   "strconv"
   "strings"
 )
@@ -28,7 +31,8 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
     "Entering OaPerpetuityPages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    of := getOaPerpetuityFields(sessions.GetUserName(sessionToken))
+    userName := sessions.GetUserName(sessionToken)
+    of := getOaPerpetuityFields(userName)
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -46,30 +50,30 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      of.currentPage = ui
+      of.CurrentPage = ui
     }
     //
-    if strings.EqualFold(of.currentPage, "rhs-ui1") {
-      of.currentButton = "lhs-button1"
+    if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+      of.CurrentButton = "lhs-button1"
       if req.Method == http.MethodPost {
-        of.fd1Interest = req.PostFormValue("fd1-interest")
-        of.fd1Compound = req.PostFormValue("fd1-cp")
-        of.fd1Pmt = req.PostFormValue("fd1-pmt")
+        of.Fd1Interest = req.PostFormValue("fd1-interest")
+        of.Fd1Compound = req.PostFormValue("fd1-cp")
+        of.Fd1Pmt = req.PostFormValue("fd1-pmt")
         var i float64
         var pmt float64
         var err error
-        if i, err = strconv.ParseFloat(of.fd1Interest, 64); err != nil {
-          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1Interest, err)
-        } else if pmt, err = strconv.ParseFloat(of.fd1Pmt, 64); err != nil {
-          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1Pmt, err)
+        if i, err = strconv.ParseFloat(of.Fd1Interest, 64); err != nil {
+          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1Interest, err)
+        } else if pmt, err = strconv.ParseFloat(of.Fd1Pmt, 64); err != nil {
+          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1Pmt, err)
         } else {
           var oa finances.Annuities
-          of.fd1Result = fmt.Sprintf("Present Value of Perpetuity: $%.2f",
-            oa.O_Perpetuity(i / 100.0, pmt, oa.GetCompoundingPeriod(of.fd1Compound[0], true)))
+          of.Fd1Result = fmt.Sprintf("Present Value of Perpetuity: $%.2f",
+            oa.O_Perpetuity(i / 100.0, pmt, oa.GetCompoundingPeriod(of.Fd1Compound[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("i = %s, cp = %s, pmt = %s, %s",
-            of.fd1Interest, of.fd1Compound, of.fd1Pmt, of.fd1Result),
+            of.Fd1Interest, of.Fd1Compound, of.Fd1Pmt, of.Fd1Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -92,35 +96,35 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
         Fd1Compound string
         Fd1Pmt string
         Fd1Result string
-      } { "Ordinary Annuity / Perpetuities", m.DTF(), of.currentButton, newSession.CsrfToken,
-          of.fd1Interest, of.fd1Compound, of.fd1Pmt, of.fd1Result,
+      } { "Ordinary Annuity / Perpetuities", m.DTF(), of.CurrentButton, newSession.CsrfToken,
+          of.Fd1Interest, of.Fd1Compound, of.Fd1Pmt, of.Fd1Result,
         })
-    } else if strings.EqualFold(of.currentPage, "rhs-ui2") {
-      of.currentButton = "lhs-button2"
+    } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
+      of.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
-        of.fd2Interest = req.FormValue("fd2-interest")
-        of.fd2Compound = req.PostFormValue("fd2-cp")
-        of.fd2Grow = req.PostFormValue("fd2-grow")
-        of.fd2Pmt = req.PostFormValue("fd2-pmt")
+        of.Fd2Interest = req.FormValue("fd2-interest")
+        of.Fd2Compound = req.PostFormValue("fd2-cp")
+        of.Fd2Grow = req.PostFormValue("fd2-grow")
+        of.Fd2Pmt = req.PostFormValue("fd2-pmt")
         var i float64
         var grow float64
         var pmt float64
         var err error
-        if i, err = strconv.ParseFloat(of.fd2Interest, 64); err != nil {
-          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2Interest, err)
-        } else if grow, err = strconv.ParseFloat(of.fd2Grow, 64); err != nil {
-          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2Grow, err)
-        } else if pmt, err = strconv.ParseFloat(of.fd2Pmt, 64); err != nil {
-          of.fd2Result = fmt.Sprintf("Error: %s -- %+v", of.fd2Pmt, err)
+        if i, err = strconv.ParseFloat(of.Fd2Interest, 64); err != nil {
+          of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2Interest, err)
+        } else if grow, err = strconv.ParseFloat(of.Fd2Grow, 64); err != nil {
+          of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2Grow, err)
+        } else if pmt, err = strconv.ParseFloat(of.Fd2Pmt, 64); err != nil {
+          of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2Pmt, err)
         } else {
           var oa finances.Annuities
-          of.fd2Result = fmt.Sprintf("Present Value of Perpetuity: $%.2f",
+          of.Fd2Result = fmt.Sprintf("Present Value of Perpetuity: $%.2f",
             oa.O_GrowingPerpetuity(i / 100.0, grow, pmt,
-            oa.GetCompoundingPeriod(of.fd2Compound[0], true)))
+            oa.GetCompoundingPeriod(of.Fd2Compound[0], true)))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("i = %s, cp = %s, grow = %s, pmt = %s, %s",
-            of.fd2Interest, of.fd2Compound, of.fd2Grow, of.fd2Pmt, of.fd2Result),
+            of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -140,21 +144,30 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
         Fd2Grow string
         Fd2Pmt string
         Fd2Result string
-      } { "Ordinary Annuity / Perpetuities", m.DTF(), of.currentButton, newSession.CsrfToken,
-          of.fd2Interest, of.fd2Compound, of.fd2Grow, of.fd2Pmt, of.fd2Result,
+      } { "Ordinary Annuity / Perpetuities", m.DTF(), of.CurrentButton, newSession.CsrfToken,
+          of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result,
         })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", of.currentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       fmt.Println("*** Request timeout ***")
-      if strings.EqualFold(of.currentPage, "rhs-ui1") {
-        of.fd1Result = ""
-      } else if strings.EqualFold(of.currentPage, "rhs-ui2") {
-        of.fd2Result = ""
+      if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+        of.Fd1Result = ""
+      } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
+        of.Fd2Result = ""
+      }
+    }
+    //
+    if data, err := json.Marshal(of); err != nil {
+      fmt.Printf("%s - %s\n", m.DTF(), err)
+    } else {
+      filePath := fmt.Sprintf("%s/%s/oaperpetuity.txt", mainDir, userName)
+      if _, err := misc.WriteAllExclusiveLock(filePath, data, os.O_WRONLY, 0o220); err != nil {
+        fmt.Printf("%s - %s\n", m.DTF(), err)
       }
     }
   } else {

@@ -2,12 +2,15 @@ package webfinances
 
 import (
   "context"
-  "finance/middlewares"
+	"encoding/json"
   "finance/finances"
+  "finance/middlewares"
+	"finance/misc"
 	"finance/sessions"
   "fmt"
   "html/template"
   "net/http"
+	"os"
   "strconv"
   "strings"
 )
@@ -28,7 +31,8 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
     "Entering OaInterestRatePages/webfinances.",
   })
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    of := getOaInterestRateFields(sessions.GetUserName(sessionToken))
+    userName := sessions.GetUserName(sessionToken)
+    of := getOaInterestRateFields(userName)
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -46,36 +50,36 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      of.currentPage = ui
+      of.CurrentPage = ui
     }
     //
-    if strings.EqualFold(of.currentPage, "rhs-ui1") {
-      of.currentButton = "lhs-button1"
+    if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+      of.CurrentButton = "lhs-button1"
       if req.Method == http.MethodPost {
-        of.fd1N = req.PostFormValue("fd1-n")
-        of.fd1TimePeriod = req.PostFormValue("fd1-tp")
-        of.fd1Compound = req.PostFormValue("fd1-cp")
-        of.fd1PV = req.PostFormValue("fd1-pv")
-        of.fd1FV = req.PostFormValue("fd1-fv")
+        of.Fd1N = req.PostFormValue("fd1-n")
+        of.Fd1TimePeriod = req.PostFormValue("fd1-tp")
+        of.Fd1Compound = req.PostFormValue("fd1-cp")
+        of.Fd1PV = req.PostFormValue("fd1-pv")
+        of.Fd1FV = req.PostFormValue("fd1-fv")
         var n float64
         var pv float64
         var fv float64
         var err error
-        if n, err = strconv.ParseFloat(of.fd1N, 64); err != nil {
-          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1N, err)
-        } else if pv, err = strconv.ParseFloat(of.fd1PV, 64); err != nil {
-          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1PV, err)
-        } else if fv, err = strconv.ParseFloat(of.fd1FV, 64); err != nil {
-          of.fd1Result = fmt.Sprintf("Error: %s -- %+v", of.fd1FV, err)
+        if n, err = strconv.ParseFloat(of.Fd1N, 64); err != nil {
+          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1N, err)
+        } else if pv, err = strconv.ParseFloat(of.Fd1PV, 64); err != nil {
+          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1PV, err)
+        } else if fv, err = strconv.ParseFloat(of.Fd1FV, 64); err != nil {
+          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1FV, err)
         } else {
           var oa finances.Annuities
-          of.fd1Result = fmt.Sprintf("Interest: %.3f%% %s", oa.O_Interest_PV_FV(pv, fv, n,
-            oa.GetTimePeriod(of.fd1TimePeriod[0], true),
-            oa.GetCompoundingPeriod(of.fd1Compound[0], true)) * 100.0, of.fd1Compound)
+          of.Fd1Result = fmt.Sprintf("Interest: %.3f%% %s", oa.O_Interest_PV_FV(pv, fv, n,
+            oa.GetTimePeriod(of.Fd1TimePeriod[0], true),
+            oa.GetCompoundingPeriod(of.Fd1Compound[0], true)) * 100.0, of.Fd1Compound)
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, tp = %s, cp = %s, pv = %s, fv = %s, %s",
-            of.fd1N, of.fd1TimePeriod, of.fd1Compound, of.fd1PV, of.fd1FV, of.fd1Result),
+            of.Fd1N, of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -100,19 +104,28 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
         Fd1PV string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Interest Rate", m.DTF(), of.currentButton, newSession.CsrfToken,
-          of.fd1N, of.fd1TimePeriod, of.fd1Compound, of.fd1PV, of.fd1FV, of.fd1Result,
+      } { "Ordinary Annuity / Interest Rate", m.DTF(), of.CurrentButton, newSession.CsrfToken,
+          of.Fd1N, of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result,
         })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", of.currentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
       fmt.Printf("%s - %s\n", m.DTF(), errString)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       fmt.Println("*** Request timeout ***")
-      if strings.EqualFold(of.currentPage, "rhs-ui1") {
-        of.fd1Result = ""
+      if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+        of.Fd1Result = ""
+      }
+    }
+    //
+    if data, err := json.Marshal(of); err != nil {
+      fmt.Printf("%s - %s\n", m.DTF(), err)
+    } else {
+      filePath := fmt.Sprintf("%s/%s/oainterestrate.txt", mainDir, userName)
+      if _, err := misc.WriteAllExclusiveLock(filePath, data, os.O_WRONLY, 0o220); err != nil {
+        fmt.Printf("%s - %s\n", m.DTF(), err)
       }
     }
   } else {
