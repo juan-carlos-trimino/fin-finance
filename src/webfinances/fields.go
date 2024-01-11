@@ -1328,19 +1328,11 @@ func DeleteSessionDataPerUser(userName string) {
 func readFields(filePath string) ([]byte, error) {
   exists, err := misc.CheckFileExists(filePath)
   if exists {
-    obj, err := misc.ReadAllShareLock(filePath, os.O_RDONLY, 0o660)
+    obj, err := misc.ReadAllShareLock(filePath, os.O_RDONLY, 0o440)
     if err != nil {
       return nil, errors.New(fmt.Sprintf("Couldn't open file %s: ", filePath) + err.Error())
     }
     return obj, nil
-  } else if err == nil {
-    //File doesn't exist, create it.
-    f, err := os.OpenFile(filePath, os.O_CREATE | os.O_RDWR, 0o660)
-    if err != nil {
-      return nil, errors.New(fmt.Sprintf("Couldn't create file %s: ", filePath) + err.Error())
-    }
-    f.Close()
-    return nil, nil
   } else {
     return nil, err
   }

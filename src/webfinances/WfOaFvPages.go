@@ -176,7 +176,7 @@ func (o WfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
       fmt.Printf("%s - %s\n", m.DTF(), err)
     } else {
       filePath := fmt.Sprintf("%s/%s/oafv.txt", mainDir, userName)
-      if _, err := misc.WriteAllExclusiveLock(filePath, data, os.O_WRONLY, 0o220); err != nil {
+      if _, err := misc.WriteAllExclusiveLock(filePath, data, os.O_CREATE | os.O_RDWR, 0o660); err != nil {
         fmt.Printf("%s - %s\n", m.DTF(), err)
       }
     }
