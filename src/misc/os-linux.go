@@ -1,14 +1,20 @@
 package misc
 
 import (
+  "bufio"
 	"io"
 	"os"
 	"os/user"
 	"runtime"
 	"strings"
+  "sync"
 	"syscall"
-	// "time"
 )
+
+//Grouping together three related variables in a single package-level variable, protect.
+var shr = struct {  //Unnamed struct.
+  mutexDirs sync.Mutex  //Protect the file.
+}{}
 
 //Is the current user running as root?
 func IsRoot() (bool, error) {
@@ -53,11 +59,11 @@ Effects of Permissions on Files and Directories
 Permission  Effect on files                     Effective on directories
 ---------------------------------------------------------------------------------------------------
 r (read)    File contents can be read.          Contents of the directory (the file names) can be
-                                                listed.
+                                                listed. Octal value of 4.
 w (write)   File contents can be changed.       Any file in the directory can be created, deleted,
-                                                or renamed.
+                                                or renamed. Octal value of 2.
 x (execute) Files can be executed as commands.  The directory can become the current working
-                                                directory.
+                                                directory. Octal value of 1.
 
 The umask command without arguments will display the current value of the shell's umask:
 $ umask
@@ -80,6 +86,10 @@ func CreateDirs(umask int, perm os.FileMode, dirs ...string) (string, error) {
   sb := strings.Builder{}
   //Grow to a larger size to reduce future resizes of the buffer.
   sb.Grow(1024)
+  shr.mutexDirs.Lock()
+  defer shr.mutexDirs.Unlock()
+  oldMask := syscall.Umask(umask)
+  defer syscall.Umask(oldMask)
   for _, dir := range dirs {
     sb.WriteString(dir)
     if !strings.HasSuffix(sb.String(), "/") {
@@ -87,9 +97,7 @@ func CreateDirs(umask int, perm os.FileMode, dirs ...string) (string, error) {
     }
     if _, err := os.Stat(sb.String()); err != nil {
       if os.IsNotExist(err) {
-        oldMask := syscall.Umask(umask)
         err := os.Mkdir(sb.String(), perm)
-        syscall.Umask(oldMask)
         if err != nil {
           return "", err
         }
@@ -101,7 +109,7 @@ func CreateDirs(umask int, perm os.FileMode, dirs ...string) (string, error) {
   return sb.String(), nil
 }
 
-func ReadAllShareLock(filePath string, flag int, perm os.FileMode) ([]byte, error) {
+func ReadAllShareLock1(filePath string, flag int, perm os.FileMode) ([]byte, error) {
   file, err := os.OpenFile(filePath, flag, perm)
   if err != nil {
     return nil, err
@@ -120,7 +128,34 @@ func ReadAllShareLock(filePath string, flag int, perm os.FileMode) ([]byte, erro
   return obj, nil
 }
 
-func WriteAllExclusiveLock(filePath string, data []byte, flag int, perm os.FileMode) (int, error) {
+func ReadAllShareLock2(filePath string, data map[string][]byte, flag int, perm os.FileMode) error {
+  file, err := os.OpenFile(filePath, flag, perm)
+  if err != nil {
+    return err
+  }
+  //Deferred function calls are pushed onto a stack. When a function returns, its deferred calls
+  //are executed in last-in-first-out order.
+  defer file.Close()
+  builder := strings.Builder{}
+  //Grow to a larger size to reduce future resizes of the buffer.
+  builder.Grow(1024)
+  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_SH); err != nil {  //Share reads.
+    return err
+  }
+  defer syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+  scanner := bufio.NewScanner(file)
+  for scanner.Scan() {
+    if builder.Len() == 0 {
+      builder.WriteString(scanner.Text())
+    } else {
+      data[builder.String()] = scanner.Bytes()
+      builder.Reset()
+    }
+  }
+  return nil
+}
+
+func WriteAllExclusiveLock1(filePath string, data []byte, flag int, perm os.FileMode) (int, error) {
   file, err := os.OpenFile(filePath, flag, perm)
   if err != nil {
     return -1, err
@@ -137,4 +172,24 @@ func WriteAllExclusiveLock(filePath string, data []byte, flag int, perm os.FileM
     return -1, err
   }
   return n, nil
+}
+
+func WriteAllExclusiveLock2(filePath string, data1 string, data2 []byte, flag int,
+  perm os.FileMode) (int, int, error) {
+  file, err := os.OpenFile(filePath, flag, perm)
+  if err != nil {
+    return -1, -1, err
+  }
+  //Deferred function calls are pushed onto a stack. When a function returns, its deferred calls
+  //are executed in last-in-first-out order.
+  defer file.Close()
+  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX); err != nil {  //Exclusive write.
+    return -1, -1, err
+  }
+  defer syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+  var n1, n2 int = -1, -1
+  if n1, err = file.WriteString(data1); err == nil {
+    n2, err = file.Write(data2)
+  }
+  return n1, n2, err
 }

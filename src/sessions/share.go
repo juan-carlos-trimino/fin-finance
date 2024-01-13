@@ -65,7 +65,7 @@ var shr = struct {  //Unnamed struct.
   //Store the username and password for each user.
   // users map[string]*[]byte  //key: username, value: password
   users map[string][]byte  //key: username, value: password
-} {
+}{
   // users: make(map[string]*[]byte, 16),
   users: make(map[string][]byte, 16),
   sessions: make(map[string]session_token, 16),  //key: sessionToken, value: session

@@ -216,7 +216,8 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       fmt.Printf("%s - %s\n", m.DTF(), err)
     } else {
       filePath := fmt.Sprintf("%s/%s/adcp.txt", mainDir, userName)
-      if _, err := misc.WriteAllExclusiveLock(filePath, data, os.O_CREATE | os.O_RDWR, 0o660); err != nil {
+      if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR, 0o600);
+        err != nil {
         fmt.Printf("%s - %s\n", m.DTF(), err)
       }
     }

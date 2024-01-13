@@ -554,32 +554,20 @@ func makeHttpToHttpsRedirectHandler(port string) *handlers {
 }
 
 func readUsers(dir, filename string) {
-  if dir != "" && filename != "" {
-    if _, err := os.Stat(dir); err != nil {
-      if os.IsNotExist(err) {
-        oldMask := syscall.Umask(0o017)
-        fmt.Printf("Default mask: %04o\nUsing mask: 0017\n", oldMask)
-        err = os.Mkdir(dir, 0o777)
-        syscall.Umask(oldMask)
-        if err != nil {
-          panic("Cannot create dir.\n" + err.Error())
-        } else if err = sessions.AddUserToFile(dir + "/" + filename, USER_NAME, PASSWORD);
-                  err != nil {
-          panic(err)
-        } else if err = sessions.AddUserToFile(dir + "/" + filename, "b", "b"); err != nil {
-          panic(err)
-        }
-      } else {
-        panic(err)
-      }
-    }
-    //
-    if err := sessions.ReadUsersFromFile(dir + "/" + filename); err != nil {
-      panic(err)
-    }
-  }// else {
-//    sessions.AddFromMemory(USER_NAME, PASSWORD)
-//  }
+  _, err := misc.CreateDirs(0o077, 0o777, dir)
+  if err != nil {
+    panic("Cannot create dir.\n" + err.Error())
+  }
+  filePath := dir + "/" + filename
+  if err = sessions.AddUserToFile(filePath, USER_NAME, PASSWORD); err != nil {
+    panic(err)
+  } else if err = sessions.AddUserToFile(filePath, "b", "b"); err != nil {
+    panic(err)
+  }
+  //
+  if err := sessions.ReadUsersFromFile(filePath); err != nil {
+    panic(err)
+  }
 }
 
 
