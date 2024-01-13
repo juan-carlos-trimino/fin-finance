@@ -2,9 +2,7 @@ package sessions
 
 import (
   "finance/misc"
-//  "bufio"
   "os"
-//  "strings"
 )
 
 // const (
