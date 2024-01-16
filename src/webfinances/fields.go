@@ -225,6 +225,7 @@ type bondsFields struct {
   Fd2Time string `json:"fd2Time"`
   Fd2TimePeriod string `json:"Fd2TimePeriod"`
   Fd2Coupon string `json:"fd2Coupon"`
+  Fd2CompoundCoupon string `json:"fd2CompoundCoupon"`
   Fd2Current string `json:"fd2Current"`
   Fd2Compound string `json:"fd2Compound"`
   Fd2Result string `json:"fd2Result"`
@@ -252,6 +253,7 @@ type bondsFields struct {
   Fd5Time string `json:"fd5Time"`
   Fd5TimePeriod string `json:"fd5TimePeriod"`
   Fd5Coupon string `json:"fd5Coupon"`
+  Fd5CompoundCoupon string `json:"fd5CompoundCoupon"`
   Fd5CurInterest string `json:"fd5CurInterest"`
   Fd5Compound string `json:"fd5Compound"`
   Fd5Result string `json:"fd5Result"`
@@ -313,8 +315,9 @@ func newBondsFields(dir1, dir2 string) *bondsFields {
     Fd2Time: "5",
     Fd2TimePeriod: "year",
     Fd2Coupon: "3.00",
+    Fd2CompoundCoupon: "annually",
     Fd2Current: "3.5",
-    Fd2Compound: "semiannually",
+    Fd2Compound: "annually",
     Fd2Result: "",
     //
     Fd3FaceValue: "1000.00",
@@ -340,8 +343,9 @@ func newBondsFields(dir1, dir2 string) *bondsFields {
     Fd5Time: "5",
     Fd5TimePeriod: "year",
     Fd5Coupon: "5.4",
+    Fd5CompoundCoupon: "annually",
     Fd5CurInterest: "7.5",
-    Fd5Compound: "semiannually",
+    Fd5Compound: "annually",
     Fd5Result: "",
     //
     Fd6FaceValue: "1000.00",

@@ -35,6 +35,23 @@
        type="number" step="any" maxlength="7" required/>
     </div>
     <div class="text-style">
+      <label class="text-box" for="fd5-compound-coupon">Compounding Period...</label>
+      <select class="text-combo" id="fd5-compound-coupon" name="fd5-compound-coupon">
+        <option class="text-combo" value="annually"
+         {{ if eq .Fd5CompoundCoupon "annually" }} selected {{ end }}>Annually</option>
+        <option class="text-combo" value="semiannually"
+         {{ if eq .Fd5CompoundCoupon "semiannually" }} selected {{ end }}>Semiannually</option>
+        <option class="text-combo" value="quarterly"
+         {{ if eq .Fd5CompoundCoupon "quarterly" }} selected {{ end }}>Quarterly</option>
+        <option class="text-combo" value="monthly"
+         {{ if eq .Fd5CompoundCoupon "monthly" }} selected {{ end }}>Monthly</option>
+        <option class="text-combo" value="weekly"
+         {{ if eq .Fd5CompoundCoupon "weekly" }} selected {{ end }}>Weekly</option>
+        <!-- <option class="text-combo" value="continuously"
+         {{ if eq .Fd5CompoundCoupon "continuously" }} selected {{ end }}>Continuously</option> -->
+      </select>
+    </div>
+    <div class="text-style">
       <label class="text-box" for="fd5-current">Current Interest (%)....</label>
       <input class="text-combo" id="fd5-current" name="fd5-current" value="{{ .Fd5CurInterest }}"
        type="number" step="any" maxlength="7" required/>

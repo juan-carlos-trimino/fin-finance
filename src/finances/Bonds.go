@@ -1,4 +1,4 @@
-//Bond pricing.
+//Bond pricing with a flat term structure.
 package finances
 
 import (
@@ -302,6 +302,7 @@ func (b *Bonds) duration(cashFlow []float64, currentRate, bondPrice float64) flo
   }
   return (D / bondPrice)
 }
+
 /*** Silence the message U1000 for unused functions. Uncomment when usage is required.
 func (b *Bonds) duration1(cashFlow []float64, currentRate float64) (float64) {
   var D float64 = zero
@@ -317,13 +318,17 @@ func (b *Bonds) duration1(cashFlow []float64, currentRate float64) (float64) {
   return (D / B)
 }
 ***/
+
 func (b *Bonds) DurationContinuous(cashFlow []float64, currentRate, bondPrice float64) float64 {
+  // var B float64 = zero  //Bond Price
   var D float64 = zero
   currentRate /= hundred
   var sz int = len(cashFlow)
   for idx, t := 0, 1.0; idx < sz; idx, t = idx + 1, t + 1.0 {
+  //  B += cashFlow[idx] * math.Exp(-currentRate * t)
     D += math.Exp(-currentRate * t) * t * cashFlow[idx]
   }
+  // return(D / B)
   return(D / bondPrice)
 }
 

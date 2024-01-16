@@ -37,6 +37,25 @@
        type="number" step="any" maxlength="7" required/>
     </div>
     <div class="text-style">
+      <label class="text-box" for="fd2-compound-coupon">Compounding Period...</label>
+      <select class="text-combo" id="fd2-compound-coupon" name="fd2-compound-coupon">
+        <option class="text-combo" value="annually"
+         {{ if eq .Fd2CompoundCoupon "annually" }} selected {{ end }}>Annually</option>
+        <option class="text-combo" value="semiannually"
+         {{ if eq .Fd2CompoundCoupon "semiannually" }} selected {{ end }}>Semiannually</option>
+        <option class="text-combo" value="quarterly"
+         {{ if eq .Fd2CompoundCoupon "quarterly" }} selected {{ end }}>Quarterly</option>
+        <option class="text-combo" value="monthly"
+         {{ if eq .Fd2CompoundCoupon "monthly" }} selected {{ end }}>Monthly</option>
+        <option class="text-combo" value="weekly"
+         {{ if eq .Fd2CompoundCoupon "weekly" }} selected {{ end }}>Weekly</option>
+        <option class="text-combo" value="daily"
+         {{ if eq .Fd2CompoundCoupon "daily" }} selected {{ end }}>Daily</option>
+        <!-- <option class="text-combo" value="continuously"
+         {{ if eq .Fd2CompoundCoupon "continuously" }} selected {{ end }}>Continuously</option> -->
+      </select>
+    </div>
+    <div class="text-style">
       <label class="text-box" for="fd2-current">Current Interest (%)....</label>
       <input class="text-combo" id="fd2-current" name="fd2-current" value="{{ .Fd2Current }}"
        type="number" step="any" maxlength="7" required/>

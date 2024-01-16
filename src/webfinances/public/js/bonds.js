@@ -53,7 +53,7 @@ function disableElements(eid) {
     document.getElementById("lhs-button2").disabled = false;
     document.getElementById("lhs-button3").disabled = false;
     document.getElementById("lhs-button4").disabled = false;
-    document.getElementById("lhs-button5").disabled = true;
+    document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = false;
     document.getElementById("lhs-button7").disabled = false;
     document.getElementById("lhs-button8").disabled = false;
@@ -63,7 +63,7 @@ function disableElements(eid) {
     document.getElementById("lhs-button2").disabled = true;
     document.getElementById("lhs-button3").disabled = false;
     document.getElementById("lhs-button4").disabled = false;
-    document.getElementById("lhs-button5").disabled = true;
+    document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = false;
     document.getElementById("lhs-button7").disabled = false;
     document.getElementById("lhs-button8").disabled = false;
@@ -73,7 +73,7 @@ function disableElements(eid) {
     document.getElementById("lhs-button2").disabled = false;
     document.getElementById("lhs-button3").disabled = true;
     document.getElementById("lhs-button4").disabled = false;
-    document.getElementById("lhs-button5").disabled = true;
+    document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = false;
     document.getElementById("lhs-button7").disabled = false;
     document.getElementById("lhs-button8").disabled = false;
@@ -83,27 +83,27 @@ function disableElements(eid) {
     document.getElementById("lhs-button2").disabled = false;
     document.getElementById("lhs-button3").disabled = false;
     document.getElementById("lhs-button4").disabled = true;
-    document.getElementById("lhs-button5").disabled = true;
+    document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = false;
     document.getElementById("lhs-button7").disabled = false;
     document.getElementById("lhs-button8").disabled = false;
-  // } else if (eid === "lhs-button5") {
-  //   // audio.play();
-  //   document.getElementById("lhs-button1").disabled = false;
-  //   document.getElementById("lhs-button2").disabled = false;
-  //   document.getElementById("lhs-button3").disabled = false;
-  //   document.getElementById("lhs-button4").disabled = false;
-  //   document.getElementById("lhs-button5").disabled = true;
-  //   document.getElementById("lhs-button6").disabled = false;
-  //   document.getElementById("lhs-button7").disabled = false;
-  //   document.getElementById("lhs-button8").disabled = false;
-  } else if (eid === "lhs-button6") {
+  } else if (eid === "lhs-button5") {
     // audio.play();
     document.getElementById("lhs-button1").disabled = false;
     document.getElementById("lhs-button2").disabled = false;
     document.getElementById("lhs-button3").disabled = false;
     document.getElementById("lhs-button4").disabled = false;
     document.getElementById("lhs-button5").disabled = true;
+    document.getElementById("lhs-button6").disabled = false;
+    document.getElementById("lhs-button7").disabled = false;
+    document.getElementById("lhs-button8").disabled = false;
+  } else if (eid === "lhs-button6") {
+    // audio.play();
+    document.getElementById("lhs-button1").disabled = false;
+    document.getElementById("lhs-button2").disabled = false;
+    document.getElementById("lhs-button3").disabled = false;
+    document.getElementById("lhs-button4").disabled = false;
+    document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = true;
     document.getElementById("lhs-button7").disabled = false;
     document.getElementById("lhs-button8").disabled = false;
@@ -113,7 +113,7 @@ function disableElements(eid) {
     document.getElementById("lhs-button2").disabled = false;
     document.getElementById("lhs-button3").disabled = false;
     document.getElementById("lhs-button4").disabled = false;
-    document.getElementById("lhs-button5").disabled = true;
+    document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = false;
     document.getElementById("lhs-button7").disabled = true;
     document.getElementById("lhs-button8").disabled = false;
@@ -123,7 +123,7 @@ function disableElements(eid) {
     document.getElementById("lhs-button2").disabled = false;
     document.getElementById("lhs-button3").disabled = false;
     document.getElementById("lhs-button4").disabled = false;
-    document.getElementById("lhs-button5").disabled = true;
+    document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = false;
     document.getElementById("lhs-button7").disabled = false;
     document.getElementById("lhs-button8").disabled = true;
