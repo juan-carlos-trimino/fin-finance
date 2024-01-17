@@ -19,6 +19,33 @@ import (
 	"testing"
 )
 
+func TestBonds_CashFlow(t *testing.T) {
+  type test struct {
+    FV float64 //Face value
+    couponRate float64
+    cp byte //Compounding period
+    n float64 //Time to call
+    tp byte //Time period
+    want []float64
+  }
+  var tests = []test {
+    { FV: 1000.00, couponRate: 3.0, cp: 's', n: 5.0, tp: 'y',
+      want: []float64{15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 1015.00} },
+  }
+  var b Bonds
+  for _, tc := range tests {
+    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, true), tc.n,
+      b.GetTimePeriod(tc.tp, true))
+    for idx := range cashFlow {
+      if math.Abs(cashFlow[idx] - tc.want[idx]) < 1e-5 {
+        fmt.Printf("Payment[%d] = $%.2f\n", idx + 1, cashFlow[idx])
+      } else {
+        t.Errorf("Payment[%d] = $%.10f, Want = $%.10f", idx + 1, cashFlow[idx], tc.want[idx])
+      }
+    }
+  }
+}
+
 func TestBonds_CurrentPrice(t *testing.T) {
   type test struct {
     FV float64 //Face value
@@ -69,7 +96,7 @@ func TestBonds_CurrentPrice(t *testing.T) {
   for _, tc := range tests {
     var cp int = b.GetCompoundingPeriod(tc.cp, true)
     var cf = b.CashFlow(tc.FV, tc.couponRate, cp, tc.n, b.GetTimePeriod(tc.tp, true))
-    price := b.CurrentPrice(cf, tc.currentRate, b.GetCompoundingPeriod(tc.cp, true))
+    price := b.CurrentPrice(cf, tc.currentRate, b.GetCompoundingPeriod(tc.currentRate_cp, true))
     if math.Abs(price - tc.want) < 1e-5 {
       fmt.Printf("Price = $%.2f\n", price)
     } else {
@@ -117,19 +144,21 @@ func TestBonds_Duration(t *testing.T) {
     cp byte //Compounding period
     n float64 //Time to call
     tp byte //Time period
-    curInterest float64
+    currentRate float64
+    currentRate_cp byte //Compounding period
     want float64
   }
   var tests = []test {
     //years = 2.738954
-    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', curInterest: 9.0,
-      want: 2.738954 },
+    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0,
+      currentRate_cp: 'a', want: 2.738954 },
   }
   var b Bonds
   for _, tc := range tests {
-    var cp int = b.GetCompoundingPeriod(tc.cp, false)
-    var cf = b.CashFlow(tc.FV, tc.couponRate, cp, tc.n, b.GetTimePeriod(tc.tp, false))
-    var years = b.Duration(cf, cp, tc.curInterest, b.CurrentPrice(cf, tc.curInterest, cp))
+    var cp int = b.GetCompoundingPeriod(tc.cp, true)
+    var cf = b.CashFlow(tc.FV, tc.couponRate, cp, tc.n, b.GetTimePeriod(tc.tp, true))
+    var years = b.Duration(cf, cp, tc.currentRate, b.CurrentPrice(cf, tc.currentRate,
+      b.GetCompoundingPeriod(tc.currentRate_cp, true)))
     if math.Abs(years - tc.want) < 1e-5 {
       fmt.Printf("years = %.2f\n", years)
     } else {
@@ -146,11 +175,13 @@ func TestBonds_DurationContinuous(t *testing.T) {
     n float64
     tp byte //Time period
     currentRate float64
+    currentRate_cp byte //Compounding period
     want float64
   }
   var tests = []test {
     //Duration = 2.737529
-    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0, want: 2.737529 },
+    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0,
+      currentRate_cp: 'c', want: 2.737529 },
   }
   var b Bonds
   for _, tc := range tests {
@@ -166,63 +197,6 @@ func TestBonds_DurationContinuous(t *testing.T) {
   }
 }
 
-func TestBonds_ModifiedDuration(t *testing.T) {
-  type test struct {
-    FV float64 //Face value
-    couponRate float64
-    cp byte //Compounding period
-    n float64 //Time to call
-    tp byte //Time period
-    curInterest float64
-    want float64
-  }
-  var tests = []test {
-    //MDuration = 2.512801%
-    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', curInterest: 9.0, want: 2.512801 },
-    //MDuration = 2.62144622%
-    { FV: 1000.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', curInterest: 5.0,
-      want: 2.62144622 },
-  }
-  var b Bonds
-  for _, tc := range tests {
-    var cp int = b.GetCompoundingPeriod(tc.cp, false)
-    var cf = b.CashFlow(tc.FV, tc.couponRate, cp, tc.n, b.GetTimePeriod(tc.tp, false))
-    var MDuration = b.ModifiedDuration(cf, cp, b.CurrentPrice(cf, tc.curInterest, cp))
-    if math.Abs(MDuration - tc.want) < 1e-5 {
-      fmt.Printf("MDuration = %.2f%%\n", MDuration)
-    } else {
-      t.Errorf("MDuration = %.10f%%, Want = %.10f%%", MDuration, tc.want)
-    }
-  }
-}
-
-func TestBonds_YieldToMaturityContinuous(t *testing.T) {
-  type test struct {
-    FV float64 //Face value
-    couponRate float64
-    cp byte //Compounding period
-    n float64
-    tp byte //Time period
-    currentRate float64
-    want float64
-  }
-  var tests = []test {
-    //Duration = 9.0
-    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0, want: 9.0 },
-  }
-  var b Bonds
-  for _, tc := range tests {
-    var cf = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
-      b.GetTimePeriod(tc.tp, false))
-    var ytm = b.YieldToMaturityContinuous(cf, b.CurrentPriceContinuous(cf, tc.currentRate))
-    if math.Abs(ytm - tc.want) < 1e-5 {
-      fmt.Printf("YTM = %.2f\n", ytm)
-    } else {
-      t.Errorf("YTM = %.10f, Want = %.10f", ytm, tc.want)
-    }
-  }
-}
-
 func TestBonds_MacaulayDuration(t *testing.T) {
   type test struct {
     FV float64 //Face value
@@ -230,20 +204,24 @@ func TestBonds_MacaulayDuration(t *testing.T) {
     cp byte //Compounding period
     n float64 //Time to call
     tp byte //Time period
-    curInterest float64
+    currentRate float64
+    currentRate_cp byte //Compounding period
     want float64
   }
   var tests = []test {
     //macyears = 2.738954
-    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', curInterest: 9.0, want: 2.738954 },
+    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0,
+      currentRate_cp: 'a', want: 2.738954 },
     //macyears = 2.7525185
-    { FV: 1000.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', curInterest: 5.0, want: 2.7525185 },
+    { FV: 1000.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 5.0,
+      currentRate_cp: 'a', want: 2.7525185 },
   }
   var b Bonds
   for _, tc := range tests {
-    var cp int = b.GetCompoundingPeriod(tc.cp, false)
-    var cf = b.CashFlow(tc.FV, tc.couponRate, cp, tc.n, b.GetTimePeriod(tc.tp, false))
-    var macyears = b.MacaulayDuration(cf, cp, b.CurrentPrice(cf, tc.curInterest, cp))
+    var cp int = b.GetCompoundingPeriod(tc.cp, true)
+    var cf = b.CashFlow(tc.FV, tc.couponRate, cp, tc.n, b.GetTimePeriod(tc.tp, true))
+    var macyears = b.MacaulayDuration(cf, cp, b.CurrentPrice(cf, tc.currentRate,
+      b.GetCompoundingPeriod(tc.currentRate_cp, true)))
     if math.Abs(macyears - tc.want) < 1e-5 {
       fmt.Printf("macyears = %.2f\n", macyears)
     } else {
@@ -260,11 +238,13 @@ func TestBonds_MacaulayDurationContinuous(t *testing.T) {
     n float64
     tp byte //Time period
     currentRate float64
+    currentRate_cp byte //Compounding period
     want float64
   }
   var tests = []test {
     //Duration = 2.737529
-    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0, want: 2.737529 },
+    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0,
+      currentRate_cp: 'c', want: 2.737529 },
   }
   var b Bonds
   for _, tc := range tests {
@@ -286,21 +266,23 @@ func TestBonds_Convexity(t *testing.T) {
     cp byte //Compounding period
     n float64 //Time to call
     tp byte //Time period
-    curInterest float64
+    currentRate float64
+    currentRate_cp byte //Compounding period
     want float64
   }
   var tests = []test {
-    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', curInterest: 9.0, want: 8.932479 },
-    { FV: 1000.00, couponRate: 5.4, cp: 's', n: 5.0, tp: 'y', curInterest: 7.5,
-      want: 21.62517240 },
-    { FV: 1000.00, couponRate: 5.4, cp: 's', n: 60.0, tp: 'm', curInterest: 7.5,
-      want: 21.62517240 },
+    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0,
+      currentRate_cp: 'a', want: 8.932479 },
+    { FV: 1000.00, couponRate: 5.4, cp: 's', n: 5.0, tp: 'y', currentRate: 7.5,
+      currentRate_cp: 's', want: 21.62517240 },
+    { FV: 1000.00, couponRate: 5.4, cp: 's', n: 60.0, tp: 'm', currentRate: 7.5,
+      currentRate_cp: 's', want: 21.62517240 },
   }
   var b Bonds
   for _, tc := range tests {
-    var cp int = b.GetCompoundingPeriod(tc.cp, false)
-    var cf = b.CashFlow(tc.FV, tc.couponRate, cp, tc.n, b.GetTimePeriod(tc.tp, false))
-    var Cx = b.Convexity(cf, tc.curInterest, cp)
+    var cf = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, true), tc.n,
+      b.GetTimePeriod(tc.tp, true))
+    var Cx = b.Convexity(cf, tc.currentRate, b.GetCompoundingPeriod(tc.currentRate_cp, true))
     if math.Abs(Cx - tc.want) < 1e-5 {
       fmt.Printf("Cx = %.2f\n", Cx)
     } else {
@@ -317,53 +299,24 @@ func TestBonds_ConvexityContinuous(t *testing.T) {
     n float64
     tp byte //Time period
     currentRate float64
+    currentRate_cp byte //Compounding period
     want float64
   }
   var tests = []test {
     //Convexity = 7.867793
-    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0, want: 7.867793 },
+    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0,
+      currentRate_cp: 'c', want: 7.867793 },
   }
   var b Bonds
   for _, tc := range tests {
-    var cf = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
-      b.GetTimePeriod(tc.tp, false))
+    var cf = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, true), tc.n,
+      b.GetTimePeriod(tc.tp, true))
     var convexity = b.ConvexityContinuous(cf, tc.currentRate,
       b.CurrentPriceContinuous(cf, tc.currentRate))
     if math.Abs(convexity - tc.want) < 1e-5 {
       fmt.Printf("Duration = %.2f\n", convexity)
     } else {
       t.Errorf("Duration = %.10f, Want = %.10f", convexity, tc.want)
-    }
-  }
-}
-
-func TestBonds_YieldToCall(t *testing.T) {
-  type test struct {
-    FV float64 //Face value
-    couponRate float64
-    cp byte //Compounding period
-    n float64 //Time to call
-    tp byte //Time period
-    bondPrice float64
-    callPrice float64
-    want float64
-  }
-  var tests = []test {
-    //ytc = 4.21485471%
-    { FV: 1000.00, couponRate: 10.0, cp: 'a', n: 9.0, tp: 'y', bondPrice: 1494.93,
-      callPrice: 1100.00, want: 4.21485471 },
-    //ytm = 7.43329954%
-    { FV: 1000.00, couponRate: 10.0, cp: 's', n: 5.0, tp: 'y', bondPrice: 1175.00,
-      callPrice: 1100.00, want: 7.43329954 },
-  }
-  var b Bonds
-  for _, tc := range tests {
-    var ytc = b.YieldToCall(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
-      b.GetTimePeriod(tc.tp, false), tc.bondPrice, tc.callPrice)
-    if math.Abs(ytc - tc.want) < 1e-5 {
-      fmt.Printf("ytc = %.2f%%\n", ytc)
-    } else {
-      t.Errorf("ytc = %.10f%%, Want = %.10f%%", ytc, tc.want)
     }
   }
 }
@@ -416,29 +369,93 @@ func TestBonds_YieldToMaturity(t *testing.T) {
   }
 }
 
-func TestBonds_CashFlow(t *testing.T) {
+func TestBonds_YieldToMaturityContinuous(t *testing.T) {
+  type test struct {
+    FV float64 //Face value
+    couponRate float64
+    cp byte //Compounding period
+    n float64
+    tp byte //Time period
+    currentRate float64
+    want float64
+  }
+  var tests = []test {
+    //Duration = 9.0
+    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0, want: 9.0 },
+  }
+  var b Bonds
+  for _, tc := range tests {
+    var cf = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+      b.GetTimePeriod(tc.tp, false))
+    var ytm = b.YieldToMaturityContinuous(cf, b.CurrentPriceContinuous(cf, tc.currentRate))
+    if math.Abs(ytm - tc.want) < 1e-5 {
+      fmt.Printf("YTM = %.2f\n", ytm)
+    } else {
+      t.Errorf("YTM = %.10f, Want = %.10f", ytm, tc.want)
+    }
+  }
+}
+
+func TestBonds_ModifiedDuration(t *testing.T) {
   type test struct {
     FV float64 //Face value
     couponRate float64
     cp byte //Compounding period
     n float64 //Time to call
     tp byte //Time period
-    want []float64
+    currentRate float64
+    currentRate_cp byte //Compounding period
+    want float64
   }
   var tests = []test {
-    { FV: 1000.00, couponRate: 3.0, cp: 's', n: 5.0, tp: 'y',
-      want: []float64{15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 1015.00} },
+    //MDuration = 2.512801%
+    { FV: 100.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 9.0,
+      currentRate_cp: 'a', want: 2.512801 },
+    //MDuration = 2.62144622%
+    { FV: 1000.00, couponRate: 10.0, cp: 'a', n: 3.0, tp: 'y', currentRate: 5.0,
+      currentRate_cp: 'a', want: 2.62144622 },
   }
   var b Bonds
   for _, tc := range tests {
-    var cashFlow = b.CashFlow(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
-                              b.GetTimePeriod(tc.tp, false))
-    for idx := range cashFlow {
-      if math.Abs(cashFlow[idx] - tc.want[idx]) < 1e-5 {
-        fmt.Printf("Payment[%d] = $%.2f\n", idx + 1, cashFlow[idx])
-      } else {
-        t.Errorf("Payment[%d] = $%.10f, Want = $%.10f", idx + 1, cashFlow[idx], tc.want[idx])
-      }
+    var cp int = b.GetCompoundingPeriod(tc.cp, false)
+    var cf = b.CashFlow(tc.FV, tc.couponRate, cp, tc.n, b.GetTimePeriod(tc.tp, true))
+    var MDuration = b.ModifiedDuration(cf, b.GetCompoundingPeriod(tc.cp, true),
+      b.CurrentPrice(cf, tc.currentRate, b.GetCompoundingPeriod(tc.currentRate_cp, true)))
+    if math.Abs(MDuration - tc.want) < 1e-5 {
+      fmt.Printf("MDuration = %.2f%%\n", MDuration)
+    } else {
+      t.Errorf("MDuration = %.10f%%, Want = %.10f%%", MDuration, tc.want)
+    }
+  }
+}
+
+func TestBonds_YieldToCall(t *testing.T) {
+  type test struct {
+    FV float64 //Face value
+    couponRate float64
+    cp byte //Compounding period
+    n float64 //Time to call
+    tp byte //Time period
+    bondPrice float64
+    callPrice float64
+    want float64
+  }
+  var tests = []test {
+    //ytc = 4.21485471%
+    { FV: 1000.00, couponRate: 10.0, cp: 'a', n: 9.0, tp: 'y', bondPrice: 1494.93,
+      callPrice: 1100.00, want: 4.21485471 },
+    //ytm = 7.43329954%
+    { FV: 1000.00, couponRate: 10.0, cp: 's', n: 5.0, tp: 'y', bondPrice: 1175.00,
+      callPrice: 1100.00, want: 7.43329954 },
+  }
+  var b Bonds
+  for _, tc := range tests {
+    var ytc = b.YieldToCall(tc.FV, tc.couponRate, b.GetCompoundingPeriod(tc.cp, false), tc.n,
+      b.GetTimePeriod(tc.tp, false), tc.bondPrice, tc.callPrice)
+    if math.Abs(ytc - tc.want) < 1e-5 {
+      fmt.Printf("ytc = %.2f%%\n", ytc)
+    } else {
+      t.Errorf("ytc = %.10f%%, Want = %.10f%%", ytc, tc.want)
     }
   }
 }

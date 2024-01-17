@@ -271,6 +271,7 @@ type bondsFields struct {
   Fd7Time string `json:"fd7Time"`
   Fd7TimePeriod string `json:"fd7TimePeriod"`
   Fd7Coupon string `json:"fd7Coupon"`
+  Fd7CompoundCoupon string `json:"fd7CompoundCoupon"`
   Fd7CurInterest string `json:"fd7CurInterest"`
   Fd7Compound string `json:"fd7Compound"`
   Fd7Result [2]string `json:"fd7Result"`
@@ -363,8 +364,9 @@ func newBondsFields(dir1, dir2 string) *bondsFields {
     Fd7Time: "5",
     Fd7TimePeriod: "year",
     Fd7Coupon: "5.4",
+    Fd7CompoundCoupon: "annually",
     Fd7CurInterest: "7.5",
-    Fd7Compound: "semiannually",
+    Fd7Compound: "annually",
     Fd7Result: [2]string { bond_notes[0], "" },
     //
     Fd8FaceValue: "1000.00",

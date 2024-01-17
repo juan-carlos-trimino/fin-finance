@@ -289,8 +289,8 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           bf.Fd4Result = fmt.Sprintf("Error: %s -- %+v", bf.Fd4BondPrice, err)
         } else {
           var b finances.Bonds
-          var cp int = b.GetCompoundingPeriod(bf.Fd4Compound[0], false)
-          var tp = b.GetTimePeriod(bf.Fd4TimePeriod[0], false)
+          var cp int = b.GetCompoundingPeriod(bf.Fd4Compound[0], true)
+          var tp = b.GetTimePeriod(bf.Fd4TimePeriod[0], true)
           cf := b.CashFlow(fv, couponRate, cp, time, tp)
           if currentInterest {
             if cp != finances.Continuously {
@@ -437,7 +437,8 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
             time, b.GetTimePeriod(bf.Fd6TimePeriod[0], true))
           switch bf.Fd2Compound[0] {
           case 'c', 'C':
-            //currentPrice = b.CurrentPriceContinuous(cf, current)
+            bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f year(s)",
+              b.MacaulayDurationContinuous(cf, b.CurrentPriceContinuous(cf, current)))
           default:
             bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f year(s)",
               b.MacaulayDuration(cf, b.GetCompoundingPeriod(bf.Fd8Compound[0], true),
@@ -481,12 +482,13 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         bf.Fd7Time = req.PostFormValue("fd7-time")
         bf.Fd7TimePeriod = req.PostFormValue("fd7-tp")
         bf.Fd7Coupon = req.PostFormValue("fd7-coupon")
+        bf.Fd7CompoundCoupon = req.PostFormValue("fd7-compound-coupon")
         bf.Fd7CurInterest = req.PostFormValue("fd7-current")
         bf.Fd7Compound = req.PostFormValue("fd7-compound")
         var fv float64
         var time float64
         var couponRate float64
-        var curInterest float64
+        var current float64
         var err error
         if fv, err = strconv.ParseFloat(bf.Fd7FaceValue, 64); err != nil {
           bf.Fd7Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd7FaceValue, err)
@@ -494,19 +496,15 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           bf.Fd7Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd7Time, err)
         } else if couponRate, err = strconv.ParseFloat(bf.Fd7Coupon, 64); err != nil {
           bf.Fd7Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd7Coupon, err)
-        } else if curInterest, err = strconv.ParseFloat(bf.Fd7CurInterest, 64); err != nil {
+        } else if current, err = strconv.ParseFloat(bf.Fd7CurInterest, 64); err != nil {
           bf.Fd7Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd7CurInterest, err)
         } else {
           var b finances.Bonds
-          var cp int = b.GetCompoundingPeriod(bf.Fd7Compound[0], false)
-          var tp = b.GetTimePeriod(bf.Fd7TimePeriod[0], false)
-          cf := b.CashFlow(fv, couponRate, cp, time, tp)
-          if cp != finances.Continuously {
-            bf.Fd7Result[1] = fmt.Sprintf("Modified Duration: %.3f%%",
-              b.ModifiedDuration(cf, cp, b.CurrentPrice(cf, curInterest, cp)))
-          } else {
-            bf.Fd7Result[1] = "-1.00"
-          }
+          cf := b.CashFlow(fv, couponRate, b.GetCompoundingPeriod(bf.Fd7CompoundCoupon[0], true),
+            time, b.GetTimePeriod(bf.Fd7TimePeriod[0], true))
+          bf.Fd7Result[1] = fmt.Sprintf("Modified Duration: %.3f%%",
+            b.ModifiedDuration(cf, b.GetCompoundingPeriod(bf.Fd7CompoundCoupon[0], true),
+            b.CurrentPrice(cf, current, b.GetCompoundingPeriod(bf.Fd7Compound[0], true))))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur interest = %s, %s",
@@ -530,11 +528,13 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd7Time string
         Fd7TimePeriod string
         Fd7Coupon string
+        Fd7CompoundCoupon string
         Fd7CurInterest string
         Fd7Compound string
         Fd7Result [2]string
       } { "Bonds", m.DTF(), bf.CurrentButton, newSession.CsrfToken, bf.Fd7FaceValue, bf.Fd7Time,
-          bf.Fd7TimePeriod, bf.Fd7Coupon, bf.Fd7CurInterest, bf.Fd7Compound, bf.Fd7Result,
+          bf.Fd7TimePeriod, bf.Fd7Coupon, bf.Fd7CompoundCoupon, bf.Fd7CurInterest, bf.Fd7Compound,
+          bf.Fd7Result,
         })
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui8") {
       bf.CurrentButton = "lhs-button8"
