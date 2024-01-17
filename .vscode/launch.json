@@ -15,10 +15,13 @@ Now the debbuger is ready to be used.
   "configurations": [
     {
       "name": "WebFinance",
+      // "name": "Test",
       "type": "go",
       "request": "launch",
       "mode": "debug",
+      // "mode": "test",
       "program": "src/",
+      // "program": "src/finances/",
       "env": {
         "HTTP": "true",
         "HTTPS": "true",
@@ -27,6 +30,7 @@ Now the debbuger is ready to be used.
         // "SHUTDOWN_TIMEOUT": "10"
       },
       "args": [],
+      // "args": ["Bonds_test.go"],
     }
   ]
 }
