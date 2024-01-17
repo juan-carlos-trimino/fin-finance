@@ -262,6 +262,7 @@ type bondsFields struct {
   Fd6Time string `json:"fd6Time"`
   Fd6TimePeriod string `json:"fd6TimePeriod"`
   Fd6Coupon string `json:"fd6Coupon"`
+  Fd6CompoundCoupon string `json:"fd6CompoundCoupon"`
   Fd6CurInterest string `json:"fd6CurInterest"`
   Fd6Compound string `json:"fd6Compound"`
   Fd6Result [2]string `json:"fd6Result"`
@@ -278,6 +279,7 @@ type bondsFields struct {
   Fd8Time string `json:"fd8Time"`
   Fd8TimePeriod string `json:"fd8TimePeriod"`
   Fd8Coupon string `json:"fd8Coupon"`
+  Fd8CompoundCoupon string `json:"fd8CompoundCoupon"`
   Fd8CurInterest string `json:"fd8CurInterest"`
   Fd8Compound string `json:"fd8Compound"`
   Fd8Result [2]string `json:"fd8Result"`
@@ -352,8 +354,9 @@ func newBondsFields(dir1, dir2 string) *bondsFields {
     Fd6Time: "5",
     Fd6TimePeriod: "year",
     Fd6Coupon: "5.4",
+    Fd6CompoundCoupon: "annually",
     Fd6CurInterest: "7.5",
-    Fd6Compound: "semiannually",
+    Fd6Compound: "annually",
     Fd6Result: [2]string { bond_notes[1], "" },
     //
     Fd7FaceValue: "1000.00",
@@ -368,8 +371,9 @@ func newBondsFields(dir1, dir2 string) *bondsFields {
     Fd8Time: "5",
     Fd8TimePeriod: "year",
     Fd8Coupon: "5.4",
+    Fd8CompoundCoupon: "annually",
     Fd8CurInterest: "7.5",
-    Fd8Compound: "semiannually",
+    Fd8Compound: "annually",
     Fd8Result: [2]string { bond_notes[2], "" },
   }
 }

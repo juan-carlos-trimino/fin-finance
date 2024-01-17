@@ -405,7 +405,8 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd5Compound string
         Fd5Result string
       } { "Bonds", m.DTF(), bf.CurrentButton, newSession.CsrfToken, bf.Fd5FaceValue, bf.Fd5Time,
-          bf.Fd5TimePeriod, bf.Fd5Coupon, bf.Fd5CompoundCoupon, bf.Fd5CurInterest, bf.Fd5Compound, bf.Fd5Result,
+          bf.Fd5TimePeriod, bf.Fd5Coupon, bf.Fd5CompoundCoupon, bf.Fd5CurInterest, bf.Fd5Compound,
+          bf.Fd5Result,
         })
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui6") {
       bf.CurrentButton = "lhs-button6"
@@ -414,12 +415,13 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         bf.Fd6Time = req.PostFormValue("fd6-time")
         bf.Fd6TimePeriod = req.PostFormValue("fd6-tp")
         bf.Fd6Coupon = req.PostFormValue("fd6-coupon")
+        bf.Fd6CompoundCoupon = req.PostFormValue("fd6-compound-coupon")
         bf.Fd6CurInterest = req.PostFormValue("fd6-current")
         bf.Fd6Compound = req.PostFormValue("fd6-compound")
         var fv float64
         var time float64
         var couponRate float64
-        var curInterest float64
+        var current float64
         var err error
         if fv, err = strconv.ParseFloat(bf.Fd6FaceValue, 64); err != nil {
           bf.Fd6Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd6FaceValue, err)
@@ -427,18 +429,19 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           bf.Fd6Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd6Time, err)
         } else if couponRate, err = strconv.ParseFloat(bf.Fd6Coupon, 64); err != nil {
           bf.Fd6Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd6Coupon, err)
-        } else if curInterest, err = strconv.ParseFloat(bf.Fd6CurInterest, 64); err != nil {
+        } else if current, err = strconv.ParseFloat(bf.Fd6CurInterest, 64); err != nil {
           bf.Fd6Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd6CurInterest, err)
         } else {
           var b finances.Bonds
-          var cp int = b.GetCompoundingPeriod(bf.Fd6Compound[0], false)
-          var tp = b.GetTimePeriod(bf.Fd6TimePeriod[0], false)
-          cf := b.CashFlow(fv, couponRate, cp, time, tp)
-          if cp != finances.Continuously {
+          cf := b.CashFlow(fv, couponRate, b.GetCompoundingPeriod(bf.Fd6CompoundCoupon[0], true),
+            time, b.GetTimePeriod(bf.Fd6TimePeriod[0], true))
+          switch bf.Fd2Compound[0] {
+          case 'c', 'C':
+            //currentPrice = b.CurrentPriceContinuous(cf, current)
+          default:
             bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f year(s)",
-              b.MacaulayDuration(cf, cp, b.CurrentPrice(cf, curInterest, cp)))
-          } else {
-            bf.Fd6Result[1] = "-1.00"
+              b.MacaulayDuration(cf, b.GetCompoundingPeriod(bf.Fd8Compound[0], true),
+                b.CurrentPrice(cf, current, b.GetCompoundingPeriod(bf.Fd8Compound[0], true))))
           }
         }
         logEntry.Print(INFO, correlationId, []string {
@@ -463,11 +466,13 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd6Time string
         Fd6TimePeriod string
         Fd6Coupon string
+        Fd6CompoundCoupon string
         Fd6CurInterest string
         Fd6Compound string
         Fd6Result [2]string
       } { "Bonds", m.DTF(), bf.CurrentButton, newSession.CsrfToken, bf.Fd6FaceValue, bf.Fd6Time,
-          bf.Fd6TimePeriod, bf.Fd6Coupon, bf.Fd6CurInterest, bf.Fd6Compound, bf.Fd6Result,
+          bf.Fd6TimePeriod, bf.Fd6Coupon, bf.Fd6CompoundCoupon, bf.Fd6CurInterest, bf.Fd6Compound,
+          bf.Fd6Result,
         })
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui7") {
       bf.CurrentButton = "lhs-button7"
@@ -538,12 +543,13 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         bf.Fd8Time = req.PostFormValue("fd8-time")
         bf.Fd8TimePeriod = req.PostFormValue("fd8-tp")
         bf.Fd8Coupon = req.PostFormValue("fd8-coupon")
+        bf.Fd8CompoundCoupon = req.PostFormValue("fd8-compound-coupon")
         bf.Fd8CurInterest = req.PostFormValue("fd8-current")
         bf.Fd8Compound = req.PostFormValue("fd8-compound")
         var fv float64
         var time float64
         var couponRate float64
-        var curInterest float64
+        var current float64
         var err error
         if fv, err = strconv.ParseFloat(bf.Fd8FaceValue, 64); err != nil {
           bf.Fd8Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd8FaceValue, err)
@@ -551,17 +557,19 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           bf.Fd8Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd8Time, err)
         } else if couponRate, err = strconv.ParseFloat(bf.Fd8Coupon, 64); err != nil {
           bf.Fd8Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd8Coupon, err)
-        } else if curInterest, err = strconv.ParseFloat(bf.Fd8CurInterest, 64); err != nil {
+        } else if current, err = strconv.ParseFloat(bf.Fd8CurInterest, 64); err != nil {
           bf.Fd8Result[1] = fmt.Sprintf("Error: %s -- %+v", bf.Fd8CurInterest, err)
         } else {
           var b finances.Bonds
-          var cp int = b.GetCompoundingPeriod(bf.Fd8Compound[0], false)
-          var tp = b.GetTimePeriod(bf.Fd8TimePeriod[0], false)
-          cf := b.CashFlow(fv, couponRate, cp, time, tp)
-          if cp != finances.Continuously {
-            bf.Fd8Result[1] = fmt.Sprintf("Convexity: %.3f", b.Convexity(cf, curInterest, cp))
-          } else {
-            bf.Fd8Result[1] = "-1.00"
+          cf := b.CashFlow(fv, couponRate, b.GetCompoundingPeriod(bf.Fd8CompoundCoupon[0], true),
+            time, b.GetTimePeriod(bf.Fd8TimePeriod[0], true))
+          switch bf.Fd8Compound[0] {
+          case 'c', 'C':
+            bf.Fd8Result[1] = fmt.Sprintf("Convexity: %.3f", b.ConvexityContinuous(cf, current,
+              b.CurrentPriceContinuous(cf, current)))
+          default:
+            bf.Fd8Result[1] = fmt.Sprintf("Convexity: %.3f", b.Convexity(cf, current,
+              b.GetCompoundingPeriod(bf.Fd8Compound[0], true)))
           }
         }
         logEntry.Print(INFO, correlationId, []string {
@@ -586,11 +594,13 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd8Time string
         Fd8TimePeriod string
         Fd8Coupon string
+        Fd8CompoundCoupon string
         Fd8CurInterest string
         Fd8Compound string
         Fd8Result [2]string
       } { "Bonds", m.DTF(), bf.CurrentButton, newSession.CsrfToken, bf.Fd8FaceValue, bf.Fd8Time,
-          bf.Fd8TimePeriod, bf.Fd8Coupon, bf.Fd8CurInterest, bf.Fd8Compound, bf.Fd8Result,
+          bf.Fd8TimePeriod, bf.Fd8Coupon, bf.Fd8CompoundCoupon, bf.Fd8CurInterest, bf.Fd8Compound,
+          bf.Fd8Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", bf.CurrentPage)
