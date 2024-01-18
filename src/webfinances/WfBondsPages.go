@@ -441,8 +441,8 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
               b.MacaulayDurationContinuous(cf, b.CurrentPriceContinuous(cf, current)))
           default:
             bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f year(s)",
-              b.MacaulayDuration(cf, b.GetCompoundingPeriod(bf.Fd8Compound[0], true),
-                b.CurrentPrice(cf, current, b.GetCompoundingPeriod(bf.Fd8Compound[0], true))))
+              b.MacaulayDuration(cf, b.GetCompoundingPeriod(bf.Fd6CompoundCoupon[0], true),
+                b.CurrentPrice(cf, current, b.GetCompoundingPeriod(bf.Fd6Compound[0], true))))
           }
         }
         logEntry.Print(INFO, correlationId, []string {
