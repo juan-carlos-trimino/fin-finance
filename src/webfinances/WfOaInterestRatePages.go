@@ -124,8 +124,8 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
       fmt.Printf("%s - %s\n", m.DTF(), err)
     } else {
       filePath := fmt.Sprintf("%s/%s/oainterestrate.txt", mainDir, userName)
-      if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR, 0o600);
-        err != nil {
+      if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
+        os.O_TRUNC, 0o600); err != nil {
         fmt.Printf("%s - %s\n", m.DTF(), err)
       }
     }

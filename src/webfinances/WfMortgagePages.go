@@ -280,8 +280,8 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       fmt.Printf("%s - %s\n", m.DTF(), err)
     } else {
       filePath := fmt.Sprintf("%s/%s/mortgage.txt", mainDir, userName)
-      if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR, 0o600);
-        err != nil {
+      if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
+        os.O_TRUNC, 0o600); err != nil {
         fmt.Printf("%s - %s\n", m.DTF(), err)
       }
     }

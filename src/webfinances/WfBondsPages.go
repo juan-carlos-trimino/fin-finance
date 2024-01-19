@@ -371,10 +371,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
             b.GetTimePeriod(bf.Fd5TimePeriod[0], true))
           switch bf.Fd5Compound[0] {
           case 'c', 'C':
-            bf.Fd5Result = fmt.Sprintf("Duration: %.3f%%",
+            bf.Fd5Result = fmt.Sprintf("Duration: %.3f",
               b.DurationContinuous(cf, current, b.CurrentPriceContinuous(cf, current)))
           default:
-            bf.Fd5Result = fmt.Sprintf("Duration: %.3f%%",
+            bf.Fd5Result = fmt.Sprintf("Duration: %.3f",
               b.Duration(cf, cp, current, b.CurrentPrice(cf, current, cp)))
           }
         }
@@ -437,10 +437,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
             time, b.GetTimePeriod(bf.Fd6TimePeriod[0], true))
           switch bf.Fd2Compound[0] {
           case 'c', 'C':
-            bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f year(s)",
+            bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f",
               b.MacaulayDurationContinuous(cf, b.CurrentPriceContinuous(cf, current)))
           default:
-            bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f year(s)",
+            bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f",
               b.MacaulayDuration(cf, b.GetCompoundingPeriod(bf.Fd6CompoundCoupon[0], true),
                 b.CurrentPrice(cf, current, b.GetCompoundingPeriod(bf.Fd6Compound[0], true))))
           }
@@ -502,7 +502,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           var b finances.Bonds
           cf := b.CashFlow(fv, couponRate, b.GetCompoundingPeriod(bf.Fd7CompoundCoupon[0], true),
             time, b.GetTimePeriod(bf.Fd7TimePeriod[0], true))
-          bf.Fd7Result[1] = fmt.Sprintf("Modified Duration: %.3f%%",
+          bf.Fd7Result[1] = fmt.Sprintf("Modified Duration: %.3f",
             b.ModifiedDuration(cf, b.GetCompoundingPeriod(bf.Fd7CompoundCoupon[0], true),
             b.CurrentPrice(cf, current, b.GetCompoundingPeriod(bf.Fd7Compound[0], true))))
         }
@@ -633,8 +633,8 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       fmt.Printf("%s - %s\n", m.DTF(), err)
     } else {
       filePath := fmt.Sprintf("%s/%s/bonds.txt", mainDir, userName)
-      if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR, 0o600);
-        err != nil {
+      if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
+        os.O_TRUNC, 0o600); err != nil {
         fmt.Printf("%s - %s\n", m.DTF(), err)
       }
     }
