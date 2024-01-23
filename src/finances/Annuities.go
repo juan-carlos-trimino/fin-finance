@@ -11,6 +11,7 @@ const (
   one float64 = 1.0
   two float64 = 2.0
   hundred float64 = 100.0
+  Accuracy float64 = 1e-5
 )
 
 /***

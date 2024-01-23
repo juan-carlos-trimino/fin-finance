@@ -9,6 +9,7 @@ import (
 	"finance/sessions"
 	"fmt"
 	"html/template"
+  "math"
 	"net/http"
 	"os"
 	"strconv"
@@ -156,12 +157,12 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
               true))
           }
           //
-          if fv > currentPrice {
-            bf.Fd2Result = fmt.Sprintf("Current Price: $%.2f (discount)", currentPrice)
+          if math.Abs(fv - currentPrice) < finances.Accuracy {
+            bf.Fd2Result = fmt.Sprintf("Current Price: $%.2f (par)", currentPrice)
           } else if fv < currentPrice {
             bf.Fd2Result = fmt.Sprintf("Current Price: $%.2f (premium)", currentPrice)
           } else {
-            bf.Fd2Result = fmt.Sprintf("Current Price: $%.2f (par)", currentPrice)
+            bf.Fd2Result = fmt.Sprintf("Current Price: $%.2f (discount)", currentPrice)
           }
         }
         logEntry.Print(INFO, correlationId, []string {
@@ -437,10 +438,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
             time, b.GetTimePeriod(bf.Fd6TimePeriod[0], true))
           switch bf.Fd2Compound[0] {
           case 'c', 'C':
-            bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f",
+            bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f year(s)",
               b.MacaulayDurationContinuous(cf, b.CurrentPriceContinuous(cf, current)))
           default:
-            bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f",
+            bf.Fd6Result[1] = fmt.Sprintf("Macaulay Duration: %.3f year(s)",
               b.MacaulayDuration(cf, b.GetCompoundingPeriod(bf.Fd6CompoundCoupon[0], true),
                 b.CurrentPrice(cf, current, b.GetCompoundingPeriod(bf.Fd6Compound[0], true))))
           }
@@ -502,7 +503,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           var b finances.Bonds
           cf := b.CashFlow(fv, couponRate, b.GetCompoundingPeriod(bf.Fd7CompoundCoupon[0], true),
             time, b.GetTimePeriod(bf.Fd7TimePeriod[0], true))
-          bf.Fd7Result[1] = fmt.Sprintf("Modified Duration: %.3f",
+          bf.Fd7Result[1] = fmt.Sprintf("Modified Duration: %.3f%%",
             b.ModifiedDuration(cf, b.GetCompoundingPeriod(bf.Fd7CompoundCoupon[0], true),
             b.CurrentPrice(cf, current, b.GetCompoundingPeriod(bf.Fd7Compound[0], true))))
         }
