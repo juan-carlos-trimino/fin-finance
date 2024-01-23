@@ -180,7 +180,6 @@ func (b *Bonds) YieldToMaturity(cashFlow []float64, bondPrice float64, cp int) (
   r = 0.5 * top
   var diff float64 = zero
   const MAX_BISECTION int = 200 //Maximum allowed number of bisections.
-  const ACCURACY float64 = 1e-5
   for idx := 0; idx < MAX_BISECTION; idx++ { //Bisection loop.
     /***
     The bisection method must succeed. Over some interval the function is known to pass through
@@ -189,7 +188,7 @@ func (b *Bonds) YieldToMaturity(cashFlow []float64, bondPrice float64, cp int) (
     bounds containing the root decrease by a factor of two.
     ***/
     diff = b.CurrentPrice(cashFlow, r, cp) - bondPrice
-    if ACCURACY > math.Abs(diff) {
+    if Accuracy > math.Abs(diff) {
       break
     } else if diff > zero {
       bottom = r
@@ -224,7 +223,6 @@ func (b *Bonds) YieldToMaturityContinuous(cashFlow []float64, bondPrice float64)
   r = 0.5 * top
   var diff float64 = zero
   const MAX_BISECTION int = 200 //Maximum allowed number of bisections.
-  const ACCURACY float64 = 1e-5
   for idx := 0; idx < MAX_BISECTION; idx++ { //Bisection loop.
     /***
     The bisection method must succeed. Over some interval the function is known to pass through
@@ -233,7 +231,7 @@ func (b *Bonds) YieldToMaturityContinuous(cashFlow []float64, bondPrice float64)
     bounds containing the root decrease by a factor of two.
     ***/
     diff = b.CurrentPriceContinuous(cashFlow, r) - bondPrice
-    if ACCURACY > math.Abs(diff) {
+    if Accuracy > math.Abs(diff) {
       break
     } else if diff > zero {
       bottom = r
@@ -246,46 +244,174 @@ func (b *Bonds) YieldToMaturityContinuous(cashFlow []float64, bondPrice float64)
 }
 
 /***
-Duration measures how long it takes, IN YEARS, for an investor to be repaid the bond's price by the
-bond's total cash flows. At the same time, duration is a measure of sensitivity of a bond's or
-fixed income portfolio's price to changes in interest rates. In general, the higher the duration,
-the more a bond's price will drop as interest rates rise (and the greater the interest rate risk).
-As a general rule, for every 1% change in interest rates (increase or decrease), a bond's price
-will change approximately 1% in the opposite direction, for every year of duration. If a bond has a
-duration of five years and interest rates increase 1%, the bond's price will drop by approximately
-5% (1% X 5 years). Likewise, if interest rates fall by 1%, the same bond's price will increase by
-about 5% (1% X 5 years).
+Discount Rate
+Discount rate is the rate of return used to discount future cash flows when calculating an
+investment's present value. A discount rate is applied to future cash flows because money earned in
+the future is less valuable than money earned today. This is based on the principle that money
+should make more money over time -- a concept known as the "time value of money".
 
-Certain factors can affect a bond's duration, including:
-(1)	TIME TO MATURITY - The longer the maturity, the higher the duration, and the greater the
-    interest rate risk. Consider two bonds that each yield 5% and cost $1,000, but have different
-    maturities. A bond that matures faster - say, in one year - would repay its true cost faster
-    than a bond that matures in 10 years. Consequently, the shorter-maturity bond would have a
-    lower duration and less risk.
-(2)	COUPON RATE - A bond's coupon rate is a key factor in the calculation of duration. If there are
-    two bonds that are identical with the exception on their coupon rates, the bond with the higher
-    coupon rate will pay back its original costs faster than the bond with a lower yield. The
-    higher the coupon rate, the lower the duration, and the lower the interest rate risk.
+Duration is an important measure for investors to consider, as bonds with higher durations (given
+equal credit, inflation and reinvestment risk) may have greater price volatility than bonds with
+lower durations.
 
-The duration of a bond in practice can refer to two different things. The Macaulay duration is the
-weighted average time until all the bond's cash flows are paid. By accounting for the present value
-of future bond payments, the Macaulay duration helps an investor evaluate and compare bonds
-independent of their term or time to maturity.
+Investment theory tells us that the value of a fixed-income investment is the sum of all of its
+cash flows discounted at an interest rate that reflects the inherent investment risk. In addition,
+due to the time value of money, it assumes that cash flows returned earlier are worth more than
+cash flows returned later. In its most basic form, duration measures the weighted average of the
+present value of the cash flows of a fixed-income investment.
 
-The second type of duration is called "modified duration" and, unlike Macaulay duration, is not
-measured in years. Modified duration measures the expected change in a bond's price to a 1% change
-in interest rates. In order to understand modified duration, keep in mind that bond prices are said
-to have an inverse relationship with interest rates. Therefore, rising interest rates indicate that
-bond prices are likely to fall, while declining interest rates indicate that bond prices are likely
-to rise.
-Notes:
-(1) Unfortunately, duration has limitations when used as a measure of interest rate sensitivity.
-    While the statistic calculates a linear relationship between price and yield changes in bonds,
-    in reality, the relationship between the changes in price and yield is convex. Hence, the
-    larger the change in interest rates, the larger the error in estimating the price change of the
-    bond.
-(2) When the bond is correctly priced, the duration and Macaulay duration will produce the same
-    number.
+All of the components of a bond -- price, coupon, maturity, and interest rates -- are used in the
+calculation of its duration. Although a bond's price is dependent on many variables apart from
+duration, duration can be used to determine how the bond's price may react to changes in interest
+rates.
+
+The price of a bond, or any fixed-income investment, is determined by summing the cash flows
+discounted by a rate of return. The rate of return can change at any time period and will be
+reflected in the calculation of an investment's market price. (The sensitivity of a bond's value to
+changing interest rates depends on both the length of time to maturity and on the pattern of cash
+flows provided by the bond.)
+
+Macaulay Duration measures the number of years required to recover the true cost of a bond,
+considering the present value of all coupon and principal payments received in the future. Thus, it
+is the only type of duration quoted in YEARS.
+
+Modified Duration expands or modifies Macaulay duration to measure the responsiveness of a bond's
+price to interest rate changes. It is defined as the percentage change in price for a 100 basis
+point (1%) change in interest rates. The formula assumes that the cash flows of the bond do not
+change as interest rates change (which is not the case for most callable bonds).
+
+Macaulay Duration Formula
+
+         n
+       -----
+       \          (PV)(CF ) * t
+        \	               t
+MacD =   \    ----------------------
+         /     Market Price of Bond
+        /
+       /
+       -----
+        t=1
+
+(PV)(CF ) = Present value of coupon at period t
+       t
+t = Time to each cash flow (in years)
+n = Number of periods to maturity.
+
+Macaulay duration is a measure of the time until the present value of cash flows from an investment
+equals the investment's cost. It is calculated by taking the weighted average of the present values
+of the cash flows, with the weights being the time until each cash flow is received. Macaulay
+duration is often used to compare the risk of different investments. An investment with a longer
+Macaulay duration is considered to be riskier because it takes longer for the investment to pay
+off; it can also be used to calculate the interest rate sensitivity of an investment. An investment
+with a longer Macaulay duration will be more sensitive to changes in interest rates. If interest
+rates are at 7% annually, a 3-year bond (face value of $1,000) with a 10% coupon paid annually
+would sell for:
+
+Market Price = $100/(1.07)^1 + $100/(1.07)^2 + $1100/(1.07)^3
+             = $93.46 + $87.34 + $897.93
+             = $1,078.73
+
+               (1 * $93.46 / $1,078.73) +
+               (2 * $87.34 / $1,078.73) +
+               (3 * $897.93 / $1,078.73)
+MacD         = 2.7458
+(It takes 2.7458 years to recover the true cost of the bond.)
+
+Note that the duration of a zero-coupon bond equals the maturity of the bond, while the duration of
+a coupon bond is less than the maturity because coupons are paid throughout the life of the bond.
+
+The Modified duration is an extension of Macaulay duration because it takes into account interest
+rate movements by including the frequency of coupon payments per year.
+
+           Macaulay Duration
+ModD = -------------------------
+             Yield to maturity
+	      1 + -------------------
+             Number of coupon
+             periods per year
+
+Using the Macaulay example above, yield to maturity is assumed to be 7 percent, there is 1 coupon
+period per year, and the Macaulay duration is 2.7458.
+
+       2.7458 / (1 + (0.7 / 1))
+       2.7458 / 1.07
+ModD = 2.566
+(For every 1 percent change in market interest rates, the market value of the bond will move
+inversely by 2.566%)
+
+As used in the equations for duration, coupon rate (which determines the size of the periodic cash
+flow), interest rates (which determines the present value of the periodic cash flow), and maturity
+(which weights each cash flow) all contribute to the duration.
+
+As maturity increases, duration increases and the bond's price becomes more sensitive to interest
+rate changes.
+  * A decrease in maturity decreases duration and renders the bond less sensitive to changes in
+    market yield. Therefore, duration varies directly with maturity.
+
+As the bond coupon increases, its duration decreases and the bond becomes less sensitive to
+interest rate changes.
+  * Increases in coupon rates raise the present value of each periodic cash flow and therefore the
+    market price. This higher market price lowers the duration.
+
+As interest rates increase, duration decreases and the bond becomes less sensitive to further rate
+changes.
+  * As interest rates increase, all of the net present values of the future cash flows decline as
+    their discount factors increase, but the cash flows that are farthest away will show the
+    largest proportional decrease. So the early cash flows will have a greater weight relative to
+    later cash flows. As yields (interest rates) decline, the opposite will occur.
+
+Convexity
+One of the limitations of duration as a measure of interest rate/price sensitivity is that it is a
+linear measure. That is, it assumes that for a certain percentage change in interest rates that an
+equal percentage change in price will occur. However, as interest rates change, the price of a bond
+is not likely to change linearly, but instead would change over some curved, or "convex", function
+of interest rates.
+
+For any given bond, a graph of the relationship between price and yield is convex. This means that
+the graph forms a curve rather than a straight line. The more convex the relationship the more
+inaccurate duration is as a measure of the interest rate sensitivity.
+
+The convexity of a bond is a measure of the curvature of its price/yield relationship. The degree
+to which the graph is curved shows how much a bond's yield changes in response to a change in
+price.
+
+Used in conjunction with duration, convexity provides a more accurate approximation of the
+percentage price change resulting from a specified change in a bond's yield than using duration
+alone. In addition to improving the estimate of a bond's price changes to changes in interest
+rates, convexity can also be used to compare bonds with the same duration. For example, two bonds
+may have the same duration but different convexity values. They may experience different price
+changes when there are extraordinary changes in interest rates. For example, if bond A has a higher
+convexity than bond B, its price would fall less during rising interest rates and appreciate more
+during falling interest rates as compared to bond B. (Zero-coupon bonds, which pay their entire
+cash flows at maturity, have the highest convexity. This is because, in general, the more dispersed
+the cash flows are, the greater the convexity will be.)
+
+This table shows how the price a of a 10-year bond with a 10% coupon changes at different yields.
+The column labeled "Delta ($)" shows the absolute change in price. As you can see, the bond's price
+rises at an increasing rate as yields fall, but declines at a decreasing rate as yields rise. This
+characteristic causes the line to be convex instead of straight.
+Yield	  Change   Price     Delta
+ (%)     (%)       ($)      ($)
+  1      (9)    1,854.43   854.43
+  2      (8)    1,721.82   721.82
+  3      (7)    1,600.90   600.90
+  4      (6)    1,490.54   490.54
+  5      (5)    1,389.73   389.73
+  6      (4)    1,297.55   297.55
+  7      (3)    1,213.19   213.19
+  8      (2)    1,135.90   135.90
+  9      (1)    1,065.04    65.04
+ 10       0     1,000.00     0.00
+ 11       1       940.25   (59.75)
+ 12       2       885.30  (114.70)
+ 13       3       834.72  (165.28)
+ 14       4       788.12  (211.88)
+ 15       5       745.14  (254.86)
+ 16       6       705.46  (294.54)
+ 17       7       668.78  (331.22)
+ 18       8       634.86  (365.14)
+ 19       9       603.44  (396.56)
 ***/
 func (b *Bonds) Duration(cashFlow []float64, cp int, currentRate, bondPrice float64) float64 {
   currentRate /= float64(cp)
