@@ -67,6 +67,10 @@ func (b *Bonds) CashFlow(FV, couponRate float64, cp int, n float64, tp int) (cas
   couponRate = b.periodicInterestRate(couponRate, cp)
   var C = FV * couponRate
   var sz int = int(b.numberOfCouponPaymentPeriods(n, tp, cp))
+  //tp != cp; e.g., tp = semiyear & cp = annually 
+  if sz == 0 {
+    sz = 1
+  }
   //The capacity argument may be omitted, in which case the capacity equals the length.
   cashFlow = make([]float64, sz) //len=cap=sz
   for idx := range cashFlow {
