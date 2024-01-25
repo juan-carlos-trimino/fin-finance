@@ -44,64 +44,64 @@ const (
 
 type Periods struct{}
 
-func (p Periods) numberOfCouponPaymentPeriods(n float64, tp, pf int) float64 {
+func (p Periods) numberOfCouponPaymentPeriods(n float64, tp, cp int) float64 {
   switch tp {
   case Years:
-    if pf == SemiAnnually {
+    if cp == SemiAnnually {
       return (n * semiYearlyPerYear)
-    } else if pf == Quarterly {
+    } else if cp == Quarterly {
       return (n * quartersPerYear)
-    } else if pf == Monthly {
+    } else if cp == Monthly {
       return (n * monthsPerYear)
-    } else if pf == Weekly {
+    } else if cp == Weekly {
       return (n * weeksPerYear)
     } else {
       return n
     }
   case Semiyears:
-    if pf == Annually {
+    if cp == Annually {
       return (n / semiYearlyPerYear)
-    } else if pf == Quarterly {
+    } else if cp == Quarterly {
       return (n * quartersPerSemiYearly)
-    } else if pf == Monthly {
+    } else if cp == Monthly {
       return (n * monthsPerSemiYearly)
-    } else if pf == Weekly {
+    } else if cp == Weekly {
       return (n * weeksPerSemiYearly)
     } else {
       return n
     }
   case Quarters:
-    if pf == Annually {
+    if cp == Annually {
       return (n / quartersPerYear)
-    } else if pf == SemiAnnually {
+    } else if cp == SemiAnnually {
       return (n / quartersPerSemiYearly)
-    } else if pf == Monthly {
+    } else if cp == Monthly {
       return (n * monthsPerQuarter)
-    } else if pf == Weekly {
+    } else if cp == Weekly {
       return (n * weeksPerQuarter)
     } else {
       return n
     }
   case Months:
-    if pf == Annually {
+    if cp == Annually {
       return (n / monthsPerYear)
-    } else if pf == SemiAnnually {
+    } else if cp == SemiAnnually {
       return (n / monthsPerSemiYearly)
-    } else if pf == Quarterly {
+    } else if cp == Quarterly {
       return (n / monthsPerQuarter)
-    } else if pf == Weekly {
+    } else if cp == Weekly {
       return (n * weeksPerMonth)
     } else {
       return n
     }
   case Weeks:
-    if pf == Annually {
+    if cp == Annually {
       return (n / weeksPerYear)
-    } else if pf == SemiAnnually {
+    } else if cp == SemiAnnually {
       return (n / weeksPerSemiYearly)
-    } else if pf == Quarterly {
+    } else if cp == Quarterly {
       return (n / weeksPerQuarter)
-    } else if pf == Monthly {
+    } else if cp == Monthly {
       return (n / weeksPerMonth)
     } else {
       return n
