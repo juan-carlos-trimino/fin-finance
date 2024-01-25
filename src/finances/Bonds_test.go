@@ -91,6 +91,12 @@ func TestBonds_CurrentPrice(t *testing.T) {
     //at 6% per annum, compounded semiannually.
     { FV: 1_000.00, couponRate: 4, cp: 's', n: 8, tp: 'y', currentRate: 6.0,
       currentRate_cp: 's', want: 874.3889797 },
+    { FV: 100.00, couponRate: 0, cp: 'a', n: 5, tp: 'y', currentRate: 6.0,
+      currentRate_cp: 'a', want: 74.72581 },
+    { FV: 1_000.00, couponRate: 0, cp: 'a', n: 2, tp: 'y', currentRate: 3.98,
+      currentRate_cp: 'a', want: 924.91191 },
+    { FV: 1_000.00, couponRate: 0, cp: 's', n: 5, tp: 'y', currentRate: 5.0,
+      currentRate_cp: 's', want: 781.1984017 },
   }
   var b Bonds
   for _, tc := range tests {
