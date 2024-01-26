@@ -582,6 +582,36 @@ func (a *Annuities) EARToNominalRate(ear float64, cp int) (r float64) {
 }
 
 /***
+yr = r * ((1 + yh/h)^(h/r) - 1)
+
+yr - Yield compounded r times a year
+yh - Yield compounded h times a year
+r  - Required compounding frequency per year
+h  - Original compounding frequency per year
+
+Notes:
+(1) When interest is compounded more frequently, the amount of interest earned in each increment of
+    time becomes smaller, but the total amount of accumulated interest grows faster.
+(2) Continuously compounding is the mathematical limit that compound interest can reach.
+(3) Simple interest is applied only to the principal and not any accumulated interest. Compound
+    interest is interest accruing on the principal and previously applied interest.
+***/
+func (a *Annuities) CompoundingFrequencyConversion(originalYield float64, originalFrequency,
+  requiredFrequency int) (requiredYield float64) {
+  requiredYield = zero
+  rcf := float64(requiredFrequency)  //Required compounding frequency.
+  ocf := float64(originalFrequency)  //Original compounding frequency.
+  if requiredFrequency == Continuously {
+    requiredYield = math.Log(originalYield + one)
+  } else if originalFrequency == Continuously {
+    requiredYield = math.Exp(originalYield) - one
+  } else {
+    requiredYield = rcf * (math.Pow(one + originalYield / ocf, ocf / rcf) - one)
+  }
+  return
+}
+
+/***
                               GEOMETRIC MEAN RETURN
 The geometric mean is used to determine the average compound growth rate (or average rate of
 return) over a given period. The geometric mean is the most accurate method for determining average

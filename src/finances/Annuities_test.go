@@ -78,6 +78,43 @@ func TestAnnuities_NominalAndEAR(t *testing.T) {
   }
 }
 
+func TestAnnuities_CompoundingFrequencyConversion(t *testing.T) {
+  type test struct {
+    yh float64
+    h byte
+    r byte
+    daily365 bool
+    want float64
+  }
+  var tests = []test {
+    { yh: 0.0, h: 'A', r: 's', want: 0.0 },
+    { yh: 0.0, h: 's', r: 'a', want: 0.0 },
+    { yh: 2.0, h: 'a', r: 'q', want: 1.98517262 },
+    { yh: 1.98517262, h: 'q', r: 'a', want: 2.0 },
+    { yh: 4.0, h: 'a', r: 'C', want: 3.922071315 },
+    { yh: 3.922071315, h: 'c', r: 'a', want: 4.0 },
+    { yh: 2.0, h: 'a', r: 'q', want: 1.985172629 },
+    { yh: 1.985172629, h: 'Q', r: 'a', want: 2.0 },
+    { yh: 10.0, h: 'a', r: 's', want: 9.76176963 },
+    { yh: 9.76176963, h: 's', r: 'A', want: 10.0 },
+    { yh: 10.0, h: 'a', r: 'c', want: 9.53101798 },
+    { yh: 9.53101798, h: 'C', r: 'A', want: 10.0 },
+    { yh: 10.0, h: 'a', r: 'c', want: 9.53101798 },
+    { yh: 1.98032, h: 'd', r: 'm', daily365: true, want:  1.9819011190 },  //true
+    { yh: 1.98032, h: 'd', r: 'm', daily365: false, want: 1.9819003717 },  //false
+  }
+  var a Annuities
+  for _, tc := range tests {
+    var yr = a.CompoundingFrequencyConversion(tc.yh / 100.0,
+      a.GetCompoundingPeriod(tc.h, tc.daily365), a.GetCompoundingPeriod(tc.r, tc.daily365)) * 100.0
+    if math.Abs(yr - tc.want) < 1e-8 {
+      fmt.Printf("Required yield = %.2f%%\n", yr)
+    } else {
+      t.Errorf("Required yield = %.10f%%, Want = %.10f%%", yr, tc.want)
+    }
+  }
+}
+
 func TestAnnuities_AverageRateOfReturn(t *testing.T) {
   type test struct {
     returns []float64
