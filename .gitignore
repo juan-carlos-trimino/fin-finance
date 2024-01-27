@@ -187,6 +187,7 @@ src/webfinances/templates/annuitydue/epp/*
 !src/webfinances/templates/miscellaneous/
 src/webfinances/templates/miscellaneous/*
 !src/webfinances/templates/miscellaneous/averagerate.html
+!src/webfinances/templates/miscellaneous/compfrequencyconv.html
 !src/webfinances/templates/miscellaneous/depreciation.html
 !src/webfinances/templates/miscellaneous/effectiveannualrate.html
 !src/webfinances/templates/miscellaneous/growthdecay.html
