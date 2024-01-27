@@ -1,0 +1,67 @@
+{{ define "miscellaneous-layout" }}
+
+<!-- rhs-ui4 -->
+<div id="rhs-ui4">
+  <form action="/fin/miscellaneous" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
+    <div class="text-style">
+      <label class="text-box" for="fd4-currentrate">Current Rate (%)........................</label>
+      <input class="text-combo" id="fd4-currentrate" name="fd4-currentrate"
+      value="{{ .Fd4CurrentRate }}" type="text" inputmode="numeric" step="any" maxlength="15"
+      required/>
+    </div>
+    <div class="text-style">
+      <label class="text-box" for="fd4-currentcompound">Current Compounding Period...</label>
+      <select class="text-combo" id="fd4-currentcompound" name="fd4-currentcompound">
+        <option class="text-combo" value="annually"
+         {{ if eq .Fd4CurrentCompound "annually" }} selected {{ end }}>Annually</option>
+        <option class="text-combo" value="semiannually"
+         {{ if eq .Fd4CurrentCompound "semiannually" }} selected {{ end }}>Semiannually</option>
+        <option class="text-combo" value="quarterly"
+         {{ if eq .Fd4CurrentCompound "quarterly" }} selected {{ end }}>Quarterly</option>
+        <option class="text-combo" value="monthly"
+         {{ if eq .Fd4CurrentCompound "monthly" }} selected {{ end }}>Monthly</option>
+        <option class="text-combo" value="weekly"
+         {{ if eq .Fd4CurrentCompound "weekly" }} selected {{ end }}>Weekly</option>
+        <option class="text-combo" value="daily360"
+         {{ if eq .Fd4CurrentCompound "daily360" }} selected {{ end }}>Daily - 360</option>
+        <option class="text-combo" value="daily365"
+         {{ if eq .Fd4CurrentCompound "daily365" }} selected {{ end }}>Daily - 365</option>
+        <option class="text-combo" value="continuously"
+         {{if eq .Fd4CurrentCompound "continuously"}} selected {{ end }}>Continuously</option>
+      </select>
+    </div>
+    <div class="text-style">
+      <label class="text-box" for="fd4-newcompound">New Compounding Period.........</label>
+      <select class="text-combo" id="fd4-newcompound" name="fd4-newcompound">
+        <option class="text-combo" value="annually"
+         {{ if eq .Fd4NewCompound "annually" }} selected {{ end }}>Annually</option>
+        <option class="text-combo" value="semiannually"
+         {{ if eq .Fd4NewCompound "semiannually" }} selected {{ end }}>Semiannually</option>
+        <option class="text-combo" value="quarterly"
+         {{ if eq .Fd4NewCompound "quarterly" }} selected {{ end }}>Quarterly</option>
+        <option class="text-combo" value="monthly"
+         {{ if eq .Fd4NewCompound "monthly" }} selected {{ end }}>Monthly</option>
+        <option class="text-combo" value="weekly"
+         {{ if eq .Fd4NewCompound "weekly" }} selected {{ end }}>Weekly</option>
+        <option class="text-combo" value="daily360"
+         {{ if eq .Fd4NewCompound "daily360" }} selected {{ end }}>Daily - 360</option>
+        <option class="text-combo" value="daily365"
+         {{ if eq .Fd4NewCompound "daily365" }} selected {{ end }}>Daily - 365</option>
+        <option class="text-combo" value="continuously"
+         {{if eq .Fd4NewCompound "continuously"}} selected {{ end }}>Continuously</option>
+      </select>
+    </div>
+    <div class="button-back-style">
+      <button class="button" id="btcompute" value="rhs-ui4" name="compute" type="submit">
+        Compute
+      </button>
+    </div>
+  </form>
+  <div>
+    <hr size="4" width="50%" color="darkgreen"/>
+    <p class="p-result">{{ .Fd4Result }}</p>
+  </div>
+</div>
+
+{{ end }}
