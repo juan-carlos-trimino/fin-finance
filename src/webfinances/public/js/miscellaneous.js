@@ -19,6 +19,8 @@ function setFocus(eid) {
     tb = document.getElementById("fd5-values");
   } else if (eid === "lhs-button6") {
     tb = document.getElementById("fd6-time");
+  } else if (eid === "lhs-button7") {
+    tb = document.getElementById("fd7-time");
   }
   tb.focus();
   /***
@@ -41,6 +43,7 @@ function disableElements(eid) {
     document.getElementById("lhs-button4").disabled = false;
     document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = false;
+    document.getElementById("lhs-button7").disabled = false;
   } else if (eid === "lhs-button2") {
     document.getElementById("lhs-button1").disabled = false;
     document.getElementById("lhs-button2").disabled = true;
@@ -48,6 +51,7 @@ function disableElements(eid) {
     document.getElementById("lhs-button4").disabled = false;
     document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = false;
+    document.getElementById("lhs-button7").disabled = false;
   } else if (eid === "lhs-button3") {
     document.getElementById("lhs-button1").disabled = false;
     document.getElementById("lhs-button2").disabled = false;
@@ -55,6 +59,7 @@ function disableElements(eid) {
     document.getElementById("lhs-button4").disabled = false;
     document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = false;
+    document.getElementById("lhs-button7").disabled = false;
   } else if (eid === "lhs-button4") {
     document.getElementById("lhs-button1").disabled = false;
     document.getElementById("lhs-button2").disabled = false;
@@ -62,6 +67,7 @@ function disableElements(eid) {
     document.getElementById("lhs-button4").disabled = true;
     document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = false;
+    document.getElementById("lhs-button7").disabled = false;
   } else if (eid === "lhs-button5") {
     document.getElementById("lhs-button1").disabled = false;
     document.getElementById("lhs-button2").disabled = false;
@@ -69,6 +75,7 @@ function disableElements(eid) {
     document.getElementById("lhs-button4").disabled = false;
     document.getElementById("lhs-button5").disabled = true;
     document.getElementById("lhs-button6").disabled = false;
+    document.getElementById("lhs-button7").disabled = false;
   } else if (eid === "lhs-button6") {
     document.getElementById("lhs-button1").disabled = false;
     document.getElementById("lhs-button2").disabled = false;
@@ -76,5 +83,14 @@ function disableElements(eid) {
     document.getElementById("lhs-button4").disabled = false;
     document.getElementById("lhs-button5").disabled = false;
     document.getElementById("lhs-button6").disabled = true;
+    document.getElementById("lhs-button7").disabled = false;
+  } else if (eid === "lhs-button7") {
+    document.getElementById("lhs-button1").disabled = false;
+    document.getElementById("lhs-button2").disabled = false;
+    document.getElementById("lhs-button3").disabled = false;
+    document.getElementById("lhs-button4").disabled = false;
+    document.getElementById("lhs-button5").disabled = false;
+    document.getElementById("lhs-button6").disabled = false;
+    document.getElementById("lhs-button7").disabled = true;
   }
 }

@@ -1,26 +1,26 @@
 {{ define "miscellaneous-layout" }}
 
-<!-- rhs-ui5 -->
-<div id="rhs-ui5">
+<!-- rhs-ui6 -->
+<div id="rhs-ui6">
   <form action="/fin/miscellaneous" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="text-style">
-      <label class="text-box" for="fd5-values">Values...</label>
-      <input class="text-combo" id="fd5-values" name="fd5-values" value="{{ .Fd5Values }}"
+      <label class="text-box" for="fd6-values">Values...</label>
+      <input class="text-combo" id="fd6-values" name="fd6-values" value="{{ .Fd6Values }}"
        type="string" required/>
     </div>
     <div>
-      <p class="p-note">{{ index .Fd5Result 0 }}</p>
+      <p class="p-note">{{ index .Fd6Result 0 }}</p>
     </div>
     <div class="button-back-style">
-      <button class="button" id="btcompute" name="compute" value="rhs-ui5" type="submit">
+      <button class="button" id="btcompute" name="compute" value="rhs-ui6" type="submit">
         Compute
       </button>
     </div>
   </form>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
-    <p class="p-result">{{index .Fd5Result 1}}</p>
+    <p class="p-result">{{index .Fd6Result 1}}</p>
   </div>
 </div>
 

@@ -1,18 +1,18 @@
 package webfinances
 
 import (
-  "context"
+	"context"
 	"encoding/json"
-  "finance/finances"
-  "finance/middlewares"
+	"finance/finances"
+	"finance/middlewares"
 	"finance/misc"
 	"finance/sessions"
-  "fmt"
-  "html/template"
-  "net/http"
+	"fmt"
+	"html/template"
+	"net/http"
 	"os"
-  "strconv"
-  "strings"
+	"strconv"
+	"strings"
 )
 
 var misc_notes = [...]string {
@@ -182,25 +182,92 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui4") {
       mf.CurrentButton = "lhs-button4"
       if req.Method == http.MethodPost {
-        mf.Fd4Interest = req.PostFormValue("fd4-interest")
-        mf.Fd4Compound = req.PostFormValue("fd4-compound")
-        mf.Fd4Factor = req.PostFormValue("fd4-factor")
+        mf.Fd4CurrentRate = req.PostFormValue("fd4-currentrate")
+        mf.Fd4CurrentCompound = req.PostFormValue("fd4-currentcompound")
+        mf.Fd4NewCompound = req.PostFormValue("fd4-newcompound")
+        var newDays, currentDays int
+        var currentRate float64
+        var err error
+        if currentRate, err = strconv.ParseFloat(mf.Fd4CurrentRate, 64); err != nil {
+          mf.Fd4Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd4CurrentRate, err)
+        } else if strings.EqualFold(mf.Fd4CurrentCompound[0:1], "D") {
+          if currentDays, err = strconv.Atoi(mf.Fd4CurrentCompound[5:len(mf.Fd4CurrentCompound)]);
+            err != nil {
+            mf.Fd4Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd4CurrentCompound, err)
+          }
+        }
+        //
+        if err == nil && strings.EqualFold(mf.Fd4NewCompound[0:1], "D") {
+          if newDays, err = strconv.Atoi(mf.Fd4NewCompound[5:len(mf.Fd4NewCompound)]); err != nil {
+            mf.Fd4Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd4NewCompound, err)
+          }
+        }
+        //
+        if err == nil {
+          var isCurrentDaily365 bool = false
+          if currentDays == finances.Daily365 {
+            isCurrentDaily365 = true
+          }
+          var isNewDaily365 bool = false
+          if newDays == finances.Daily365 {
+            isNewDaily365 = true
+          }
+          var a finances.Annuities
+          mf.Fd4Result = fmt.Sprintf("New Rate: %.10f%%",
+            a.CompoundingFrequencyConversion(currentRate / 100.0,
+            a.GetCompoundingPeriod(mf.Fd4CurrentCompound[0], isCurrentDaily365),
+            a.GetCompoundingPeriod(mf.Fd4NewCompound[0], isNewDaily365)) * 100.0)
+        }
+        logEntry.Print(INFO, correlationId, []string {
+          fmt.Sprintf("current rate = %s, current compound = %s, new compound = %s, %s",
+          mf.Fd4CurrentRate, mf.Fd4CurrentCompound, mf.Fd4NewCompound, mf.Fd4Result),
+        })
+      }
+      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
+      cookie := sessions.CreateCookie(newSessionToken)
+      http.SetCookie(res, cookie)
+      /***
+      The Must function wraps around the ParseGlob function that returns a pointer to a template
+      and an error, and it panics if the error is not nil.
+      ***/
+      t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
+                                             "webfinances/templates/header.html",
+                                             "webfinances/templates/miscellaneous/compfrequencyconv.html",
+                                             "webfinances/templates/footer.html"))
+      t.ExecuteTemplate(res, "miscellaneous", struct {
+        Header string
+        Datetime string
+        CurrentButton string
+        CsrfToken string
+        Fd4CurrentRate string
+        Fd4CurrentCompound string
+        Fd4NewCompound string
+        Fd4Result string
+      } { "Miscellaneous", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
+          mf.Fd4CurrentRate, mf.Fd4CurrentCompound, mf.Fd4NewCompound, mf.Fd4Result,
+        })
+    } else if strings.EqualFold(mf.CurrentPage, "rhs-ui5") {
+      mf.CurrentButton = "lhs-button5"
+      if req.Method == http.MethodPost {
+        mf.Fd5Interest = req.PostFormValue("fd5-interest")
+        mf.Fd5Compound = req.PostFormValue("fd5-compound")
+        mf.Fd5Factor = req.PostFormValue("fd5-factor")
         var ir float64
         var factor float64
         var err error
-        if ir, err = strconv.ParseFloat(mf.Fd4Interest, 64); err != nil {
-          mf.Fd4Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd4Interest, err)
-        } else if factor, err = strconv.ParseFloat(mf.Fd4Factor, 64); err != nil {
-          mf.Fd4Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd4Factor, err)
+        if ir, err = strconv.ParseFloat(mf.Fd5Interest, 64); err != nil {
+          mf.Fd5Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd5Interest, err)
+        } else if factor, err = strconv.ParseFloat(mf.Fd5Factor, 64); err != nil {
+          mf.Fd5Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd5Factor, err)
         } else {
           var a finances.Annuities
-          mf.Fd4Result = fmt.Sprintf("Growth/Decay: %.3f %s", a.GrowthDecayOfFunds(factor,
-           ir / 100.0, a.GetCompoundingPeriod(mf.Fd4Compound[0], true)),
-           a.TimePeriods(mf.Fd4Compound))
+          mf.Fd5Result = fmt.Sprintf("Growth/Decay: %.3f %s", a.GrowthDecayOfFunds(factor,
+           ir / 100.0, a.GetCompoundingPeriod(mf.Fd5Compound[0], true)),
+           a.TimePeriods(mf.Fd5Compound))
         }
         logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("interest rate = %s, cp = %s, factor = %s, %s\n", mf.Fd4Interest,
-           mf.Fd4Compound, mf.Fd4Factor, mf.Fd4Result),
+          fmt.Sprintf("interest rate = %s, cp = %s, factor = %s, %s\n", mf.Fd5Interest,
+           mf.Fd5Compound, mf.Fd5Factor, mf.Fd5Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -215,33 +282,33 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Datetime string
         CurrentButton string
         CsrfToken string
-        Fd4Interest string
-        Fd4Compound string
-        Fd4Factor string
-        Fd4Result string
+        Fd5Interest string
+        Fd5Compound string
+        Fd5Factor string
+        Fd5Result string
       } { "Miscellaneous", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
-          mf.Fd4Interest, mf.Fd4Compound, mf.Fd4Factor, mf.Fd4Result,
+          mf.Fd5Interest, mf.Fd5Compound, mf.Fd5Factor, mf.Fd5Result,
         })
-    } else if strings.EqualFold(mf.CurrentPage, "rhs-ui5") {
-      mf.CurrentButton = "lhs-button5"
+    } else if strings.EqualFold(mf.CurrentPage, "rhs-ui6") {
+      mf.CurrentButton = "lhs-button6"
       if req.Method == http.MethodPost {
-        mf.Fd5Values = req.PostFormValue("fd5-values")
-        split := strings.Split(mf.Fd5Values, ";")
+        mf.Fd6Values = req.PostFormValue("fd6-values")
+        split := strings.Split(mf.Fd6Values, ";")
         values := make([]float64, len(split))
         var err error
         for i, s := range split {
           if values[i], err = strconv.ParseFloat(s, 64); err != nil {
-            mf.Fd5Result[1] = fmt.Sprintf("Error: %s -- %+v", s, err)
+            mf.Fd6Result[1] = fmt.Sprintf("Error: %s -- %+v", s, err)
             break;
           }
         }
         //
         if err == nil {
           var a finances.Annuities
-          mf.Fd5Result[1] = fmt.Sprintf("Avg: %.3f%%", a.AverageRateOfReturn(values) * 100.0)
+          mf.Fd6Result[1] = fmt.Sprintf("Avg: %.3f%%", a.AverageRateOfReturn(values) * 100.0)
         }
         logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("values = [%s], %s\n", mf.Fd5Values, mf.Fd5Result[1]),
+          fmt.Sprintf("values = [%s], %s\n", mf.Fd6Values, mf.Fd6Result[1]),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -256,38 +323,38 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Datetime string
         CurrentButton string
         CsrfToken string
-        Fd5Values string
-        Fd5Result [2]string
+        Fd6Values string
+        Fd6Result [2]string
       } { "Miscellaneous", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
-          mf.Fd5Values, mf.Fd5Result,
+          mf.Fd6Values, mf.Fd6Result,
         })
-    } else if strings.EqualFold(mf.CurrentPage, "rhs-ui6") {
-      mf.CurrentButton = "lhs-button6"
+    } else if strings.EqualFold(mf.CurrentPage, "rhs-ui7") {
+      mf.CurrentButton = "lhs-button7"
       if req.Method == http.MethodPost {
-        mf.Fd6Time = req.PostFormValue("fd6-time")
-        mf.Fd6TimePeriod = req.PostFormValue("fd6-tp")
-        mf.Fd6Rate = req.PostFormValue("fd6-rate")
-        mf.Fd6Compound = req.PostFormValue("fd6-compound")
-        mf.Fd6PV = req.PostFormValue("fd6-pv")
+        mf.Fd7Time = req.PostFormValue("fd7-time")
+        mf.Fd7TimePeriod = req.PostFormValue("fd7-tp")
+        mf.Fd7Rate = req.PostFormValue("fd7-rate")
+        mf.Fd7Compound = req.PostFormValue("fd7-compound")
+        mf.Fd7PV = req.PostFormValue("fd7-pv")
         var time float64
         var rate float64
         var pv float64
         var err error
-        if time, err = strconv.ParseFloat(mf.Fd6Time, 64); err != nil {
-          mf.Fd6Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd6Time, err)
-        } else if rate, err = strconv.ParseFloat(mf.Fd6Rate, 64); err != nil {
-          mf.Fd6Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd6Rate, err)
-        } else if pv, err = strconv.ParseFloat(mf.Fd6PV, 64); err != nil {
-          mf.Fd6Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd6PV, err)
+        if time, err = strconv.ParseFloat(mf.Fd7Time, 64); err != nil {
+          mf.Fd7Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd7Time, err)
+        } else if rate, err = strconv.ParseFloat(mf.Fd7Rate, 64); err != nil {
+          mf.Fd7Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd7Rate, err)
+        } else if pv, err = strconv.ParseFloat(mf.Fd7PV, 64); err != nil {
+          mf.Fd7Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd7PV, err)
         } else {
           var a finances.Annuities
-          mf.Fd6Result = fmt.Sprintf("Future Value: %.2f", a.Depreciation(pv, rate / 100.0,
-           a.GetCompoundingPeriod(mf.Fd6Compound[0], false), time,
-           a.GetTimePeriod(mf.Fd6TimePeriod[0], false)))
+          mf.Fd7Result = fmt.Sprintf("Future Value: %.2f", a.Depreciation(pv, rate / 100.0,
+           a.GetCompoundingPeriod(mf.Fd7Compound[0], false), time,
+           a.GetTimePeriod(mf.Fd7TimePeriod[0], false)))
         }
         logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("time = %s, tp = %s, rate = %s, cp = %s, pv = %s, %s\n", mf.Fd6Time,
-           mf.Fd6TimePeriod, mf.Fd6Rate, mf.Fd6Compound, mf.Fd6PV, mf.Fd6Result),
+          fmt.Sprintf("time = %s, tp = %s, rate = %s, cp = %s, pv = %s, %s\n", mf.Fd7Time,
+           mf.Fd7TimePeriod, mf.Fd7Rate, mf.Fd7Compound, mf.Fd7PV, mf.Fd7Result),
         })
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -302,14 +369,14 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Datetime string
         CurrentButton string
         CsrfToken string
-        Fd6Time string
-        Fd6TimePeriod string
-        Fd6Rate string
-        Fd6Compound string
-        Fd6PV string
-        Fd6Result string
+        Fd7Time string
+        Fd7TimePeriod string
+        Fd7Rate string
+        Fd7Compound string
+        Fd7PV string
+        Fd7Result string
       } { "Miscellaneous", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
-          mf.Fd6Time, mf.Fd6TimePeriod, mf.Fd6Rate, mf.Fd6Compound, mf.Fd6PV, mf.Fd6Result,
+          mf.Fd7Time, mf.Fd7TimePeriod, mf.Fd7Rate, mf.Fd7Compound, mf.Fd7PV, mf.Fd7Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", mf.CurrentPage)
@@ -328,9 +395,11 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       } else if strings.EqualFold(mf.CurrentPage, "rhs-ui4") {
         mf.Fd4Result = ""
       } else if strings.EqualFold(mf.CurrentPage, "rhs-ui5") {
-        mf.Fd5Result[1] = ""
+        mf.Fd5Result = ""
       } else if strings.EqualFold(mf.CurrentPage, "rhs-ui6") {
-        mf.Fd6Result = ""
+        mf.Fd6Result[1] = ""
+      } else if strings.EqualFold(mf.CurrentPage, "rhs-ui7") {
+        mf.Fd7Result = ""
       }
     }
     //

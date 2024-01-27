@@ -63,20 +63,25 @@ type miscellaneousFields struct {
   Fd3Inflation string `json:"fd3Inflation"`
   Fd3Result [4]string `json:"fd3Result"`
   //
-  Fd4Interest string `json:"fd4Interest"`
-  Fd4Compound string `json:"fd4Compound"`
-  Fd4Factor string `json:"fd4Factor"`
+  Fd4CurrentRate string `json:"fd4CurrentRate"`
+  Fd4CurrentCompound string `json:"fd4CurrentCompound"`
+  Fd4NewCompound string `json:"fd4NewCompound"`
   Fd4Result string `json:"fd4Result"`
   //
-  Fd5Values string `json:"fd5Values"`
-  Fd5Result [2]string `json:"fd5Result"`
+  Fd5Interest string `json:"fd5Interest"`
+  Fd5Compound string `json:"fd5Compound"`
+  Fd5Factor string `json:"fd5Factor"`
+  Fd5Result string `json:"fd5Result"`
   //
-  Fd6Time string `json:"fd6Time"`
-  Fd6TimePeriod string `json:"fd6TimePeriod"`
-  Fd6Rate string `json:"fd6Rate"`
-  Fd6Compound string `json:"fd6Compound"`
-  Fd6PV string `json:"fd6PV"`
-  Fd6Result string `json:"fd6Result"`
+  Fd6Values string `json:"fd6Values"`
+  Fd6Result [2]string `json:"fd6Result"`
+  //
+  Fd7Time string `json:"fd7Time"`
+  Fd7TimePeriod string `json:"fd7TimePeriod"`
+  Fd7Rate string `json:"fd7Rate"`
+  Fd7Compound string `json:"fd7Compound"`
+  Fd7PV string `json:"fd7PV"`
+  Fd7Result string `json:"fd7Result"`
 }
 
 func newMiscellaneousFields(dir1, dir2 string) *miscellaneousFields {
@@ -113,20 +118,25 @@ func newMiscellaneousFields(dir1, dir2 string) *miscellaneousFields {
     Fd3Inflation: "2.0",
     Fd3Result: [4]string { misc_notes[1], misc_notes[2], misc_notes[3], "" },
     //
-    Fd4Interest: "14.87",
-    Fd4Compound: "annually",
-    Fd4Factor: "2.0",
+    Fd4CurrentRate: "9.00",
+    Fd4CurrentCompound: "annually",
+    Fd4NewCompound: "monthly",
     Fd4Result: "",
     //
-    Fd5Values: "2.0;1.5",
-    Fd5Result: [2]string { misc_notes[4], "" },
+    Fd5Interest: "14.87",
+    Fd5Compound: "annually",
+    Fd5Factor: "2.0",
+    Fd5Result: "",
     //
-    Fd6Time: "1.0",
-    Fd6TimePeriod: "year",
-    Fd6Rate: "15.0",
-    Fd6Compound: "annually",
-    Fd6PV: "1.00",
-    Fd6Result: "",
+    Fd6Values: "2.0;1.5",
+    Fd6Result: [2]string { misc_notes[4], "" },
+    //
+    Fd7Time: "1.0",
+    Fd7TimePeriod: "year",
+    Fd7Rate: "15.0",
+    Fd7Compound: "annually",
+    Fd7PV: "1.00",
+    Fd7Result: "",
   }
 }
 
