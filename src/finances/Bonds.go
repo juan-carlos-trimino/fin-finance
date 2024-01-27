@@ -393,8 +393,8 @@ the cash flows are, the greater the convexity will be.)
 
 This table shows how the price a of a 10-year bond with a 10% coupon changes at different yields.
 The column labeled "Delta ($)" shows the absolute change in price. As you can see, the bond's price
-rises at an increasing rate as yields fall, but declines at a decreasing rate as yields rise. This
-characteristic causes the line to be convex instead of straight.
+(y-axis) rises at an increasing rate as yields (x-axis) fall, but declines at a decreasing rate as
+yields rise. This characteristic causes the line to be convex instead of straight.
 Yield	  Change   Price     Delta
  (%)     (%)       ($)      ($)
   1      (9)    1,854.43   854.43

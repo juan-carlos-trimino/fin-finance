@@ -1345,6 +1345,13 @@ func DeleteSessionDataPerUser(userName string) {
   delete(currentFields, userName)
 }
 
+/***
+Even though each username has its own exclusive set of files, multiple users can share the same
+username. In this scenario, there is a possibility that two or more users may try to modify a file
+at the same time thereby corrupting the file. In order to prevent file corruption, the file is
+protected with a lock that allows a single writer (exclusive write) or multiple readers (share
+reads).
+***/
 func readFields(filePath string) ([]byte, error) {
   exists, err := misc.CheckFileExists(filePath)
   if exists {
