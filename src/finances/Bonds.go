@@ -152,7 +152,31 @@ func (b *Bonds) YieldToCall(FV, couponRate float64, cp int, timeToCall float64, 
   return(b.YieldToMaturity(cashFlow, bondPrice, cp))
 }
 
+
+
+
 /***
+The current yield of a bond calculates the rate of return on a bond by using the current market
+price of the bond instead of its face value. It is calculated as the annual coupon payment divided
+by the current market price. The current yield is an accurate measure of bond yield as it reflects
+the market sentiment and investor expectations from the bond in terms of return.
+***/
+func (b *Bonds) CurrentYield(annualCoupon, FV, currentPrice float64) (cy float64) {
+  cy = ((annualCoupon / 100) * FV) / currentPrice
+  return
+}
+
+
+
+/***
+Yield to Maturity (YTM) is the overall interest rate earned by an investor who buys a bond at the
+market price and holds it until maturity. Mathematically, it is the discount rate at which the sum
+of all future cash flows (from coupons and principal repayment) equals the price of the bond. YTM
+is often quoted in terms of an annual rate and may differ from the bond's coupon rate. It assumes
+that coupon and principal payments are made on time. It does not require dividends to be
+reinvested, but computations of YTM generally make that assumption. Further, it does not consider
+taxes paid by the investor or brokerage costs associated with the purchase.
+
 What is the internal rate of return (IRR) on the investment of buying the bond now and holding the
 bond to maturity? The answer is the yield to maturity of a bond. IRR assumes reinvestment of coupon
 at the bond yield.
