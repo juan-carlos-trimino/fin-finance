@@ -13,7 +13,7 @@ import (
 )
 
 const (
- sessionTimeout time.Duration = 180 * time.Second
+ sessionTimeout time.Duration = 10 * time.Minute
 )
 
 type session_token struct {
