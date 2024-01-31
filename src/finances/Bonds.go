@@ -152,9 +152,6 @@ func (b *Bonds) YieldToCall(FV, couponRate float64, cp int, timeToCall float64, 
   return(b.YieldToMaturity(cashFlow, bondPrice, cp))
 }
 
-
-
-
 /***
 The current yield of a bond calculates the rate of return on a bond by using the current market
 price of the bond instead of its face value. It is calculated as the annual coupon payment divided
@@ -162,11 +159,9 @@ by the current market price. The current yield is an accurate measure of bond yi
 the market sentiment and investor expectations from the bond in terms of return.
 ***/
 func (b *Bonds) CurrentYield(annualCoupon, FV, currentPrice float64) (cy float64) {
-  cy = ((annualCoupon / 100) * FV) / currentPrice
+  cy = ((annualCoupon / hundred) * FV) / currentPrice
   return
 }
-
-
 
 /***
 Yield to Maturity (YTM) is the overall interest rate earned by an investor who buys a bond at the
