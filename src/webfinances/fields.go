@@ -266,34 +266,34 @@ type bondsFields struct {
   Fd5CompoundCoupon string `json:"fd5CompoundCoupon"`
   Fd5CurInterest string `json:"fd5CurInterest"`
   Fd5Compound string `json:"fd5Compound"`
-  Fd5Result string `json:"fd5Result"`
+  Fd5Result [7]string `json:"fd5Result"`
   //
-  Fd6FaceValue string `json:"fd6FaceValue"`
-  Fd6Time string `json:"fd6Time"`
-  Fd6TimePeriod string `json:"fd6TimePeriod"`
-  Fd6Coupon string `json:"fd6Coupon"`
-  Fd6CompoundCoupon string `json:"fd6CompoundCoupon"`
-  Fd6CurInterest string `json:"fd6CurInterest"`
-  Fd6Compound string `json:"fd6Compound"`
-  Fd6Result [2]string `json:"fd6Result"`
+  // Fd6FaceValue string `json:"fd6FaceValue"`
+  // Fd6Time string `json:"fd6Time"`
+  // Fd6TimePeriod string `json:"fd6TimePeriod"`
+  // Fd6Coupon string `json:"fd6Coupon"`
+  // Fd6CompoundCoupon string `json:"fd6CompoundCoupon"`
+  // Fd6CurInterest string `json:"fd6CurInterest"`
+  // Fd6Compound string `json:"fd6Compound"`
+  // Fd6Result [2]string `json:"fd6Result"`
   //
-  Fd7FaceValue string `json:"fd7FaceValue"`
-  Fd7Time string `json:"fd7Time"`
-  Fd7TimePeriod string `json:"fd7TimePeriod"`
-  Fd7Coupon string `json:"fd7Coupon"`
-  Fd7CompoundCoupon string `json:"fd7CompoundCoupon"`
-  Fd7CurInterest string `json:"fd7CurInterest"`
-  Fd7Compound string `json:"fd7Compound"`
-  Fd7Result [2]string `json:"fd7Result"`
+  // Fd7FaceValue string `json:"fd7FaceValue"`
+  // Fd7Time string `json:"fd7Time"`
+  // Fd7TimePeriod string `json:"fd7TimePeriod"`
+  // Fd7Coupon string `json:"fd7Coupon"`
+  // Fd7CompoundCoupon string `json:"fd7CompoundCoupon"`
+  // Fd7CurInterest string `json:"fd7CurInterest"`
+  // Fd7Compound string `json:"fd7Compound"`
+  // Fd7Result [2]string `json:"fd7Result"`
   //
-  Fd8FaceValue string `json:"fd8FaceValue"`
-  Fd8Time string `json:"fd8Time"`
-  Fd8TimePeriod string `json:"fd8TimePeriod"`
-  Fd8Coupon string `json:"fd8Coupon"`
-  Fd8CompoundCoupon string `json:"fd8CompoundCoupon"`
-  Fd8CurInterest string `json:"fd8CurInterest"`
-  Fd8Compound string `json:"fd8Compound"`
-  Fd8Result [2]string `json:"fd8Result"`
+  // Fd8FaceValue string `json:"fd8FaceValue"`
+  // Fd8Time string `json:"fd8Time"`
+  // Fd8TimePeriod string `json:"fd8TimePeriod"`
+  // Fd8Coupon string `json:"fd8Coupon"`
+  // Fd8CompoundCoupon string `json:"fd8CompoundCoupon"`
+  // Fd8CurInterest string `json:"fd8CurInterest"`
+  // Fd8Compound string `json:"fd8Compound"`
+  // Fd8Result [2]string `json:"fd8Result"`
 }
 
 func newBondsFields(dir1, dir2 string) *bondsFields {
@@ -359,34 +359,34 @@ func newBondsFields(dir1, dir2 string) *bondsFields {
     Fd5CompoundCoupon: "annually",
     Fd5CurInterest: "7.5",
     Fd5Compound: "annually",
-    Fd5Result: "",
+    Fd5Result: [7]string { "", "", "", "", "", "", "" },
     //
-    Fd6FaceValue: "1000.00",
-    Fd6Time: "5",
-    Fd6TimePeriod: "year",
-    Fd6Coupon: "5.4",
-    Fd6CompoundCoupon: "annually",
-    Fd6CurInterest: "7.5",
-    Fd6Compound: "annually",
-    Fd6Result: [2]string { bond_notes[1], "" },
+    // Fd6FaceValue: "1000.00",
+    // Fd6Time: "5",
+    // Fd6TimePeriod: "year",
+    // Fd6Coupon: "5.4",
+    // Fd6CompoundCoupon: "annually",
+    // Fd6CurInterest: "7.5",
+    // Fd6Compound: "annually",
+    // Fd6Result: [2]string { bond_notes[1], "" },
     //
-    Fd7FaceValue: "1000.00",
-    Fd7Time: "5",
-    Fd7TimePeriod: "year",
-    Fd7Coupon: "5.4",
-    Fd7CompoundCoupon: "annually",
-    Fd7CurInterest: "7.5",
-    Fd7Compound: "annually",
-    Fd7Result: [2]string { bond_notes[0], "" },
+    // Fd7FaceValue: "1000.00",
+    // Fd7Time: "5",
+    // Fd7TimePeriod: "year",
+    // Fd7Coupon: "5.4",
+    // Fd7CompoundCoupon: "annually",
+    // Fd7CurInterest: "7.5",
+    // Fd7Compound: "annually",
+    // Fd7Result: [2]string { bond_notes[0], "" },
     //
-    Fd8FaceValue: "1000.00",
-    Fd8Time: "5",
-    Fd8TimePeriod: "year",
-    Fd8Coupon: "5.4",
-    Fd8CompoundCoupon: "annually",
-    Fd8CurInterest: "7.5",
-    Fd8Compound: "annually",
-    Fd8Result: [2]string { bond_notes[2], "" },
+    // Fd8FaceValue: "1000.00",
+    // Fd8Time: "5",
+    // Fd8TimePeriod: "year",
+    // Fd8Coupon: "5.4",
+    // Fd8CompoundCoupon: "annually",
+    // Fd8CurInterest: "7.5",
+    // Fd8Compound: "annually",
+    // Fd8Result: [2]string { bond_notes[2], "" },
   }
 }
 

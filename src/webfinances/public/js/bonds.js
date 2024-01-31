@@ -25,12 +25,12 @@ function setFocus(eid) {
     tb = document.getElementById("fd4-facevalue");
   } else if (eid === "lhs-button5") {
     tb = document.getElementById("fd5-facevalue");
-  } else if (eid === "lhs-button6") {
-    tb = document.getElementById("fd6-facevalue");
-  } else if (eid === "lhs-button7") {
-    tb = document.getElementById("fd7-facevalue");
-  } else if (eid === "lhs-button8") {
-    tb = document.getElementById("fd8-facevalue");
+  // } else if (eid === "lhs-button6") {
+  //   tb = document.getElementById("fd6-facevalue");
+  // } else if (eid === "lhs-button7") {
+  //   tb = document.getElementById("fd7-facevalue");
+  // } else if (eid === "lhs-button8") {
+  //   tb = document.getElementById("fd8-facevalue");
   }
   tb.focus();
   /***
@@ -54,9 +54,9 @@ function disableElements(eid) {
     document.getElementById("lhs-button3").disabled = false;
     document.getElementById("lhs-button4").disabled = false;
     document.getElementById("lhs-button5").disabled = false;
-    document.getElementById("lhs-button6").disabled = false;
-    document.getElementById("lhs-button7").disabled = false;
-    document.getElementById("lhs-button8").disabled = false;
+    // document.getElementById("lhs-button6").disabled = false;
+    // document.getElementById("lhs-button7").disabled = false;
+    // document.getElementById("lhs-button8").disabled = false;
   } else if (eid === "lhs-button2") {
     // audio.play();
     document.getElementById("lhs-button1").disabled = false;
@@ -64,9 +64,9 @@ function disableElements(eid) {
     document.getElementById("lhs-button3").disabled = false;
     document.getElementById("lhs-button4").disabled = false;
     document.getElementById("lhs-button5").disabled = false;
-    document.getElementById("lhs-button6").disabled = false;
-    document.getElementById("lhs-button7").disabled = false;
-    document.getElementById("lhs-button8").disabled = false;
+    // document.getElementById("lhs-button6").disabled = false;
+    // document.getElementById("lhs-button7").disabled = false;
+    // document.getElementById("lhs-button8").disabled = false;
   } else if (eid === "lhs-button3") {
     // audio.play();
     document.getElementById("lhs-button1").disabled = false;
@@ -74,9 +74,9 @@ function disableElements(eid) {
     document.getElementById("lhs-button3").disabled = true;
     document.getElementById("lhs-button4").disabled = false;
     document.getElementById("lhs-button5").disabled = false;
-    document.getElementById("lhs-button6").disabled = false;
-    document.getElementById("lhs-button7").disabled = false;
-    document.getElementById("lhs-button8").disabled = false;
+    // document.getElementById("lhs-button6").disabled = false;
+    // document.getElementById("lhs-button7").disabled = false;
+    // document.getElementById("lhs-button8").disabled = false;
   } else if (eid === "lhs-button4") {
     // audio.play();
     document.getElementById("lhs-button1").disabled = false;
@@ -84,9 +84,9 @@ function disableElements(eid) {
     document.getElementById("lhs-button3").disabled = false;
     document.getElementById("lhs-button4").disabled = true;
     document.getElementById("lhs-button5").disabled = false;
-    document.getElementById("lhs-button6").disabled = false;
-    document.getElementById("lhs-button7").disabled = false;
-    document.getElementById("lhs-button8").disabled = false;
+    // document.getElementById("lhs-button6").disabled = false;
+    // document.getElementById("lhs-button7").disabled = false;
+    // document.getElementById("lhs-button8").disabled = false;
   } else if (eid === "lhs-button5") {
     // audio.play();
     document.getElementById("lhs-button1").disabled = false;
@@ -94,38 +94,38 @@ function disableElements(eid) {
     document.getElementById("lhs-button3").disabled = false;
     document.getElementById("lhs-button4").disabled = false;
     document.getElementById("lhs-button5").disabled = true;
-    document.getElementById("lhs-button6").disabled = false;
-    document.getElementById("lhs-button7").disabled = false;
-    document.getElementById("lhs-button8").disabled = false;
-  } else if (eid === "lhs-button6") {
-    // audio.play();
-    document.getElementById("lhs-button1").disabled = false;
-    document.getElementById("lhs-button2").disabled = false;
-    document.getElementById("lhs-button3").disabled = false;
-    document.getElementById("lhs-button4").disabled = false;
-    document.getElementById("lhs-button5").disabled = false;
-    document.getElementById("lhs-button6").disabled = true;
-    document.getElementById("lhs-button7").disabled = false;
-    document.getElementById("lhs-button8").disabled = false;
-  } else if (eid === "lhs-button7") {
-    // audio.play();
-    document.getElementById("lhs-button1").disabled = false;
-    document.getElementById("lhs-button2").disabled = false;
-    document.getElementById("lhs-button3").disabled = false;
-    document.getElementById("lhs-button4").disabled = false;
-    document.getElementById("lhs-button5").disabled = false;
-    document.getElementById("lhs-button6").disabled = false;
-    document.getElementById("lhs-button7").disabled = true;
-    document.getElementById("lhs-button8").disabled = false;
-  } else if (eid === "lhs-button8") {
-    // audio.play();
-    document.getElementById("lhs-button1").disabled = false;
-    document.getElementById("lhs-button2").disabled = false;
-    document.getElementById("lhs-button3").disabled = false;
-    document.getElementById("lhs-button4").disabled = false;
-    document.getElementById("lhs-button5").disabled = false;
-    document.getElementById("lhs-button6").disabled = false;
-    document.getElementById("lhs-button7").disabled = false;
-    document.getElementById("lhs-button8").disabled = true;
+    // document.getElementById("lhs-button6").disabled = false;
+    // document.getElementById("lhs-button7").disabled = false;
+    // document.getElementById("lhs-button8").disabled = false;
+  // } else if (eid === "lhs-button6") {
+  //   // audio.play();
+  //   document.getElementById("lhs-button1").disabled = false;
+  //   document.getElementById("lhs-button2").disabled = false;
+  //   document.getElementById("lhs-button3").disabled = false;
+  //   document.getElementById("lhs-button4").disabled = false;
+  //   document.getElementById("lhs-button5").disabled = false;
+  //   document.getElementById("lhs-button6").disabled = true;
+  //   document.getElementById("lhs-button7").disabled = false;
+  //   document.getElementById("lhs-button8").disabled = false;
+  // } else if (eid === "lhs-button7") {
+  //   // audio.play();
+  //   document.getElementById("lhs-button1").disabled = false;
+  //   document.getElementById("lhs-button2").disabled = false;
+  //   document.getElementById("lhs-button3").disabled = false;
+  //   document.getElementById("lhs-button4").disabled = false;
+  //   document.getElementById("lhs-button5").disabled = false;
+  //   document.getElementById("lhs-button6").disabled = false;
+  //   document.getElementById("lhs-button7").disabled = true;
+  //   document.getElementById("lhs-button8").disabled = false;
+  // } else if (eid === "lhs-button8") {
+  //   // audio.play();
+  //   document.getElementById("lhs-button1").disabled = false;
+  //   document.getElementById("lhs-button2").disabled = false;
+  //   document.getElementById("lhs-button3").disabled = false;
+  //   document.getElementById("lhs-button4").disabled = false;
+  //   document.getElementById("lhs-button5").disabled = false;
+  //   document.getElementById("lhs-button6").disabled = false;
+  //   document.getElementById("lhs-button7").disabled = false;
+  //   document.getElementById("lhs-button8").disabled = true;
   }
 }
