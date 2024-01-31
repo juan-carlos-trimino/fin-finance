@@ -402,11 +402,6 @@ func TestBonds_YieldToMaturityContinuous(t *testing.T) {
   }
 }
 
-
-
-
-
-
 func TestBonds_CurrentYield(t *testing.T) {
   type test struct {
     couponRate float64
@@ -416,28 +411,23 @@ func TestBonds_CurrentYield(t *testing.T) {
     want float64
   }
   var tests = []test {
-    { FV: 100.00, couponRate: 4.0, cp: 'a', currentPrice: 90.00,
-      want: 4.444444 },
-    { FV: 1_000.00, couponRate: 5.0, cp: 'a', currentPrice: 900.00,
-      want: 5.5555555 },
-    { FV: 1_000.00, couponRate: 4.8889485, cp: 'm', currentPrice: 900.00,
-      want: 5.5555555 },
-
-
-
-      { FV: 1_200.00, couponRate: 4.939015, cp: 's', currentPrice: 850.00,
-      want: 7.05882306 },
-      { FV: 1_200.00, couponRate: 4.908893, cp: 'q', currentPrice: 850.00,
-      want: 7.05882239 },
-
-
-
+    { FV: 100.00, couponRate: 4.0, cp: 'a', currentPrice: 90.00, want: 4.444444 },
+    { FV: 1_000.00, couponRate: 5.0, cp: 'a', currentPrice: 900.00, want: 5.5555555 },
+    { FV: 1_000.00, couponRate: 4.8889485, cp: 'm', currentPrice: 900.00, want: 5.5555555 },
+    { FV: 1_200.00, couponRate: 4.939015, cp: 's', currentPrice: 850.00, want: 7.05882306 },
+    { FV: 1_200.00, couponRate: 4.908893, cp: 'q', currentPrice: 850.00, want: 7.05882239 },
   }
   var a Annuities
   var b Bonds
+  var annualRate float64
   for _, tc := range tests {
-    annualRate := a.CompoundingFrequencyConversion(tc.couponRate / 100.0,
-      a.GetCompoundingPeriod(tc.cp, true), a.GetCompoundingPeriod('a', true)) * 100.0
+    switch tc.cp {
+    case 'a', 'A':
+      annualRate = tc.couponRate
+    default:
+      annualRate = a.CompoundingFrequencyConversion(tc.couponRate / 100.0,
+        a.GetCompoundingPeriod(tc.cp, true), a.GetCompoundingPeriod('a', true)) * 100.0
+    }
     cy := b.CurrentYield(annualRate, tc.FV, tc.currentPrice) * 100.0
     if math.Abs(cy - tc.want) < 1e-5 {
       fmt.Printf("Current Yield = %.3f\n", cy)
@@ -446,14 +436,6 @@ func TestBonds_CurrentYield(t *testing.T) {
     }
   }
 }
-
-
-
-
-
-
-
-
 
 func TestBonds_ModifiedDuration(t *testing.T) {
   type test struct {
