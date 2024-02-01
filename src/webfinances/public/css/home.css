@@ -109,6 +109,15 @@ nav ul li:hover {
   font-size: 18px;
 }
 
+.button2 {
+  background-color: rgb(2, 71, 31);
+  color: rgb(185, 241, 163);
+  border-radius: 8px;
+  height: 70px;
+  width: 200px;
+  font-size: 18px;
+}
+
 .button:hover {
   background-color: rgb(185, 241, 163);
   color: rgb(2, 71, 31);

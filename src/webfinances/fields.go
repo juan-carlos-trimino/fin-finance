@@ -257,7 +257,7 @@ type bondsFields struct {
   Fd4CurrentRadio string `json:"fd4CurrentRadio"`
   Fd4CurInterest string `json:"fd4CurInterest"`
   Fd4BondPrice string `json:"fd4BondPrice"`
-  Fd4Result string `json:"fd4Result"`
+  Fd4Result [2]string `json:"fd4Result"`
   //
   Fd5FaceValue string `json:"fd5FaceValue"`
   Fd5Time string `json:"fd5Time"`
@@ -350,7 +350,7 @@ func newBondsFields(dir1, dir2 string) *bondsFields {
     Fd4CurrentRadio: "fd4-curinterest",
     Fd4CurInterest: "2.3",
     Fd4BondPrice: "1000.00",
-    Fd4Result: "",
+    Fd4Result: [2]string { "", "" },
     //
     Fd5FaceValue: "1000.00",
     Fd5Time: "5",

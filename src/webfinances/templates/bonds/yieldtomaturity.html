@@ -84,7 +84,8 @@
   <script type="text/javascript" src="/public/js/bondsYTM.js?radio='{{ .Fd4CurrentRadio }}'&cb='{{ .CurrentButton }}'"></script>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
-    <p class="p-result">{{ .Fd4Result }}</p>
+    <p class="p-result">{{ index .Fd4Result 0 }}</p>
+    <p class="p-result">{{ index .Fd4Result 1 }}</p>
   </div>
 </div>
 

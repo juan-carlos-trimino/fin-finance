@@ -279,37 +279,51 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         var bondPrice float64
         var err error
         if fv, err = strconv.ParseFloat(bf.Fd4FaceValue, 64); err != nil {
-          bf.Fd4Result = fmt.Sprintf("Error: %s -- %+v", bf.Fd4FaceValue, err)
+          bf.Fd4Result[0] = fmt.Sprintf("Error: %s -- %+v", bf.Fd4FaceValue, err)
         } else if time, err = strconv.ParseFloat(bf.Fd4Time, 64); err != nil {
-          bf.Fd4Result = fmt.Sprintf("Error: %s -- %+v", bf.Fd4Time, err)
+          bf.Fd4Result[0] = fmt.Sprintf("Error: %s -- %+v", bf.Fd4Time, err)
         } else if couponRate, err = strconv.ParseFloat(bf.Fd4Coupon, 64); err != nil {
-          bf.Fd4Result = fmt.Sprintf("Error: %s -- %+v", bf.Fd4Coupon, err)
+          bf.Fd4Result[0] = fmt.Sprintf("Error: %s -- %+v", bf.Fd4Coupon, err)
         } else if curInterest, err = strconv.ParseFloat(bf.Fd4CurInterest, 64); err != nil {
-          bf.Fd4Result = fmt.Sprintf("Error: %s -- %+v", bf.Fd4CurInterest, err)
+          bf.Fd4Result[0] = fmt.Sprintf("Error: %s -- %+v", bf.Fd4CurInterest, err)
         } else if bondPrice, err = strconv.ParseFloat(bf.Fd4BondPrice, 64); err != nil {
-          bf.Fd4Result = fmt.Sprintf("Error: %s -- %+v", bf.Fd4BondPrice, err)
+          bf.Fd4Result[0] = fmt.Sprintf("Error: %s -- %+v", bf.Fd4BondPrice, err)
         } else {
           var b finances.Bonds
           var cp int = b.GetCompoundingPeriod(bf.Fd4Compound[0], true)
           var tp = b.GetTimePeriod(bf.Fd4TimePeriod[0], true)
           cf := b.CashFlow(fv, couponRate, cp, time, tp)
+          //Yield to Maturity.
           if currentInterest {
             if cp != finances.Continuously {
-              bf.Fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%",
-                b.YieldToMaturity(cf, b.CurrentPrice(cf, curInterest, cp), tp))
+              bondPrice = b.CurrentPrice(cf, curInterest, cp)
+              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.3f%%",
+                b.YieldToMaturity(cf, bondPrice, tp))
             } else {
-              bf.Fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%",
-                b.YieldToMaturityContinuous(cf, b.CurrentPriceContinuous(cf, curInterest)))
+              bondPrice = b.CurrentPriceContinuous(cf, curInterest)
+              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.3f%%",
+                b.YieldToMaturityContinuous(cf, bondPrice))
             }
           } else {  //Bond price.
             if cp != finances.Continuously {
-              bf.Fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%",
+              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.3f%%",
                 b.YieldToMaturity(cf, bondPrice, cp))
             } else {
-              bf.Fd4Result = fmt.Sprintf("Yield to Maturity: %.3f%%",
+              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.3f%%",
                 b.YieldToMaturityContinuous(cf, bondPrice))
             }
           }
+          //Current Yield.
+          var a finances.Annuities
+          var annualRate float64
+          switch bf.Fd4Compound[0] {
+          case 'a', 'A':
+            annualRate = couponRate
+          default:
+            annualRate = a.CompoundingFrequencyConversion(couponRate / 100.0,
+              a.GetCompoundingPeriod(bf.Fd4Compound[0], true), a.GetCompoundingPeriod('a', true)) * 100.0
+          }
+          bf.Fd4Result[1] = fmt.Sprintf("Current Yield = %.3f%%", b.CurrentYield(annualRate, fv, bondPrice) * 100.0)
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur radio = %s, cur interest = %s, bond price = %s, %s",
@@ -337,7 +351,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd4CurrentRadio string
         Fd4CurInterest string
         Fd4BondPrice string
-        Fd4Result string
+        Fd4Result [2]string
       } { "Bonds", m.DTF(), bf.CurrentButton, newSession.CsrfToken, bf.Fd4FaceValue, bf.Fd4Time,
           bf.Fd4TimePeriod, bf.Fd4Coupon, bf.Fd4Compound, bf.Fd4CurrentRadio, bf.Fd4CurInterest,
           bf.Fd4BondPrice, bf.Fd4Result,
@@ -651,7 +665,8 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       } else if strings.EqualFold(bf.CurrentPage, "rhs-ui3") {
         bf.Fd3Result = ""
       } else if strings.EqualFold(bf.CurrentPage, "rhs-ui4") {
-        bf.Fd4Result = ""
+        bf.Fd4Result[0] = ""
+        bf.Fd4Result[1] = ""
       } else if strings.EqualFold(bf.CurrentPage, "rhs-ui5") {
         bf.Fd5Result[0] = ""
         bf.Fd5Result[1] = ""
