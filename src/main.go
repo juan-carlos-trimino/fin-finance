@@ -230,6 +230,9 @@ func main() {
   }
   fmt.Printf("Using SHUTDOWN_TIMEOUT: %d\n", SHUTDOWN_TIMEOUT)
   fmt.Println("OS: " + misc.GetOS())
+  numCpus, maxProcs := misc.CpusAvailable()
+  fmt.Println("Number of CPUs: ", numCpus)
+  fmt.Println("GOMAXPROCS: ", maxProcs)
   if userName, err := misc.GetUsername(); err != nil {
     fmt.Println(err)
   } else {
@@ -343,6 +346,10 @@ func main() {
       signalChan1 <- syscall.SIGINT //Let the goroutine finish.
     }
   }
+  /***
+  In Go, when the main thread of execution terminates, the entire process also terminates, even if
+  other threads are still running.
+  ***/
   wg.Wait() //Block until shutdown is done.
 }
 

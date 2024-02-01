@@ -38,6 +38,19 @@ func GetOS() string {
 }
 
 /***
+Go's runtime determines how many kernel-level threads to use based on the number of logical
+processors. This is set in the environment variable called GOMAXPROCS. If this variable is not set,
+Go populates this variable by quering the OS to determine how many CPUs the system has.
+***/
+func CpusAvailable() (numOfCpus, maxProcs int) {
+  //Go defaults the value of GOMAXPROCS to the value of NumCPU().
+  numOfCpus = runtime.NumCPU()  //Number of CPUs.
+  //Calling GOMAXPROCS(n) with n < 1 returns the current value without altering it.
+  maxProcs = runtime.GOMAXPROCS(0)
+  return
+}
+
+/***
 When you create a new file or directory, it is assigned default permissions. There are two things
 that affect the default permissions. The first is whether you are creating a regular file or a
 directory; the second is the current umask.
