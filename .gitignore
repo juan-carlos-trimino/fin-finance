@@ -236,3 +236,10 @@ src/sessions/*
 !src/security/
 src/security/*
 !src/security/security.go
+# Infrastructure as Code (IaC)
+!tf/
+tf/*
+!tf/IaC-oracle/
+tf/IaC-oracle/*
+!tf/IaC-oracle/infrastructure/
+tf/IaC-oracle/infrastructure/*
