@@ -10,13 +10,23 @@
 #############################################################################################################
 # GLOBAL VARIABLES #
 ####################
+###################################################################################################
+# Compartments help you organize and control access to your resources. A compartment is a         #
+# collection of related resources (such as cloud networks, compute instances, or block volumes)   #
+# that can be accessed only by those groups that have been given permission by an administrator in#
+# your organization.                                                                              #
+###################################################################################################
+# https://docs.oracle.com/en/cloud/foundation/cloud_architecture/governance/compartments.html#what-is-a-compartment
 variable compartment_id {
   type = string
   default = "<required>"
   sensitive = true
-  description = "xxxxxxxxxxThe compartment to create the resources in"
+  description = "Organize and control access to your resources."
 }
 
+###################################################################################################
+# https://docs.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm                         #
+###################################################################################################
 variable region {
   type = string
   default = "<required>"
