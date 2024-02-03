@@ -236,12 +236,21 @@ src/sessions/*
 !src/security/
 src/security/*
 !src/security/security.go
-# Infrastructure as Code (IaC)
+################################
+# Infrastructure as Code (IaC) #
+################################
 !tf/
 tf/*
+!tf/.gitkeep
 !tf/IaC-oracle/
 tf/IaC-oracle/*
-!tf/IaC-oracle/infrastructure/
-tf/IaC-oracle/infrastructure/*
-!tf/IaC-oracle/infrastructure/variables_no_push.tf.template
-!tf/IaC-oracle/infrastructure/variables.tf
+!tf/IaC-oracle/namespace.tf
+!tf/IaC-oracle/providers.tf
+!tf/IaC-oracle/variables_no_push.tf.template
+!tf/IaC-oracle/variables.tf
+
+
+#!tf/IaC-oracle/infrastructure/
+#tf/IaC-oracle/infrastructure/*
+#!tf/IaC-oracle/infrastructure/variables_no_push.tf.template
+#!tf/IaC-oracle/infrastructure/variables.tf
