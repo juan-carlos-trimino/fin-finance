@@ -246,5 +246,4 @@ tf/*
 tf/IaC-oracle/*
 !tf/IaC-oracle/namespace.tf
 !tf/IaC-oracle/providers.tf
-!tf/IaC-oracle/variables_no_push.tf.template
 !tf/IaC-oracle/variables.tf
