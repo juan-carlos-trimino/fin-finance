@@ -244,6 +244,17 @@ tf/*
 !tf/.gitkeep
 !tf/IaC-oracle/
 tf/IaC-oracle/*
+!tf/IaC-oracle/availability-domains.tf
+!tf/IaC-oracle/bootstrap.tf
+!tf/IaC-oracle/cluster.tf
+!tf/IaC-oracle/compartment.tf
 !tf/IaC-oracle/namespace.tf
+!tf/IaC-oracle/node-pool.tf
+!tf/IaC-oracle/outputs.tf
+!tf/IaC-oracle/private-security-list.tf
+!tf/IaC-oracle/private-subnet.tf
 !tf/IaC-oracle/providers.tf
+!tf/IaC-oracle/public-security-list.tf
+!tf/IaC-oracle/public-subnet.tf
+!tf/IaC-oracle/tf_secrets.auto.tfvars
 !tf/IaC-oracle/variables.tf
