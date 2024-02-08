@@ -1,9 +1,9 @@
 # Output the "list" of all availability domains.
 # The data source oci_identity_availability_domains, fetches a list of availability domains.
 # Declare an output block to print the fetched information.
-output "all-availability-domains" {
-  value = data.oci_identity_availability_domains.availability_domains.availability_domains
-}
+# output "all-availability-domains" {
+#   value = data.oci_identity_availability_domains.availability_domains.availability_domains
+# }
 
 ###########################
 # Outputs for compartment #
@@ -118,9 +118,9 @@ output "node-pool-kubernetes-version" {
   value = oci_containerengine_node_pool.k8s-node-pool.kubernetes_version
 }
 
-output "node-size" {
-  value = oci_containerengine_node_pool.k8s-node-pool.node_config_details[0].size
-}
+# output "node-size" {
+#   value = oci_containerengine_node_pool.k8s-node-pool.node_config_details[0].size
+# }
 
 output "node-shape" {
   value = oci_containerengine_node_pool.k8s-node-pool.node_shape

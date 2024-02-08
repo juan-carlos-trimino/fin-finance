@@ -12,3 +12,4 @@ region = "us-chicago-1"
 # private_key_path = "~/.oci/oci_api_key_public.pem"
 private_key_path = "~/.oci/oci_api_key.pem"
 node_count = 2
+# boot_volume_size = 50

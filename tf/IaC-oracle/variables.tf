@@ -20,18 +20,6 @@ variable k8s_version {  # Container Engine for Kubernetes (OKE).
   default = "v1.28.2"
 }
 
-# OCI offers 4 OCPUs, 24GB RAM and 200GB of storage for free. These resources can be used to create up to 4
-# instances. Enter a value between [1,4] and the resources will be equally spread across the instance count.
-variable node_count {
-  description = "Count of nodes."
-  type = number
-  default = 2
-  validation {
-    condition = var.node_count >= 1 && var.node_count <= 4
-    error_message = "Node count must be between 1 and 4."
-  }
-}
-
 ######################################
 # CONFIDENTIAL/SENSITIVE INFORMATION #
 #############################################################################################################
@@ -94,7 +82,30 @@ variable region {
 # under Profile -> My Profile -> API keys.
 # Example for Oracle Linux: /home/opc/.oci/<your-rsa-key-name>.pem
 variable private_key_path {
+  description = "Path to the RSA private key."
   type = string
   sensitive = true
-  description = "Path to the RSA private key."
 }
+
+# OCI offers 4 OCPUs, 24GB RAM and 200GB of storage for free. These resources can be used to create up to 4
+# instances. Enter a value between [1,4] and the resources will be equally spread across the instance count.
+variable node_count {
+  description = "Count of nodes."
+  type = number
+  validation {
+    condition = var.node_count >= 1 && var.node_count <= 4
+    error_message = "Node count must be between 1 and 4."
+  }
+  sensitive = true
+}
+
+# Specify the disk size in GB for the nodes in the cluster.
+# variable boot_volume_size {
+#   description = "Disk size in GB."
+#   type = number
+#   validation {
+#     condition = var.boot_volume_size >= 10 && var.boot_volume_size <= 50
+#     error_message = "Disk size Node must be between 10 and 50."
+#   }
+#   sensitive = true
+# }
