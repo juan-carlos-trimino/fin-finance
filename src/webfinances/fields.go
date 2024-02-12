@@ -1346,11 +1346,14 @@ func DeleteSessionDataPerUser(userName string) {
 }
 
 /***
-Even though each username has its own exclusive set of files, multiple users can share the same
-username. In this scenario, there is a possibility that two or more users may try to modify a file
-at the same time thereby corrupting the file. In order to prevent file corruption, the file is
-protected with a lock that allows a single writer (exclusive write) or multiple readers (share
-reads).
+Notes about synchronization:
+(1) Even though each username has its own exclusive set of files, multiple users can share the same
+    username. In this scenario, there is a possibility that two or more users may try to modify a
+    file at the same time thereby corrupting the file. In order to prevent file corruption, the
+    file is protected with a lock that allows a single writer (exclusive write) or multiple readers
+    (share reads).
+(2) It's always good practice to protect shared resources even if you're sure that there will be no
+    conflict.
 ***/
 func readFields(filePath string) ([]byte, error) {
   exists, err := misc.CheckFileExists(filePath)
