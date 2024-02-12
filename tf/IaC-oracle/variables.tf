@@ -89,15 +89,36 @@ variable private_key_path {
 
 # OCI offers 4 OCPUs, 24GB RAM and 200GB of storage for free. These resources can be used to create up to 4
 # instances. Enter a value between [1,4] and the resources will be equally spread across the instance count.
-variable node_count {
+variable nodes {
   description = "Count of nodes."
   type = number
   validation {
-    condition = var.node_count >= 1 && var.node_count <= 4
+    condition = var.nodes >= 1 && var.nodes <= 4
     error_message = "Node count must be between 1 and 4."
   }
   sensitive = true
 }
+
+variable ocpus_per_node {
+  description = "Ocpus per node."
+  type = number
+  # validation {
+  #   condition = var.nodes >= 1 && var.nodes <= 4
+  #   error_message = "Node count must be between 1 and 4."
+  # }
+  sensitive = true
+}
+
+variable memory_per_node {
+  description = "Memory (in GB) per node."
+  type = number
+  # validation {
+  #   condition = var.nodes >= 1 && var.nodes <= 4
+  #   error_message = "Node count must be between 1 and 4."
+  # }
+  sensitive = true
+}
+
 
 # Specify the disk size in GB for the nodes in the cluster.
 # variable boot_volume_size {

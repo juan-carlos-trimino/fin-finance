@@ -11,5 +11,16 @@ fingerprint = "46:bd:73:75:01:10:b4:de:8b:d5:20:0f:40:65:bd:16"
 region = "us-chicago-1"
 # private_key_path = "~/.oci/oci_api_key_public.pem"
 private_key_path = "~/.oci/oci_api_key.pem"
-node_count = 2
-# boot_volume_size = 50
+
+# One node (instance)
+# nodes = 1
+# ocpus_per_node = 4
+# memory_per_node = 24
+# Two nodes (instances)
+# nodes = 2
+# ocpus_per_node = 2
+# memory_per_node = 12
+# Four nodes (instances)
+nodes = 2#4
+ocpus_per_node = 1
+memory_per_node = 6

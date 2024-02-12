@@ -4,6 +4,7 @@ module "vcn" {
   version = "3.1.0"
   vcn_name = "fin-vcn"
   # The DNS Domain Name for your virtual cloud network is: <your-dns-label>.oraclevcn.com
+  # Alphanumeric string that begins with a letter.
   vcn_dns_label = "findnslbl"
   vcn_cidrs = ["10.0.0.0/16"]
   # compartment_id = var.compartment_id
@@ -96,7 +97,6 @@ resource "oci_core_subnet" "vcn-private-subnet" {
   compartment_id = oci_identity_compartment.tf-compartment.id
   vcn_id = module.vcn.vcn_id
   cidr_block = "10.0.1.0/24"
-  # Optional
   # Caution: For the route table id, use module.vcn.nat_route_id.
   # Do not use module.vcn.nat_gateway_id, because it is the OCID for the gateway and not the route table.
   route_table_id = module.vcn.nat_route_id
@@ -104,7 +104,7 @@ resource "oci_core_subnet" "vcn-private-subnet" {
     oci_core_security_list.private-security-list.id
   ]
   display_name = "fin-private-subnet"
-  prohibit_public_ip_on_vnic = true
+  # prohibit_public_ip_on_vnic = true
 }
 
 # Source from https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_security_list

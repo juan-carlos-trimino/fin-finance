@@ -107,23 +107,28 @@ output "cluster-state" {
 # Outputs for k8s node pool #
 #############################
 output "node-pool-name" {
-  value = oci_containerengine_node_pool.k8s-node-pool.name
+  value = oci_containerengine_node_pool.arm64-node-pool.name
 }
 
 output "node-pool-OCID" {
-  value = oci_containerengine_node_pool.k8s-node-pool.id
+  value = oci_containerengine_node_pool.arm64-node-pool.id
 }
 
 output "node-pool-kubernetes-version" {
-  value = oci_containerengine_node_pool.k8s-node-pool.kubernetes_version
+  value = oci_containerengine_node_pool.arm64-node-pool.kubernetes_version
 }
 
-# output "node-size" {
-#   value = oci_containerengine_node_pool.k8s-node-pool.node_config_details[0].size
-# }
-
 output "node-shape" {
-  value = oci_containerengine_node_pool.k8s-node-pool.node_shape
+  value = oci_containerengine_node_pool.arm64-node-pool.node_shape
+}
+
+output "node-size" {
+  value = oci_containerengine_node_pool.arm64-node-pool.node_config_details[0].size
+  sensitive = true
+}
+
+output "node_details" {
+  value = oci_containerengine_node_pool.arm64-node-pool.nodes.*.private_ip
 }
 
 ###################
@@ -147,3 +152,23 @@ output "cluster_public_endpoint" {
 # output "node_ips" {
 #   value = oci_containerengine_node_pool.oke_node_pool.nodes.*.public_ip
 # }
+
+
+output "latest_arm64_image_display_name" {
+  value = data.oci_core_images.latest_arm64_image.images.0.display_name
+}
+
+output "latest_arm64_image_name" {
+  value = data.oci_core_images.latest_arm64_image.images.0.id
+}
+
+
+
+output "latest_amd64_image_display_name" {
+  value = data.oci_core_images.latest_arm64_image.images.0.display_name
+}
+
+output "latest_amd64_image_name" {
+  value = data.oci_core_images.latest_arm64_image.images.0.id
+}
+
