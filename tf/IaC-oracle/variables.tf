@@ -13,12 +13,12 @@ variable app_version {
   description = "The application version."
 }
 
-# See https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengaboutk8sversions.htm for a list of
-# supported versions.
-variable k8s_version {  # Container Engine for Kubernetes (OKE).
-  type = string
-  default = "v1.28.2"
-}
+# # See https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengaboutk8sversions.htm for a list of
+# # supported versions.
+# variable k8s_version {  # Container Engine for Kubernetes (OKE).
+#   type = string
+#   default = "v1.28.2"
+# }
 
 ######################################
 # CONFIDENTIAL/SENSITIVE INFORMATION #

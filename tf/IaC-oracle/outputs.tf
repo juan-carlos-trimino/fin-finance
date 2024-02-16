@@ -8,13 +8,13 @@
 ###########################
 # Outputs for compartment #
 ###########################
-output "compartment-name" {
-  value = oci_identity_compartment.tf-compartment.name
-}
+# output "compartment-name" {
+#   value = oci_identity_compartment.compartment.name
+# }
 
-output "compartment-OCID" {
-  value = oci_identity_compartment.tf-compartment.id
-}
+# output "compartment-OCID" {
+#   value = oci_identity_compartment.compartment.id
+# }
 
 ##############################
 # Outputs for the vcn module #
@@ -39,108 +39,108 @@ output "id-for-for-route-table-that-includes-the-nat-gateway" {
   value = module.vcn.nat_route_id
 }
 
-#####################################
-# Outputs for private security list #
-#####################################
-output "private-security-list-name" {
-  value = oci_core_security_list.private-security-list.display_name
-}
+# #####################################
+# # Outputs for private security list #
+# #####################################
+# output "private-security-list-name" {
+#   value = oci_core_security_list.private-security-list.display_name
+# }
 
-output "private-security-list-OCID" {
-  value = oci_core_security_list.private-security-list.id
-}
+# output "private-security-list-OCID" {
+#   value = oci_core_security_list.private-security-list.id
+# }
 
-####################################
-# Outputs for public security list #
-####################################
-output "public-security-list-name" {
-  value = oci_core_security_list.public-security-list.display_name
-}
+# ####################################
+# # Outputs for public security list #
+# ####################################
+# output "public-security-list-name" {
+#   value = oci_core_security_list.public-security-list.display_name
+# }
 
-output "public-security-list-OCID" {
-  value = oci_core_security_list.public-security-list.id
-}
+# output "public-security-list-OCID" {
+#   value = oci_core_security_list.public-security-list.id
+# }
 
-##############################
-# Outputs for private subnet #
-##############################
-output "private-subnet-name" {
-  value = oci_core_subnet.vcn-private-subnet.display_name
-}
+# ##############################
+# # Outputs for private subnet #
+# ##############################
+# output "private-subnet-name" {
+#   value = oci_core_subnet.vcn-private-subnet.display_name
+# }
 
-output "private-subnet-OCID" {
-  value = oci_core_subnet.vcn-private-subnet.id
-}
+# output "private-subnet-OCID" {
+#   value = oci_core_subnet.private-subnet.id
+# }
 
-#############################
-# Outputs for public subnet #
-#############################
-output "public-subnet-name" {
-  value = oci_core_subnet.vcn-public-subnet.display_name
-}
+# #############################
+# # Outputs for public subnet #
+# #############################
+# output "public-subnet-name" {
+#   value = oci_core_subnet.public-subnet.display_name
+# }
 
-output "public-subnet-OCID" {
-  value = oci_core_subnet.vcn-public-subnet.id
-  # value = module.vcn-public-subnet.id
-}
+# output "public-subnet-OCID" {
+#   value = oci_core_subnet.public-subnet.id
+#   # value = module.vcn-public-subnet.id
+# }
 
-###########################
-# Outputs for k8s cluster #
-###########################
-output "cluster-name" {
-  value = oci_containerengine_cluster.k8s-cluster.name
-}
+# ###########################
+# # Outputs for k8s cluster #
+# ###########################
+# output "cluster-name" {
+#   value = oci_containerengine_cluster.k8s-cluster.name
+# }
 
-output "cluster-OCID" {
-  value = oci_containerengine_cluster.k8s-cluster.id
-}
+# output "cluster-OCID" {
+#   value = oci_containerengine_cluster.k8s-cluster.id
+# }
 
-output "cluster-kubernetes-version" {
-  value = oci_containerengine_cluster.k8s-cluster.kubernetes_version
-}
+# output "cluster-kubernetes-version" {
+#   value = oci_containerengine_cluster.k8s-cluster.kubernetes_version
+# }
 
-output "cluster-state" {
-  value = oci_containerengine_cluster.k8s-cluster.state
-}
+# output "cluster-state" {
+#   value = oci_containerengine_cluster.k8s-cluster.state
+# }
 
-#############################
-# Outputs for k8s node pool #
-#############################
-output "node-pool-name" {
-  value = oci_containerengine_node_pool.arm64-node-pool.name
-}
+# #############################
+# # Outputs for k8s node pool #
+# #############################
+# output "node-pool-name" {
+#   value = oci_containerengine_node_pool.arm64-node-pool.name
+# }
 
-output "node-pool-OCID" {
-  value = oci_containerengine_node_pool.arm64-node-pool.id
-}
+# output "node-pool-OCID" {
+#   value = oci_containerengine_node_pool.arm64-node-pool.id
+# }
 
-output "node-pool-kubernetes-version" {
-  value = oci_containerengine_node_pool.arm64-node-pool.kubernetes_version
-}
+# output "node-pool-kubernetes-version" {
+#   value = oci_containerengine_node_pool.arm64-node-pool.kubernetes_version
+# }
 
-output "node-shape" {
-  value = oci_containerengine_node_pool.arm64-node-pool.node_shape
-}
+# output "node-shape" {
+#   value = oci_containerengine_node_pool.arm64-node-pool.node_shape
+# }
 
-output "node-size" {
-  value = oci_containerengine_node_pool.arm64-node-pool.node_config_details[0].size
-  sensitive = true
-}
+# output "node-size" {
+#   value = oci_containerengine_node_pool.arm64-node-pool.node_config_details[0].size
+#   sensitive = true
+# }
 
-output "node_details" {
-  value = oci_containerengine_node_pool.arm64-node-pool.nodes.*.private_ip
-}
+# output "node_details" {
+#   value = oci_containerengine_node_pool.arm64-node-pool.nodes.*.private_ip
+# }
 
-###################
-# Outputs for k8s #
-###################
-output "cluster_id" {
-  value = oci_containerengine_cluster.k8s-cluster.id
-}
+# ###################
+# # Outputs for k8s #
+# ###################
+# output "cluster_id" {
+#   value = oci_containerengine_cluster.k8s-cluster.id
+# }
 
-output "cluster_public_endpoint" {
-  value = oci_containerengine_cluster.k8s-cluster.endpoints[0].public_endpoint
-}
+# output "cluster_public_endpoint" {
+#   value = oci_containerengine_cluster.k8s-cluster.endpoints[0].public_endpoint
+# }
 
 
 
@@ -154,21 +154,21 @@ output "cluster_public_endpoint" {
 # }
 
 
-output "latest_arm64_image_display_name" {
-  value = data.oci_core_images.latest_arm64_image.images.0.display_name
-}
+# output "image_display_name" {
+#   value = data.oci_core_images.use_image.images.0.display_name
+# }
 
-output "latest_arm64_image_name" {
-  value = data.oci_core_images.latest_arm64_image.images.0.id
-}
+# output "image_id" {
+#   value = data.oci_core_images.use_image.images.0.id
+# }
 
 
 
-output "latest_amd64_image_display_name" {
-  value = data.oci_core_images.latest_arm64_image.images.0.display_name
-}
+# output "latest_amd64_image_display_name" {
+#   value = data.oci_core_images.latest_arm64_image.images.0.display_name
+# }
 
-output "latest_amd64_image_name" {
-  value = data.oci_core_images.latest_arm64_image.images.0.id
-}
+# output "latest_amd64_image_name" {
+#   value = data.oci_core_images.latest_arm64_image.images.0.id
+# }
 

@@ -28,7 +28,7 @@
 # Declare an Oracle Cloud Infrastructure compartment resource and then define the specifics for the
 # compartment.
 # https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_compartment
-resource "oci_identity_compartment" "tf-compartment" {
+resource "oci_identity_compartment" "fin-compartment" {
   description = "Compartment for Terraform resources."
   name = "fin-compartment"
   compartment_id = var.tenancy_ocid
@@ -36,4 +36,17 @@ resource "oci_identity_compartment" "tf-compartment" {
   # Note: To destroy a compartment, the compartment must also be empty. Use the depends_on argument to ensure
   #       that any hidden dependencies are defined.
   enable_delete = true
+}
+
+
+
+###########################
+# Outputs for compartment #
+###########################
+# output "compartment-name" {
+#   value = oci_identity_compartment.fin-compartment.name
+# }
+
+output "compartment-id" {
+  value = oci_identity_compartment.fin-compartment.id
 }
