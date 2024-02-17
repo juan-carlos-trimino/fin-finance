@@ -246,6 +246,8 @@ tf/*
 tf/IaC-oracle/*
 !tf/IaC-oracle/bootstrap.tf
 !tf/IaC-oracle/compartment.tf
+!tf/IaC-oracle/data.tf
+!tf/IaC-oracle/main.tf
 !tf/IaC-oracle/namespace.tf
 !tf/IaC-oracle/outputs.tf
 !tf/IaC-oracle/providers.tf
