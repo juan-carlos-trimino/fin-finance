@@ -75,9 +75,9 @@ resource "oci_containerengine_node_pool" "node-pool" {
   compartment_id = var.compartment_id
   kubernetes_version = var.k8s_version
   node_config_details {
-    node_pool_pod_network_option_details {
-      cni_type = var.cluster_cni_type
-    }
+    # node_pool_pod_network_option_details {
+    #   cni_type = var.cluster_cni_type
+    # }
     dynamic "placement_configs" {
       for_each = local.ads
       content {
@@ -89,11 +89,11 @@ resource "oci_containerengine_node_pool" "node-pool" {
     size = var.nodes
   }
   # Enhanced cluster feature.
-  node_pool_cycling_details {
-    is_node_cycling_enabled = false
-    maximum_surge = 1
-    maximum_unavailable = 0
-  }
+  # node_pool_cycling_details {
+  #   is_node_cycling_enabled = false
+  #   maximum_surge = 1
+  #   maximum_unavailable = 0
+  # }
   # https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm
   node_shape = "VM.Standard.A1.Flex"
   # Configure how much memory and OCPUs to use in each node.

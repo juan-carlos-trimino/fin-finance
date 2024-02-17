@@ -42,6 +42,10 @@ variable sl_ingress_security_rules {
     })), [])
   }))
 }
+variable prohibit_public_ip_on_vnic {
+  type = bool
+  default = false
+}
 
 #https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/core_security_list
 resource "oci_core_security_list" "security-list" {
@@ -96,7 +100,7 @@ resource "oci_core_subnet" "subnet" {
   security_list_ids = [
     oci_core_security_list.security-list.id
   ]
-  # prohibit_public_ip_on_vnic = true
+  prohibit_public_ip_on_vnic = var.prohibit_public_ip_on_vnic
 }
 
 #############################
