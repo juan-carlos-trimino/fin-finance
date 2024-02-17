@@ -28,7 +28,7 @@ variable subnet_id {
 
 # Source from https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/containerengine_cluster
 
-resource "oci_containerengine_cluster" "cluster" {
+resource "oci_containerengine_cluster" "k8s-cluster" {
   name = var.name
   type = var.type
   compartment_id = var.compartment_id
@@ -64,42 +64,13 @@ resource "oci_containerengine_cluster" "cluster" {
   }
 }
 
-data "oci_containerengine_cluster_kube_config" "kubeconfig" {
-  cluster_id = oci_containerengine_cluster.cluster.id
-  endpoint = "PUBLIC_ENDPOINT"  # LEGACY_KUBERNETES,PUBLIC_ENDPOINT,PRIVATE_ENDPOINT,VCN_HOSTNAME.
-  token_version = "2.0.0"
-}
-
 ###########################
 # Outputs for k8s cluster #
 ###########################
-output "cluster-name" {
-  value = oci_containerengine_cluster.cluster.name
+output "cluster-id" {
+  value = oci_containerengine_cluster.k8s-cluster.id
 }
 
-output "cluster-OCID" {
-  value = oci_containerengine_cluster.cluster.id
-}
-
-output "cluster-kubernetes-version" {
-  value = oci_containerengine_cluster.cluster.kubernetes_version
-}
-
-output "cluster-state" {
-  value = oci_containerengine_cluster.cluster.state
-}
-
-###################
-# Outputs for k8s #
-###################
-output "cluster_id" {
-  value = oci_containerengine_cluster.cluster.id
-}
-
-output "cluster_public_endpoint" {
-  value = oci_containerengine_cluster.cluster.endpoints[0].public_endpoint
-}
-
-output "cluster_cni_type" {
-  value = oci_containerengine_cluster.cluster.cluster_pod_network_options[0].cni_type
+output "cluster-cni-type" {
+  value = oci_containerengine_cluster.k8s-cluster.cluster_pod_network_options[0].cni_type
 }

@@ -24,6 +24,11 @@
 # $ terraform apply
 # $ terraform destroy
 
+# $ terraform plan -var-file="../tf_secrets.auto.tfvars"
+# $ terraform apply -var-file="../tf_secrets.auto.tfvars"
+# $ terraform destroy -var-file="../tf_secrets.auto.tfvars"
+
+
 # $ terraform init
 # $ terraform -chdir=../tf init
 # where -chdir=../tf allows you to declare where the root of your terraform project is located.
@@ -87,9 +92,8 @@ module "arm64-node-pool" {
   tenancy_ocid = var.tenancy_ocid
   compartment_id = oci_identity_compartment.fin-compartment.id
   subnet_id = module.private-subnet.subnet-id
-  cluster_id = module.cluster.cluster_id
-  cluster_cni_type = module.cluster.cluster_cni_type
-  image_id = data.oci_core_images.use_image.images.0.id
+  cluster_id = module.cluster.cluster-id
+  cluster_cni_type = module.cluster.cluster-cni-type
   nodes = var.nodes
   memory_per_node = var.memory_per_node
   ocpus_per_node = var.ocpus_per_node
@@ -105,7 +109,8 @@ module "private-subnet" {
   compartment_id = oci_identity_compartment.fin-compartment.id
   vcn_id = module.vcn.vcn_id
   # Caution: For the route table id, use module.vcn.nat_route_id.
-  # Do not use module.vcn.nat_gateway_id, because it is the OCID for the gateway and not the route table.
+  # Do not use module.vcn.nat_gateway_id, because it is the OCID for the gateway and not the route
+  # table.
   route_table_id = module.vcn.nat_route_id
   #
   sl_display_name = "private-subnet-security-list"
@@ -133,7 +138,8 @@ module "public-subnet" {
   compartment_id = oci_identity_compartment.fin-compartment.id
   vcn_id = module.vcn.vcn_id
   # Caution: For the route table id, use module.vcn.nat_route_id.
-  # Do not use module.vcn.nat_gateway_id, because it is the OCID for the gateway and not the route table.
+  # Do not use module.vcn.nat_gateway_id, because it is the OCID for the gateway and not the route
+  # table.
   route_table_id = module.vcn.nat_route_id
   #
   sl_display_name = "public-subnet-security-list"
@@ -154,14 +160,50 @@ module "public-subnet" {
     stateless = false
     source = "0.0.0.0/0"
     source_type = "CIDR_BLOCK"
-    # Get protocol numbers from https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml TCP is 6
     protocol = "6"
     tcp_options = [{
       min = 6443
       max = 6443
     }]
+  },
+  {
+    stateless = false
+    source = "10.0.0.0/16"
+    source_type = "CIDR_BLOCK"
+    protocol = "6"
+    tcp_options = [{
+      min = 22
+      max = 22
+    }]
   }]
 }
+
+  #
+  #
+  # ingress_security_rules {
+  #   stateless = false
+  #   source = "0.0.0.0/0"
+  #   source_type = "CIDR_BLOCK"
+  #   # Get protocol numbers from https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml ICMP is 1
+  #   protocol = "1"
+  #   # For ICMP type and code see: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
+  #   icmp_options {
+  #     type = 3
+  #     code = 4
+  #   }
+  # }
+  #
+  # ingress_security_rules {
+  #   stateless = false
+  #   source = "10.0.0.0/16"
+  #   source_type = "CIDR_BLOCK"
+  #   # Get protocol numbers from https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml ICMP is 1
+  #   protocol = "1"
+  #   # For ICMP type and code see: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
+  #   icmp_options {
+  #     type = 3
+  #   }
+  # }
 
 module "cluster" {
   depends_on = [

@@ -1,12 +1,9 @@
-
-
-data "oci_core_images" "use_image" {
-  compartment_id = oci_identity_compartment.fin-compartment.id
-  operating_system = "Oracle Linux"
-  operating_system_version = "8"
-  shape = "VM.Standard.A1.Flex"
-  sort_by = "TIMECREATED"
-  sort_order = "DESC"
+###################################################################################################
+# In Terraform to fetch data, you use a data source. Fetching data from a data source is similar  #
+# to the GET method in REST APIs.                                                                 #
+###################################################################################################
+data "oci_containerengine_cluster_kube_config" "kubeconfig" {
+  cluster_id = module.cluster.cluster-id
+  endpoint = "PUBLIC_ENDPOINT"  # LEGACY_KUBERNETES,PUBLIC_ENDPOINT,PRIVATE_ENDPOINT,VCN_HOSTNAME.
+  token_version = "2.0.0"
 }
-
-
