@@ -13,43 +13,19 @@
 # $ oci setup config
 # It will prompt you for all of the information require to generate the config file. You will need
 # the following:
-# (1) user's OCID
-# (2) tenancy's OCID
+# (1) user's OCID (Profile->My profile)
+# (2) tenancy's OCID (Profile->Tenancy: <tenancy-name>)
 # (3) the region
 #
 # When creating the keys, decline creating a passphrase. Once the keys are generated, you'll need
-# to associate the public key to the user. From the Oracle Cloud web console, click on "API keys"
-# on the left and click on "Add API Key." Upload the public key's pem file.
+# to associate the public key to the user. From the Oracle Cloud web console, click on "Profile->
+# My profile->API keys" on the left and click on "Add API Key." Upload the public key's pem file.
 #
 # You can verify that everything is configured properly by running the following command:
 # $ oci iam compartment list -c <tenancy-ocid>
 #   where <tenancy-ocid> is your tenancy's OCID.
-# If there are no errors, you are done.
-
-###########################################
-# kubectl                                 #
-# https://kubernetes.io/docs/tasks/tools/ #
-###########################################
-# To create a kubeconfig file for kubectl to access the cluster, execute the following command:
-# $ oci ce cluster create-kubeconfig --cluster-id <cluster OCID> --file ~/.kube/<name-of-config-file>
-#   --region <region> --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
-# You will need the following:
-# (1) cluster's OCID
-# (2) name for the config file
-# (3) the region
-#
-# The command will create a kubeconfig file in the ~/.kube directory; the kubeconfig file will
-# contain the keys and all of the configuration for kubectl to access the cluster.
-#
-# Next, set the KUBECONFIG environment variable with the kubeconfig file path.
-# $ export KUBECONFIG=~/.kube/<name-of-config-file>
-#
-# Check if the environment variable was set.
-# $ printenv KUBECONFIG
-#
-# Finally, let's try to list the available nodes in the cluster.
-# $ kubectl get nodes
-# If the nodes are displayed, you are done.
+# If there are no errors in the JSON reply, the config file was create (by default in ~/.oci). At
+# this point, you need to run Terraform to allocate your resources.
 
 ###################################################################################
 # Terraform                                                                       #
@@ -79,6 +55,35 @@
 #
 # To troubleshoot the OCI Terraform Provider:
 # https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformtroubleshooting.htm
+#
+# Once Terraform finish setting up your resources, you need to set up kubectl to access the cluster.
+
+###########################################
+# kubectl                                 #
+# https://kubernetes.io/docs/tasks/tools/ #
+###########################################
+# To create a kubeconfig file for kubectl to access the cluster, execute the following command:
+# $ oci ce cluster create-kubeconfig --cluster-id <cluster OCID> --file ~/.kube/<name-of-config-file>
+#   --region <region> --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
+# You will need the following:
+# (1) cluster's OCID (Navigation menu->Developer Services->Kubernetes Clusters (OKE) [Under
+#     Containers & Artifacts]->Select the compartment that contains the cluster[Compartment]->
+#     On the Clusters page, click the name of the cluster)
+# (2) name for the config file
+# (3) the region
+#
+# The command will create a kubeconfig file in the ~/.kube directory; the kubeconfig file will
+# contain the keys and all of the configuration for kubectl to access the cluster.
+#
+# Next, set the KUBECONFIG environment variable with the kubeconfig file path.
+# $ export KUBECONFIG=~/.kube/<name-of-config-file>
+#
+# Check if the environment variable was set.
+# $ printenv KUBECONFIG
+#
+# Finally, let's try to list the available nodes in the cluster.
+# $ kubectl get nodes
+# If the nodes are displayed, you are done.
 
 # Virtual Cloud Network (VCN) or Virtual Private Cloud (VPC).
 module "vcn" {
@@ -97,24 +102,6 @@ module "vcn" {
   create_internet_gateway = true
   create_nat_gateway = true
   create_service_gateway = true
-}
-
-module "arm64-node-pool" {
-  depends_on = [
-    module.private-subnet,
-    module.public-subnet,
-    module.cluster
-  ]
-  source = "./modules/node"
-  name = "arm64-worker-pool"
-  tenancy_ocid = var.tenancy_ocid
-  compartment_id = oci_identity_compartment.fin-compartment.id
-  subnet_id = module.private-subnet.subnet-id
-  cluster_id = module.cluster.cluster-id
-  cluster_cni_type = module.cluster.cluster-cni-type
-  nodes = var.nodes
-  memory_per_node = var.memory_per_node
-  ocpus_per_node = var.ocpus_per_node
 }
 
 module "private-subnet" {
@@ -191,17 +178,48 @@ module "public-subnet" {
       min = 6443
       max = 6443
     }]
-  },
-  {
-    stateless = false
-    source = "10.0.0.0/16"
-    source_type = "CIDR_BLOCK"
-    protocol = "6"
-    tcp_options = [{
-      min = 22
-      max = 22
-    }]
   }]
+  # {
+  #   stateless = false
+  #   source = "10.0.0.0/16"
+  #   source_type = "CIDR_BLOCK"
+  #   protocol = "6"
+  #   tcp_options = [{
+  #     min = 22
+  #     max = 22
+  #   }]
+  # }]
+}
+
+module "cluster" {
+  depends_on = [
+    # module.private-subnet,
+    module.public-subnet
+  ]
+  source = "./modules/cluster"
+  name = "k8s-cluster"
+  type = "BASIC_CLUSTER"
+  compartment_id = oci_identity_compartment.fin-compartment.id
+  vcn_id = module.vcn.vcn_id
+  subnet_ids = [
+    module.public-subnet.subnet-id
+  ]
+}
+
+module "arm64-node-pool" {
+  depends_on = [
+    module.cluster
+  ]
+  source = "./modules/node"
+  name = "arm64-worker-pool"
+  tenancy_ocid = var.tenancy_ocid
+  compartment_id = oci_identity_compartment.fin-compartment.id
+  subnet_id = module.private-subnet.subnet-id
+  cluster_id = module.cluster.cluster-id
+  cluster_cni_type = module.cluster.cluster-cni-type
+  nodes = var.nodes
+  memory_per_node = var.memory_per_node
+  ocpus_per_node = var.ocpus_per_node
 }
 
   #
@@ -230,15 +248,3 @@ module "public-subnet" {
   #     type = 3
   #   }
   # }
-
-module "cluster" {
-  depends_on = [
-    module.public-subnet
-  ]
-  source = "./modules/cluster"
-  name = "k8s-cluster"
-  type = "BASIC_CLUSTER"
-  compartment_id = oci_identity_compartment.fin-compartment.id
-  vcn_id = module.vcn.vcn_id
-  subnet_ids = [module.public-subnet.subnet-id]
-}

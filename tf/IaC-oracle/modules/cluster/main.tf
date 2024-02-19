@@ -55,7 +55,9 @@ resource "oci_containerengine_cluster" "k8s-cluster" {
       pods_cidr = "10.244.0.0/16"
       services_cidr = "10.96.0.0/16"
     }
-    service_lb_subnet_ids = var.subnet_ids
+    service_lb_subnet_ids = [
+      var.subnet_ids[0]
+    ]
   }
 }
 
