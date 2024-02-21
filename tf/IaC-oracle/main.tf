@@ -89,7 +89,7 @@
 module "vcn" {
   source = "oracle-terraform-modules/vcn/oci"
   version = "3.1.0"
-  vcn_name = "fin-vcn"
+  vcn_name = "vcn-fiv"
   vcn_dns_label = "findnslbl"
   compartment_id = oci_identity_compartment.fin-compartment.id
   region = var.region
@@ -145,10 +145,7 @@ module "public-subnet" {
   subnet_display_name = "public-subnet"
   compartment_id = oci_identity_compartment.fin-compartment.id
   cidr_block = "10.0.0.0/24"    # Public subnet's CIDR block.
-  # Caution: For the route table id, use module.vcn.nat_route_id.
-  # Do not use module.vcn.nat_gateway_id, because it is the OCID for the gateway and not the route
-  # table.
-  route_table_id = module.vcn.nat_route_id
+  route_table_id = module.vcn.ig_route_id
   # VNICs created in this subnet will automatically be assigned public IP addresses unless
   # specified otherwise during instance launch or VNIC creation.
   prohibit_public_ip_on_vnic = false
@@ -161,12 +158,12 @@ module "public-subnet" {
     protocol = "all"  # All protocols
   }]
   # Allow traffic for all ports within the range of the VCN (10.0.0.0/16).
-  sl_ingress_security_rules = [#{
-  #   stateless = false
-  #   source = "10.0.0.0/16"
-  #   source_type = "CIDR_BLOCK"
-  #   protocol = "all"
-  # },
+  sl_ingress_security_rules = [{
+    stateless = false
+    source = "10.0.0.0/16"
+    source_type = "CIDR_BLOCK"
+    protocol = "all"
+  },
   {
     stateless = false
     # Allow VCN traffic to come in as well as traffic from anywhere on port 6443 TCP; we'll use
@@ -193,7 +190,6 @@ module "public-subnet" {
 
 module "cluster" {
   depends_on = [
-    # module.private-subnet,
     module.public-subnet
   ]
   source = "./modules/cluster"
