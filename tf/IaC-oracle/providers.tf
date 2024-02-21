@@ -14,7 +14,7 @@ terraform {
     #
     # null = {
     #   source = "hashicorp/null"
-    #   version = ">= 3.1.0"
+    #   version = ">= 3.1.1"
     # }
   }
 }
@@ -31,3 +31,6 @@ provider "oci" {  # Oracle Cloud Infrastructure (OCI)
 
 # provider "null" {
 # }
+
+provider "tls" {
+}
