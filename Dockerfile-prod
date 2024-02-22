@@ -17,7 +17,7 @@
 # -------------------------------------------------------------------------------------------------
 # Use an offical golang image to create the binary.
 # Alpine images provide the Almquist shell (ash) from BusyBox.
-FROM golang:1.20.2-alpine3.17 AS builder
+FROM golang:1.22.0-alpine3.19 AS builder
 
 # Create a working directory in the image.
 WORKDIR /goapp/
@@ -29,6 +29,10 @@ COPY ./src/main.go ./
 COPY ./src/finances ./finances/
 COPY ./src/mathutil ./mathutil/
 COPY ./src/webfinances ./webfinances/
+COPY ./src/middlewares ./middlewares
+COPY ./src/misc ./misc
+COPY ./src/security ./security
+COPY ./src/sessions ./sessions
 
 # Download necessary Go modules; https://go.dev/ref/mod#go-mod-download
 RUN go mod download
@@ -36,7 +40,7 @@ RUN go mod download
 # Build the binary; https://go.googlesource.com/sublime-build/+/HEAD/docs/configuration.md
 RUN go build -o ./godir/webserver -v main.go
 
-FROM alpine:3.17
+FROM alpine:3.19
 
 WORKDIR /
 
