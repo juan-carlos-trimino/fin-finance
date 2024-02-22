@@ -263,3 +263,18 @@ tf/IaC-oracle/modules/node/*
 !tf/IaC-oracle/modules/subnet/
 tf/IaC-oracle/modules/subnet/*
 !tf/IaC-oracle/modules/subnet/main.tf
+########################################
+# Infrastructure as Code (IaC) for app #
+########################################
+!fin-IaC-app/
+fin-IaC-app/*
+!fin-IaC-app/main.tf
+!fin-IaC-app/namespace.tf
+!fin-IaC-app/providers.tf
+!fin-IaC-app/variables.tf
+!fin-IaC-app/modules/
+fin-IaC-app/modules/*
+!fin-IaC-app/modules/deployment/
+fin-IaC-app/modules/deployment/*
+!fin-IaC-app/modules/deployment/main.tf
+!fin-IaC-app/modules/.gitkeep
