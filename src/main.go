@@ -83,7 +83,7 @@ var (  //Environment variables.
 )
 
 const (
-  dataDir string = "./dataDir"
+  dataDir string = "/wsf_data_dir"
   users string = "user.txt"
 )
 

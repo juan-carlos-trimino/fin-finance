@@ -1,7 +1,24 @@
 //The default name for the generated executable would be finance.
 module finance
 
-go 1.21.5
+//To find the system architecture type, execute:
+//$ dpkg --print-architecture
+//To upgrade golang
+//$ sudo apt-get update
+//$ sudo apt-get -y upgrade
+//Notice the version and system architecture type: 1.22.0.linux-xxxxx
+//$ wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
+//$ sudo tar -xvf go1.22.0.linux-amd64.tar.gz -C /usr/local
+//Set the Go path.
+//$ echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.profile
+//$ source ~/.profile
+//Verify the installation.
+//$ go version
+//Set up the Go workspace, if one is not set up.
+//$ mkdir ~/go
+//$ echo "export GOPATH=$HOME/go" >> ~/.profile
+//$ source ~/.profile
+go 1.22.0
 
 require (
 	github.com/google/uuid v1.6.0
