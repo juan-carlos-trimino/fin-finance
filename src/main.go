@@ -67,23 +67,20 @@ import (
 )
 
 var (  //Environment variables.
-  K8S bool = false
-  HTTPS bool = false
+  SERVER string = "localhost"
   HTTP bool = true
+  HTTP_PORT string = "8080"
+  HTTPS bool = false
+  HTTPS_PORT string = "8443"
   LE_CERT = false
   MAX_RETRIES int = 10
   SHUTDOWN_TIMEOUT int = 15
-  HTTPS_PORT string = "8443"
-  HTTP_PORT string = "8080"
-  SVC_NAME string
-  APP_NAME_VER string
-  SERVER string = "localhost"
   USER_NAME string = "a"
   PASSWORD string = "a"
 )
 
 const (
-  dataDir string = "/wsf_data_dir"
+  dataDir string = "./wsf_data_dir"
   users string = "user.txt"
 )
 
@@ -142,6 +139,11 @@ func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 func main() {
   var exists bool = false
   var ev string
+  ev, exists = os.LookupEnv("SERVER")
+  if exists {
+    SERVER = ev
+  }
+  //
   ev, exists = os.LookupEnv("HTTPS")
   if exists {
     b, err := strconv.ParseBool(ev)
@@ -174,33 +176,6 @@ func main() {
       LE_CERT = b
     } else {
       fmt.Printf("'%s' is not a boolean.\n", ev)
-    }
-  }
-  ev, exists = os.LookupEnv("K8S")
-  if exists {
-    b, err := strconv.ParseBool(ev)
-    if err == nil {
-      K8S = b
-    } else {
-      fmt.Printf("'%s' is not a boolean.\n", ev)
-    }
-    //
-    if K8S {
-      SVC_NAME, exists = os.LookupEnv("SVC_NAME")
-      if !exists {
-        fmt.Println("Missing environment parameter: SVC_NAME")
-        return
-      }
-      APP_NAME_VER, exists = os.LookupEnv("APP_NAME_VER")
-      if !exists {
-        fmt.Println("Missing environment parameter: APP_NAME_VER")
-        return
-      }
-      SERVER, exists = os.LookupEnv("SERVER")
-      if !exists {
-        fmt.Println("Missing environment parameter: SERVER")
-        return
-      }
     }
   }
   //
