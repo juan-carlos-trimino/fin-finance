@@ -17,7 +17,7 @@
 # -------------------------------------------------------------------------------------------------
 # Use an offical golang image to create the binary.
 # Alpine images provide the Almquist shell (ash) from BusyBox.
-FROM golang:1.22.0-alpine3.19 AS builder
+FROM --platform=arm64 golang:1.22.0-alpine3.19 AS builder
 
 # Create a working directory in the image.
 WORKDIR /goapp/
@@ -28,28 +28,36 @@ COPY ./src/go.* ./
 COPY ./src/main.go ./
 COPY ./src/finances ./finances/
 COPY ./src/mathutil ./mathutil/
+COPY ./src/middlewares ./middlewares/
+COPY ./src/misc ./misc/
+COPY ./src/security ./security/
+COPY ./src/sessions ./sessions/
 COPY ./src/webfinances ./webfinances/
-COPY ./src/middlewares ./middlewares
-COPY ./src/misc ./misc
-COPY ./src/security ./security
-COPY ./src/sessions ./sessions
 
 # Download necessary Go modules; https://go.dev/ref/mod#go-mod-download
 RUN go mod download
 
 # Build the binary; https://go.googlesource.com/sublime-build/+/HEAD/docs/configuration.md
+# RUN GOOS="linux" GOARCH="arm64" go build -o ./godir/webserver -v main.go
 RUN go build -o ./godir/webserver -v main.go
 
 FROM alpine:3.19
 
-WORKDIR /
+WORKDIR /goapp/
+
+ENV HTTP=true
+# Set USER to any string to avoid the error:
+# user: Current requires cgo or $USER set in environment
+ENV USER="wsf-user"
 
 # Copy the binary to the production image from the builder stage.
-COPY --from=builder /goapp/godir/ ./goapp/
+COPY --from=builder /goapp/godir/ ./
+COPY --from=builder /goapp/webfinances/public/ ./webfinances/public/
+COPY --from=builder /goapp/webfinances/templates/ ./webfinances/templates/
 
 EXPOSE 8080
 
-USER 1000:1000
+USER 1100:1100
 
 # Run the web service on container startup.
-ENTRYPOINT ["./goapp/webserver"]
+ENTRYPOINT ["./webserver"]
