@@ -22,9 +22,9 @@ variable dockerfile_name {
   default = "Dockerfile-prod"
   type = string
 }
-  variable dir_name {
-    type = string
-  }
+variable dir_path {
+  type = string
+}
 variable cr_login_server {
   type = string
 }
@@ -64,23 +64,27 @@ variable cr_password {
       success_threshold = number
     }))
   }
-  # Be aware that the default imagePullPolicy depends on the image tag. If a container refers to the
-  # latest tag (either explicitly or by not specifying the tag at all), imagePullPolicy defaults to
-  # Always, but if the container refers to any other tag, the policy defaults to IfNotPresent.
-  #
-  # When using a tag other than latest, the imagePullPolicy property must be set if changes are made
-  # to an image without changing the tag. Better yet, always push changes to an image under a new
-  # tag.
-  variable image_pull_policy {
-    default = "Always"
-    type = string
-  }
+# Be aware that the default imagePullPolicy depends on the image tag. If a container refers to the
+# latest tag (either explicitly or by not specifying the tag at all), imagePullPolicy defaults to
+# Always, but if the container refers to any other tag, the policy defaults to IfNotPresent.
+#
+# When using a tag other than latest, the imagePullPolicy property must be set if changes are made
+# to an image without changing the tag. Better yet, always push changes to an image under a new
+# tag.
+variable image_pull_policy {
+  default = "Always"
+  type = string
+}
   variable security_context {
     default = [{
       run_as_non_root = true
       run_as_user = 1100
       run_as_group = 1100
-      read_only_root_filesystem = false
+      # fs_group = 1100
+      # run_as_user = 0
+      # run_as_group = 0
+      # fs_group = 0
+      read_only_root_filesystm = true
     }]
     type = list(object({
       run_as_non_root = bool
@@ -89,26 +93,26 @@ variable cr_password {
       read_only_root_filesystem = bool
     }))
   }
-  variable env {
-    default = {}
-    type = map
-  }
-  variable qos_requests_cpu {
-    default = ""
-    type = string
-  }
-  variable qos_requests_memory {
-    default = ""
-    type = string
-  }
-  variable qos_limits_cpu {
-    default = "0"
-    type = string
-  }
-  variable qos_limits_memory {
-    default = "0"
-    type = string
-  }
+variable env {
+  default = {}
+  type = map
+}
+variable qos_requests_cpu {
+  default = ""
+  type = string
+}
+variable qos_requests_memory {
+  default = ""
+  type = string
+}
+variable qos_limits_cpu {
+  default = "0"
+  type = string
+}
+variable qos_limits_memory {
+  default = "0"
+  type = string
+}
 variable replicas {
   default = 1
   type = number
@@ -117,30 +121,30 @@ variable termination_grace_period_seconds {
   default = 30
   type = number
 }
-  variable service_name {
-    type = string
-  }
-  # The ServiceType allows to specify what kind of Service to use: ClusterIP (default),
-  # NodePort, LoadBalancer, and ExternalName.
-  variable service_type {
-    default = "ClusterIP"
-    type = string
-  }
-  # The service normally forwards each connection to a randomly selected backing pod. To
-  # ensure that connections from a particular client are passed to the same Pod each time,
-  # set the service's sessionAffinity property to ClientIP instead of None (default).
-  # Session affinity and Web Browsers (for LoadBalancer Services)
-  # Since the service is now exposed externally, accessing it with a web browser will hit
-  # the same pod every time. If the sessionAffinity is set to None, then why? The browser
-  # is using keep-alive connections and sends all its requests through a single connection.
-  # Services work at the connection level, and when a connection to a service is initially
-  # open, a random pod is selected and then all network packets belonging to that connection
-  # are sent to that single pod. Even with the sessionAffinity set to None, the same pod will
-  # always get hit (until the connection is closed).
-  variable service_session_affinity {
-    default = "None"
-    type = string
-  }
+variable service_name {
+  type = string
+}
+# The ServiceType allows to specify what kind of Service to use: ClusterIP (default),
+# NodePort, LoadBalancer, and ExternalName.
+variable service_type {
+  default = "ClusterIP"
+  type = string
+}
+# The service normally forwards each connection to a randomly selected backing pod. To ensure that
+# connections from a particular client are passed to the same Pod each time, set the service's
+# sessionAffinity property to ClientIP instead of None (default).
+# Session affinity and Web Browsers (for LoadBalancer Services)
+# Since the service is now exposed externally, accessing it with a web browser will hit the same
+# pod every time. If the sessionAffinity is set to None, then why? The browser is using keep-alive
+# connections and sends all its requests through a single connection. Services work at the
+# connection level, and when a connection to a service is initially open, a random pod is selected
+# and then all network packets belonging to that connection are sent to that single pod. Even with
+# the sessionAffinity set to None, the same pod will always get hit (until the connection is
+# closed).
+variable service_session_affinity {
+  default = "None"
+  type = string
+}
   variable port {
     default = [{
       name = "ports"
@@ -181,7 +185,7 @@ resource "null_resource" "docker_build" {
   }
   #
   provisioner "local-exec" {
-    command = "docker build -t ${local.image_tag} --file ${var.dir_name}/${var.dockerfile_name} ${var.dir_name}"
+    command = "docker build -t ${local.image_tag} --file ${var.dir_path}/${var.dockerfile_name} ${var.dir_path}"
   }
 }
 
@@ -196,9 +200,6 @@ resource "null_resource" "docker_login" {
     always_run = timestamp()
   }
   #
-  # provisioner "local-exec" {
-  #   command = "echo ${var.cr_password} >> pw.txt"
-  # }
   provisioner "local-exec" {
     # command = "docker login ${var.cr_login_server} -T -u ${var.cr_username} --password-stdin"
     command = "docker login ${var.cr_login_server} -u ${var.cr_username} -p ${var.cr_password}"
@@ -241,6 +242,10 @@ resource "kubernetes_secret" "registry_credentials" {
   type = "kubernetes.io/dockerconfigjson"
 }
 
+
+
+
+
 # Declare a K8s deployment to deploy a microservice; it instantiates the container for the
 # microservice into the K8s cluster.
 resource "kubernetes_deployment" "deployment" {
@@ -278,7 +283,7 @@ resource "kubernetes_deployment" "deployment" {
           # It must match the label selector of the ReplicaSet.
           pod_selector_lbl = local.pod_selector_label
           # It must match the label selector of the Service.
-          svc_selector_lbl = local.svc_selector_label
+# jct          svc_selector_lbl = local.svc_selector_label
         }
       }
       # The Pod template's specification.
@@ -287,16 +292,42 @@ resource "kubernetes_deployment" "deployment" {
         image_pull_secrets {
           name = kubernetes_secret.registry_credentials.metadata[0].name
         }
+
+        init_container {
+          name = "init-commands"
+          image = "busybox:1.34.1"
+          image_pull_policy = "IfNotPresent"
+          command = [
+            "/bin/sh",
+            "-c",
+            "mkdir ./wsf_data_dir; chown -R 1100:1100 ./wsf_data_dir"
+          ]
+          security_context {
+            run_as_non_root = false
+            run_as_user = 0
+            run_as_group = 0
+            read_only_root_filesystem = true
+            privileged = true
+          }
+          volume_mount {
+            name = "wsf"
+            mount_path = "/wsf_data_dir"
+            read_only = false
+          }
+        }
+
+
         container {
           name = var.service_name
-          image = local.image_tag
           image_pull_policy = var.image_pull_policy
+          image = local.image_tag
           dynamic "security_context" {
             for_each = var.security_context
             content {
               run_as_non_root = security_context.value["run_as_non_root"]
               run_as_user = security_context.value["run_as_user"]
               run_as_group = security_context.value["run_as_group"]
+              # fs_group = security_context.value["fs_group"]
               read_only_root_filesystem = security_context.value["read_only_root_filesystem"]
             }
           }
@@ -356,12 +387,26 @@ resource "kubernetes_deployment" "deployment" {
               value = env.value
             }
           }
+
+
+          volume_mount {
+            name = "wsf"
+            mount_path = "/wsf_data_dir"
+            read_only = false
+          }
+
+
+        }
+        #
+        volume {
+          name = "wsf"
+          empty_dir {}
         }
       }
     }
   }
 }
-
+/***
 # Declare a K8s service to create a DNS record to make the microservice accessible within the
 # cluster.
 resource "kubernetes_service" "service" {
@@ -391,3 +436,4 @@ resource "kubernetes_service" "service" {
     type = var.service_type
   }
 }
+***/
