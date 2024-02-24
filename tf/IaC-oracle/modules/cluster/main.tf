@@ -20,11 +20,9 @@ variable vcn_id {
   type = string
 }
 variable subnet_ids {
-  type = list
   default = []
+  type = list
 }
-
-
 
 # https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/containerengine_cluster
 resource "oci_containerengine_cluster" "k8s-cluster" {
