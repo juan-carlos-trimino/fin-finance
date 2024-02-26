@@ -1,10 +1,3 @@
-
-# Execute the following command to clean up all the pending resources and remove all the K8s
-# objects: (Caution: The command in this step removes all the resources.)
-# $ kubectl delete all --all -n <namespace>
-# Execute the following command to delete the namespace:
-# $ kubectl delete namespace <namespace>
-
 locals {
   namespace = kubernetes_namespace.ns.metadata[0].name
   cr_login_server = "docker.io"
@@ -43,6 +36,12 @@ module "fin-finances" {
     MAX_RETRIES: 20
     SERVER: "http://${local.svc_dns_finances}"
   }
+  # security_context = [{
+  #   run_as_non_root = true
+  #   run_as_user = 1100
+  #   run_as_group = 1100
+  #   read_only_root_filesystem = true
+  # }]
   # readiness_probe = [{
   #   http_get = [{
   #     path = "/readiness"
