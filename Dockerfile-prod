@@ -57,7 +57,8 @@ COPY --from=builder /goapp/webfinances/templates/ ./webfinances/templates/
 
 EXPOSE 8080
 
-USER 1100:1100
+# USER 1100:1100
+USER 0:0
 
 # Run the web service on container startup.
 ENTRYPOINT ["./webserver"]
