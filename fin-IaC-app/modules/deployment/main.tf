@@ -75,24 +75,20 @@ variable image_pull_policy {
   default = "Always"
   type = string
 }
-  variable security_context {
-    default = [{
-      run_as_non_root = true
-      run_as_user = 1100
-      run_as_group = 1100
-      # fs_group = 1100
-      # run_as_user = 0
-      # run_as_group = 0
-      # fs_group = 0
-      read_only_root_filesystm = true
-    }]
-    type = list(object({
-      run_as_non_root = bool
-      run_as_user = number
-      run_as_group = number
-      read_only_root_filesystem = bool
-    }))
-  }
+variable security_context {
+  default = [{
+    run_as_non_root = false
+    run_as_user = 0
+    run_as_group = 0
+    read_only_root_filesystem = false
+  }]
+  type = list(object({
+    run_as_non_root = bool
+    run_as_user = number
+    run_as_group = number
+    read_only_root_filesystem = bool
+  }))
+}
 variable env {
   default = {}
   type = map
@@ -293,29 +289,35 @@ resource "kubernetes_deployment" "deployment" {
           name = kubernetes_secret.registry_credentials.metadata[0].name
         }
 
-        init_container {
-          name = "init-commands"
-          image = "busybox:1.34.1"
-          image_pull_policy = "IfNotPresent"
-          command = [
-            "/bin/sh",
-            "-c",
-            "mkdir ./wsf_data_dir; chown -R 1100:1100 ./wsf_data_dir"
-          ]
-          security_context {
-            run_as_non_root = false
-            run_as_user = 0
-            run_as_group = 0
-            read_only_root_filesystem = true
-            privileged = true
-          }
-          volume_mount {
-            name = "wsf"
-            mount_path = "/wsf_data_dir"
-            read_only = false
-          }
-        }
-
+        # init_container {
+        #   name = "init-commands"
+        #   image = "busybox:1.34.1"
+        #   image_pull_policy = "IfNotPresent"
+        #   command = [
+        #     "/bin/sh",
+        #     "-c"
+        #   ]
+        #   args = [
+        #     "/bin/chown -R 1100:1100 /wsf_data_dir"
+        #   ]
+        #   # command = [
+        #   #   "/bin/sh",
+        #   #   "-c",
+        #   #   "/bin/chmod -R 777./wsf_data_dir"
+        #   # ]
+        #   security_context {
+        #     run_as_non_root = false
+        #     run_as_user = 0
+        #     run_as_group = 0
+        #     read_only_root_filesystem = true
+        #     privileged = true
+        #   }
+        #   volume_mount {
+        #     name = "wsf"
+        #     mount_path = "/wsf_data_dir"
+        #     read_only = false
+        #   }
+        # }
 
         container {
           name = var.service_name
@@ -327,7 +329,6 @@ resource "kubernetes_deployment" "deployment" {
               run_as_non_root = security_context.value["run_as_non_root"]
               run_as_user = security_context.value["run_as_user"]
               run_as_group = security_context.value["run_as_group"]
-              # fs_group = security_context.value["fs_group"]
               read_only_root_filesystem = security_context.value["read_only_root_filesystem"]
             }
           }
