@@ -45,10 +45,12 @@ FROM alpine:3.19
 
 WORKDIR /goapp/
 
-ENV HTTP=true
+# Same as env = {} in modules.
+# ENV HTTP=true
 # Set USER to any string to avoid the error:
 # user: Current requires cgo or $USER set in environment
-ENV USER="wsf-user"
+# ENV USER="wsf-user"
+# ENV HTTP_PORT="8080"
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /goapp/godir/ ./
@@ -57,8 +59,7 @@ COPY --from=builder /goapp/webfinances/templates/ ./webfinances/templates/
 
 EXPOSE 8080
 
-# USER 1100:1100
-USER 0:0
+USER 1100:1100
 
 # Run the web service on container startup.
 ENTRYPOINT ["./webserver"]
