@@ -13,7 +13,7 @@ Compile and run the app.
 $ go build -o finance && HTTPS=true ./finance
 
 To change the PORT.
-$ go build -o finance && HTTPS=true PORT=8181 ./finance
+$ go build -o finance && HTTPS=true HTTPS_PORT=8181 ./finance
 
 Compile and run the app in the background.
 $ go build -o finance && HTTPS=true ./finance &
