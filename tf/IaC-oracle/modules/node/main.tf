@@ -118,3 +118,10 @@ resource "oci_containerengine_node_pool" "node-pool" {
   }
   ssh_public_key = tls_private_key.node_pool_ssh_key_pair.public_key_openssh
 }
+
+#############################
+# Outputs for public subnet #
+#############################
+output "node-pool-id" {
+  value = oci_containerengine_node_pool.node-pool.id
+}
