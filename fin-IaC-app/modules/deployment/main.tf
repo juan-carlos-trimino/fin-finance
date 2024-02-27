@@ -141,20 +141,21 @@ variable service_session_affinity {
   default = "None"
   type = string
 }
-  variable port {
-    default = [{
-      name = "ports"
-      service_port = 80
-      target_port = 8080
-      protocol = "TCP"
-    }]
-    type = list(object({
-      name = string
-      service_port = number
-      target_port = number
-      protocol = string
-    }))
-  }
+variable ports {
+  default = [{
+    name = "ports"
+    service_port = 80
+    target_port = 8080
+    protocol = "TCP"
+  }]
+  type = list(object({
+    name = string
+    service_port = number
+    target_port = number
+    node_port = optional(number)
+    protocol = string
+  }))
+}
 
 /***
 Define local variables.
@@ -238,10 +239,6 @@ resource "kubernetes_secret" "registry_credentials" {
   type = "kubernetes.io/dockerconfigjson"
 }
 
-
-
-
-
 # Declare a K8s deployment to deploy a microservice; it instantiates the container for the
 # microservice into the K8s cluster.
 resource "kubernetes_deployment" "deployment" {
@@ -279,7 +276,7 @@ resource "kubernetes_deployment" "deployment" {
           # It must match the label selector of the ReplicaSet.
           pod_selector_lbl = local.pod_selector_label
           # It must match the label selector of the Service.
-# jct          svc_selector_lbl = local.svc_selector_label
+          svc_selector_lbl = local.svc_selector_label
         }
       }
       # The Pod template's specification.
@@ -288,37 +285,6 @@ resource "kubernetes_deployment" "deployment" {
         image_pull_secrets {
           name = kubernetes_secret.registry_credentials.metadata[0].name
         }
-
-        # init_container {
-        #   name = "init-commands"
-        #   image = "busybox:1.34.1"
-        #   image_pull_policy = "IfNotPresent"
-        #   command = [
-        #     "/bin/sh",
-        #     "-c"
-        #   ]
-        #   args = [
-        #     "/bin/chown -R 1100:1100 /wsf_data_dir"
-        #   ]
-        #   # command = [
-        #   #   "/bin/sh",
-        #   #   "-c",
-        #   #   "/bin/chmod -R 777./wsf_data_dir"
-        #   # ]
-        #   security_context {
-        #     run_as_non_root = false
-        #     run_as_user = 0
-        #     run_as_group = 0
-        #     read_only_root_filesystem = true
-        #     privileged = true
-        #   }
-        #   volume_mount {
-        #     name = "wsf"
-        #     mount_path = "/wsf_data_dir"
-        #     read_only = false
-        #   }
-        # }
-
         container {
           name = var.service_name
           image_pull_policy = var.image_pull_policy
@@ -339,7 +305,7 @@ resource "kubernetes_deployment" "deployment" {
           # explicitly. Nonetheless, it is good practice to define the ports explicitly so that
           # everyone using the cluster can quickly see what ports each pod exposes.
           dynamic "port" {
-            for_each = var.port
+            for_each = var.ports
             content {
               name = port.value["name"]
               container_port = port.value["target_port"]  # The port the app is listening.
@@ -388,15 +354,11 @@ resource "kubernetes_deployment" "deployment" {
               value = env.value
             }
           }
-
-
           volume_mount {
             name = "wsf"
             mount_path = "/wsf_data_dir"
             read_only = false
           }
-
-
         }
         #
         volume {
@@ -407,7 +369,7 @@ resource "kubernetes_deployment" "deployment" {
     }
   }
 }
-/***
+
 # Declare a K8s service to create a DNS record to make the microservice accessible within the
 # cluster.
 resource "kubernetes_service" "service" {
@@ -426,15 +388,16 @@ resource "kubernetes_service" "service" {
     }
     session_affinity = var.service_session_affinity
     dynamic "port" {
-      for_each = var.port
+      for_each = var.ports
+      iterator = it
       content {
-        name = port.value["name"]
-        port = port.value["service_port"]
-        target_port = port.value["target_port"]
-        protocol = port.value["protocol"]
+        name = it.value["name"]
+        port = it.value["service_port"]
+        target_port = it.value["target_port"]
+        node_port = it.value["node_port"]
+        protocol = it.value["protocol"]
       }
     }
     type = var.service_type
   }
 }
-***/
