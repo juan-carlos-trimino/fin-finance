@@ -15,7 +15,6 @@ locals {
 # Application                                                                                     #
 ###################################################################################################
 module "fin-finances" {
-#  count = var.k8s_manifest_crd ? 0 : 1
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ".."
@@ -30,18 +29,37 @@ module "fin-finances" {
   cr_password = var.cr_password
   # Configure environment variables specific to the app.
   env = {
+    HTTP_PORT="8080"
+    # Set USER to any string to avoid the error:
+    # user: Current requires cgo or $USER set in environment
+    USER="wsf-user"
     SVC_NAME: local.svc_finances
     APP_NAME_VER: "${var.app_name} ${var.app_version}"
-    PORT: "80"
     MAX_RETRIES: 20
     SERVER: "http://${local.svc_dns_finances}"
   }
-  # security_context = [{
-  #   run_as_non_root = true
-  #   run_as_user = 1100
-  #   run_as_group = 1100
-  #   read_only_root_filesystem = true
+  # For NodePort, it's required to allow communication on ALL protocols in the worker node subnet.
+  ports = [{
+    name = "ports"
+    service_port = 80
+    target_port = 8080
+    node_port = 31600
+    protocol = "TCP"
+  }]
+  service_type = "NodePort"
+  # ports = [{
+  #   name = "ports"
+  #   service_port = 80
+  #   target_port = 8080
+  #   protocol = "TCP"
   # }]
+  # service_type = "LoadBalancer"
+  security_context = [{
+    run_as_non_root = true
+    run_as_user = 1100
+    run_as_group = 1100
+    read_only_root_filesystem = true
+  }]
   # readiness_probe = [{
   #   http_get = [{
   #     path = "/readiness"
@@ -55,5 +73,4 @@ module "fin-finances" {
   #   success_threshold = 1
   # }]
   service_name = local.svc_finances
-  service_type = "LoadBalancer"
 }
