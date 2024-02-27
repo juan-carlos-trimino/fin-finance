@@ -119,7 +119,6 @@ variable memory_per_node {
   sensitive = true
 }
 
-
 # Specify the disk size in GB for the nodes in the cluster.
 # variable boot_volume_size {
 #   description = "Disk size in GB."
