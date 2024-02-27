@@ -133,6 +133,28 @@ module "private-subnet" {
     source = "10.0.0.0/16"  # VCN
     source_type = "CIDR_BLOCK"
     protocol = "all"
+  },
+  # For health checking the cluster from the Network Load Balancer. K8S serves the healthz API
+  # response on that port hence we need to allow it.xxxxxxxxxxxxxxxxxxx
+  {
+    stateless = false
+    source = "10.0.0.0/24"
+    source_type = "CIDR_BLOCK"
+    protocol = "6"
+    tcp_options = [{
+      min = 10256
+      max = 10256
+    }]
+  },
+  {
+    stateless = false
+    source = "10.0.0.0/24"
+    source_type = "CIDR_BLOCK"
+    protocol = "6"
+    tcp_options = [{  # NodePort
+      min = 31600
+      max = 31600
+    }]
   }]
 }
 
@@ -156,36 +178,57 @@ module "public-subnet" {
     destination = "0.0.0.0/0"  # Allow all traffic to go out anywhere.
     destination_type = "CIDR_BLOCK"
     protocol = "all"  # All protocols
+  },
+  {
+    stateless = false
+    destination = "10.0.1.0/24"
+    destination_type = "CIDR_BLOCK"
+    protocol = "6"
+    tcp_options = [{
+      min = 10256
+      max = 10256
+    }]
+  },
+  {
+    stateless = false
+    destination = "10.0.1.0/24"
+    destination_type = "CIDR_BLOCK"
+    protocol = "6"
+    tcp_options = [{
+      min = 31600
+      max = 31600
+    }]
   }]
   # Allow traffic for all ports within the range of the VCN (10.0.0.0/16).
   sl_ingress_security_rules = [{
     stateless = false
-    source = "10.0.0.0/16"
+    # Allow VCN traffic to come in as well as traffic from anywhere on port 6443 TCP (for kubectl
+    # to communicate with the K8S cluster).
+    source = "0.0.0.0/0"
     source_type = "CIDR_BLOCK"
-    protocol = "all"
+    protocol = "6"
+    tcp_options = [{  # kubectl.
+      min = 6443
+      max = 6443
+    }]
   },
+  # Allow the load balancer to communicate with the public subnet.
   {
     stateless = false
-    # Allow VCN traffic to come in as well as traffic from anywhere on port 6443 TCP; we'll use
-    # kubectl to communicate with the K8S cluster.
     source = "0.0.0.0/0"
     source_type = "CIDR_BLOCK"
     protocol = "6"
     tcp_options = [{
-      min = 6443
-      max = 6443
+      max = 80
+      min = 80
     }]
+  },
+  {
+    stateless = false
+    source = "10.0.0.0/16"
+    source_type = "CIDR_BLOCK"
+    protocol = "all"
   }]
-  # {
-  #   stateless = false
-  #   source = "10.0.0.0/16"
-  #   source_type = "CIDR_BLOCK"
-  #   protocol = "6"
-  #   tcp_options = [{
-  #     min = 22
-  #     max = 22
-  #   }]
-  # }]
 }
 
 module "cluster" {
