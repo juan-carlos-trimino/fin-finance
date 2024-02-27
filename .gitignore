@@ -2,9 +2,9 @@
 **
 
 # But include these files...
-!Dockerfile
 !.dockerignore
 !.gitignore
+!Dockerfile-prod
 !LICENSE
 !README.md
 # ... and these files under the 'src' directory...
