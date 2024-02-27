@@ -47,12 +47,6 @@ module "fin-finances" {
     protocol = "TCP"
   }]
   service_type = "NodePort"
-  # ports = [{
-  #   name = "ports"
-  #   service_port = 80
-  #   target_port = 8080
-  #   protocol = "TCP"
-  # }]
   # service_type = "LoadBalancer"
   security_context = [{
     run_as_non_root = true
