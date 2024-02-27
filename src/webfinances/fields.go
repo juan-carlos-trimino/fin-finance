@@ -8,11 +8,16 @@ import (
 	"os"
 )
 
-const (
-  mainDir string = "./dataDir/fields"
-)
-
+var mainDir string = "/fields"
 var mt = misc.Misc{}
+
+func SetupDirStructure(dir string) {
+  mainDir = dir + mainDir
+  dirErr, err := misc.CreateDirs(0o077, 0o777, mainDir)
+  if err != nil {
+    panic("Cannot create directory '" + dirErr + "': " + err.Error())
+  }
+}
 
 //Store the fields for each user in memory.
 var currentFields = map[string]*fields{}  //key: user, value: fields
