@@ -108,11 +108,12 @@ func CreateDirs(umask int, perm os.FileMode, dirs ...string) (string, error) {
     if !strings.HasSuffix(sb.String(), "/") {
       sb.WriteString("/")
     }
+    //
     if _, err := os.Stat(sb.String()); err != nil {
       if os.IsNotExist(err) {
         err := os.Mkdir(sb.String(), perm)
         if err != nil {
-          return "", err
+          return sb.String(), err
         }
       } else {
         return "", err
