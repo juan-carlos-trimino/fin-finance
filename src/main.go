@@ -57,7 +57,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
-	_ "net/http/pprof" //Blank import of pprof.
+//	_ "net/http/pprof" //Blank import of pprof.
 	"os"
 	"os/signal"
 	"strconv"
@@ -588,7 +588,7 @@ func makeTlsConfig() *tls.Config {
 
   rootCAs := security.SystemCertPool()
   if ok := rootCAs.AppendCertsFromPEM(rootCertPEM); !ok {
-    panic("Failed to append CA's certificate.\n" + err.Error())
+    panic("Failed to append CA's certificate.")
   }
   tlsConfig := &tls.Config{
     MinVersion: tls.VersionTLS13,
@@ -626,7 +626,6 @@ func Timeout(res http.ResponseWriter, req *http.Request) {
 //  time.Sleep(5 * time.Second)
 //  fmt.Println("My func Println")
   //res.Write().Write("My func!\n")
-  return
 }
 //////////////////////////
 
