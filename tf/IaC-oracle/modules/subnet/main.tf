@@ -106,10 +106,6 @@ resource "oci_core_subnet" "subnet" {
 #############################
 # Outputs for public subnet #
 #############################
-output "subnet-name" {
-  value = oci_core_subnet.subnet.display_name
-}
-
 output "subnet-id" {
   value = oci_core_subnet.subnet.id
 }
