@@ -80,10 +80,10 @@ var (  //Environment variables.
 )
 
 const (
-  dataDir string = "./wsf_data_dir"
   users string = "user.txt"
 )
 
+var dataDir string = "/wsf_data_dir"
 var m = misc.Misc{}
 
 /***
@@ -164,7 +164,7 @@ func main() {
     }
   }
   //
-  if HTTP == false && HTTPS == false {
+  if !HTTP && !HTTPS {
     fmt.Println("You can run only HTTP (default), only HTTPS (set environment variables to:" +
                 " HTTP=false and HTTPS=true), or both (set environment variable to: HTTPS=true).")
     return
@@ -205,6 +205,12 @@ func main() {
   }
   fmt.Printf("Using SHUTDOWN_TIMEOUT: %d\n", SHUTDOWN_TIMEOUT)
   fmt.Println("OS: " + misc.GetOS())
+  homeDir, err := os.UserHomeDir()
+  if err != nil {
+    panic("home" + err.Error())
+  }
+  fmt.Println("Home directory: " + homeDir)
+  dataDir = homeDir + dataDir
   numCpus, maxProcs := misc.CpusAvailable()
   fmt.Println("Number of CPUs: ", numCpus)
   fmt.Println("GOMAXPROCS: ", maxProcs)
@@ -222,6 +228,7 @@ func main() {
     fmt.Println("The current user is not running as root.")
   }
   readUsers(dataDir, users)
+  webfinances.SetupDirStructure(dataDir)
   /***
   When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return
   ErrServerClosed. Make sure the program doesn't exit and waits instead for Shutdown to return.
@@ -536,9 +543,9 @@ func makeHttpToHttpsRedirectHandler(port string) *handlers {
 }
 
 func readUsers(dir, filename string) {
-  _, err := misc.CreateDirs(0o077, 0o777, dir)
+  dirErr, err := misc.CreateDirs(0o077, 0o777, dir)
   if err != nil {
-    panic("Cannot create dir.\n" + err.Error())
+    panic("Cannot create directory '" + dirErr + "': " + err.Error())
   }
   filePath := dir + "/" + filename
   if err = sessions.AddUserToFile(filePath, USER_NAME, PASSWORD); err != nil {
