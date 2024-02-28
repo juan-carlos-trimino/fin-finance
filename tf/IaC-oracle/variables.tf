@@ -87,6 +87,12 @@ variable private_key_path {
   sensitive = true
 }
 
+variable kubeconfig_path {
+  description = "Path to the kubectl config file."
+  type = string
+  sensitive = true
+}
+
 # OCI offers 4 OCPUs, 24GB RAM and 200GB of storage for free. These resources can be used to create up to 4
 # instances. Enter a value between [1,4] and the resources will be equally spread across the instance count.
 variable nodes {
