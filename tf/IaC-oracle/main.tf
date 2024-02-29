@@ -57,29 +57,7 @@
 # https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformtroubleshooting.htm
 #
 # Once Terraform finish setting up your resources, you need to set up kubectl to access the cluster.
-
-###########################################
-# kubectl                                 #
-# https://kubernetes.io/docs/tasks/tools/ #
-###########################################
-# To create a kubeconfig file for kubectl to access the cluster, execute the following command:
-# $ oci ce cluster create-kubeconfig --cluster-id <cluster OCID> --file ~/.kube/<name-of-config-file>
-#   --region <region> --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
-# You will need the following:
-# (1) cluster's OCID (Navigation menu->Developer Services->Kubernetes Clusters (OKE) [Under
-#     Containers & Artifacts]->Select the compartment that contains the cluster[Compartment]->
-#     On the Clusters page, click the name of the cluster)
-# (2) name for the config file
-# (3) the region
-#
-# The command will create a kubeconfig file in the ~/.kube directory; the kubeconfig file will
-# contain the keys and all of the configuration for kubectl to access the cluster.
-#
-# Next, set the KUBECONFIG environment variable with the kubeconfig file path.
-# $ export KUBECONFIG=~/.kube/<name-of-config-file>
-#
-# Check if the environment variable was set.
-# $ printenv KUBECONFIG
+# See null-resources.tf.
 #
 # Finally, let's try to list the available nodes in the cluster.
 # $ kubectl get nodes
@@ -257,6 +235,7 @@ module "arm64-node-pool" {
   cluster_id = module.cluster.cluster-id
   cluster_cni_type = module.cluster.cluster-cni-type
   nodes = var.nodes
+  public_key = local.public_key
   memory_per_node = var.memory_per_node
   ocpus_per_node = var.ocpus_per_node
 }
