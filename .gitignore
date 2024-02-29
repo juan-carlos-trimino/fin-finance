@@ -245,15 +245,16 @@ tf/*
 !tf/.gitkeep
 !tf/IaC-oracle/
 tf/IaC-oracle/*
-!tf/IaC-oracle/bootstrap.tf
+# !tf/IaC-oracle/bootstrap.tf
 !tf/IaC-oracle/compartment.tf
 !tf/IaC-oracle/data.tf
 !tf/IaC-oracle/main.tf
 !tf/IaC-oracle/node-port-nlb.tf
 !tf/IaC-oracle/null-resource.tf
-!tf/IaC-oracle/namespace.tf
+# !tf/IaC-oracle/namespace.tf
 !tf/IaC-oracle/outputs.tf
 !tf/IaC-oracle/providers.tf
+!tf/IaC-oracle/ssh-key.tf
 !tf/IaC-oracle/variables.tf
 !tf/IaC-oracle/modules/
 tf/IaC-oracle/modules/*
