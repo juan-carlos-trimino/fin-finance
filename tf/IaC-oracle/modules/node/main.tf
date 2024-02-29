@@ -34,6 +34,9 @@ variable ocpus_per_node {
 variable subnet_id {
   type = string
 }
+variable public_key {
+  type = string
+}
 
 ###################################################################################################
 # In Terraform to fetch data, you use a data source. Fetching data from a data source is similar  #
@@ -52,11 +55,6 @@ data "oci_identity_availability_domains" "avail_domains" {
 locals {
   # The data source oci_identity_availability_domains, fetches a list of availability domains.
   ads = data.oci_identity_availability_domains.avail_domains.availability_domains[*].name
-}
-
-resource "tls_private_key" "node_pool_ssh_key_pair" {
-  algorithm = "RSA"
-  rsa_bits = 4096
 }
 
 data "oci_core_images" "use_image" {
@@ -116,7 +114,7 @@ resource "oci_containerengine_node_pool" "node-pool" {
     key = "name"
     value = "k8s-cluster"
   }
-  ssh_public_key = tls_private_key.node_pool_ssh_key_pair.public_key_openssh
+  ssh_public_key = var.public_key
 }
 
 #############################
