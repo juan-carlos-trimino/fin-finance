@@ -135,3 +135,9 @@ variable memory_per_node {
 #   }
 #   sensitive = true
 # }
+
+variable load_balancer {
+  description = "Possible values: nlb (Network Load Balancer, lb (Load Balancer), and none."
+  type = string
+  default = "none"
+}
