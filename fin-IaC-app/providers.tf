@@ -16,6 +16,24 @@ terraform {
       source = "hashicorp/null"
       version = ">= 3.1.1"
     }
+    #
+    helm = {
+      source = "hashicorp/helm"
+      version = ">= 2.4.1"
+    }
+    #
+    digitalocean = {
+      # Using an environment variable to set the DIGITALOCEAN_TOKEN.
+      source = "digitalocean/digitalocean"
+      version = "~> 2.0"
+    }
+  }
+}
+
+# Load and connect to Helm.
+provider "helm" {
+  kubernetes {
+    config_path = "~/.kube/k8s-config"
   }
 }
 
@@ -30,4 +48,7 @@ provider "kubernetes" {
 }
 
 provider "null" {
+}
+
+provider "digitalocean" {
 }
