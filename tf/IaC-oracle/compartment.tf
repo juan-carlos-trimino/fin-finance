@@ -3,7 +3,7 @@
 # https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_compartment
 resource "oci_identity_compartment" "fin-compartment" {
   description = "Compartment for Terraform resources."
-  name = "compartment-fin"
+  name = var.compartment_name
   compartment_id = var.tenancy_ocid
   # By default, the Terraform provider does not delete a compartment when using the destroy
   # command.
