@@ -13,9 +13,12 @@ output "compartment_id" {
   value = oci_identity_compartment.fin-compartment.id
 }
 
-#######################################################################
-# Output for Node Port Network Load Balancer (NLB) (node-port-nlb.tf) #
-#######################################################################
-output "node_port_nlb_public_ip" {
-  value = [for ip in oci_network_load_balancer_network_load_balancer.node-port-nlb.ip_addresses : ip if ip.is_public == true]
+###################################################################################
+# Output the IP address of the Network Load Balancer (NLB) (module node-port-nlb) #
+###################################################################################
+# The special [*] symbol iterates over all of the elements of the list given to its left and
+# accesses from each one the attribute name given on its right.
+output "nlb_public_ip" {
+  # The module node-port-nlb may have zero or one instance.
+  value = [for ip in module.node-port-nlb[*].node_port_nlb_public_ip : ip[*].ip_address]
 }
