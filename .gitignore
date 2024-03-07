@@ -259,6 +259,9 @@ tf/IaC-oracle/modules/*
 !tf/IaC-oracle/modules/cluster/
 tf/IaC-oracle/modules/cluster/*
 !tf/IaC-oracle/modules/cluster/main.tf
+!tf/IaC-oracle/modules/network-load-balancer/
+tf/IaC-oracle/modules/network-load-balancer/*
+!tf/IaC-oracle/modules/network-load-balancer/main.tf
 !tf/IaC-oracle/modules/node/
 tf/IaC-oracle/modules/node/*
 !tf/IaC-oracle/modules/node/main.tf
