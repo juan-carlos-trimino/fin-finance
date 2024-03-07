@@ -250,6 +250,7 @@ tf/IaC-oracle/*
 !tf/IaC-oracle/main.tf
 !tf/IaC-oracle/node-port-nlb.tf
 !tf/IaC-oracle/null-resource.tf
+!tf/IaC-oracle/locals.tf
 !tf/IaC-oracle/outputs.tf
 !tf/IaC-oracle/providers.tf
 !tf/IaC-oracle/ssh-key.tf
