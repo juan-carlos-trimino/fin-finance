@@ -7,24 +7,15 @@ variable compartment_id {
 variable subnet_id {
   type = string
 }
-# variable node_pool_id {
-#   type = string
-# }
 variable nodes {
   type = number
 }
 variable nlb_node_port {
   type = number
 }
-
 variable target_ids {
   type = list
 }
-
-# variable active_nodes {
-#   type = list
-# }
-
 
 ########################################
 # Network Load Balancer (NLB)          #
@@ -37,32 +28,6 @@ variable target_ids {
 # Best for: Scaling network virtual appliances such as firewalls, real-time streaming, long       #
 # running connections, Voice over IP (VoIP), Internet of Things (IoT), and trading platforms.     #
 ###################################################################################################
-
-# data "oci_containerengine_node_pool" "k8s-node-port" {
-#   node_pool_id = var.node_pool_id
-# }
-
-# locals {
-#   # Let's load the active nodes from the Node Pool; the NLB has to point to active nodes.
-#   active_nodes = (
-#     [for node in data.oci_containerengine_node_pool.k8s-node-port.nodes :
-#      node if node.state == "ACTIVE"]
-#   )
-# }
-
-
-# data "oci_core_instance_pool_instances" "instance_pool_instances" {
-#   compartment_id = var.compartment_id
-#   instance_pool_id = var.node_pool_id
-# }
-
-# data "oci_core_instance" "core_instances_ips" {
-#   count = var.nodes
-#   instance_id = data.oci_core_instance_pool_instances.instance_pool_instances.instances[count.index].id
-# }
-
-
-
 
 resource "oci_network_load_balancer_network_load_balancer" "node-port-nlb" {
   display_name = "node-port-nlb"
@@ -85,15 +50,11 @@ resource "oci_network_load_balancer_backend_set" "node-port-nlb-backend-set" {
 }
 
 resource "oci_network_load_balancer_backend" "node-port-nlb-backend" {
-  count = length(var.target_ids) # var.nodes #length(local.active_nodes)
-  # for_each = toset([var.target_ids])
+  count = length(var.target_ids)
   backend_set_name = oci_network_load_balancer_backend_set.node-port-nlb-backend-set.name
   network_load_balancer_id = oci_network_load_balancer_network_load_balancer.node-port-nlb.id
   port = var.nlb_node_port
-  # target_id = local.active_nodes[count.index].id
-//  target_id = data.oci_core_instance_pool_instances.instance_pool_instances.instances[count.index].id
   target_id = var.target_ids[count.index].id
-  # target_id = each.key
 }
 
 resource "oci_network_load_balancer_listener" "node-port-nlb-listener" {
