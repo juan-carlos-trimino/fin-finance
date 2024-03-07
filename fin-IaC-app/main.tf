@@ -234,8 +234,8 @@ module "fin-finances" {
   # Use a NodePort service #
   ##########################
   # Setting the service type to NodePort – For a NodePort service, each node in the cluster opens
-  # a port on the node itself (the same port number is used across all of them) and redirects
-  # traffic received on that port to the underlying service. The service isn’t accessible only at
+  # a port on the node itself (the same port number is used across all nodes) and redirects
+  # traffic received on that port to the underlying service. The service isn't accessible only at
   # the internal cluster IP and port, but also through a dedicated port on all nodes. Specifying
   # the port isn't mandatory; K8s will choose a random port if it is omitted.
   # Note: By default, the range of the service NodePorts is 30000-32768. This range contains 2768
