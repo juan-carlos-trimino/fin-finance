@@ -112,14 +112,12 @@ module "private-subnet" {
     source_type = "CIDR_BLOCK"
     protocol = "all"
   },
-  # For health checking the cluster from the Network Load Balancer. K8S serves the healthz API
-  # response on that port hence we need to allow it.xxxxxxxxxxxxxxxxxxx
   {
     stateless = false
     source = "10.0.0.0/24"
     source_type = "CIDR_BLOCK"
     protocol = "6"
-    tcp_options = [{
+    tcp_options = [{  # Port to bind the health check server (kube-proxy).
       min = 10256
       max = 10256
     }]
@@ -130,8 +128,8 @@ module "private-subnet" {
     source_type = "CIDR_BLOCK"
     protocol = "6"
     tcp_options = [{  # NodePort
-      min = 31600
-      max = 31600
+      min = var.nlb_node_port
+      max = var.nlb_node_port
     }]
   }]
 }
@@ -162,7 +160,7 @@ module "public-subnet" {
     destination = "10.0.1.0/24"
     destination_type = "CIDR_BLOCK"
     protocol = "6"
-    tcp_options = [{
+    tcp_options = [{  # Port to bind the health check server (kube-proxy).
       min = 10256
       max = 10256
     }]
@@ -173,8 +171,8 @@ module "public-subnet" {
     destination_type = "CIDR_BLOCK"
     protocol = "6"
     tcp_options = [{
-      min = 31600
-      max = 31600
+      min = var.nlb_node_port
+      max = var.nlb_node_port
     }]
   }]
   # Allow traffic for all ports within the range of the VCN (10.0.0.0/16).
@@ -240,29 +238,15 @@ module "arm64-node-pool" {
   ocpus_per_node = var.ocpus_per_node
 }
 
-  #
-  #
-  # ingress_security_rules {
-  #   stateless = false
-  #   source = "0.0.0.0/0"
-  #   source_type = "CIDR_BLOCK"
-  #   # Get protocol numbers from https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml ICMP is 1
-  #   protocol = "1"
-  #   # For ICMP type and code see: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
-  #   icmp_options {
-  #     type = 3
-  #     code = 4
-  #   }
-  # }
-  #
-  # ingress_security_rules {
-  #   stateless = false
-  #   source = "10.0.0.0/16"
-  #   source_type = "CIDR_BLOCK"
-  #   # Get protocol numbers from https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml ICMP is 1
-  #   protocol = "1"
-  #   # For ICMP type and code see: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
-  #   icmp_options {
-  #     type = 3
-  #   }
-  # }
+module "node-port-nlb" {
+  depends_on = [
+    module.arm64-node-pool
+  ]
+  count = var.load_balancer == "nlb" ? 1 : 0
+  source = "./modules/network-load-balancer"
+  nlb_node_port = var.nlb_node_port
+  compartment_id = oci_identity_compartment.fin-compartment.id
+  subnet_id = module.public-subnet.subnet-id
+  target_ids = local.active_nodes
+  nodes = var.nodes
+}
