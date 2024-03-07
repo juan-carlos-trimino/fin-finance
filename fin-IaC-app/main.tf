@@ -228,16 +228,35 @@ module "fin-finances" {
     MAX_RETRIES: 20
     SERVER: "http://${local.svc_dns_finances}"
   }
+  #########################################
+  # Exposing services to external clients #
+  #########################################
+  # Use a NodePort service #
+  ##########################
+  # Setting the service type to NodePort – For a NodePort service, each node in the cluster opens
+  # a port on the node itself (the same port number is used across all of them) and redirects
+  # traffic received on that port to the underlying service. The service isn’t accessible only at
+  # the internal cluster IP and port, but also through a dedicated port on all nodes. Specifying
+  # the port isn't mandatory; K8s will choose a random port if it is omitted.
+  # Note: By default, the range of the service NodePorts is 30000-32768. This range contains 2768
+  # ports, which means that you can create up to 2768 services with NodePorts.
+  #
   # For NodePort, it's required to allow communication on ALL protocols in the worker node subnet.
   ports = [{
     name = "ports"
     service_port = 80
     target_port = 8080
-    # node_port = 31600
+    node_port = var.nlb_node_port
     protocol = "TCP"
   }]
-  # service_type = "NodePort"
-  service_type = "LoadBalancer"
+  service_type = "NodePort"
+  # ports = [{
+  #   name = "ports"
+  #   service_port = 80
+  #   target_port = 8080
+  #   protocol = "TCP"
+  # }]
+  # service_type = "LoadBalancer"
   security_context = [{
     run_as_non_root = true
     run_as_user = 1100
