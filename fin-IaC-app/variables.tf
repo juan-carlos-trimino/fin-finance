@@ -31,6 +31,11 @@ variable k8s_manifest_crd {
   default = "true"
 }
 
+variable nlb_node_port {
+  type = number
+  default = 31600
+}
+
 ######################################
 # CONFIDENTIAL/SENSITIVE INFORMATION #
 ###################################################################################################
