@@ -141,3 +141,8 @@ variable load_balancer {
   type = string
   default = "none"
 }
+
+variable nlb_node_port {
+  type = number
+  default = 31600
+}
