@@ -136,13 +136,22 @@ variable memory_per_node {
 #   sensitive = true
 # }
 
-variable load_balancer {
-  description = "Possible values: nlb (Network Load Balancer, lb (Load Balancer), and none."
-  type = string
-  default = "none"
+variable network_load_balancer {
+  type = bool
+  default = false
 }
 
 variable nlb_node_port {
   type = number
   default = 31600
+}
+
+variable load_balancer {
+  type = bool
+  default = false
+}
+
+variable nat {
+  type = bool
+  default = false
 }

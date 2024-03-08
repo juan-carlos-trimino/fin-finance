@@ -201,6 +201,16 @@ module "public-subnet" {
   },
   {
     stateless = false
+    source = "0.0.0.0/0"
+    source_type = "CIDR_BLOCK"
+    protocol = "6"
+    tcp_options = [{
+      max = 443
+      min = 443
+    }]
+  },
+  {
+    stateless = false
     source = "10.0.0.0/16"
     source_type = "CIDR_BLOCK"
     protocol = "all"
@@ -242,7 +252,7 @@ module "node-port-nlb" {
   depends_on = [
     module.arm64-node-pool
   ]
-  count = var.load_balancer == "nlb" ? 1 : 0
+  count = var.network_load_balancer ? 1 : 0
   source = "./modules/network-load-balancer"
   nlb_node_port = var.nlb_node_port
   compartment_id = oci_identity_compartment.fin-compartment.id
@@ -250,3 +260,40 @@ module "node-port-nlb" {
   target_ids = local.active_nodes
   nodes = var.nodes
 }
+
+module "load-balancer" {
+  depends_on = [
+    module.arm64-node-pool
+  ]
+  count = var.load_balancer ? 1 : 0
+  source = "./modules/load-balancer"
+  compartment_id = oci_identity_compartment.fin-compartment.id
+  shape = "flexible"
+  is_private = false
+  public_subnet_id = module.public-subnet.subnet-id
+  vcn_id = module.vcn.vcn_id
+  target_ids = local.active_nodes
+  shape_details_maximum_bandwidth_in_mbps = 10
+
+  # node_pool_id = module.arm64-node-pool.node-pool-id
+  # instance_pool_id   = module.instance-pool.instance_pool_id
+
+  # region             = var.region
+  # node_pool_size = module.arm64-node-pool.instance_pool_size
+  # private_subnet_id  = module.private-vcn.private_subnet_id
+}
+
+
+/***
+module "nat" {
+  count = var.nat ? 1 : 0
+  source = "../modules/nat"
+  region = var.region
+  # compartment_ocid = xxxxxxxxxxxxxxxxvar.compartment_ocid
+  # availability_domain = xxxxxxxxxxxxxxvar.availability_domain
+  # vcn_id = module.private-vcn.vcn_id
+  # private_subnet_id = module.private-vcn.private_subnet_id
+  # public_subnet_id = module.private-vcn.public_subnet_id
+  # environment = var.environment
+}
+***/

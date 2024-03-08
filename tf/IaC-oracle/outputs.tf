@@ -22,3 +22,11 @@ output "nlb_public_ip" {
   # The module node-port-nlb may have zero or one instance.
   value = [for ip in module.node-port-nlb[*].node_port_nlb_public_ip : ip[*].ip_address]
 }
+
+##########################################################################
+# Output the IP address of the Load Balancer (LB) (module load-balancer) #
+##########################################################################
+output "lb_public_ip" {
+  # The module load-balancer may have zero or one instance.
+  value = module.load-balancer[*].lb_public_ip
+}
