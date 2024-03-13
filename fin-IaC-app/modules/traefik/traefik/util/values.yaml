@@ -48,10 +48,16 @@ certificatesResolvers:
         # configured duration in seconds. Useful if internal networks block external DNS queries.
         delayBeforeCheck: 0
         resolvers:
-          - '1.1.1.1:53'
+          - '1.1.1.1:53'  # Cloudflare DNS (https://1.1.1.1/dns/)
           - '1.0.0.1:53'
-          - '8.8.8.8:53'
+          - '8.8.8.8:53'  # Google DNS (https://developers.google.com/speed/public-dns/)
           - '8.8.4.4:53'
+          - '9.9.9.9:53'  # Quad9 DNS (https://www.quad9.net/)
+          - '149.112.112.112:53'
+          - '208.67.222.222:53' # OpenDNS (https://www.opendns.com/)
+          - '208.67.220.220:53'
+          - '76.76.2.0:53'  # Control D (https://controld.com/free-dns)
+          - '76.76.10.0:53'
 # Configure the deployment
 deployment:
   # Enable deployment.
