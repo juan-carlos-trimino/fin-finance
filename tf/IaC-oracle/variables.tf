@@ -155,3 +155,8 @@ variable nat {
   type = bool
   default = false
 }
+
+variable igw {  //Internet gateway.
+  type = bool
+  default = false
+}
