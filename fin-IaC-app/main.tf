@@ -5,7 +5,21 @@
 # $ terraform apply -var="k8s_manifest_crd=false" -auto-approve
 # $ terraform destroy -var="app_version=1.0.0" -auto-approve
 # $ terraform destroy -auto-approve
+####################
+# Kubectl Commands #
+####################
+# $ kubectl cluster-info
+# $ kubectl get nodes
+#
 # $ kubectl get all -n finances
+# $ kubectl get pods -n finances
+#
+# Execute commands in a running Traefik container.
+# $ kubectl exec -it $(kubectl get pods -n finances --selector "app.kubernetes.io/name=traefik" --output=name) -- /bin/sh
+#
+# Confirm what platform is running on the cluster.
+# $ kubectl describe node | grep "kubernetes.io/arch"
+#
 locals {
   namespace = kubernetes_namespace.ns.metadata[0].name
   cr_login_server = "docker.io"
