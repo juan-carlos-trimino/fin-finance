@@ -30,3 +30,15 @@ output "lb_public_ip" {
   # The module load-balancer may have zero or one instance.
   value = module.load-balancer[*].lb_public_ip
 }
+
+########################################
+# Output Internet Gateway (module igw) #
+########################################
+output "igw_id" {
+  # The module load-balancer may have zero or one instance.
+  value = module.igw[*].igw_id
+}
+
+output "igw" {
+  value = module.igw[*].igw
+}
