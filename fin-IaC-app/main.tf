@@ -34,6 +34,7 @@ locals {
   ####################
   # Name of Services #
   ####################
+  svc_traefik = "fin-traefik"
   svc_finances = "fin-finances"
   svc_error_page = "fin-error-page"
   ############
@@ -60,7 +61,7 @@ module "traefik" {
   chart_version = "26.1.0"
   api_auth_token = var.traefik_dns_api_token
   timeout = var.helm_traefik_timeout_seconds
-  service_name = "fin-traefik"
+  service_name = local.svc_traefik
 }
 
 module "middleware-gateway-basic-auth" {
