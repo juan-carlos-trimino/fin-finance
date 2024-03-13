@@ -284,6 +284,21 @@ module "load-balancer" {
 }
 
 
+
+module "igw" {
+  depends_on = [
+    module.arm64-node-pool
+  ]
+  count = var.igw ? 1 : 0
+  source = "./modules/igw"
+  compartment_id = oci_identity_compartment.fin-compartment.id
+  name = "igw"
+  enabled = true
+  vcn_id = module.vcn.vcn_id
+}
+
+
+
 /***
 module "nat" {
   count = var.nat ? 1 : 0
