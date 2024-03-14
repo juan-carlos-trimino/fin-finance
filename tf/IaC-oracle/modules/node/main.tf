@@ -93,7 +93,7 @@ resource "oci_containerengine_node_pool" "node-pool" {
   #   maximum_unavailable = 0
   # }
   # https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm
-  node_shape = "VM.Standard.A1.Flex"
+  node_shape = "VM.Standard.A1.Flex"  # ARM processors.
   # Configure how much memory and OCPUs to use in each node.
   node_shape_config {
     # The total amount of memory available to each node, in gigabytes.
