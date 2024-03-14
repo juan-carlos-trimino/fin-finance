@@ -23,6 +23,8 @@ certificatesResolvers:
   le:
     # Enable ACME.
     acme:
+      # The email address that is used for registration will be set in the section acme in
+      # ./modules/traefik/cert-manager/acme-issuer.
       # email address used for registration.
       # email: 'someone@trimino.xyz'
       # Production.
@@ -47,6 +49,7 @@ certificatesResolvers:
         # verify. If delayBeforeCheck is greater than zero, this check is delayed for the
         # configured duration in seconds. Useful if internal networks block external DNS queries.
         delayBeforeCheck: 0
+        # The DNS servers use to resolve hostnames to IP addresses.
         resolvers:
           - '1.1.1.1:53'  # Cloudflare DNS (https://1.1.1.1/dns/)
           - '1.0.0.1:53'
@@ -177,7 +180,8 @@ logs:
     # also ask for the json format in the format option
     format: json
     # By default, the level is set to ERROR. Alternative logging levels are DEBUG, PANIC, FATAL, ERROR, WARN, and INFO.
-    level: ERROR
+    # level: ERROR
+    level: DEBUG
 #
 # metrics:
 #   prometheus:
@@ -194,6 +198,7 @@ persistence:
   name: traefik-certs
   accessMode: ReadWriteOnce
   size: 1Gi
+  # The path property matches the value used in the certificatesResolvers.le.acme.storage property.
   path: /traefik-certs
   annotations: {}
 # Enable Healthcheck.
