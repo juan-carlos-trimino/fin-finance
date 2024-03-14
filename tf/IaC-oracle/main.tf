@@ -283,8 +283,6 @@ module "load-balancer" {
   # private_subnet_id  = module.private-vcn.private_subnet_id
 }
 
-
-
 module "igw" {
   depends_on = [
     module.arm64-node-pool
