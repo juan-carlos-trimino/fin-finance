@@ -34,36 +34,36 @@ variable cr_username {
 variable cr_password {
   type = string
 }
-  variable readiness_probe {
-    default = []
-    type = list(object({
-      http_get = list(object({
-        # Host name to connect to, defaults to the pod IP.
-        #host = string
-        # Path to access on the HTTP server. Defaults to /.
-        path = string
-        # Name or number of the port to access on the container. Number must be in the range 1 to
-        # 65535.
-        port = number
-        # Scheme to use for connecting to the host (HTTP or HTTPS). Defaults to HTTP.
-        scheme = string
-      }))
-      # Number of seconds after the container has started before liveness or readiness probes are
-      # initiated. Defaults to 0 seconds. Minimum value is 0.
-      initial_delay_seconds = number
-      # How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
-      period_seconds = number
-      # Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1.
-      timeout_seconds = number
-      # When a probe fails, Kubernetes will try failureThreshold times before giving up. Giving up in
-      # case of liveness probe means restarting the container. In case of readiness probe the Pod
-      # will be marked Unready. Defaults to 3. Minimum value is 1.
-      failure_threshold = number
-      # Minimum consecutive successes for the probe to be considered successful after having failed.
-      # Defaults to 1. Must be 1 for liveness and startup Probes. Minimum value is 1.
-      success_threshold = number
+variable readiness_probe {
+  default = []
+  type = list(object({
+    http_get = list(object({
+      # Host name to connect to, defaults to the pod IP.
+      #host = string
+      # Path to access on the HTTP server. Defaults to /.
+      path = string
+      # Name or number of the port to access on the container. Number must be in the range 1 to
+      # 65535.
+      port = number
+      # Scheme to use for connecting to the host (HTTP or HTTPS). Defaults to HTTP.
+      scheme = string
     }))
-  }
+    # Number of seconds after the container has started before liveness or readiness probes are
+    # initiated. Defaults to 0 seconds. Minimum value is 0.
+    initial_delay_seconds = number
+    # How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+    period_seconds = number
+    # Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1.
+    timeout_seconds = number
+    # When a probe fails, Kubernetes will try failureThreshold times before giving up. Giving up in
+    # case of liveness probe means restarting the container. In case of readiness probe the Pod
+    # will be marked Unready. Defaults to 3. Minimum value is 1.
+    failure_threshold = number
+    # Minimum consecutive successes for the probe to be considered successful after having failed.
+    # Defaults to 1. Must be 1 for liveness and startup Probes. Minimum value is 1.
+    success_threshold = number
+  }))
+}
 # Be aware that the default imagePullPolicy depends on the image tag. If a container refers to the
 # latest tag (either explicitly or by not specifying the tag at all), imagePullPolicy defaults to
 # Always, but if the container refers to any other tag, the policy defaults to IfNotPresent.
