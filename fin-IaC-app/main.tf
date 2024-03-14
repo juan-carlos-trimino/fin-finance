@@ -1,3 +1,6 @@
+#############
+# Terraform #
+#############
 # $ terraform init
 # $ terraform apply -var="app_version=1.0.0" -auto-approve
 # $ terraform apply -auto-approve
@@ -10,15 +13,14 @@
 ####################
 # $ kubectl cluster-info
 # $ kubectl get nodes
+# Confirm what platform is running on the cluster.
+# $ kubectl describe node | grep "kubernetes.io/arch"
 #
 # $ kubectl get all -n finances
 # $ kubectl get pods -n finances
 #
 # Execute commands in a running Traefik container.
-# $ kubectl exec -it $(kubectl get pods -n finances --selector "app.kubernetes.io/name=traefik" --output=name) -- /bin/sh
-#
-# Confirm what platform is running on the cluster.
-# $ kubectl describe node | grep "kubernetes.io/arch"
+# $ kubectl exec -it -n finances $(kubectl get pods -n finances --selector "app.kubernetes.io/name=traefik" --output=name) -- /bin/sh
 #
 locals {
   namespace = kubernetes_namespace.ns.metadata[0].name
@@ -176,6 +178,28 @@ module "ingress-route" {
 ###################################################################################################
 # cert manager                                                                                    #
 ###################################################################################################
+# Troubleshooting Certificates #
+################################
+# $ kubectl get svc,pods -n finances
+# $ kubectl get Issuers,ClusterIssuers,Certificates,CertificateRequests,Orders,Challenges -n finances
+# $ kubectl get Issuers,ClusterIssuers,Certificates,CertificateRequests,Orders,Challenges --all-namespaces
+# $ kubectl describe Issuers,ClusterIssuers,Certificates,CertificateRequests,Orders,Challenges -A
+#
+# To check the certificate:
+# $ kubectl -n finances describe certificate <certificate-name>
+# $ kubectl -n finances delete certificate <certificate-name>
+# $ kubectl -n finances describe certificate <certificate-name>
+# $ kubectl -n finances delete certificate <certificate-name>
+#
+# To describe a specific resource (the resource name can be obtained from the kubectl get command):
+# $ kubectl describe Issuer <issuer-name> -n finances
+# $ kubectl get ingressroute -A
+# $ kubectl get ingress -n finances
+#
+# To delete a pending Challenge, see here and here. As per documentation, the order is important!!!
+# $ kubectl delete Issuer <issuer-name> -n finances
+# $ kubectl delete Certificate <certificate-name> -n finances
+#
 module "cert-manager" {
   count = var.reverse_proxy ? 1 : 0
   source = "./modules/traefik/cert-manager/cert-manager"
