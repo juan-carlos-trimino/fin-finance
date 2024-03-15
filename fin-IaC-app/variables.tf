@@ -120,10 +120,13 @@ variable traefik_gateway_password {
   sensitive = true
 }
 
+# Digital Ocean
 # From the left menu:
 # (1) Select API
 # (2) From the Tokens tab, select the Generate New Token button.
-variable traefik_dns_api_token {  # digital ocean - Valid for 90 days (2/29/2024).
+#     Scopes: read/write.
+# (3) The token has an expiration date; ensure the token is valid.
+variable traefik_dns_api_token {
   default = "<required>"
   sensitive = true
 }
