@@ -260,9 +260,15 @@ IaC/oracle/modules/*
 !IaC/oracle/modules/cluster/
 IaC/oracle/modules/cluster/*
 !IaC/oracle/modules/cluster/main.tf
+!IaC/oracle/modules/igw/
+IaC/oracle/modules/igw/*
+!IaC/oracle/modules/igw/main.tf
 !IaC/oracle/modules/load-balancer/
 IaC/oracle/modules/load-balancer/*
 !IaC/oracle/modules/load-balancer/main.tf
+!IaC/oracle/modules/nat/
+IaC/oracle/modules/nat/*
+!IaC/oracle/modules/nat/main.tf
 !IaC/oracle/modules/network-load-balancer/
 IaC/oracle/modules/network-load-balancer/*
 !IaC/oracle/modules/network-load-balancer/main.tf
