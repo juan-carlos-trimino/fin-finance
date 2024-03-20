@@ -361,5 +361,13 @@ IaC-storage/*
 !IaC-storage/.gitkeep
 !IaC-storage/oracle/
 IaC-storage/oracle/*
+!IaC-storage/oracle/modules/
+IaC-storage/oracle/modules/*
+!IaC-storage/oracle/modules/bucket/
+IaC-storage/oracle/modules/bucket/*
+!IaC-storage/oracle/modules/bucket/main.tf
+!IaC-storage/oracle/modules/.gitkeep
 !IaC-storage/oracle/data.tf
 !IaC-storage/oracle/main.tf
+!IaC-storage/oracle/providers.tf
+!IaC-storage/oracle/variables.tf
