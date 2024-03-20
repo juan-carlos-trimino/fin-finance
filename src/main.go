@@ -1,3 +1,4 @@
+// go:build linux && !windows
 // +build linux,!windows
 
 // HTTP server.
@@ -44,26 +45,26 @@ PS> curl.exe "http://localhost:8080"
 ***/
 
 import (
-	"context"
-	"crypto/tls"
-	"errors"
-	"finance/middlewares"
-	"finance/misc"
-	"finance/security"
-	"finance/sessions"
-	"finance/webfinances"
-	"fmt"
-  "golang.org/x/crypto/acme/autocert"
-	"net"
-	"net/http"
-	"net/http/pprof"
+  "context"
+  "crypto/tls"
+ 	"errors"
+  "finance/middlewares"
+ 	"finance/misc"
+ 	"finance/security"
+ 	"finance/sessions"
+ 	"finance/webfinances"
+ 	"fmt"
+ 	"golang.org/x/crypto/acme/autocert"
+ 	"net"
+ 	"net/http"
+ 	"net/http/pprof"
 //	_ "net/http/pprof" //Blank import of pprof.
-	"os"
-	"os/signal"
-	"strconv"
-	"sync"
-	"syscall"
-	"time"
+  "os"
+ 	"os/signal"
+  "strconv"
+ 	"sync"
+  "syscall"
+ 	"time"
 )
 
 var (  //Environment variables.
@@ -72,7 +73,7 @@ var (  //Environment variables.
   HTTP_PORT string = "8080"
   HTTPS bool = false
   HTTPS_PORT string = "8443"
-  LE_CERT = false
+  LE_CERT bool = false
   MAX_RETRIES int = 10
   SHUTDOWN_TIMEOUT int = 15
   USER_NAME string = "a"
@@ -391,22 +392,22 @@ func makeHandlers() *handlers {
   //h.mux["/readiness"] =
   //func (res http.ResponseWriter, req *http.Request){
   //  fmt.Printf("\naaaaaaServer not ready. %s\n", SERVER)
-    // req, err := http.NewRequest(http.MethodHead, SERVER, nil)
-    // if err != nil {
-    //   fmt.Println("Server not ready.")
-    //   res.WriteHeader(http.StatusInternalServerError)
-    //   return
-    // }
-    // resp, err := client.Do(req)
-    // if err != nil {
-    //   fmt.Printf("client: error making http request: %s\n", err)
-    //   res.WriteHeader(http.StatusInternalServerError)
-    //   return
-    // }
-    // resp.Body.Close()
-    // fmt.Println("Server is ready.")
-    // //https://go.dev/src/net/http/status.go
-    //res.WriteHeader(http.StatusOK)
+  // req, err := http.NewRequest(http.MethodHead, SERVER, nil)
+  // if err != nil {
+  //   fmt.Println("Server not ready.")
+  //   res.WriteHeader(http.StatusInternalServerError)
+  //   return
+  // }
+  // resp, err := client.Do(req)
+  // if err != nil {
+  //   fmt.Printf("client: error making http request: %s\n", err)
+  //   res.WriteHeader(http.StatusInternalServerError)
+  //   return
+  // }
+  // resp.Body.Close()
+  // fmt.Println("Server is ready.")
+  // //https://go.dev/src/net/http/status.go
+  //res.WriteHeader(http.StatusOK)
   //}
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
@@ -513,6 +514,17 @@ func makeHandlers() *handlers {
   h.mux["/debug/pprof/profile"] = pprof.Profile
   h.mux["/debug/pprof/symbol"] = pprof.Symbol
   h.mux["/debug/pprof/trace"] = pprof.Trace
+
+// jct
+// var b blob.Blob
+// h.mux["/storage/blob/ListBuckets"] = b.ListBuckets
+// h.mux["/storage/blob/CreateBucket"] = b.CreateBucket
+// h.mux["/storage/blob/DeleteBucket"] = b.DeleteBucket
+// h.mux["/storage/blob/ListItemsInBucket"] = b.ListItemsInBucket
+// h.mux["/storage/blob/UploadBlobFile"] = b.UploadBlobFile
+// h.mux["/storage/blob/DeleteItemFromBucket"] = b.DeleteItemFromBucket
+// h.mux["/storage/blob/DownloadBlobFile"] = b.DownloadBlobFile
+
   commonMiddlewares := []middlewares.Middleware{
     middlewares.SecurityHeaders,
     middlewares.CorrelationId,
@@ -535,7 +547,7 @@ func makeHttpToHttpsRedirectHandler(port string) *handlers {
     host, _, _ := net.SplitHostPort(req.Host)
     u := req.URL
     u.Host = net.JoinHostPort(host, port)
-    u.Scheme="https"
+    u.Scheme = "https"
     fmt.Printf("%s - Redirecting to %s\n", m.DTF(), u.String())
     http.Redirect(res, req, u.String(), http.StatusMovedPermanently)
   }
@@ -559,23 +571,21 @@ func readUsers(dir, filename string) {
   }
 }
 
-
-//////////////
+// ////////////
 func makeTlsConfig() *tls.Config {
 
-// see Certificate structure at
-// http://golang.org/pkg/crypto/x509/#Certificate
-// see http://golang.org/pkg/crypto/x509/#KeyUsage
+  // see Certificate structure at
+  // http://golang.org/pkg/crypto/x509/#Certificate
+  // see http://golang.org/pkg/crypto/x509/#KeyUsage
 
-//Addr:      ":4443",
-//server would listen on IP address 0.0.0.0 and TCP port 4443.
+  //Addr:      ":4443",
+  //server would listen on IP address 0.0.0.0 and TCP port 4443.
 
   rootCert, rootCertPEM, rootPrivKey := security.GenRootCA()
   _, serverCertPEM, serverPrivKeyPEM := security.GenServerCert(rootCert, rootPrivKey)
 
-
-// fmt.Println(string(serverCertPEM))
-// fmt.Println(string(serverPrivKeyPEM))
+  // fmt.Println(string(serverCertPEM))
+  // fmt.Println(string(serverPrivKeyPEM))
 
   //Generate the key/pair for the server.
   serverTlsCert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
@@ -583,8 +593,7 @@ func makeTlsConfig() *tls.Config {
     panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
   }
 
-
-// fmt.Println(string(serverTlsCert.Certificate[0]))
+  // fmt.Println(string(serverTlsCert.Certificate[0]))
 
   rootCAs := security.SystemCertPool()
   if ok := rootCAs.AppendCertsFromPEM(rootCertPEM); !ok {
@@ -621,14 +630,14 @@ func makeTlsConfig() *tls.Config {
   return tlsConfig
 }
 
-
 func Timeout(res http.ResponseWriter, req *http.Request) {
-//  time.Sleep(5 * time.Second)
-//  fmt.Println("My func Println")
-  //res.Write().Write("My func!\n")
+  //	time.Sleep(5 * time.Second)
+  //	fmt.Println("My func Println")
+  //
+  // res.Write().Write("My func!\n")
 }
-//////////////////////////
 
+//////////////////////////
 
 func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.WaitGroup) {
   fmt.Printf("%s - Waiting for notification to shut down the server at %s.\n", m.DTF(), server.Addr)
