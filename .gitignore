@@ -353,3 +353,13 @@ IaC-app/modules/traefik/traefik/util/*
 !IaC-app/modules/traefik/traefik/util/values.yaml
 !IaC-app/modules/traefik/traefik/main.tf
 !IaC-app/modules/.gitkeep
+###########
+# Storage #
+###########
+!IaC-storage/
+IaC-storage/*
+!IaC-storage/.gitkeep
+!IaC-storage/oracle/
+IaC-storage/oracle/*
+!IaC-storage/oracle/data.tf
+!IaC-storage/oracle/main.tf
