@@ -54,7 +54,7 @@ variable user_ocid {
 #   description = "Organize and control access to your resources."
 # }
 
-variable compartment_name {
+variable tenancy_ocid {
   type = string
   sensitive = true
 }
@@ -78,8 +78,8 @@ variable region {
 }
 
 # Collect the following information from your environment.
-# Path to the RSA private key file to use for authentication against OCI. An API key can be created in the UI
-# under Profile -> My Profile -> API keys.
+# Path to the RSA private key file to use for authentication against OCI. An API key can be created
+# in the UI under Profile -> My Profile -> API keys.
 # Example for Oracle Linux: /home/opc/.oci/<your-rsa-key-name>.pem
 variable private_key_path {
   description = "Path to the RSA private key."
@@ -93,8 +93,9 @@ variable kubeconfig_path {
   sensitive = true
 }
 
-# OCI offers 4 OCPUs, 24GB RAM and 200GB of storage for free. These resources can be used to create up to 4
-# instances. Enter a value between [1,4] and the resources will be equally spread across the instance count.
+# OCI offers 4 OCPUs, 24GB RAM and 200GB of storage for free. These resources can be used to create
+# up to 4 instances. Enter a value between [1,4] and the resources will be equally spread across
+# the instance count.
 variable nodes {
   description = "Count of nodes."
   type = number
