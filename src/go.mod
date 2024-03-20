@@ -21,11 +21,15 @@ module finance
 go 1.22.0
 
 require (
+	github.com/aws/aws-sdk-go v1.51.2
 	github.com/google/uuid v1.6.0
-	golang.org/x/crypto v0.18.0
+	github.com/oracle/oci-go-sdk/v56 v56.1.0
+	golang.org/x/crypto v0.21.0
 )
 
 require (
-	golang.org/x/net v0.20.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/sony/gobreaker v0.5.0 // indirect
+	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )
