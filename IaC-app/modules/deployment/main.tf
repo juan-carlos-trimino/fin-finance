@@ -30,9 +30,11 @@ variable cr_login_server {
 }
 variable cr_username {
   type = string
+  sensitive = true
 }
 variable cr_password {
   type = string
+  sensitive = true
 }
 variable readiness_probe {
   default = []
@@ -239,6 +241,38 @@ resource "kubernetes_secret" "registry_credentials" {
   type = "kubernetes.io/dockerconfigjson"
 }
 
+# resource "kubernetes_secret" "api_key" {  # For object storage.
+#   metadata {
+#     name = "${var.service_name}-api-key"
+#     namespace = var.namespace
+#     labels = {
+#       app = var.app_name
+#     }
+#   }
+#   # Plain-text data.
+#   data = {
+#     # file reads the content of a file at the given path and returns it as a string.
+#     api_key = file(var.private_api_key_path)
+#   }
+#   type = "Opaque"
+# }
+
+# resource "kubernetes_secret" "obj_storage_ns" {  # For object storage.
+#   metadata {
+#     name = "${var.service_name}-obj-storage-ns"
+#     namespace = var.namespace
+#     labels = {
+#       app = var.app_name
+#     }
+#   }
+#   # Plain-text data.
+#   data = {
+#     # file reads the content of a file at the given path and returns it as a string.
+#     obj_storage_ns = var.obj_storage_ns
+#   }
+#   type = "Opaque"
+# }
+
 # Declare a K8s deployment to deploy a microservice; it instantiates the container for the
 # microservice into the K8s cluster.
 resource "kubernetes_deployment" "deployment" {
@@ -354,6 +388,24 @@ resource "kubernetes_deployment" "deployment" {
               value = env.value
             }
           }
+          # env {
+          #   name = "API_KEY"
+          #   value_from {
+          #     secret_key_ref {
+          #       name = kubernetes_secret.api_key.metadata[0].name
+          #       key = "api_key"
+          #     }
+          #   }
+          # }
+          # env {
+          #   name = "OBBJ_STORAGE_NS"
+          #   value_from {
+          #     secret_key_ref {
+          #       name = kubernetes_secret.obj_storage_ns.metadata[0].name
+          #       key = "obj_storage_ns"
+          #     }
+          #   }
+          # }
           volume_mount {
             name = "wsf"
             mount_path = "/wsf_data_dir"
