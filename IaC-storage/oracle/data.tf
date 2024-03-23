@@ -8,6 +8,5 @@
 # Object Storage Settings.
 # https://docs.oracle.com/en-us/iaas/Content/Object/Tasks/understandingnamespaces.htm
 data "oci_objectstorage_namespace" "ns" {
-  # compartment_id = var.tenancy_ocid
-  compartment_id = var.compartment_id
+  compartment_id = var.tenancy_ocid
 }
