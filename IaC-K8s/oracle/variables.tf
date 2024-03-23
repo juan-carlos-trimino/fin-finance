@@ -13,13 +13,6 @@ variable app_version {
   description = "The application version."
 }
 
-# # See https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengaboutk8sversions.htm for a list of
-# # supported versions.
-# variable k8s_version {  # Container Engine for Kubernetes (OKE).
-#   type = string
-#   default = "v1.28.2"
-# }
-
 ######################################
 # CONFIDENTIAL/SENSITIVE INFORMATION #
 #############################################################################################################
@@ -30,6 +23,11 @@ variable app_version {
 # IMPORTANT: Because this file contains confidential/sensitive information, do not push the file to a       #
 #            version control system. This file is meant to be on your local system only.                    #
 #############################################################################################################
+# Compartments help you organize and control access to your resources. A compartment is a collection of     #
+# related resources (such as cloud networks, compute instances, or block volumes) that can be accessed only #
+# by those groups that have been given permission by an administrator in your organization.                 #
+#############################################################################################################
+# https://docs.oracle.com/en/cloud/foundation/cloud_architecture/governance/compartments.html#what-is-a-compartment
 # In the top navigation bar, click the Profile menu, go to "Tenancy: <your-tenancy>"" and copy OCID.
 variable tenancy_ocid {
   type = string
@@ -38,23 +36,6 @@ variable tenancy_ocid {
 
 # From the Profile menu, go to "My profile" and copy OCID.
 variable user_ocid {
-  type = string
-  sensitive = true
-}
-
-#############################################################################################################
-# Compartments help you organize and control access to your resources. A compartment is a collection of     #
-# related resources (such as cloud networks, compute instances, or block volumes) that can be accessed only #
-# by those groups that have been given permission by an administrator in your organization.                 #
-#############################################################################################################
-# https://docs.oracle.com/en/cloud/foundation/cloud_architecture/governance/compartments.html#what-is-a-compartment
-# variable compartment_id {
-#   type = string
-#   sensitive = true
-#   description = "Organize and control access to your resources."
-# }
-
-variable tenancy_ocid {
   type = string
   sensitive = true
 }
