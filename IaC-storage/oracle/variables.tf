@@ -19,14 +19,6 @@ variable user_ocid {
   sensitive = true
 }
 
-# From the Profile menu (user avatar), go to "My profile" and click "API Keys" (on the left side).
-# Copy the fingerprint associated with the RSA public key. The format is:
-# xx:xx:xx...xx
-variable fingerprint {
-  type = string
-  sensitive = true
-}
-
 variable region {
   description = "An OCI region."
   type = string
@@ -73,5 +65,3 @@ variable private_key_path {
   type = string
   sensitive = true
 }
-
-
