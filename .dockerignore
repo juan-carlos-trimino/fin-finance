@@ -46,12 +46,10 @@ src/sessions/*
 !src/sessions/share.go
 !src/sessions/users.go
 #
-!src/storage
-src/storage/*
-!src/storage/s3
-src/storage/s3/*
-!src/storage/s3/oracle.go
-!src/storage/s3/s3.go
+!src/s3_storage
+src/s3_storage/*
+!src/s3_storage/oracle.go
+!src/s3_storage/s3.go
 #
 !src/webfinances
 src/webfinances/*
