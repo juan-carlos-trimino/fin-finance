@@ -1,4 +1,4 @@
-// go:build linux && !windows
+//go:build linux && !windows
 // +build linux,!windows
 
 // HTTP server.
@@ -45,26 +45,27 @@ PS> curl.exe "http://localhost:8080"
 ***/
 
 import (
-  "context"
-  "crypto/tls"
- 	"errors"
-  "finance/middlewares"
- 	"finance/misc"
- 	"finance/security"
- 	"finance/sessions"
- 	"finance/webfinances"
- 	"fmt"
- 	"golang.org/x/crypto/acme/autocert"
- 	"net"
- 	"net/http"
- 	"net/http/pprof"
-//	_ "net/http/pprof" //Blank import of pprof.
-  "os"
- 	"os/signal"
-  "strconv"
- 	"sync"
-  "syscall"
- 	"time"
+	"context"
+	"crypto/tls"
+	"errors"
+	"finance/middlewares"
+	"finance/misc"
+	"finance/security"
+	"finance/sessions"
+  "finance/s3_storage"
+	"finance/webfinances"
+	"fmt"
+	"net"
+	"net/http"
+	"net/http/pprof"
+	"golang.org/x/crypto/acme/autocert"
+	//	_ "net/http/pprof" //Blank import of pprof.
+	"os"
+	"os/signal"
+	"strconv"
+	"sync"
+	"syscall"
+	"time"
 )
 
 var (  //Environment variables.
@@ -514,17 +515,18 @@ func makeHandlers() *handlers {
   h.mux["/debug/pprof/profile"] = pprof.Profile
   h.mux["/debug/pprof/symbol"] = pprof.Symbol
   h.mux["/debug/pprof/trace"] = pprof.Trace
-
-// jct
-// var b blob.Blob
-// h.mux["/storage/blob/ListBuckets"] = b.ListBuckets
-// h.mux["/storage/blob/CreateBucket"] = b.CreateBucket
-// h.mux["/storage/blob/DeleteBucket"] = b.DeleteBucket
-// h.mux["/storage/blob/ListItemsInBucket"] = b.ListItemsInBucket
+  /***
+  S3 storage
+  ***/
+  var s3s s3_storage.S3_Storage
+  s3s.S3Config = s3_storage.NewCreateOracleConfig()
+  h.mux["/storage/s3/ListBuckets"] = s3s.ListBuckets
+  h.mux["/storage/s3/CreateBucket"] = s3s.CreateBucket
+  h.mux["/storage/s3/DeleteBucket"] = s3s.DeleteBucket
+  h.mux["/storage/s3/ListItemsInBucket"] = s3s.ListItemsInBucket
+  h.mux["/storage/s3/DeleteItemFromBucket"] = s3s.DeleteItemFromBucket
 // h.mux["/storage/blob/UploadBlobFile"] = b.UploadBlobFile
-// h.mux["/storage/blob/DeleteItemFromBucket"] = b.DeleteItemFromBucket
 // h.mux["/storage/blob/DownloadBlobFile"] = b.DownloadBlobFile
-
   commonMiddlewares := []middlewares.Middleware{
     middlewares.SecurityHeaders,
     middlewares.CorrelationId,
