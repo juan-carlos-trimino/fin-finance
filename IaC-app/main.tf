@@ -263,6 +263,7 @@ module "fin-finances" {
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
+  obj_storage_ns = var.obj_storage_ns
   # Configure environment variables specific to the app.
   env = {
     HTTP_PORT="8080"

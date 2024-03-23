@@ -46,6 +46,7 @@ variable nlb_node_port {  # Network load balancer.
 # IMPORTANT: Because this file contains confidential/sensitive information, do not push the file  #
 #            to a version control system. This file is meant to be on your local system only.     #
 ###################################################################################################
+# Storage #
 variable region {
   description = "An OCI region."
   type = string
