@@ -32,7 +32,7 @@ COPY ./src/middlewares ./middlewares/
 COPY ./src/misc ./misc/
 COPY ./src/security ./security/
 COPY ./src/sessions ./sessions/
-COPY ./src/storage ./storage/
+COPY ./src/s3_storage ./storage/
 COPY ./src/webfinances ./webfinances/
 
 # Download necessary Go modules; https://go.dev/ref/mod#go-mod-download
