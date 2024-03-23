@@ -47,8 +47,32 @@ variable nlb_node_port {  # Network load balancer.
 #            to a version control system. This file is meant to be on your local system only.     #
 ###################################################################################################
 # Storage #
+###########
+# To view the Object Storage namespace string, do the following:
+# Open the Profile menu and click Tenancy: <tenancy_name>. The namespace string is listed under
+# Object Storage Settings.
+variable obj_storage_ns {
+  type = string
+  sensitive = true
+}
+
+# From the top navigation bar, find your region.
+# From the table in "Regions and Availability Domains," find your region's <region-identifier>.
+# Example: us-ashburn-1
+# https://docs.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm
 variable region {
   description = "An OCI region."
+  type = string
+  sensitive = true
+}
+
+# Profile menu -> My Profile -> Under Resources -> Customer secret keys
+variable aws_access_key_id {
+  type = string
+  sensitive = true
+}
+
+variable aws_secret_access_key {
   type = string
   sensitive = true
 }

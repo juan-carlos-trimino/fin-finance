@@ -264,6 +264,9 @@ module "fin-finances" {
   cr_username = var.cr_username
   cr_password = var.cr_password
   obj_storage_ns = var.obj_storage_ns
+  region = var.region
+  aws_access_key_id = var.aws_access_key_id
+  aws_secret_access_key = var.aws_secret_access_key
   # Configure environment variables specific to the app.
   env = {
     HTTP_PORT="8080"
