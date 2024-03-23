@@ -519,7 +519,7 @@ func makeHandlers() *handlers {
   S3 storage
   ***/
   var s3s s3_storage.S3_Storage
-  s3s.S3Config = s3_storage.NewCreateOracleConfig()
+  s3s.S3Client = s3_storage.NewCreateOracleClient()
   h.mux["/storage/s3/ListBuckets"] = s3s.ListBuckets
   h.mux["/storage/s3/CreateBucket"] = s3s.CreateBucket
   h.mux["/storage/s3/DeleteBucket"] = s3s.DeleteBucket
