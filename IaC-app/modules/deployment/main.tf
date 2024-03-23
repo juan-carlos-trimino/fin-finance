@@ -36,6 +36,22 @@ variable cr_password {
   type = string
   sensitive = true
 }
+variable obj_storage_ns {
+  type = string
+  sensitive = true
+}
+variable region {
+  type = string
+  sensitive = true
+}
+variable aws_access_key_id {
+  type = string
+  sensitive = true
+}
+variable aws_secret_access_key {
+  type = string
+  sensitive = true
+}
 variable readiness_probe {
   default = []
   type = list(object({
@@ -241,37 +257,23 @@ resource "kubernetes_secret" "registry_credentials" {
   type = "kubernetes.io/dockerconfigjson"
 }
 
-# resource "kubernetes_secret" "api_key" {  # For object storage.
-#   metadata {
-#     name = "${var.service_name}-api-key"
-#     namespace = var.namespace
-#     labels = {
-#       app = var.app_name
-#     }
-#   }
-#   # Plain-text data.
-#   data = {
-#     # file reads the content of a file at the given path and returns it as a string.
-#     api_key = file(var.private_api_key_path)
-#   }
-#   type = "Opaque"
-# }
-
-# resource "kubernetes_secret" "obj_storage_ns" {  # For object storage.
-#   metadata {
-#     name = "${var.service_name}-obj-storage-ns"
-#     namespace = var.namespace
-#     labels = {
-#       app = var.app_name
-#     }
-#   }
-#   # Plain-text data.
-#   data = {
-#     # file reads the content of a file at the given path and returns it as a string.
-#     obj_storage_ns = var.obj_storage_ns
-#   }
-#   type = "Opaque"
-# }
+resource "kubernetes_secret" "obj_storage" {  # For object storage.
+  metadata {
+    name = "${var.service_name}-s3-storage"
+    namespace = var.namespace
+    labels = {
+      app = var.app_name
+    }
+  }
+  # Plain-text data.
+  data = {
+    obj_storage_ns = var.obj_storage_ns
+    region = var.region
+    aws_access_key_id = var.aws_access_key_id
+    aws_secret_access_key = var.aws_secret_access_key
+  }
+  type = "Opaque"
+}
 
 # Declare a K8s deployment to deploy a microservice; it instantiates the container for the
 # microservice into the K8s cluster.
@@ -388,24 +390,42 @@ resource "kubernetes_deployment" "deployment" {
               value = env.value
             }
           }
-          # env {
-          #   name = "API_KEY"
-          #   value_from {
-          #     secret_key_ref {
-          #       name = kubernetes_secret.api_key.metadata[0].name
-          #       key = "api_key"
-          #     }
-          #   }
-          # }
-          # env {
-          #   name = "OBBJ_STORAGE_NS"
-          #   value_from {
-          #     secret_key_ref {
-          #       name = kubernetes_secret.obj_storage_ns.metadata[0].name
-          #       key = "obj_storage_ns"
-          #     }
-          #   }
-          # }
+          env {
+            name = "AWS_SECRET_ACCESS_KEY"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.obj_storage.metadata[0].name
+                key = "aws_secret_access_key"
+              }
+            }
+          }
+          env {
+            name = "OBJ_STORAGE_NS"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.obj_storage.metadata[0].name
+                key = "obj_storage_ns"
+              }
+            }
+          }
+          env {
+            name = "AWS_REGION"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.obj_storage.metadata[0].name
+                key = "region"
+              }
+            }
+          }
+          env {
+            name = "AWS_ACCESS_KEY_ID"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.obj_storage.metadata[0].name
+                key = "aws_access_key_id"
+              }
+            }
+          }
           volume_mount {
             name = "wsf"
             mount_path = "/wsf_data_dir"
