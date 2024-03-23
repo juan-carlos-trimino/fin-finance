@@ -41,6 +41,11 @@ src/mathutil/*
 src/misc/*
 !src/misc/misc.go
 !src/misc/os-linux.go
+#
+!src/s3_storage/
+src/s3_storage/*
+!src/s3_storage/oracle.go
+!src/s3_storage/s3.go
 # ... and this directory and its file...
 !src/webfinances/
 src/webfinances/*
@@ -359,6 +364,7 @@ IaC-app/modules/traefik/traefik/util/*
 !IaC-storage/
 IaC-storage/*
 !IaC-storage/.gitkeep
+#
 !IaC-storage/oracle/
 IaC-storage/oracle/*
 !IaC-storage/oracle/modules/
