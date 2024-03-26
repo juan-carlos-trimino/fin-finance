@@ -562,10 +562,13 @@ func readUsers(dir, filename string) {
     panic("Cannot create directory '" + dirErr + "': " + err.Error())
   }
   filePath := dir + "/" + filename
-  if err = sessions.AddUserToFile(filePath, USER_NAME, PASSWORD); err != nil {
-    panic(err)
-  } else if err = sessions.AddUserToFile(filePath, "b", "b"); err != nil {
-    panic(err)
+  //If file exists, do not write the hard-coded users a second time.
+  if ok, _ := misc.CheckFileExists(filePath); !ok {
+    if err = sessions.AddUserToFile(filePath, USER_NAME, PASSWORD); err != nil {
+      panic(err)
+    } else if err = sessions.AddUserToFile(filePath, "b", "b"); err != nil {
+      panic(err)
+    }
   }
   //
   if err := sessions.ReadUsersFromFile(filePath); err != nil {
