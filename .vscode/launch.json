@@ -26,6 +26,7 @@ Now the debbuger is ready to be used.
         "HTTP": "true",
         "HTTPS": "true",
         "LE_CERT": "false",
+        "K8S": "false",
         // "PORT": "8081",
         // "SHUTDOWN_TIMEOUT": "10"
       },
