@@ -69,6 +69,7 @@ import (
 )
 
 var (  //Environment variables.
+  K8S bool = false
   SERVER string = "localhost"
   HTTP bool = true
   HTTP_PORT string = "8080"
@@ -83,9 +84,10 @@ var (  //Environment variables.
 
 const (
   users string = "user.txt"
+  bucketName string = "fin-finances"
+  dataDirName string = "/wsf_data_dir"
 )
 
-var dataDir string = "/wsf_data_dir"
 var m = misc.Misc{}
 
 /***
@@ -156,6 +158,16 @@ func main() {
     }
   }
   //
+  ev, exists = os.LookupEnv("K8S")
+  if exists {
+    b, err := strconv.ParseBool(ev)
+    if err == nil {
+      K8S = b
+    } else {
+      fmt.Printf("'%s' is not a boolean.\n", ev)
+    }
+  }
+  //
   ev, exists = os.LookupEnv("HTTP")
   if exists {
     b, err := strconv.ParseBool(ev)
@@ -212,7 +224,7 @@ func main() {
     panic("home" + err.Error())
   }
   fmt.Println("Home directory: " + homeDir)
-  dataDir = homeDir + dataDir
+  dataDir := homeDir + dataDirName
   numCpus, maxProcs := misc.CpusAvailable()
   fmt.Println("Number of CPUs: ", numCpus)
   fmt.Println("GOMAXPROCS: ", maxProcs)
@@ -238,7 +250,11 @@ func main() {
   var wg sync.WaitGroup
   var httpServer *http.Server
   if HTTP {
-    httpServer = makeServer(HTTP_PORT, makeHandlers())
+    if K8S {
+      httpServer = makeServer(HTTP_PORT, makeHandlersS3(makeHandlers()))
+    } else {
+      httpServer = makeServer(HTTP_PORT, makeHandlers())
+    }
   }
   //https://pkg.go.dev/golang.org/x/crypto/acme/autocert
   var certMan autocert.Manager
@@ -276,7 +292,13 @@ func main() {
     }
     signalChan2 = make(chan os.Signal, 1) //Buffered channel capacity 1; notifier will not block.
     go func() {
-      httpsServer := makeServer(HTTPS_PORT, makeHandlers())
+      var httpsServer *http.Server = nil
+      if K8S {
+        httpsServer = makeServer(HTTPS_PORT, makeHandlersS3(makeHandlers()))
+      } else {
+        httpsServer = makeServer(HTTPS_PORT, makeHandlers())
+      }
+      //
       if LE_CERT {
         httpsServer.TLSConfig = &tls.Config{
           MinVersion: tls.VersionTLS13,
@@ -515,18 +537,6 @@ func makeHandlers() *handlers {
   h.mux["/debug/pprof/profile"] = pprof.Profile
   h.mux["/debug/pprof/symbol"] = pprof.Symbol
   h.mux["/debug/pprof/trace"] = pprof.Trace
-  /***
-  S3 storage
-  ***/
-  var s3s s3_storage.S3_Storage
-  s3s.S3Client = s3_storage.NewCreateOracleClient()
-  h.mux["/storage/s3/ListBuckets"] = s3s.ListBuckets
-  h.mux["/storage/s3/CreateBucket"] = s3s.CreateBucket
-  h.mux["/storage/s3/DeleteBucket"] = s3s.DeleteBucket
-  h.mux["/storage/s3/ListItemsInBucket"] = s3s.ListItemsInBucket
-  h.mux["/storage/s3/DeleteItemFromBucket"] = s3s.DeleteItemFromBucket
-// h.mux["/storage/blob/UploadBlobFile"] = b.UploadBlobFile
-// h.mux["/storage/blob/DownloadBlobFile"] = b.DownloadBlobFile
   commonMiddlewares := []middlewares.Middleware{
     middlewares.SecurityHeaders,
     middlewares.CorrelationId,
@@ -536,6 +546,45 @@ func makeHandlers() *handlers {
   for idx, f := range h.mux{
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
+  return h
+}
+
+func makeHandlersS3(h *handlers) *handlers {
+  config, s3Client := s3_storage.NewCreateOracleClient()
+  s3s := s3_storage.S3_Storage{
+    Config: config,
+    S3Client: s3Client,
+    BucketName: bucketName,
+  }
+  muxs := len(h.mux)
+  h.mux["/storage/s3/ListBuckets"] = s3s.ListBuckets
+  h.mux["/storage/s3/CreateBucket"] = s3s.CreateBucket
+  h.mux["/storage/s3/DeleteBucket"] = s3s.DeleteBucket
+  h.mux["/storage/s3/ListItemsInBucket"] = s3s.ListItemsInBucket
+  h.mux["/storage/s3/DeleteItemFromBucket"] = s3s.DeleteItemFromBucket
+  h.mux["/storage/s3/DownloadItemFromBucket"] = s3s.DownloadItemFromBucket
+  h.mux["/storage/s3/UploadItemToBucket"] = s3s.UploadItemToBucket
+  commonMiddlewares := []middlewares.Middleware{
+    middlewares.SecurityHeaders,
+    middlewares.CorrelationId,
+    //middlewares.ValidateSessions,
+  }
+  var id int = 0
+  for idx, f := range h.mux{
+    if id < muxs {
+      id++
+      continue
+    }
+    h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
+  }
+
+//   d := "/dir/ffff"
+//   dd := "/wsf_data_dir/jct.txt"
+//   fmt.Printf("dirrr: %s\n", d)
+//   fmt.Printf("dixxx: %s\n", dd)
+// _, e := s3s.DownloadItemFromBucket(d, dd)
+// fmt.Printf("msg: %s\n", e.Error())
+
   return h
 }
 
