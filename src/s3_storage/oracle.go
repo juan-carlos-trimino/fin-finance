@@ -13,7 +13,7 @@ import (
 )
 
 // https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformUsingObjectStore.htm#s3
-func NewCreateOracleClient() *s3.S3 {
+func NewCreateOracleClient() (*aws.Config, *s3.S3) {
   endPoint := fmt.Sprintf("https://%s.compat.objectstorage.%s.oraclecloud.com",
    os.Getenv("OBJ_STORAGE_NS"), os.Getenv("AWS_REGION"))
   config := aws.NewConfig().
@@ -23,5 +23,5 @@ func NewCreateOracleClient() *s3.S3 {
     os.Getenv("AWS_SECRET_ACCESS_KEY"), "")).
    WithS3ForcePathStyle(true)
   sess := session.Must(session.NewSession())
-  return s3.New(sess, config)
+  return config, s3.New(sess, config)
 }
