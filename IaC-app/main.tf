@@ -18,17 +18,21 @@
 #
 # $ kubectl get all -n finances
 # $ kubectl get pods -n finances
+# $ kubectl delete pod -n finances <pod-name>
 # $ kubectl describe -n finances pod <pod-name>
 # $ kubectl get -n finances -o jsonpath='{.spec.containers[*].ports[*].containerPort}' pod <pod-name>
 #
-# Execute commands in a running Traefik container.
-# $ kubectl exec -it -n finances $(kubectl get pods -n finances --selector "app.kubernetes.io/name=traefik" --output=name) -- /bin/sh
+# Execute commands in a running container.
+# $ kubectl exec -it -n finances <pod-name> -- /bin/sh
 #
 # $ kubectl logs -n finances <pod-name>
 # $ kubectl logs -n finances <pod-name> --previous
 ###########################
 # Troubleshooting Traefik #
 ###########################
+# Execute commands in a running Traefik container.
+# $ kubectl exec -it -n finances $(kubectl get pods -n finances --selector "app.kubernetes.io/name=traefik" --output=name) -- /bin/sh
+#
 # kubectl get pod,middleware,ingressroute,svc -n finances
 # kubectl get all -l "app.kubernetes.io/name=traefik" -n finances
 # kubectl get all -l "app=finances" -n finances
@@ -269,10 +273,12 @@ module "fin-finances" {
   aws_secret_access_key = var.aws_secret_access_key
   # Configure environment variables specific to the app.
   env = {
-    HTTP_PORT="8080"
     # Set USER to any string to avoid the error:
     # user: Current requires cgo or $USER set in environment
-    USER="wsf-user"
+    USER: "wsf-user"
+    #
+    K8S: true
+    HTTP_PORT: "8080"
     SVC_NAME: local.svc_finances
     APP_NAME_VER: "${var.app_name} ${var.app_version}"
     MAX_RETRIES: 20
