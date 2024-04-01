@@ -19,9 +19,12 @@ func NewCreateOracleClient() (*aws.Config, *s3.S3) {
   config := aws.NewConfig().
    WithRegion(os.Getenv("AWS_REGION")).
    WithEndpoint(endPoint).
+   
+   WithMaxRetries(5).
+
    WithCredentials(credentials.NewStaticCredentials(os.Getenv("AWS_ACCESS_KEY_ID"),
     os.Getenv("AWS_SECRET_ACCESS_KEY"), "")).
-   WithS3ForcePathStyle(true)
+   WithS3ForcePathStyle(*aws.Bool(true))
   sess := session.Must(session.NewSession())
   return config, s3.New(sess, config)
 }
