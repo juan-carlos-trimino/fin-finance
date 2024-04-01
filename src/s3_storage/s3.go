@@ -1,7 +1,6 @@
 package s3_storage
 
 import (
-  "bytes"
 	"fmt"
   "io"
 	"net/http"
@@ -228,7 +227,7 @@ func (s *S3_Storage) DeleteItemFromBucket(res http.ResponseWriter, req *http.Req
   }
 }
 
- /***
+/***
 http://.../storage/s3/DownloadItemFromBucket?bucket=xxxx&item=xxxx
 ***/
 func (s *S3_Storage) DownloadItemFromBucket(res http.ResponseWriter, req *http.Request) {
@@ -293,8 +292,8 @@ func (s *S3_Storage) DownloadItemFromBucket(res http.ResponseWriter, req *http.R
   //Stream the body to the client without fully loading it into memory.
   size, err := io.Copy(res, result.Body)
   if err != nil {
-    fmt.Fprintf(res, "Copy failed: %v", err)
-    fmt.Printf("Copy failed: %v\n", err)
+    fmt.Fprintf(res, "%v", err)
+    fmt.Printf("%v\n", err)
   } else {
     fmt.Printf("Downloaded file %s successfully; sent=%d -> storage=%d.\n", item, size, *result.ContentLength)
   }
@@ -315,7 +314,6 @@ func (s *S3_Storage) DownloadItemFromBucket1(key, filepath string) (bool, error)
     &s3.GetObjectInput{
       Bucket: aws.String(s.BucketName),
       Key: aws.String(key),
-      // ContentType: aws.String("test/test"),
     })
   if err != nil {
     return false, fmt.Errorf("failed to download file, %v", err)
@@ -323,7 +321,7 @@ func (s *S3_Storage) DownloadItemFromBucket1(key, filepath string) (bool, error)
   return true, fmt.Errorf("file downloaded, %d bytes", n)
 }
 
- /***
+/***
 http://.../storage/s3/UploadItemToBucket?bucket=xxxx
 ***/
 func (s *S3_Storage) UploadItemToBucket(res http.ResponseWriter, req *http.Request) {
@@ -379,46 +377,44 @@ func (s *S3_Storage) UploadItemToBucket(res http.ResponseWriter, req *http.Reque
   //MaxBytesReader prevents clients from accidentally or maliciously sending a large request and
   //wasting server resources. If possible, it tells the ResponseWriter to close the connection
   //after the limit has been reached.
-  req.Body = http.MaxBytesReader(res, req.Body, 100 << 20)  //100MB
+  req.Body = http.MaxBytesReader(res, req.Body, 5_000 << 20)  //5GB
   defer req.Body.Close()
   // n << x = n * 2^x
   // n >> x = n / 2^x
   if err := req.ParseMultipartForm(32 << 20); err != nil {  //32MB in memory, rest on disk.
-    fmt.Fprintln(res, err.Error())
-    fmt.Println(err.Error())
+    fmt.Fprintf(res, "%v", err)
+    fmt.Printf("%v\n", err)
     return
   }
   //FormFile returns the first file for the given key "fileToLoad"; it also returns the File
   //Metadata like Headers, file size, etc.
   file, handler, err := req.FormFile("fileToLoad")
   if err != nil {
-    fmt.Fprintln(res, err.Error())
-    fmt.Printf("Error while parsing the form parameters: %+v\n", err)
+    fmt.Fprintf(res, "%v", err)
+    fmt.Printf("%v\n", err)
     return
   }
   defer file.Close()
-  fmt.Printf("File Name: %+v\n", handler.Filename)
-  fmt.Printf("File Size: %+v\n", handler.Size)
-  fmt.Printf("MIME Header: %+v\n", handler.Header)
-  //Read all of the content of the uploaded file into a byte slice.
-  fileBytes, err := io.ReadAll(file)
+  fmt.Printf("File Name: %v\n", handler.Filename)
+  fmt.Printf("File Size: %v\n", handler.Size)
+  fmt.Printf("MIME Header: %v\n", handler.Header)
   if err != nil {
-    fmt.Fprintln(res, err.Error())
-    fmt.Println(err.Error())
+    fmt.Fprintf(res, "%v", err)
+    fmt.Printf("%v\n", err)
     return
   }
   _, err = s.S3Client.PutObject(&s3.PutObjectInput{
     Bucket: aws.String(bucket),
     Key: aws.String(handler.Filename),
-    Body: bytes.NewReader(fileBytes),
+    Body: file,
     ContentLength: aws.Int64(handler.Size),
     ContentType: aws.String(handler.Header.Get("Content-Type")),
     ContentDisposition: aws.String("attachment"),
     ServerSideEncryption: aws.String("AES256"),
   })
   if err != nil {
-    fmt.Fprintln(res, err.Error())
-    fmt.Println(err.Error())
+    fmt.Fprintf(res, "%v", err)
+    fmt.Printf("%v\n", err)
   } else {
     fmt.Fprintf(res, "File %s with size %d was uploaded.", handler.Filename, handler.Size)
     fmt.Printf("File %s with size %d was uploaded.", handler.Filename, handler.Size)
