@@ -34,6 +34,11 @@ variable tenancy_ocid {
   sensitive = true
 }
 
+variable compartment_name {
+  type = string
+  sensitive = true
+}
+
 # From the Profile menu, go to "My profile" and copy OCID.
 variable user_ocid {
   type = string
