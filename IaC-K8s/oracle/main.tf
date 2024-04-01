@@ -226,6 +226,7 @@ module "cluster" {
   type = "BASIC_CLUSTER"
   compartment_id = oci_identity_compartment.fin-compartment.id
   vcn_id = module.vcn.vcn_id
+  k8s_version = "v1.29.1"
   subnet_ids = [
     module.public-subnet.subnet-id
   ]
