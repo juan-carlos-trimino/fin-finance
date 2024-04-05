@@ -21,6 +21,11 @@ src/*
 !src/go.sum
 !src/main.go
 # ... and these files under the 'finances' directory...
+!src/concurrency/
+src/concurrency/*
+!/src/concurrency/RPReadWriteLock.go
+!/src/concurrency/WPReadWriteLock.go
+# ... and this directory and its file...
 !src/finances/
 src/finances/*
 !src/finances/Annuities_test.go
