@@ -36,6 +36,11 @@ src/misc/*
 !src/misc/misc.go
 !src/misc/os-linux.go
 #
+!src/s3_storage
+src/s3_storage/*
+!src/s3_storage/oracle.go
+!src/s3_storage/s3.go
+#
 !src/security
 src/security/*
 !src/security/security.go
@@ -45,11 +50,6 @@ src/sessions/*
 !src/sessions/session.go
 !src/sessions/share.go
 !src/sessions/users.go
-#
-!src/s3_storage
-src/s3_storage/*
-!src/s3_storage/oracle.go
-!src/s3_storage/s3.go
 #
 !src/webfinances
 src/webfinances/*
