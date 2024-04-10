@@ -4,6 +4,11 @@ import (
   "sync"
 )
 
+/***
+Semaphores have the ability to limit concurrency on a shared resource to a fixed number of
+concurrent goroutines. Furthermore, when used to signal, semaphores have the added advantage that
+the signal is stored if the goroutine is not yet waiting for it.
+***/
 type Semaphore struct {
   //Counter for the semaphore.
   count int

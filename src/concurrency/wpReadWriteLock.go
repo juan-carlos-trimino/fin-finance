@@ -41,17 +41,17 @@ func (rw *WPReadWriteLock) ReadLock() {
   rw.cond.L.Lock()  //Acquire mutex.
   for rw.writersWaiting > 0 || rw.writerActive {
     /***
-    When there are multiple goroutines suspended on a condition variable's Wait(), Signal() will
-    arbitrarily wake up one of these goroutines. On the other hand, Broadcast() will wake up all
-    goroutines that are suspended on a Wait().
-
-    Whenever a waiting goroutine receives a signal or broadcast, it will try to reacquire the
-    mutex. If another goroutine is holding the mutex, the goroutine will remain suspended until
-    the mutex becomes available.
-
-    The Wait() function releases the mutex and suspends the goroutine in an atomic manner. This
-    means that another goroutine cannot come in between these two operations; i.e., acquire the
-    lock and call the Signal() function before the goroutine calling Wait() has been suspended.
+    (1) When there are multiple goroutines suspended on a condition variable's Wait(), Signal()
+        will arbitrarily wake up one of these goroutines. On the other hand, Broadcast() will wake
+        up all goroutines that are suspended on a Wait().
+    (2) Whenever a waiting goroutine receives a signal or broadcast, it will try to reacquire the
+        mutex. If another goroutine is holding the mutex, the goroutine will remain suspended until
+        the mutex becomes available.
+    (3) The Wait() function releases the mutex and suspends the goroutine in an atomic manner. This
+        means that another goroutine cannot come in between these two operations; i.e., acquire the
+        lock and call the Signal() function before the goroutine calling Wait() has been suspended.
+    (4) If Signal() or Broadcast() is called and no goroutines are suspended on a Wait(), the
+        signal or broadcast is missed.
     ***/
     rw.cond.Wait()
   }
