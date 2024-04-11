@@ -24,6 +24,8 @@ src/*
 !src/concurrency/
 src/concurrency/*
 !src/concurrency/semaphore.go
+!src/concurrency/waitGroup.go
+!src/concurrency/waitGroupL.go
 !src/concurrency/rpReadWriteLock.go
 !src/concurrency/wpReadWriteLock.go
 # ... and this directory and its file...
