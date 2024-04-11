@@ -45,27 +45,27 @@ PS> curl.exe "http://localhost:8080"
 ***/
 
 import (
-	"context"
-	"crypto/tls"
-	"errors"
-	"finance/middlewares"
-	"finance/misc"
-	"finance/security"
-	"finance/sessions"
+  "context"
+  "crypto/tls"
+  "errors"
+  "finance/middlewares"
+  "finance/misc"
+  "finance/security"
+  "finance/sessions"
   "finance/s3_storage"
-	"finance/webfinances"
-	"fmt"
-	"net"
-	"net/http"
-	"net/http/pprof"
-	"golang.org/x/crypto/acme/autocert"
-	//	_ "net/http/pprof" //Blank import of pprof.
-	"os"
-	"os/signal"
-	"strconv"
-	"sync"
-	"syscall"
-	"time"
+  "finance/webfinances"
+  "fmt"
+  "net"
+  "net/http"
+  "net/http/pprof"
+  "golang.org/x/crypto/acme/autocert"
+  //	_ "net/http/pprof" //Blank import of pprof.
+  "os"
+  "os/signal"
+  "strconv"
+  "sync"
+  "syscall"
+  "time"
 )
 
 var (  //Environment variables.
@@ -247,7 +247,7 @@ func main() {
   When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return
   ErrServerClosed. Make sure the program doesn't exit and waits instead for Shutdown to return.
   ***/
-  var wg sync.WaitGroup
+  var wg sync.WaitGroup = sync.WaitGroup{}
   var httpServer *http.Server
   if HTTP {
     if K8S {
