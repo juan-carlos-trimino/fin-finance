@@ -21,12 +21,17 @@
 # $ kubectl delete pod -n finances <pod-name>
 # $ kubectl describe -n finances pod <pod-name>
 # $ kubectl get -n finances -o jsonpath='{.spec.containers[*].ports[*].containerPort}' pod <pod-name>
+# To see what node a pod is scheduled.
+# $ kubectl get po -o wide -n finances
 #
 # Execute commands in a running container.
 # $ kubectl exec -it -n finances <pod-name> -- /bin/sh
 #
 # $ kubectl logs -n finances <pod-name>
 # $ kubectl logs -n finances <pod-name> --previous
+#
+# $ kubectl get pv
+# $ kubectl get pvc -n finances
 ###########################
 # Troubleshooting Traefik #
 ###########################
@@ -267,10 +272,7 @@ module "fin-finances" {
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
-  obj_storage_ns = var.obj_storage_ns
   region = var.region
-  aws_access_key_id = var.aws_access_key_id
-  aws_secret_access_key = var.aws_secret_access_key
   # Configure environment variables specific to the app.
   env = {
     # Set USER to any string to avoid the error:
@@ -284,7 +286,41 @@ module "fin-finances" {
     MAX_RETRIES: 20
     SERVER: "http://${local.svc_dns_finances}"
   }
-  /***
+  /*** s3 storage
+  obj_storage = [{
+    aws_access_key_id = var.aws_access_key_id
+    aws_secret_access_key = var.aws_secret_access_key
+    obj_storage_ns = var.obj_storage_ns
+  }]
+  env_secret = [{
+    env_name = "AWS_SECRET_ACCESS_KEY"
+    secret_name = "${local.svc_finances}-s3-storage"
+    secret_key = "aws_secret_access_key"
+  },
+  {
+    env_name = "OBJ_STORAGE_NS"
+    secret_name = "${local.svc_finances}-s3-storage"
+    secret_key = "obj_storage_ns"
+  },
+  {
+    env_name = "AWS_REGION"
+    secret_name = "${local.svc_finances}-s3-storage"
+    secret_key = "region"
+  },
+  {
+    env_name = "AWS_ACCESS_KEY_ID"
+    secret_name = "${local.svc_finances}-s3-storage"
+    # secret_name = "kubernetes_secret.obj_storage.metadata[0].name"
+    secret_key = "aws_access_key_id"
+  }]
+  s3 storage ***/
+  /*** env_field
+  env_field = [{
+    env_name = "POD_ID"
+    field_path = "status.podIP"
+  }]
+  env_field ***/
+  /*** NodePort
   #########################################
   # Exposing services to external clients #
   #########################################
@@ -307,16 +343,36 @@ module "fin-finances" {
     protocol = "TCP"
   }]
   service_type = "NodePort"
-  ***/
-  # /***
+  NodePort ***/
   ports = [{
     name = "ports"
     service_port = 80
     target_port = 8080
     protocol = "TCP"
   }]
+  volume_mount = [{
+    name = "wsf"
+    mount_path = "/wsf_data_dir"
+    read_only = false
+  },
+  {
+    name = "wsf1"
+    mount_path = "/wsf1_data_dir"
+    read_only = false
+  }]
+  volume_empty_dir = [{
+    name = "wsf"
+  }]
+  volume_pvc = [{
+    volume_name = "wsf1"
+    claim_name = "jct"
+  }]
+  persistent_volume_claims = [{
+    name = "jct"
+    access_modes = ["ReadWriteOnce"]
+    storage = "2Gi"
+  }]
   service_type = "LoadBalancer"
-  # ***/
   security_context = [{
     run_as_non_root = true
     run_as_user = 1100

@@ -36,19 +36,16 @@ variable cr_password {
   type = string
   sensitive = true
 }
-variable obj_storage_ns {
-  type = string
+variable obj_storage {
+  default = []
+  type = list(object({
+    obj_storage_ns = string
+    aws_access_key_id = string
+    aws_secret_access_key = string
+  }))
   sensitive = true
 }
 variable region {
-  type = string
-  sensitive = true
-}
-variable aws_access_key_id {
-  type = string
-  sensitive = true
-}
-variable aws_secret_access_key {
   type = string
   sensitive = true
 }
@@ -111,6 +108,21 @@ variable env {
   default = {}
   type = map
 }
+variable env_secret {
+  default = []
+  type = list(object({
+    env_name = string
+    secret_name = string
+    secret_key = string
+  }))
+}
+variable env_field {
+  default = []
+  type = list(object({
+    env_name = string
+    field_path = string
+  }))
+}
 variable qos_requests_cpu {
   default = ""
   type = string
@@ -172,6 +184,81 @@ variable ports {
     target_port = number
     node_port = optional(number)
     protocol = string
+  }))
+}
+variable pvc_access_modes {
+  default = []
+  type = list(any)
+}
+variable pvc_storage_class_name {
+  default = ""
+  type = string
+}
+variable pvc_storage_size {
+  default = "20Gi"
+  type = string
+}
+# In Linux when a filesystem is mounted into a non-empty directory, the directory will only contain
+# the files from the newly mounted filesystem. The files in the original directory are inaccessible
+# for as long as the filesystem is mounted. In cases when the original directory contains crucial
+# files, mounting a volume could break the container. To overcome this limitation, K8s provides an
+# additional subPath property on the volumeMount; this property mounts a single file or a single
+# directory from the volume instead of mounting the whole volume, and it does not hide the existing
+# files in the original directory.
+variable volume_mount {
+  default = []
+  type = list(object({
+    name = string
+    mount_path = string
+    sub_path = optional(string)
+    read_only = optional(bool)
+  }))
+}
+variable volume_empty_dir {
+  description = "(Optional) A temporary directory that shares a pod's lifetime."
+  default = []
+  type = list(object({
+    name = string
+    medium = optional(string)
+    size_limit = optional(string)
+  }))
+}
+variable volume_config_map {
+  default = []
+  type = list(object({
+    volume_name = string
+    # Name of the ConfigMap containing the files to add to the container.
+    config_map_name = string
+    # An array of keys from the ConfigMap to create as files.
+    items = optional(list(object({
+      # Include the entry under this key.
+      key = string
+      # The entry's value should be stored in this file.
+      path = string
+      # Although ConfigMaps should be used for non-sensitive configuration data, you may want to
+      # make the file readable and writeble only to the user and group that owned the file; e.g.,
+      # default_mode = "6600" (-rw-rw------)
+      # The default permission is "6440" (-rw-r--r----)
+      default_mode = optional(string)
+    })), [])
+  }))
+}
+variable volume_pvc {  # PersistentVolumeClaim
+  default = []
+  type = list(object({
+    volume_name = string
+    claim_name = string
+  }))
+}
+variable persistent_volume_claims {
+  default = []
+  type = list(object({
+    name = string
+    # ReadWriteOnce (RWO) - Only a single NODE can mount the volume for reading and writing.
+    # ReadOnlyMany (ROX) - Multiple NODES can mount the volume for reading.
+    # ReadWriteMany (RWX) - Multiple NODES can mount the volume for both reading and writing.
+    access_modes = list(string)
+    storage = string
   }))
 }
 
@@ -258,6 +345,7 @@ resource "kubernetes_secret" "registry_credentials" {
 }
 
 resource "kubernetes_secret" "obj_storage" {  # For object storage.
+  count = length(var.obj_storage)
   metadata {
     name = "${var.service_name}-s3-storage"
     namespace = var.namespace
@@ -267,12 +355,34 @@ resource "kubernetes_secret" "obj_storage" {  # For object storage.
   }
   # Plain-text data.
   data = {
-    obj_storage_ns = var.obj_storage_ns
+    obj_storage_ns = var.obj_storage[count.index].obj_storage_ns
     region = var.region
-    aws_access_key_id = var.aws_access_key_id
-    aws_secret_access_key = var.aws_secret_access_key
+    aws_access_key_id = var.obj_storage[count.index].aws_access_key_id
+    aws_secret_access_key = var.obj_storage[count.index].aws_secret_access_key
   }
   type = "Opaque"
+}
+
+# PersistentVolumeClaims can only be created in a specific namespace; they can then only be used by
+# pods in the same namespace.
+resource "kubernetes_persistent_volume_claim" "pvc" {
+  count = length(var.persistent_volume_claims)
+  metadata {
+    name = var.persistent_volume_claims[count.index].name
+    namespace = var.namespace
+    labels = {
+      app = var.app_name
+    }
+  }
+  spec {
+    access_modes = var.persistent_volume_claims[count.index].access_modes
+    resources {
+      requests = {
+        storage = var.persistent_volume_claims[count.index].storage
+      }
+    }
+    storage_class_name = ""
+  }
 }
 
 # Declare a K8s deployment to deploy a microservice; it instantiates the container for the
@@ -383,6 +493,8 @@ resource "kubernetes_deployment" "deployment" {
               memory = var.qos_limits_memory
             }
           }
+          # To list all of the environment variables:
+          # Linux: $ printenv
           dynamic "env" {
             for_each = var.env
             content {
@@ -390,52 +502,82 @@ resource "kubernetes_deployment" "deployment" {
               value = env.value
             }
           }
-          env {
-            name = "AWS_SECRET_ACCESS_KEY"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.obj_storage.metadata[0].name
-                key = "aws_secret_access_key"
+          dynamic "env" {
+            for_each = var.env_secret
+            content {
+              name = env.value["env_name"]
+              value_from {
+                secret_key_ref {
+                  # name = kubernetes_secret.obj_storage.metadata[0].name
+                  name = env.value["secret_name"]
+                  key = env.value["secret_key"]
+                }
               }
             }
           }
-          env {
-            name = "OBJ_STORAGE_NS"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.obj_storage.metadata[0].name
-                key = "obj_storage_ns"
+          dynamic "env" {
+            for_each = var.env_field
+            content {
+              name = env.value["env_name"]
+              value_from {
+                field_ref {
+                  field_path = env.value["field_path"]
+                }
               }
             }
           }
-          env {
-            name = "AWS_REGION"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.obj_storage.metadata[0].name
-                key = "region"
-              }
+          dynamic "volume_mount" {
+            for_each = var.volume_mount
+            content {
+              name = volume_mount.value["name"]
+              mount_path = volume_mount.value["mount_path"]
+              sub_path = volume_mount.value["sub_path"]
+              read_only = volume_mount.value["read_only"]
             }
-          }
-          env {
-            name = "AWS_ACCESS_KEY_ID"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.obj_storage.metadata[0].name
-                key = "aws_access_key_id"
-              }
-            }
-          }
-          volume_mount {
-            name = "wsf"
-            mount_path = "/wsf_data_dir"
-            read_only = false
           }
         }
-        #
-        volume {
-          name = "wsf"
-          empty_dir {}
+        # Set volumes at the Pod level, then mount them into containers inside that Pod.
+        dynamic "volume" {
+          for_each = var.volume_empty_dir
+          content {
+            name = volume.value["name"]
+            empty_dir {
+              medium = volume.value["medium"]
+              size_limit = volume.value["size_limit"]
+            }
+          }
+        }
+        dynamic "volume" {
+          for_each = var.volume_config_map
+          iterator = it
+          content {
+            name = it.value["volume_name"]
+            config_map {
+              name = it.value["config_map_name"]
+              dynamic "items" {
+                for_each = it.value["items"]
+                iterator = itn
+                content {
+                  key = itn.value["key"]
+                  path = itn.value["path"]
+                  default_mode = itn.value["default_mode"]
+                }
+              }
+            }
+          }
+        }
+        # Pods access storage by using the claim as a volume. Claims must exist in the same
+        # namespace as the Pod using the claim. The cluster finds the claim in the Pod's namespace
+        # and uses it to get the PersistentVolume backing the claim. The volume is then mounted to
+        # the host and into the Pod.
+        dynamic "volume" {
+          for_each = var.volume_pvc
+          content {
+            name = volume.value["volume_name"]
+            persistent_volume_claim {
+              claim_name = volume.value["claim_name"]
+            }
+          }
         }
       }
     }
