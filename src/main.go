@@ -335,6 +335,13 @@ func main() {
     ErrServerClosed. Make sure the program doesn't exit and waits instead for Shutdown to return.
     ***/
     go waitForServer(httpServer, signalChan1, &wg)
+    //Print all env variables.
+    // fmt.Println("*********** env ***************")
+    // envs := os.Environ()
+    // for _, e := range envs {
+    //   fmt.Println(e)
+    // }
+    // fmt.Println("*********** env ***************")
     fmt.Printf("%s - Starting the server at port %s...\n", m.DTF(), httpServer.Addr)
     /***
     ListenAndServe runs forever, or until the server fails (or fails to start) with an error,
