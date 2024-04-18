@@ -398,11 +398,6 @@ func (s *S3_Storage) UploadItemToBucket(res http.ResponseWriter, req *http.Reque
   fmt.Printf("File Name: %v\n", handler.Filename)
   fmt.Printf("File Size: %v\n", handler.Size)
   fmt.Printf("MIME Header: %v\n", handler.Header)
-  if err != nil {
-    fmt.Fprintf(res, "%v", err)
-    fmt.Printf("%v\n", err)
-    return
-  }
   _, err = s.S3Client.PutObject(&s3.PutObjectInput{
     Bucket: aws.String(bucket),
     Key: aws.String(handler.Filename),
