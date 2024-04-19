@@ -123,21 +123,29 @@ variable env_field {
     field_path = string
   }))
 }
-variable qos_requests_cpu {
-  default = ""
-  type = string
-}
-variable qos_requests_memory {
-  default = ""
-  type = string
-}
-variable qos_limits_cpu {
-  default = "0"
-  type = string
-}
-variable qos_limits_memory {
-  default = "0"
-  type = string
+# Quality of Service (QoS) classes for pods:
+# (1) BestEffort (lowest priority) - It's assigned to pods that do not have any requests or limits
+#     set at all (in any of their containers).
+# (2)
+# (3) Guaranteed (highest priority) - It's assigned to pods whose containers' requests are equal to
+#     the limits for all resources (for each container in the pod). For a pod's class to be
+#     Guaranteed, three things need to be true:
+#     * Requests and limits need to be set for both CPU and memory.
+#     * They need to be set for each container.
+#     * They need to be equal; the limit needs to match the request for each resource in each
+#       container.
+# If a Container specifies its own memory limit, but does not specify a memory request, Kubernetes
+# automatically assigns a memory request that matches the limit. Similarly, if a Container
+# specifies its own CPU limit, but does not specify a CPU request, Kubernetes automatically assigns
+# a CPU request that matches the limit.
+variable resources {
+  default = {}
+  type = object({
+    requests_cpu = optional(string)
+    requests_memory = optional(string)
+    limits_cpu = optional(string)
+    limits_memory = optional(string)
+  })
 }
 variable replicas {
   default = 1
@@ -258,6 +266,8 @@ variable persistent_volume_claims {
     # ReadOnlyMany (ROX) - Multiple NODES can mount the volume for reading.
     # ReadWriteMany (RWX) - Multiple NODES can mount the volume for both reading and writing.
     access_modes = list(string)
+    # Filesystem (default) or Block.
+    volume_mode = optional(string)
     storage = string
   }))
 }
@@ -376,6 +386,7 @@ resource "kubernetes_persistent_volume_claim" "pvc" {
   }
   spec {
     access_modes = var.persistent_volume_claims[count.index].access_modes
+    volume_mode = var.persistent_volume_claims[count.index].volume_mode
     resources {
       requests = {
         storage = var.persistent_volume_claims[count.index].storage
@@ -477,20 +488,17 @@ resource "kubernetes_deployment" "deployment" {
               }
             }
           }
-          resources {
-            requests = {
-              # If a Container specifies its own memory limit, but does not specify a memory
-              # request, Kubernetes automatically assigns a memory request that matches the limit.
-              # Similarly, if a Container specifies its own CPU limit, but does not specify a CPU
-              # request, Kubernetes automatically assigns a CPU request that matches the limit.
-              cpu = var.qos_requests_cpu == "" ? var.qos_limits_cpu : var.qos_requests_cpu
-              memory = (
-                var.qos_requests_memory == "" ? var.qos_limits_memory : var.qos_requests_memory
-              )
-            }
-            limits = {
-              cpu = var.qos_limits_cpu
-              memory = var.qos_limits_memory
+          dynamic "resources" {
+            for_each = var.resources == {} ? [] : [1]
+            content {
+              requests = {
+                cpu = var.resources.requests_cpu
+                memory = var.resources.requests_memory
+              }
+              limits = {
+                cpu = var.resources.limits_cpu
+                memory = var.resources.limits_memory
+              }
             }
           }
           # To list all of the environment variables:

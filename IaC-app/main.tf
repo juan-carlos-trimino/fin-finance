@@ -23,12 +23,16 @@
 # $ kubectl get -n finances -o jsonpath='{.spec.containers[*].ports[*].containerPort}' pod <pod-name>
 # To see what node a pod is scheduled.
 # $ kubectl get po -o wide -n finances
+# To get detail pod information.
+# $ kubectl describe pod <pod-name> -n finances
 #
 # Execute commands in a running container.
 # $ kubectl exec -it -n finances <pod-name> -- /bin/sh
 #
 # $ kubectl logs -n finances <pod-name>
 # $ kubectl logs -n finances <pod-name> --previous
+# To view the logs of a specific container running in a pod.
+# $ kubectl logs <pod-name> -c <container-name> -n finances
 #
 # $ kubectl get pv
 # $ kubectl get pvc -n finances
@@ -267,8 +271,13 @@ module "fin-finances" {
   app_version = var.app_version
   namespace = local.namespace
   replicas = 1
-  qos_limits_cpu = "400m"
-  qos_limits_memory = "400Mi"
+  # Limits and requests for CPU resources are measured in millicores. If the container needs one
+  # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
+  # value of '250m.'
+  resources = {  # QoS - Guaranteed
+    limits_cpu = "400m"
+    limits_memory = "400Mi"
+  }
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
@@ -354,24 +363,25 @@ module "fin-finances" {
     name = "wsf"
     mount_path = "/wsf_data_dir"
     read_only = false
-  },
-  {
-    name = "wsf1"
-    mount_path = "/wsf1_data_dir"
-    read_only = false
-  }]
+  }#,
+  # {
+  #   name = "wsf1"
+  #   mount_path = "/wsf1_data_dir"
+  #   read_only = false
+  # }
+  ]
   volume_empty_dir = [{
     name = "wsf"
   }]
-  volume_pvc = [{
-    volume_name = "wsf1"
-    claim_name = "jct"
-  }]
-  persistent_volume_claims = [{
-    name = "jct"
-    access_modes = ["ReadWriteOnce"]
-    storage = "2Gi"
-  }]
+  # volume_pvc = [{
+  #   volume_name = "wsf1"
+  #   claim_name = "jct"
+  # }]
+  # persistent_volume_claims = [{
+  #   name = "jct"
+  #   access_modes = ["ReadWriteOnce"]
+  #   storage = "2Gi"
+  # }]
   service_type = "LoadBalancer"
   security_context = [{
     run_as_non_root = true
