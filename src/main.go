@@ -225,6 +225,7 @@ func main() {
   }
   fmt.Println("Home directory: " + homeDir)
   dataDir := homeDir + dataDirName
+  fmt.Println("Data directory: " + dataDir)
   numCpus, maxProcs := misc.CpusAvailable()
   fmt.Println("Number of CPUs: ", numCpus)
   fmt.Println("GOMAXPROCS: ", maxProcs)

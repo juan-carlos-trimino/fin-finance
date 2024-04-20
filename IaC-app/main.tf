@@ -36,6 +36,9 @@
 #
 # $ kubectl get pv
 # $ kubectl get pvc -n finances
+# $ kubectl get sc
+# To see more info about the standard storage class.
+# $ kubectl get sc oci-bv -o yaml
 ###########################
 # Troubleshooting Traefik #
 ###########################
@@ -359,29 +362,28 @@ module "fin-finances" {
     target_port = 8080
     protocol = "TCP"
   }]
-  volume_mount = [{
+  volume_mount = [#{
+  #   name = "wsf"
+  #   mount_path = "/wsf_data_dir"
+  #   read_only = false
+  # }#,
+  {
     name = "wsf"
     mount_path = "/wsf_data_dir"
     read_only = false
-  }#,
-  # {
-  #   name = "wsf1"
-  #   mount_path = "/wsf1_data_dir"
-  #   read_only = false
-  # }
-  ]
+  }]
   volume_empty_dir = [{
     name = "wsf"
   }]
   # volume_pvc = [{
-  #   volume_name = "wsf1"
-  #   claim_name = "jct"
+  #   volume_name = "wsf"
+  #   claim_name = "finances-pvc"
   # }]
-  # persistent_volume_claims = [{
-  #   name = "jct"
-  #   access_modes = ["ReadWriteOnce"]
-  #   storage = "2Gi"
-  # }]
+  persistent_volume_claims = [{
+    pvc_name = "finances-pvc"
+    access_modes = ["ReadWriteOnce"]
+    storage_size = "2Gi"
+  }]
   service_type = "LoadBalancer"
   security_context = [{
     run_as_non_root = true

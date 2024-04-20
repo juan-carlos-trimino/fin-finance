@@ -261,14 +261,17 @@ variable volume_pvc {  # PersistentVolumeClaim
 variable persistent_volume_claims {
   default = []
   type = list(object({
-    name = string
+    pvc_name = string
     # ReadWriteOnce (RWO) - Only a single NODE can mount the volume for reading and writing.
     # ReadOnlyMany (ROX) - Multiple NODES can mount the volume for reading.
     # ReadWriteMany (RWX) - Multiple NODES can mount the volume for both reading and writing.
     access_modes = list(string)
     # Filesystem (default) or Block.
     volume_mode = optional(string)
-    storage = string
+    storage_size = string
+    # By specifying an empty string ("") as the storage class name, the PVC binds to a
+    # pre-provisioned PV instead of dynamically provisioning a new one.
+    storage_class_name = optional(string)
   }))
 }
 
@@ -378,7 +381,7 @@ resource "kubernetes_secret" "obj_storage" {  # For object storage.
 resource "kubernetes_persistent_volume_claim" "pvc" {
   count = length(var.persistent_volume_claims)
   metadata {
-    name = var.persistent_volume_claims[count.index].name
+    name = var.persistent_volume_claims[count.index].pvc_name
     namespace = var.namespace
     labels = {
       app = var.app_name
@@ -389,10 +392,10 @@ resource "kubernetes_persistent_volume_claim" "pvc" {
     volume_mode = var.persistent_volume_claims[count.index].volume_mode
     resources {
       requests = {
-        storage = var.persistent_volume_claims[count.index].storage
+        storage = var.persistent_volume_claims[count.index].storage_size
       }
     }
-    storage_class_name = ""
+    storage_class_name = var.persistent_volume_claims[count.index].storage_class_name
   }
 }
 
