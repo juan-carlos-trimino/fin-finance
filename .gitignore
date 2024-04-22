@@ -23,10 +23,11 @@ src/*
 # ... and these files under the 'finances' directory...
 !src/concurrency/
 src/concurrency/*
+!src/concurrency/barrier.go
+!src/concurrency/rpReadWriteLock.go
 !src/concurrency/semaphore.go
 !src/concurrency/waitGroup.go
 !src/concurrency/waitGroupL.go
-!src/concurrency/rpReadWriteLock.go
 !src/concurrency/wpReadWriteLock.go
 # ... and this directory and its file...
 !src/finances/
