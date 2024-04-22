@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
   let params = getParams();
   disableElements(params.cb);
   setFocus(params.cb);
+  amountOfInterest(params.leap);
 });
 
 function setFocus(eid) {
@@ -50,5 +51,13 @@ function disableElements(eid) {
     document.getElementById("lhs-button2").disabled = false;
     document.getElementById("lhs-button3").disabled = false;
     document.getElementById("lhs-button4").disabled = true;
+  }
+}
+
+function amountOfInterest(leap) {
+  if (leap === "on") {
+    document.getElementById("fd1-leap").checked = true;
+  } else {
+    document.getElementById("fd1-leap").checked = false;
   }
 }

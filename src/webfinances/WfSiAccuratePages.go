@@ -58,6 +58,14 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       if req.Method == http.MethodPost {
         sif.Fd1Time = req.PostFormValue("fd1-time")
         sif.Fd1TimePeriod = req.PostFormValue("fd1-tp")
+        //In HTML whenever a checkbox is checked and is POSTed, it has a value of "on". If the
+        //checkbox is unchecked it has no value ("").
+        sif.Fd1Leap = req.PostFormValue("fd1-leap")
+        var leap bool = false
+        if sif.Fd1Leap != "" {
+          leap = true
+        }
+        sif.Fd1TimePeriod = req.PostFormValue("fd1-tp")
         sif.Fd1Interest = req.PostFormValue("fd1-interest")
         sif.Fd1Compound = req.PostFormValue("fd1-compound")
         sif.Fd1PV = req.PostFormValue("fd1-pv")
@@ -74,10 +82,17 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.2f",
-            si.AccurateInterest(pv, i / 100.0,
-            periods.GetCompoundingPeriod(sif.Fd1Compound[0], true), n,
-            periods.GetTimePeriod(sif.Fd1TimePeriod[0], true)))
+          if leap {
+            sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.2f",
+              si.AccurateInterest(pv, i / 100.0,
+              periods.GetCompoundingPeriod(sif.Fd1Compound[0], true), n,
+              finances.Daily366))
+          } else {
+            sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.2f",
+              si.AccurateInterest(pv, i / 100.0,
+              periods.GetCompoundingPeriod(sif.Fd1Compound[0], true), n,
+              finances.Daily365))
+          }
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", sif.Fd1Time,
@@ -101,14 +116,15 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         CurrentButton string
         CsrfToken string
         Fd1Time string
+        Fd1Leap string
         Fd1TimePeriod string
         Fd1Interest string
         Fd1Compound string
         Fd1PV string
         Fd1Result string
       } { "Simple Interest / Accurate (Exact) Interest", m.DTF(), sif.CurrentButton,
-          newSession.CsrfToken, sif.Fd1Time, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound,
-          sif.Fd1PV, sif.Fd1Result,
+          newSession.CsrfToken, sif.Fd1Time, sif.Fd1Leap, sif.Fd1TimePeriod, sif.Fd1Interest,
+          sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result,
         })
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui2") {
       sif.CurrentButton = "lhs-button2"

@@ -1071,6 +1071,7 @@ type siAccurateFields struct {
   CurrentButton string `json:"currentButton"`
   //
   Fd1Time string `json:"fd1Time"`
+  Fd1Leap string `json:"fd1Leap"`
   Fd1TimePeriod string `json:"fd1TimePeriod"`
   Fd1Interest string `json:"fd1Interest"`
   Fd1Compound string `json:"fd1Compound"`
@@ -1120,6 +1121,7 @@ func newSiAccurateFields(dir1, dir2 string) *siAccurateFields {
     CurrentButton: "lhs-button1",
     //
     Fd1Time: "1",
+    Fd1Leap: "",
     Fd1TimePeriod: "year",
     Fd1Interest: "1.00",
     Fd1Compound: "annually",
