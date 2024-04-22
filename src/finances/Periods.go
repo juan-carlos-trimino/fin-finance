@@ -17,6 +17,7 @@ const (
   Daily int = -2
   Daily360 int = 360
   Daily365 int = 365
+  Daily366 int = 366
   Continuously int = -1
   //Time Periods
   Years int = 1
