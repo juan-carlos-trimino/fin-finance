@@ -31,13 +31,9 @@ $ go test -v -run="Simple" -parallel 16
 To enable the race detector (will increase the overhead of memory usage and execution time):
 $ go test -v -run="Simple" -race
 ---
-
-
 To get more information regarding the test cases, use the verbose (-v) flag and the coverage (-cover) flag
 for the coverage of the test cases against the code.
 $ go test -v -run="Simple" -cover
-
-
 ***/
 
 import (
@@ -61,6 +57,7 @@ func TestSimpleInterest_Interest(t *testing.T) {
     { typeOf: "accurate", p: 156.00, rate: 153.846, cp: Monthly, n: 1.0, tp: Months, want: 19.999980 },
     { typeOf: "accurate", p: 100.00, rate: 4.00, cp: Annually, n: 1.0, tp: Months, want: 0.3333333333 },
     { typeOf: "accurate", p: 10000.00, rate: 9.00, cp: Annually, n: 153.0, tp: Daily365, want: 377.26027397 },
+    { typeOf: "accurate", p: 10000.00, rate: 9.00, cp: Annually, n: 153.0, tp: Daily366, want: 376.22950819 },
     { typeOf: "banker's", p: 100.00, rate: 4.00, cp: Monthly, n: 1, tp: Months, want: 0.3333333333 },
     { typeOf: "banker's", p: 100.00, rate: 4.00, cp: Annually, n: 1, tp: Months, want: 0.3333333333 },
     { typeOf: "banker's", p: 10000.00, rate: 9.00, cp: Annually, n: 153, tp: Daily360, want: 382.50 },
