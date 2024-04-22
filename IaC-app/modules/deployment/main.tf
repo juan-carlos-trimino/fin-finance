@@ -79,6 +79,28 @@ variable readiness_probe {
     success_threshold = number
   }))
 }
+variable init_container {
+  default = []
+  type = list(object({
+    name = string
+    image = string
+    image_pull_policy = optional(string)
+    command = optional(list(string))
+    security_context = optional(list(object({
+      run_as_non_root = bool
+      run_as_user = number
+      run_as_group = number
+      read_only_root_filesystem = bool
+      privileged = bool
+    })), [])
+    volume_mounts = optional(list(object({
+      name = string
+      mount_path = string
+      sub_path = optional(string)
+      read_only = optional(bool)
+    })), [])
+  }))
+}
 # Be aware that the default imagePullPolicy depends on the image tag. If a container refers to the
 # latest tag (either explicitly or by not specifying the tag at all), imagePullPolicy defaults to
 # Always, but if the container refers to any other tag, the policy defaults to IfNotPresent.
@@ -444,6 +466,38 @@ resource "kubernetes_deployment" "deployment" {
         termination_grace_period_seconds = var.termination_grace_period_seconds
         image_pull_secrets {
           name = kubernetes_secret.registry_credentials.metadata[0].name
+        }
+        # These containers are run during pod initialization.
+        dynamic "init_container" {
+          for_each = var.init_container
+          iterator = it
+          content {
+            name = it.value["name"]
+            image = it.value["image"]
+            image_pull_policy = it.value["image_pull_policy"]
+            command = it.value["command"]
+            dynamic "security_context" {
+              for_each = it.value["security_context"]
+              iterator = it1
+              content {
+                run_as_non_root = it1.value["run_as_non_root"]
+                run_as_user = it1.value["run_as_user"]
+                run_as_group = it1.value["run_as_group"]
+                read_only_root_filesystem = it1.value["read_only_root_filesystem"]
+                privileged = it1.value["privileged"]
+              }
+            }
+            dynamic "volume_mounts" {
+              for_each = it.value["volume_mounts"]
+              iterator = it2
+              content {
+                name = it2.value["name"]
+                mount_path = it2.value["mount_path"]
+                sub_path = it2.value["sub_path"]
+                read_only = it2.value["read_only"]
+              }
+            }
+          }
         }
         container {
           name = var.service_name

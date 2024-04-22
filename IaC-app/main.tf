@@ -274,6 +274,24 @@ module "fin-finances" {
   app_version = var.app_version
   namespace = local.namespace
   replicas = 1
+  init_container = [{
+    name = "file-permission"
+    image = "busybox:1.28"
+    image_pull_policy = "IfNotPresent"
+    command = [
+      "/bin/sh",
+      "-c",
+      # chmod modifies file permissions.
+      "chmod -R 0660 /wsf_data_dir"
+    ]
+    # security_context = [
+            # run_as_non_root = false
+      # run_as_user = 1100
+      # run_as_group = 1100
+      # read_only_root_filesystem = false
+      # privileged = true
+    # ]
+  }]
   # Limits and requests for CPU resources are measured in millicores. If the container needs one
   # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
   # value of '250m.'
