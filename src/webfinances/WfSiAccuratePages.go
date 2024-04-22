@@ -61,10 +61,6 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         //In HTML whenever a checkbox is checked and is POSTed, it has a value of "on". If the
         //checkbox is unchecked it has no value ("").
         sif.Fd1Leap = req.PostFormValue("fd1-leap")
-        var leap bool = false
-        if sif.Fd1Leap != "" {
-          leap = true
-        }
         sif.Fd1TimePeriod = req.PostFormValue("fd1-tp")
         sif.Fd1Interest = req.PostFormValue("fd1-interest")
         sif.Fd1Compound = req.PostFormValue("fd1-compound")
@@ -82,17 +78,14 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          if leap {
-            sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.2f",
-              si.AccurateInterest(pv, i / 100.0,
-              periods.GetCompoundingPeriod(sif.Fd1Compound[0], true), n,
-              finances.Daily366))
-          } else {
-            sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.2f",
-              si.AccurateInterest(pv, i / 100.0,
-              periods.GetCompoundingPeriod(sif.Fd1Compound[0], true), n,
-              finances.Daily365))
+          daysInYear := finances.Daily365
+          if sif.Fd1Leap != "" {
+            daysInYear = finances.Daily366
           }
+          sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.2f",
+            si.AccurateInterest(pv, i / 100.0,
+            periods.GetCompoundingPeriod(sif.Fd1Compound[0], true), n,
+            daysInYear))
         }
         logEntry.Print(INFO, correlationId, []string {
           fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", sif.Fd1Time,
