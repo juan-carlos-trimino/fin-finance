@@ -45,27 +45,30 @@ PS> curl.exe "http://localhost:8080"
 ***/
 
 import (
-  "context"
-  "crypto/tls"
-  "errors"
-  "finance/middlewares"
-  "finance/misc"
-  "finance/security"
-  "finance/sessions"
-  "finance/s3_storage"
-  "finance/webfinances"
-  "fmt"
-  "net"
-  "net/http"
-  "net/http/pprof"
-  "golang.org/x/crypto/acme/autocert"
-  //	_ "net/http/pprof" //Blank import of pprof.
-  "os"
-  "os/signal"
-  "strconv"
-  "sync"
-  "syscall"
-  "time"
+	"context"
+	"crypto/tls"
+	"errors"
+	"finance/middlewares"
+	"finance/misc"
+	"finance/s3_storage"
+	"finance/security"
+	"finance/sessions"
+	"finance/webfinances"
+	"fmt"
+	"net"
+	"net/http"
+	"net/http/pprof"
+	// "strings"
+
+	"golang.org/x/crypto/acme/autocert"
+
+	//	_ "net/http/pprof" //Blank import of pprof.
+	"os"
+	"os/signal"
+	"strconv"
+	"sync"
+	"syscall"
+	"time"
 )
 
 var (  //Environment variables.
@@ -224,6 +227,7 @@ func main() {
     panic("home" + err.Error())
   }
   fmt.Println("Home directory: " + homeDir)
+  // homeDir = strings.TrimRight(homeDir, "/")
   dataDir := homeDir + dataDirName
   fmt.Println("Data directory: " + dataDir)
   numCpus, maxProcs := misc.CpusAvailable()
