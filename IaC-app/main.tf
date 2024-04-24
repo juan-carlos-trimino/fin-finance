@@ -32,7 +32,7 @@
 # $ kubectl logs -n finances <pod-name>
 # $ kubectl logs -n finances <pod-name> --previous
 # To view the logs of a specific container running in a pod.
-# $ kubectl logs <pod-name> -c <container-name> -n finances
+# $ kubectl logs -n finances <pod-name> -c <container-name>
 #
 # $ kubectl get pv
 # $ kubectl get pvc -n finances
@@ -274,24 +274,29 @@ module "fin-finances" {
   app_version = var.app_version
   namespace = local.namespace
   replicas = 1
-  init_container = [{
-    name = "file-permission"
-    image = "busybox:1.28"
-    image_pull_policy = "IfNotPresent"
-    command = [
-      "/bin/sh",
-      "-c",
-      # chmod modifies file permissions.
-      "chmod -R 0660 /wsf_data_dir"
-    ]
-    # security_context = [
-            # run_as_non_root = false
-      # run_as_user = 1100
-      # run_as_group = 1100
-      # read_only_root_filesystem = false
-      # privileged = true
-    # ]
-  }]
+  # init_container = [{
+  #   name = "file-permission"
+  #   image = "busybox:1.34.1"
+  #   image_pull_policy = "IfNotPresent"
+  #   command = [
+  #     "/bin/sh",
+  #     "-c",
+  #     "chown -v -R 1100:1100 /wsf_data_dir"
+  #     # "chmod -R 660 /wsf_data_dir"
+  #   ]
+  #   volume_mounts = [{
+  #     name = "wsf"
+  #     mount_path = "/wsf_data_dir"
+  #     read_only = false
+  #   }]
+  #   security_context = [{
+  #     run_as_non_root = false
+  #     run_as_user = 0
+  #     run_as_group = 0
+  #     read_only_root_filesystem = true
+  #     privileged = true
+  #   }]
+  # }]
   # Limits and requests for CPU resources are measured in millicores. If the container needs one
   # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
   # value of '250m.'
@@ -380,29 +385,28 @@ module "fin-finances" {
     target_port = 8080
     protocol = "TCP"
   }]
-  volume_mount = [#{
-  #   name = "wsf"
-  #   mount_path = "/wsf_data_dir"
-  #   read_only = false
-  # }#,
-  {
+  volume_mount = [{
     name = "wsf"
     mount_path = "/wsf_data_dir"
     read_only = false
   }]
-  volume_empty_dir = [{
-    name = "wsf"
-  }]
-  # volume_pvc = [{
-  #   volume_name = "wsf"
-  #   claim_name = "finances-pvc"
+  # volume_empty_dir = [{
+  #   name = "wsf"
   # }]
+  volume_pv = [{
+    pv_name = "wsf"
+    claim_name = "finances-pvc"
+  }]
   persistent_volume_claims = [{
     pvc_name = "finances-pvc"
+    volume_mode = "Filesystem"
     access_modes = ["ReadWriteOnce"]
     storage_size = "2Gi"
+    storage_class_name = "oci-bv"
   }]
-  service_type = "LoadBalancer"
+  pod_security_context = [{
+    fs_group = 2200
+  }]
   security_context = [{
     run_as_non_root = true
     run_as_user = 1100
@@ -421,5 +425,6 @@ module "fin-finances" {
   #   failure_threshold = 4
   #   success_threshold = 1
   # }]
+  service_type = "LoadBalancer"
   service_name = local.svc_finances
 }

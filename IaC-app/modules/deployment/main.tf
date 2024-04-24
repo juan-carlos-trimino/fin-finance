@@ -112,6 +112,16 @@ variable image_pull_policy {
   default = "Always"
   type = string
 }
+variable pod_security_context {
+  default = []
+  type = list(object({
+    run_as_user = optional(string)
+    run_as_group = optional(string)
+    fs_group = optional(string)
+    fs_group_change_policy = optional(string)
+    supplemental_groups = optional(set(number))
+  }))
+}
 variable security_context {
   default = [{
     run_as_non_root = false
@@ -273,10 +283,10 @@ variable volume_config_map {
     })), [])
   }))
 }
-variable volume_pvc {  # PersistentVolumeClaim
+variable volume_pv {  # PersistentVolumeClaim
   default = []
   type = list(object({
-    volume_name = string
+    pv_name = string
     claim_name = string
   }))
 }
@@ -467,6 +477,28 @@ resource "kubernetes_deployment" "deployment" {
         image_pull_secrets {
           name = kubernetes_secret.registry_credentials.metadata[0].name
         }
+        # Security context options at the pod level serve as a default for all the pod's containers
+        # but can be overridden at the container level.
+        dynamic "security_context" {
+          for_each = var.pod_security_context
+          iterator = it
+          content {
+            run_as_user = it.value["run_as_user"]
+            run_as_group = it.value["run_as_group"]
+            # Set the group that owns the pod volumes. This group will be used by K8s to change the
+            # permissions of all files/directories in the volumes, when the volumes are mounted by
+            # a pod.
+            fs_group = it.value["fs_group"]
+            supplemental_groups = it.value["supplemental_groups"]
+            # By default, Kubernetes recursively changes ownership and permissions for the contents
+            # of each volume to match the fsGroup specified in a Pod's securityContext when that
+            # volume is mounted. For large volumes, checking and changing ownership and permissions
+            # can take a lot of time, slowing Pod startup. You can use the fsGroupChangePolicy
+            # field inside a securityContext to control the way that Kubernetes checks and manages
+            # ownership and permissions for a volume.
+            fs_group_change_policy = it.value["fs_group_change_policy"]
+          }
+        }
         # These containers are run during pod initialization.
         dynamic "init_container" {
           for_each = var.init_container
@@ -487,7 +519,7 @@ resource "kubernetes_deployment" "deployment" {
                 privileged = it1.value["privileged"]
               }
             }
-            dynamic "volume_mounts" {
+            dynamic "volume_mount" {
               for_each = it.value["volume_mounts"]
               iterator = it2
               content {
@@ -503,6 +535,9 @@ resource "kubernetes_deployment" "deployment" {
           name = var.service_name
           image_pull_policy = var.image_pull_policy
           image = local.image_tag
+          # Security settings that you specify for a container apply only to the individual
+          # container, and they override settings made at the Pod level when there is overlap.
+          # Container settings do not affect the Pod's Volumes.
           dynamic "security_context" {
             for_each = var.security_context
             content {
@@ -602,6 +637,10 @@ resource "kubernetes_deployment" "deployment" {
           }
         }
         # Set volumes at the Pod level, then mount them into containers inside that Pod.
+        #
+        # By default, the filesystem owner of a volume is root:root. If a Pod is running as a
+        # non-root user and needs to create files or directories on the volume, this will fail due
+        # to insufficient or incorrect permissions.
         dynamic "volume" {
           for_each = var.volume_empty_dir
           content {
@@ -636,9 +675,9 @@ resource "kubernetes_deployment" "deployment" {
         # and uses it to get the PersistentVolume backing the claim. The volume is then mounted to
         # the host and into the Pod.
         dynamic "volume" {
-          for_each = var.volume_pvc
+          for_each = var.volume_pv
           content {
-            name = volume.value["volume_name"]
+            name = volume.value["pv_name"]
             persistent_volume_claim {
               claim_name = volume.value["claim_name"]
             }
