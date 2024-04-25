@@ -153,7 +153,6 @@ resource "kubernetes_manifest" "ingress-route" {
             }
           ]
         },
-
         {
           kind = "Rule"
           # match = "Host(`169.46.98.220.nip.io`) && PathPrefix(`/`)"
@@ -193,9 +192,6 @@ resource "kubernetes_manifest" "ingress-route" {
             }
           ]
         },
-
-
-
 
 /***
         {
