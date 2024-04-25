@@ -45,30 +45,28 @@ PS> curl.exe "http://localhost:8080"
 ***/
 
 import (
-	"context"
-	"crypto/tls"
-	"errors"
-	"finance/middlewares"
-	"finance/misc"
-	"finance/s3_storage"
-	"finance/security"
-	"finance/sessions"
-	"finance/webfinances"
-	"fmt"
-	"net"
-	"net/http"
-	"net/http/pprof"
-	// "strings"
-
-	"golang.org/x/crypto/acme/autocert"
-
-	//	_ "net/http/pprof" //Blank import of pprof.
-	"os"
-	"os/signal"
-	"strconv"
-	"sync"
-	"syscall"
-	"time"
+  "context"
+  "crypto/tls"
+  "errors"
+  "finance/middlewares"
+  "finance/misc"
+  "finance/s3_storage"
+  "finance/security"
+  "finance/sessions"
+  "finance/webfinances"
+  "fmt"
+  "net"
+  "net/http"
+  "net/http/pprof"
+  "golang.org/x/crypto/acme/autocert"
+  //	_ "net/http/pprof" //Blank import of pprof.
+  "os"
+  "os/signal"
+  "strconv"
+  "strings"
+  "sync"
+  "syscall"
+  "time"
 )
 
 var (  //Environment variables.
@@ -88,7 +86,7 @@ var (  //Environment variables.
 const (
   users string = "user.txt"
   bucketName string = "fin-finances"
-  dataDirName string = "/wsf_data_dir"
+  dataDirName string = "wsf_data_dir"
 )
 
 var m = misc.Misc{}
@@ -226,9 +224,17 @@ func main() {
   if err != nil {
     panic("home" + err.Error())
   }
+  buffer := strings.Builder{}
+  //Grow to a larger size to reduce future resizes of the buffer.
+  buffer.Grow(1024)
   fmt.Println("Home directory: " + homeDir)
-  // homeDir = strings.TrimRight(homeDir, "/")
-  dataDir := homeDir + dataDirName
+  if homeDir[len(homeDir) - 1] != '/' {
+    buffer.WriteString(homeDir)
+    buffer.WriteByte('/')
+  } else {
+    buffer.WriteString(homeDir)
+  }
+  dataDir := buffer.String() + dataDirName
   fmt.Println("Data directory: " + dataDir)
   numCpus, maxProcs := misc.CpusAvailable()
   fmt.Println("Number of CPUs: ", numCpus)
