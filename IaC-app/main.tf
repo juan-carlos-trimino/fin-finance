@@ -274,29 +274,31 @@ module "fin-finances" {
   app_version = var.app_version
   namespace = local.namespace
   replicas = 1
-  # init_container = [{
-  #   name = "file-permission"
-  #   image = "busybox:1.34.1"
-  #   image_pull_policy = "IfNotPresent"
-  #   command = [
-  #     "/bin/sh",
-  #     "-c",
-  #     "chown -v -R 1100:1100 /wsf_data_dir"
-  #     # "chmod -R 660 /wsf_data_dir"
-  #   ]
-  #   volume_mounts = [{
-  #     name = "wsf"
-  #     mount_path = "/wsf_data_dir"
-  #     read_only = false
-  #   }]
-  #   security_context = [{
-  #     run_as_non_root = false
-  #     run_as_user = 0
-  #     run_as_group = 0
-  #     read_only_root_filesystem = true
-  #     privileged = true
-  #   }]
-  # }]
+  /*** init_container
+  init_container = [{
+    name = "file-permission"
+    image = "busybox:1.34.1"
+    image_pull_policy = "IfNotPresent"
+    command = [
+      "/bin/sh",
+      "-c",
+      "chown -v -R 1100:1100 /wsf_data_dir"
+      # "chmod -R 660 /wsf_data_dir"
+    ]
+    volume_mounts = [{
+      name = "wsf"
+      mount_path = "/wsf_data_dir"
+      read_only = false
+    }]
+    security_context = [{
+      run_as_non_root = false
+      run_as_user = 0
+      run_as_group = 0
+      read_only_root_filesystem = true
+      privileged = true
+    }]
+  }]
+  init_container ***/
   # Limits and requests for CPU resources are measured in millicores. If the container needs one
   # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
   # value of '250m.'
@@ -390,9 +392,11 @@ module "fin-finances" {
     mount_path = "/wsf_data_dir"
     read_only = false
   }]
-  # volume_empty_dir = [{
-  #   name = "wsf"
-  # }]
+  /*** empty_dir
+  volume_empty_dir = [{
+    name = "wsf"
+  }]
+  empty_dir ***/
   volume_pv = [{
     pv_name = "wsf"
     claim_name = "finances-pvc"
@@ -413,18 +417,20 @@ module "fin-finances" {
     run_as_group = 1100
     read_only_root_filesystem = true
   }]
-  # readiness_probe = [{
-  #   http_get = [{
-  #     path = "/readiness"
-  #     port = 0
-  #     scheme = "HTTP"
-  #   }]
-  #   initial_delay_seconds = 30
-  #   period_seconds = 20
-  #   timeout_seconds = 2
-  #   failure_threshold = 4
-  #   success_threshold = 1
-  # }]
-  service_type = "LoadBalancer"
+  /*** readiness
+  readiness_probe = [{
+    http_get = [{
+      path = "/readiness"
+      port = 0
+      scheme = "HTTP"
+    }]
+    initial_delay_seconds = 30
+    period_seconds = 20
+    timeout_seconds = 2
+    failure_threshold = 4
+    success_threshold = 1
+  }]
+  readiness ***/
+  service_type = "ClusterIP"
   service_name = local.svc_finances
 }
