@@ -273,6 +273,10 @@ module "fin-finances" {
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
+  region = var.region
+  cr_login_server = local.cr_login_server
+  cr_username = var.cr_username
+  cr_password = var.cr_password
   replicas = 1
   /*** init_container
   init_container = [{
@@ -306,10 +310,6 @@ module "fin-finances" {
     limits_cpu = "400m"
     limits_memory = "400Mi"
   }
-  cr_login_server = local.cr_login_server
-  cr_username = var.cr_username
-  cr_password = var.cr_password
-  region = var.region
   # Configure environment variables specific to the app.
   env = {
     # Set USER to any string to avoid the error:
