@@ -430,26 +430,14 @@ func makeHandlers() *handlers {
   fragmentation of the heap as well as putting pressure on the GC.
   ***/
   h.mux = make(map[string]http.HandlerFunc, 128)
-  //h.mux["/readiness"] =
-  //func (res http.ResponseWriter, req *http.Request){
-  //  fmt.Printf("\naaaaaaServer not ready. %s\n", SERVER)
-  // req, err := http.NewRequest(http.MethodHead, SERVER, nil)
-  // if err != nil {
-  //   fmt.Println("Server not ready.")
-  //   res.WriteHeader(http.StatusInternalServerError)
-  //   return
-  // }
-  // resp, err := client.Do(req)
-  // if err != nil {
-  //   fmt.Printf("client: error making http request: %s\n", err)
-  //   res.WriteHeader(http.StatusInternalServerError)
-  //   return
-  // }
-  // resp.Body.Close()
-  // fmt.Println("Server is ready.")
-  // //https://go.dev/src/net/http/status.go
-  //res.WriteHeader(http.StatusOK)
-  //}
+  h.mux["/readiness"] = func (res http.ResponseWriter, req *http.Request) {
+    fmt.Println("Readiness probe.")
+    res.WriteHeader(http.StatusOK)
+  }
+  h.mux["/liveness"] = func (res http.ResponseWriter, req *http.Request) {
+    fmt.Println("Liveness probe.")
+    res.WriteHeader(http.StatusOK)
+  }
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/getParams.js"] = wfpages.PublicGetParamsFile
@@ -575,13 +563,13 @@ func makeHandlersS3(h *handlers) *handlers {
     BucketName: bucketName,
   }
   muxs := len(h.mux)
-  h.mux["/storage/s3/ListBuckets"] = s3s.ListBuckets
-  h.mux["/storage/s3/CreateBucket"] = s3s.CreateBucket
-  h.mux["/storage/s3/DeleteBucket"] = s3s.DeleteBucket
-  h.mux["/storage/s3/ListItemsInBucket"] = s3s.ListItemsInBucket
-  h.mux["/storage/s3/DeleteItemFromBucket"] = s3s.DeleteItemFromBucket
-  h.mux["/storage/s3/DownloadItemFromBucket"] = s3s.DownloadItemFromBucket
-  h.mux["/storage/s3/UploadItemToBucket"] = s3s.UploadItemToBucket
+  h.mux["/storage/s3/ListBuckets"] = middlewares.ValidateSessions(s3s.ListBuckets)
+  h.mux["/storage/s3/CreateBucket"] = middlewares.ValidateSessions(s3s.CreateBucket)
+  h.mux["/storage/s3/DeleteBucket"] = middlewares.ValidateSessions(s3s.DeleteBucket)
+  h.mux["/storage/s3/ListItemsInBucket"] = middlewares.ValidateSessions(s3s.ListItemsInBucket)
+  h.mux["/storage/s3/DeleteItemFromBucket"] = middlewares.ValidateSessions(s3s.DeleteItemFromBucket)
+  h.mux["/storage/s3/DownloadItemFromBucket"] = middlewares.ValidateSessions(s3s.DownloadItemFromBucket)
+  h.mux["/storage/s3/UploadItemToBucket"] = middlewares.ValidateSessions(s3s.UploadItemToBucket)
   commonMiddlewares := []middlewares.Middleware{
     middlewares.SecurityHeaders,
     middlewares.CorrelationId,
@@ -595,14 +583,6 @@ func makeHandlersS3(h *handlers) *handlers {
     }
     h.mux[idx] = middlewares.ChainMiddlewares(f, commonMiddlewares)
   }
-
-//   d := "/dir/ffff"
-//   dd := "/wsf_data_dir/jct.txt"
-//   fmt.Printf("dirrr: %s\n", d)
-//   fmt.Printf("dixxx: %s\n", dd)
-// _, e := s3s.DownloadItemFromBucket(d, dd)
-// fmt.Printf("msg: %s\n", e.Error())
-
   return h
 }
 
