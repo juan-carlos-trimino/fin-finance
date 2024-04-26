@@ -417,20 +417,30 @@ module "fin-finances" {
     run_as_group = 1100
     read_only_root_filesystem = true
   }]
-  /*** readiness
   readiness_probe = [{
+    initial_delay_seconds = 5
+    period_seconds = 25
+    timeout_seconds = 1
+    failure_threshold = 3
+    success_threshold = 1
     http_get = [{
       path = "/readiness"
-      port = 0
+      port = 8080
       scheme = "HTTP"
     }]
-    initial_delay_seconds = 30
-    period_seconds = 20
-    timeout_seconds = 2
-    failure_threshold = 4
-    success_threshold = 1
   }]
-  readiness ***/
+  liveness_probe = [{
+    initial_delay_seconds = 5
+    period_seconds = 20
+    timeout_seconds = 1
+    failure_threshold = 3
+    success_threshold = 1
+    http_get = [{
+      path = "/liveness"
+      port = 8080
+      scheme = "HTTP"
+    }]
+  }]
   service_type = "ClusterIP"
   service_name = local.svc_finances
 }

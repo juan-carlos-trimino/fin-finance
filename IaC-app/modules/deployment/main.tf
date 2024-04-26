@@ -52,31 +52,55 @@ variable region {
 variable readiness_probe {
   default = []
   type = list(object({
-    http_get = list(object({
+    # Number of seconds after the container has started before liveness or readiness probes are
+    # initiated. Defaults to 0 seconds. Minimum value is 0.
+    initial_delay_seconds = optional(number)
+    # How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+    period_seconds = optional(number)
+    # Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1.
+    timeout_seconds = optional(number)
+    # When a probe fails, Kubernetes will try failureThreshold times before giving up. Giving up in
+    # case of liveness probe means restarting the container. In case of readiness probe the Pod
+    # will be marked Unready. Defaults to 3. Minimum value is 1.
+    failure_threshold = optional(number)
+    # Minimum consecutive successes for the probe to be considered successful after having failed.
+    # Defaults to 1. Must be 1 for liveness and startup Probes. Minimum value is 1.
+    success_threshold = optional(number)
+    http_get = optional(list(object({
       # Host name to connect to, defaults to the pod IP.
-      #host = string
+      host = optional(string)
       # Path to access on the HTTP server. Defaults to /.
-      path = string
+      path = optional(string)
       # Name or number of the port to access on the container. Number must be in the range 1 to
       # 65535.
       port = number
       # Scheme to use for connecting to the host (HTTP or HTTPS). Defaults to HTTP.
-      scheme = string
-    }))
-    # Number of seconds after the container has started before liveness or readiness probes are
-    # initiated. Defaults to 0 seconds. Minimum value is 0.
-    initial_delay_seconds = number
-    # How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
-    period_seconds = number
-    # Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1.
-    timeout_seconds = number
-    # When a probe fails, Kubernetes will try failureThreshold times before giving up. Giving up in
-    # case of liveness probe means restarting the container. In case of readiness probe the Pod
-    # will be marked Unready. Defaults to 3. Minimum value is 1.
-    failure_threshold = number
-    # Minimum consecutive successes for the probe to be considered successful after having failed.
-    # Defaults to 1. Must be 1 for liveness and startup Probes. Minimum value is 1.
-    success_threshold = number
+      scheme = optional(string)
+      http_header = optional(list(object({
+        name = string
+        value = string
+      })), [])
+    })), [])
+  }))
+}
+variable liveness_probe {
+  default = []
+  type = list(object({
+    initial_delay_seconds = optional(number)
+    period_seconds = optional(number)
+    timeout_seconds = optional(number)
+    failure_threshold = optional(number)
+    success_threshold = optional(number)
+    http_get = optional(list(object({
+      host = optional(string)
+      path = optional(string)
+      port = number
+      scheme = optional(string)
+      http_header = optional(list(object({
+        name = string
+        value = string
+      })), [])
+    })), [])
   }))
 }
 variable init_container {
@@ -225,18 +249,6 @@ variable ports {
     node_port = optional(number)
     protocol = string
   }))
-}
-variable pvc_access_modes {
-  default = []
-  type = list(any)
-}
-variable pvc_storage_class_name {
-  default = ""
-  type = string
-}
-variable pvc_storage_size {
-  default = "20Gi"
-  type = string
 }
 # In Linux when a filesystem is mounted into a non-empty directory, the directory will only contain
 # the files from the newly mounted filesystem. The files in the original directory are inaccessible
@@ -561,6 +573,9 @@ resource "kubernetes_deployment" "deployment" {
               protocol = port.value["protocol"]
             }
           }
+          # Liveness probes keep pods healthy by killing unhealthy containers and replacing them
+          # with new healthy containers; readiness probes ensure that only pods with containers
+          # that are ready to serve requests receive them.
           dynamic "readiness_probe" {
             for_each = var.readiness_probe
             content {
@@ -572,10 +587,46 @@ resource "kubernetes_deployment" "deployment" {
               dynamic "http_get" {
                 for_each = readiness_probe.value.http_get
                 content {
-                  #host = http_get.value["host"]
+                  host = http_get.value["host"]
                   path = http_get.value["path"]
-                  port = http_get.value["port"] != 0 ? http_get.value["port"] : 8080
+                  port = http_get.value["port"]
                   scheme = http_get.value["scheme"]
+                  dynamic "http_header" {
+                    for_each = http_get.value.http_header
+                    content {
+                      name = http_headers.value["name"]
+                      value = http_headers.value["value"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+          dynamic "liveness_probe" {
+            for_each = var.liveness_probe
+            iterator = it
+            content {
+              initial_delay_seconds = it.value["initial_delay_seconds"]
+              period_seconds = it.value["period_seconds"]
+              timeout_seconds = it.value["timeout_seconds"]
+              failure_threshold = it.value["failure_threshold"]
+              success_threshold = it.value["success_threshold"]
+              dynamic "http_get" {
+                for_each = it.value.http_get
+                iterator = it1
+                content {
+                  host = it1.value["host"]
+                  path = it1.value["path"]
+                  port = it1.value["port"]
+                  scheme = it1.value["scheme"]
+                  dynamic "http_header" {
+                    for_each = it1.value.http_header
+                    iterator = it2
+                    content {
+                      name = it2.value["name"]
+                      value = it2.value["value"]
+                    }
+                  }
                 }
               }
             }
