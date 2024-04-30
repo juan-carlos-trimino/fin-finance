@@ -220,6 +220,16 @@ variable service_type {
   default = "ClusterIP"
   type = string
 }
+variable service_account {
+  default = null
+  type = object({
+    annotations = optional(map(string), {})
+    automount_service_account_token = optional(bool)
+    secret = optional(list(object({
+      name = string
+    })), [])
+  })
+}
 # The service normally forwards each connection to a randomly selected backing pod. To ensure that
 # connections from a particular client are passed to the same Pod each time, set the service's
 # sessionAffinity property to ClientIP instead of None (default).
@@ -420,6 +430,52 @@ resource "kubernetes_secret" "obj_storage" {  # For object storage.
   type = "Opaque"
 }
 
+
+
+resource "kubernetes_secret" "secrets" {
+  count = length(var.obj_storage)
+  metadata {
+    name = "${var.service_name}-secrets"
+    namespace = var.namespace
+    labels = {
+      app = var.app_name
+    }
+  }
+  # Plain-text data.
+  data = {
+  }
+  type = "Opaque"
+}
+
+# A ServiceAccount is used by an application running inside a pod to authenticate itself with the
+# API server. A default ServiceAccount is automatically created for each namespace; each pod is
+# associated with exactly one ServiceAccount, but multiple pods can use the same ServiceAccount. A
+# pod can only use a ServiceAccount from the same namespace.
+#
+# For cluster security, let's constrain the cluster metadata this pod may read.
+resource "kubernetes_service_account" "service_account" {
+  count = var.service_account == null ? 0 : 1
+  metadata {
+    name = "${var.service_name}-service-account"
+    namespace = var.namespace
+    labels = {
+      app = var.app_name
+    }
+    annotations = var.service_account.annotations
+  }
+  # To enable automatic mounting of the service account token; it defaults to true.
+  automount_service_account_token = var.service_account.automount_service_account_token
+  dynamic "secret" {
+    for_each = var.service_account.secret
+    content {
+      name = secret.value["name"]
+    }
+  }
+}
+
+
+
+
 # PersistentVolumeClaims can only be created in a specific namespace; they can then only be used by
 # pods in the same namespace.
 resource "kubernetes_persistent_volume_claim" "pvc" {
@@ -489,6 +545,19 @@ resource "kubernetes_deployment" "deployment" {
         image_pull_secrets {
           name = kubernetes_secret.registry_credentials.metadata[0].name
         }
+        # dynamic "service_account_name" {
+        #   for_each = var.service_account # == {} ? [] : [1]
+        #   content {
+        #     service_account_name = "kubernetes_service_account.service_account.metadata[0].name"
+        #   }
+        # }
+        service_account_name = (var.service_account == null ? "default" :
+                               kubernetes_service_account.service_account[0].metadata[0].name)
+
+
+        # service_account_name = kubernetes_service_account.service_account[0].metadata[0].name
+
+
         # Security context options at the pod level serve as a default for all the pod's containers
         # but can be overridden at the container level.
         dynamic "security_context" {

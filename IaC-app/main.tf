@@ -310,18 +310,33 @@ module "fin-finances" {
     limits_cpu = "400m"
     limits_memory = "400Mi"
   }
+
+  # service_account = {
+  #   annotations = {
+  #     "kubernetes.io/enforce-mountable-secrets" = "true",
+  #     "kubernetes.io/service-account.name" = "build-robot"
+  #   }
+  #   secret = [{
+  #       name = "${local.svc_finances}-secrets"
+  #     },
+  #     {
+  #       name = "${local.svc_finances}-s3-storage"
+  #     }
+  #   ]
+  # }
+
   # Configure environment variables specific to the app.
   env = {
     # Set USER to any string to avoid the error:
     # user: Current requires cgo or $USER set in environment
-    USER: "wsf-user"
+    USER = "wsf-user"
     #
-    K8S: true
-    HTTP_PORT: "8080"
-    SVC_NAME: local.svc_finances
-    APP_NAME_VER: "${var.app_name} ${var.app_version}"
-    MAX_RETRIES: 20
-    SERVER: "http://${local.svc_dns_finances}"
+    K8S = true
+    HTTP_PORT = "8080"
+    SVC_NAME = local.svc_finances
+    APP_NAME_VER = "${var.app_name} ${var.app_version}"
+    MAX_RETRIES = 20
+    SERVER = "http://${local.svc_dns_finances}"
   }
   /*** s3 storage
   obj_storage = [{
