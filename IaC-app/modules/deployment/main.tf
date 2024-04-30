@@ -10,6 +10,9 @@ variable app_name {
 variable app_version {
   type = string
 }
+variable dir_path {
+  type = string
+}
 variable image_tag {
   default = ""
   type = string
@@ -18,11 +21,12 @@ variable namespace {
   default = "default"
   type = string
 }
+variable region {
+  type = string
+  sensitive = true
+}
 variable dockerfile_name {
   default = "Dockerfile-prod"
-  type = string
-}
-variable dir_path {
   type = string
 }
 variable cr_login_server {
@@ -43,10 +47,6 @@ variable obj_storage {
     aws_access_key_id = string
     aws_secret_access_key = string
   }))
-  sensitive = true
-}
-variable region {
-  type = string
   sensitive = true
 }
 variable readiness_probe {
@@ -223,6 +223,7 @@ variable service_type {
 variable service_account {
   default = null
   type = object({
+    name = string
     annotations = optional(map(string), {})
     automount_service_account_token = optional(bool)
     secret = optional(list(object({
@@ -447,16 +448,17 @@ resource "kubernetes_secret" "secrets" {
   type = "Opaque"
 }
 
+
+
+
 # A ServiceAccount is used by an application running inside a pod to authenticate itself with the
 # API server. A default ServiceAccount is automatically created for each namespace; each pod is
 # associated with exactly one ServiceAccount, but multiple pods can use the same ServiceAccount. A
 # pod can only use a ServiceAccount from the same namespace.
-#
-# For cluster security, let's constrain the cluster metadata this pod may read.
 resource "kubernetes_service_account" "service_account" {
   count = var.service_account == null ? 0 : 1
   metadata {
-    name = "${var.service_name}-service-account"
+    name = var.service_account.name
     namespace = var.namespace
     labels = {
       app = var.app_name
@@ -472,9 +474,6 @@ resource "kubernetes_service_account" "service_account" {
     }
   }
 }
-
-
-
 
 # PersistentVolumeClaims can only be created in a specific namespace; they can then only be used by
 # pods in the same namespace.
@@ -545,19 +544,10 @@ resource "kubernetes_deployment" "deployment" {
         image_pull_secrets {
           name = kubernetes_secret.registry_credentials.metadata[0].name
         }
-        # dynamic "service_account_name" {
-        #   for_each = var.service_account # == {} ? [] : [1]
-        #   content {
-        #     service_account_name = "kubernetes_service_account.service_account.metadata[0].name"
-        #   }
-        # }
-        service_account_name = (var.service_account == null ? "default" :
-                               kubernetes_service_account.service_account[0].metadata[0].name)
-
-
-        # service_account_name = kubernetes_service_account.service_account[0].metadata[0].name
-
-
+        service_account_name = (
+          var.service_account == null ? "default" :
+                                 kubernetes_service_account.service_account[0].metadata[0].name
+        )
         # Security context options at the pod level serve as a default for all the pod's containers
         # but can be overridden at the container level.
         dynamic "security_context" {
