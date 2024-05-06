@@ -24,6 +24,7 @@ src/*
 !src/concurrency/
 src/concurrency/*
 !src/concurrency/barrier.go
+!src/concurrency/channel.go
 !src/concurrency/rpReadWriteLock.go
 !src/concurrency/semaphore.go
 !src/concurrency/waitGroup.go
