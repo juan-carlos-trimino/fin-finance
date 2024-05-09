@@ -307,22 +307,24 @@ module "fin-finances" {
   # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
   # value of '250m.'
   resources = {  # QoS - Guaranteed
-    limits_cpu = "400m"
-    limits_memory = "400Mi"
+    limits_cpu = "300m"
+    limits_memory = "300Mi"
   }
+  # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+  # Note: The keys and the values in the map must be strings. In other words, you cannot use numeric, boolean, list or other types for either the keys or the values.
   service_account = {
     name = "${local.svc_finances}-service-account"
-    annotations = {
-      "kubernetes.io/enforce-mountable-secrets" = "true",
-      "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
-    }
-    # secret = [{
-    #     name = "${local.svc_finances}-secrets"
-    #   },
-    #   {
-    #     name = "${local.svc_finances}-s3-storage"
-    #   }
-    # ]
+    # annotations = {
+    #   "kubernetes.io/enforce-mountable-secrets" = "true"
+    #   "kubernetes.io/service-account.name" = "${local.svc_finances}-sa"
+    # }
+    automount_service_account_token = true
+    secret = [{
+      name = "${local.svc_finances}-secrets"
+    },
+    {
+      name = "${local.svc_finances}-s3-storage"
+    }]
   }
   # Configure environment variables specific to the app.
   env = {
@@ -431,30 +433,52 @@ module "fin-finances" {
     run_as_group = 1100
     read_only_root_filesystem = true
   }]
+  # /*** readiness_probe
   readiness_probe = [{
     initial_delay_seconds = 5
     period_seconds = 25
     timeout_seconds = 1
     failure_threshold = 3
     success_threshold = 1
-    http_get = [{
-      path = "/readiness"
+    # http_get = [{
+    #   path = "/readiness"
+    #   port = 8080
+    #   scheme = "HTTP"
+    # }]
+    tcp_socket = {
       port = 8080
-      scheme = "HTTP"
-    }]
+    }
+    # exec = {
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "ls -al /wsf_data_dir"
+    # ]}
   }]
+  # readiness_probe **/
+  # /*** liveness_probe
   liveness_probe = [{
     initial_delay_seconds = 5
     period_seconds = 20
     timeout_seconds = 1
     failure_threshold = 3
     success_threshold = 1
-    http_get = [{
-      path = "/liveness"
+    # http_get = [{
+    #   path = "/liveness"
+    #   port = 8080
+    #   scheme = "HTTP"
+    # }]
+    tcp_socket = {
       port = 8080
-      scheme = "HTTP"
-    }]
+    }
+    # exec = {
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "ls -al /wsf_data_dir"
+    # ]}
   }]
+  # liveness_probe ***/
   service_type = "ClusterIP"
   service_name = local.svc_finances
 }

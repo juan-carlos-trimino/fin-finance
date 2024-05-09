@@ -81,6 +81,12 @@ variable readiness_probe {
         value = string
       })), [])
     })), [])
+    exec = optional(object({
+      command = list(string)
+    }), null)
+    tcp_socket = optional(object({
+      port = number
+    }), null)
   }))
 }
 variable liveness_probe {
@@ -101,6 +107,12 @@ variable liveness_probe {
         value = string
       })), [])
     })), [])
+    exec = optional(object({
+      command = list(string)
+    }), null)
+    tcp_socket = optional(object({
+      port = number
+    }), null)
   }))
 }
 variable init_container {
@@ -224,8 +236,8 @@ variable service_account {
   default = null
   type = object({
     name = string
-    annotations = optional(map(string), {})
-    automount_service_account_token = optional(bool)
+    annotations = optional(map(string), null)
+    automount_service_account_token = optional(bool, true)
     secret = optional(list(object({
       name = string
     })), [])
@@ -451,6 +463,8 @@ resource "kubernetes_secret" "secrets" {
 
 
 
+
+
 # A ServiceAccount is used by an application running inside a pod to authenticate itself with the
 # API server. A default ServiceAccount is automatically created for each namespace; each pod is
 # associated with exactly one ServiceAccount, but multiple pods can use the same ServiceAccount. A
@@ -546,7 +560,7 @@ resource "kubernetes_deployment" "deployment" {
         }
         service_account_name = (
           var.service_account == null ? "default" :
-                                 kubernetes_service_account.service_account[0].metadata[0].name
+          kubernetes_service_account.service_account[0].metadata[0].name
         )
         # Security context options at the pod level serve as a default for all the pod's containers
         # but can be overridden at the container level.
@@ -659,6 +673,20 @@ resource "kubernetes_deployment" "deployment" {
                   }
                 }
               }
+              dynamic "exec" {
+                # for_each = it.value["exec"] != null ? [it.value["exec"]] : []
+                for_each = readiness_probe.value["exec"] != null ? [readiness_probe.value["exec"]] : []
+                content {
+                  command = exec.value.command
+                }
+              }
+              dynamic "tcp_socket" {
+                # for_each = it.value["tcp_socket"] != null ? [it.value["tcp_socket"]] : []
+                for_each = readiness_probe.value["tcp_socket"] != null ? [readiness_probe.value["tcp_socket"]] : []
+                content {
+                  port = tcp_socket.value.port
+                }
+              }
             }
           }
           dynamic "liveness_probe" {
@@ -686,6 +714,18 @@ resource "kubernetes_deployment" "deployment" {
                       value = it2.value["value"]
                     }
                   }
+                }
+              }
+              dynamic "exec" {
+                for_each = it.value["exec"] != null ? [it.value["exec"]] : []
+                content {
+                  command = exec.value.command
+                }
+              }
+              dynamic "tcp_socket" {
+                for_each = it.value["tcp_socket"] != null ? [it.value["tcp_socket"]] : []
+                content {
+                  port = tcp_socket.value.port
                 }
               }
             }
