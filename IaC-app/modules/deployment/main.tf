@@ -174,7 +174,7 @@ variable security_context {
 }
 variable env {
   default = {}
-  type = map
+  type = map(any)
 }
 variable env_secret {
   default = []
@@ -236,7 +236,7 @@ variable service_account {
   default = null
   type = object({
     name = string
-    annotations = optional(map(string), null)
+    annotations = optional(map(string), {})
     automount_service_account_token = optional(bool, true)
     secret = optional(list(object({
       name = string
@@ -558,10 +558,7 @@ resource "kubernetes_deployment" "deployment" {
         image_pull_secrets {
           name = kubernetes_secret.registry_credentials.metadata[0].name
         }
-        service_account_name = (
-          var.service_account == null ? "default" :
-          kubernetes_service_account.service_account[0].metadata[0].name
-        )
+        service_account_name = var.service_account == null ? "default" : var.service_account.name
         # Security context options at the pod level serve as a default for all the pod's containers
         # but can be overridden at the container level.
         dynamic "security_context" {
