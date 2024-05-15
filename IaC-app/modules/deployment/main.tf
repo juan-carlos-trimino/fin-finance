@@ -411,6 +411,11 @@ resource "null_resource" "docker_push" {
 }
 
 # The maximum size of a Secret is limited to 1MB.
+# K8s helps keep Secrets safe by making sure each Secret is only distributed to the nodes that run
+# the pods that need access to the Secret.
+# On the nodes, Secrets are always stored in memory and never written to physical storage. (The
+# secret volume uses an in-memory filesystem (tmpfs) for the Secret files.)
+# From K8s version 1.7, etcd stores Secrets in encrypted form.
 resource "kubernetes_secret" "secrets" {
   count = length(var.secrets)
   metadata {
