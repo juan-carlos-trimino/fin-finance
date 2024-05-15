@@ -310,6 +310,35 @@ module "fin-finances" {
     limits_cpu = "300m"
     limits_memory = "300Mi"
   }
+  #### https://kubernetes.io/docs/concepts/configuration/secret/
+  # If the order of Secrets changes, the Deployment must be changed accordingly.
+  secrets = [{
+    name = "${local.svc_finances}-registry-credentials"
+    # Plain-text data.
+    data = {
+      ".dockerconfigjson" = jsonencode({
+        auths = {
+          "${local.cr_login_server}" = {
+            auth = base64encode("${var.cr_username}:${var.cr_password}")
+          }
+        }
+      })
+    }
+    type = "kubernetes.io/dockerconfigjson"
+  },
+  /*** s3 storage
+  {
+    name = "${local.svc_finances}-s3-storage"
+    data = {
+      obj_storage_ns = var.obj_storage_ns
+      region = var.region
+      aws_access_key_id = var.aws_access_key_id
+      aws_secret_access_key = var.aws_secret_access_key
+    }
+    type = "Opaque"
+  }
+  s3 storage ***/
+  ]
   service_account = {
     name = "${local.svc_finances}-service-account"
     # Note: The keys and the values in the map must be strings. In other words, you cannot use
@@ -341,11 +370,6 @@ module "fin-finances" {
     SERVER = "http://${local.svc_dns_finances}"
   }
   /*** s3 storage
-  obj_storage = [{
-    aws_access_key_id = var.aws_access_key_id
-    aws_secret_access_key = var.aws_secret_access_key
-    obj_storage_ns = var.obj_storage_ns
-  }]
   env_secret = [{
     env_name = "AWS_SECRET_ACCESS_KEY"
     secret_name = "${local.svc_finances}-s3-storage"
@@ -364,7 +388,6 @@ module "fin-finances" {
   {
     env_name = "AWS_ACCESS_KEY_ID"
     secret_name = "${local.svc_finances}-s3-storage"
-    # secret_name = "kubernetes_secret.obj_storage.metadata[0].name"
     secret_key = "aws_access_key_id"
   }]
   s3 storage ***/

@@ -40,15 +40,6 @@ variable cr_password {
   type = string
   sensitive = true
 }
-variable obj_storage {
-  default = []
-  type = list(object({
-    obj_storage_ns = string
-    aws_access_key_id = string
-    aws_secret_access_key = string
-  }))
-  sensitive = true
-}
 variable readiness_probe {
   default = []
   type = list(object({
@@ -232,6 +223,21 @@ variable service_type {
   default = "ClusterIP"
   type = string
 }
+
+
+variable secrets {
+  default = []
+  type = list(object({
+    name = string
+    annotations = optional(map(string), {})
+    data = optional(map(string), {})
+    binary_data = optional(map(string), {})
+    type = optional(string, "Opaque")
+  }))
+  sensitive = true
+}
+
+
 variable service_account {
   default = null
   type = object({
@@ -404,66 +410,22 @@ resource "null_resource" "docker_push" {
   }
 }
 
-resource "kubernetes_secret" "registry_credentials" {
-  metadata {
-    name = "${var.service_name}-registry-credentials"
-    namespace = var.namespace
-    labels = {
-      app = var.app_name
-    }
-  }
-  data = {
-    ".dockerconfigjson" = jsonencode({
-      auths = {
-        "${var.cr_login_server}" = {
-          auth = base64encode("${var.cr_username}:${var.cr_password}")
-        }
-      }
-    })
-  }
-  type = "kubernetes.io/dockerconfigjson"
-}
-
-resource "kubernetes_secret" "obj_storage" {  # For object storage.
-  count = length(var.obj_storage)
-  metadata {
-    name = "${var.service_name}-s3-storage"
-    namespace = var.namespace
-    labels = {
-      app = var.app_name
-    }
-  }
-  # Plain-text data.
-  data = {
-    obj_storage_ns = var.obj_storage[count.index].obj_storage_ns
-    region = var.region
-    aws_access_key_id = var.obj_storage[count.index].aws_access_key_id
-    aws_secret_access_key = var.obj_storage[count.index].aws_secret_access_key
-  }
-  type = "Opaque"
-}
-
-
-
+# The maximum size of a Secret is limited to 1MB.
 resource "kubernetes_secret" "secrets" {
-  count = length(var.obj_storage)
+  count = length(var.secrets)
   metadata {
-    name = "${var.service_name}-secrets"
+    name = var.secrets[count.index].name
     namespace = var.namespace
     labels = {
       app = var.app_name
     }
+    annotations = var.secrets[count.index].annotations
   }
   # Plain-text data.
-  data = {
-  }
-  type = "Opaque"
+  data = var.secrets[count.index].data
+  binary_data = var.secrets[count.index].binary_data
+  type = var.secrets[count.index].type
 }
-
-
-
-
-
 
 # A ServiceAccount is used by an application running inside a pod to authenticate itself with the
 # API server. A default ServiceAccount is automatically created for each namespace; each pod is
@@ -556,7 +518,7 @@ resource "kubernetes_deployment" "deployment" {
       spec {
         termination_grace_period_seconds = var.termination_grace_period_seconds
         image_pull_secrets {
-          name = kubernetes_secret.registry_credentials.metadata[0].name
+          name = kubernetes_secret.secrets[0].metadata[0].name  # registry-credentials
         }
         service_account_name = var.service_account == null ? "default" : var.service_account.name
         # Security context options at the pod level serve as a default for all the pod's containers
@@ -755,7 +717,6 @@ resource "kubernetes_deployment" "deployment" {
               name = env.value["env_name"]
               value_from {
                 secret_key_ref {
-                  # name = kubernetes_secret.obj_storage.metadata[0].name
                   name = env.value["secret_name"]
                   key = env.value["secret_key"]
                 }
