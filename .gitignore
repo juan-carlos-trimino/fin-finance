@@ -5,6 +5,7 @@
 !.dockerignore
 !.gitignore
 !Dockerfile-prod
+!fin-finance.code-workspace
 !LICENSE
 !README.md
 # ... and these files under the 'src' directory...
