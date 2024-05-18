@@ -1,9 +1,7 @@
 package webfinances
 
 import (
-  //"encoding/json"
   "finance/middlewares"
-  "finance/misc"
   "finance/sessions"
   "fmt"
   //Package template (html/template) implements data-driven templates for generating HTML output
@@ -13,7 +11,6 @@ import (
   "net/http"
 )
 
-var m = misc.Misc{}
 var tmpl *template.Template
 
 /***

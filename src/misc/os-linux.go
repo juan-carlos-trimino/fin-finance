@@ -207,3 +207,27 @@ func WriteAllExclusiveLock2(filePath string, data1 string, data2 []byte, flag in
   }
   return n1, n2, err
 }
+
+func CheckFileExists(fileName string) (bool, error) {
+  info, err := os.Stat(fileName)
+  if err != nil {
+    if os.IsNotExist(err) {
+      return false, nil
+    } else {
+      return false, err
+    }
+  }
+  return !info.IsDir(), nil
+}
+
+func CheckDirExists(dirName string) (bool, error) {
+  info, err := os.Stat(dirName)
+  if err != nil {
+    if os.IsNotExist(err) {
+      return false, nil
+    } else {
+      return false, err
+    }
+  }
+  return info.IsDir(), nil
+}

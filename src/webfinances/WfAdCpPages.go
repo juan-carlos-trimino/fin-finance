@@ -1,19 +1,25 @@
 package webfinances
 
 import (
-	"context"
-	"encoding/json"
-	"finance/finances"
-	"finance/middlewares"
-	"finance/misc"
-	"finance/sessions"
-	"fmt"
-	"html/template"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
+  "context"
+  "encoding/json"
+  "finance/finances"
+  "finance/middlewares"
+  "finance/misc"
+  "finance/sessions"
+  "fmt"
+  "html/template"
+  // "github.com/juan-carlos-trimino/gplogger"
+  "net/http"
+  "os"
+  "strconv"
+  "strings"
 )
+
+
+
+var m = misc.Misc{}
+
 
 type WfAdCpPages struct {
 }
