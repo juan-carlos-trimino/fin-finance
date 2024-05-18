@@ -1,24 +1,20 @@
 package webfinances
 
 import (
-	"context"
-	"encoding/json"
-	"finance/finances"
-	"finance/middlewares"
-	"finance/misc"
-	"finance/sessions"
-	"fmt"
-	"html/template"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
+  "context"
+  "encoding/json"
+  "finance/finances"
+  "finance/middlewares"
+  "finance/misc"
+  "finance/sessions"
+  "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
+  "html/template"
+  "net/http"
+  "os"
+  "strconv"
+  "strings"
 )
-
-
-
-var m = misc.Misc{}
-
 
 var mortgage_notes = [...]string {
   "Refinance mortgage and HELOC with one load.",
@@ -41,10 +37,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
     return
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  logEntry := LogEntry{}
-  logEntry.Print(INFO, correlationId, []string {
-    "Entering MortgagePages/webfinances.",
-  })
+  logger.LogInfo("Entering MortgagePages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     mf := getMortgageFields(userName)
@@ -96,10 +89,9 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
           mf.Fd1Result[1] = fmt.Sprintf("Total Interest: $%.2f", totalInterest)
           mf.Fd1Result[2] = fmt.Sprintf("Total Cost: $%.2f", totalCost)
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, amount = %s, %s", mf.Fd1N,
-            mf.Fd1TimePeriod, mf.Fd1Interest, mf.Fd1Compound, mf.Fd1Amount, mf.Fd1Result[0]),
-        })
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, amount = %s, %s",
+         mf.Fd1N, mf.Fd1TimePeriod, mf.Fd1Interest, mf.Fd1Compound, mf.Fd1Amount, mf.Fd1Result[0]),
+         correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -123,7 +115,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd1Compound string
         Fd1Amount string
         Fd1Result [3]string
-      } { "Mortgage", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
+      } { "Mortgage", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd1N, mf.Fd1TimePeriod, mf.Fd1Interest, mf.Fd1Compound, mf.Fd1Amount, mf.Fd1Result,
         })
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui2") {
@@ -180,11 +172,10 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
           mf.Fd2TotalCost = fmt.Sprintf("Total Cost: $%.2f", at.TotalCost)
           mf.Fd2TotalInterest = fmt.Sprintf("Total Interest: $%.2f", at.TotalInterest)
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, amount = %s, total cost = %s, total interest = %s",
-            mf.Fd2N, mf.Fd2TimePeriod, mf.Fd2Interest, mf.Fd2Compound, mf.Fd2Amount,
-            mf.Fd2TotalCost, mf.Fd2TotalInterest),
-        })
+        logger.LogInfo(fmt.Sprintf(
+         "n = %s, tp = %s, interest = %s, cp = %s, amount = %s, total cost = %s, total interest = %s",
+         mf.Fd2N, mf.Fd2TimePeriod, mf.Fd2Interest, mf.Fd2Compound, mf.Fd2Amount, mf.Fd2TotalCost,
+         mf.Fd2TotalInterest), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -206,9 +197,9 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd2TotalCost string
         Fd2TotalInterest string
         Fd2Result []Row
-      } { "Mortgage", m.DTF(), mf.CurrentButton, newSession.CsrfToken, mf.Fd2N, mf.Fd2TimePeriod,
-          mf.Fd2Interest, mf.Fd2Compound, mf.Fd2Amount, mf.Fd2TotalCost, mf.Fd2TotalInterest,
-          mf.Fd2Result,
+      } { "Mortgage", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken, mf.Fd2N,
+          mf.Fd2TimePeriod, mf.Fd2Interest, mf.Fd2Compound, mf.Fd2Amount, mf.Fd2TotalCost,
+          mf.Fd2TotalInterest, mf.Fd2Result,
         })
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui3") {
       mf.CurrentButton = "lhs-button3"
@@ -235,10 +226,9 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
           mf.Fd3Result[2] = fmt.Sprintf("Blended Interest Rate: %.3f%%",
             m.BlendedInterestRate(mBalance, mRate, hBalance, hRate))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("mortgage balance = %s, mortgage rate = %s, HELOC balance = %s, HELOC rate = %s, %s\n",
-            mf.Fd3Mbalance, mf.Fd3Mrate, mf.Fd3Hbalance, mf.Fd3Hrate, mf.Fd3Result[2]),
-        })
+        logger.LogInfo(fmt.Sprintf(
+         "mortgage balance = %s, mortgage rate = %s, HELOC balance = %s, HELOC rate = %s, %s",
+         mf.Fd3Mbalance, mf.Fd3Mrate, mf.Fd3Hbalance, mf.Fd3Hrate, mf.Fd3Result[2]), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -257,17 +247,17 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd3Hrate string
         Fd3Hbalance string
         Fd3Result [3]string
-      } { "Mortgage", m.DTF(), mf.CurrentButton, newSession.CsrfToken, mf.Fd3Mrate, mf.Fd3Mbalance,
-          mf.Fd3Hrate, mf.Fd3Hbalance, mf.Fd3Result,
+      } { "Mortgage", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken, mf.Fd3Mrate,
+          mf.Fd3Mbalance, mf.Fd3Hrate, mf.Fd3Hbalance, mf.Fd3Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", mf.CurrentPage)
-      fmt.Printf("%s - %s\n", m.DTF(), errString)
+      logger.LogError(errString, "-1")
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      fmt.Println("*** Request timeout ***")
+      logger.LogWarning("*** Request timeout ***", "-1")
       if strings.EqualFold(mf.CurrentPage, "rhs-ui1") {
         mf.Fd1Result[0] = ""
         mf.Fd1Result[1] = ""
@@ -282,17 +272,17 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
     }
     //
     if data, err := json.Marshal(mf); err != nil {
-      fmt.Printf("%s - %s\n", m.DTF(), err)
+      logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/mortgage.txt", mainDir, userName)
       if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
-        fmt.Printf("%s - %s\n", m.DTF(), err)
+        logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    fmt.Printf("%s - %s\n", m.DTF(), errString)
+    logger.LogError(errString, "-1")
     panic(errString)
   }
 }

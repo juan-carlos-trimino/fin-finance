@@ -8,6 +8,7 @@ import (
 	"finance/misc"
 	"finance/sessions"
   "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
   "html/template"
   "net/http"
 	"os"
@@ -26,10 +27,7 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
     return
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  logEntry := LogEntry{}
-  logEntry.Print(INFO, correlationId, []string {
-    "Entering OaCpPages/webfinances.",
-  })
+  logger.LogInfo("Entering OaCpPages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     of := getOaCpFields(userName)
@@ -76,10 +74,8 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
             i / 100.0, oa.GetCompoundingPeriod(of.Fd1Compound[0], true)),
             oa.TimePeriods(of.Fd1Compound))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("i = %s, cp = %s, pv = %s, fv = %s, %s",
-            of.Fd1Interest, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result),
-        })
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pv = %s, fv = %s, %s", of.Fd1Interest,
+         of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -102,7 +98,7 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
         Fd1PV string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Compounding Periods", m.DTF(), of.CurrentButton,
+      } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), of.CurrentButton,
           newSession.CsrfToken, of.Fd1Interest, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result,
         })
     } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
@@ -128,10 +124,8 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
             i / 100.0, oa.GetCompoundingPeriod(of.Fd2Compound[0], true)),
             oa.TimePeriods(of.Fd2Compound))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("i = %s, cp = %s, pmt = %s, pv = %s, %s",
-            of.Fd2Interest, of.Fd2Compound, of.Fd2Payment, of.Fd2PV, of.Fd2Result),
-        })
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, pv = %s, %s", of.Fd2Interest,
+         of.Fd2Compound, of.Fd2Payment, of.Fd2PV, of.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -150,7 +144,7 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
         Fd2Payment string
         Fd2PV string
         Fd2Result string
-      } { "Ordinary Annuity / Compounding Periods", m.DTF(), of.CurrentButton,
+      } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), of.CurrentButton,
           newSession.CsrfToken, of.Fd2Interest, of.Fd2Compound, of.Fd2Payment, of.Fd2PV,
           of.Fd2Result,
         })
@@ -177,10 +171,8 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
             i / 100.0, oa.GetCompoundingPeriod(of.Fd3Compound[0], true)),
             oa.TimePeriods(of.Fd3Compound))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", of.Fd3Interest,
-            of.Fd3Compound, of.Fd3Payment, of.Fd3FV, of.Fd3Result),
-        })
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", of.Fd3Interest,
+         of.Fd3Compound, of.Fd3Payment, of.Fd3FV, of.Fd3Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -199,18 +191,18 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
         Fd3Payment string
         Fd3FV string
         Fd3Result string
-      } { "Ordinary Annuity / Compounding Periods", m.DTF(), of.CurrentButton,
+      } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), of.CurrentButton,
           newSession.CsrfToken, of.Fd3Interest, of.Fd3Compound, of.Fd3Payment, of.Fd3FV,
           of.Fd3Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
-      fmt.Printf("%s - %s\n", m.DTF(), errString)
+      logger.LogInfo(errString, "-1")
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      fmt.Println("*** Request timeout ***")
+      logger.LogWarning("*** Request timeout ***", "-1")
       if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
         of.Fd1Result = ""
       } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
@@ -221,17 +213,17 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
     }
     //
     if data, err := json.Marshal(of); err != nil {
-      fmt.Printf("%s - %s\n", m.DTF(), err)
+      logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/oacp.txt", mainDir, userName)
       if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
-        fmt.Printf("%s - %s\n", m.DTF(), err)
+        logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    fmt.Printf("%s - %s\n", m.DTF(), errString)
+    logger.LogError(errString, "-1")
     panic(errString)
   }
 }

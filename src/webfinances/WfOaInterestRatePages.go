@@ -2,15 +2,16 @@ package webfinances
 
 import (
   "context"
-	"encoding/json"
+  "encoding/json"
   "finance/finances"
   "finance/middlewares"
-	"finance/misc"
-	"finance/sessions"
+  "finance/misc"
+  "finance/sessions"
   "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
   "html/template"
   "net/http"
-	"os"
+  "os"
   "strconv"
   "strings"
 )
@@ -26,10 +27,7 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
     return
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  logEntry := LogEntry{}
-  logEntry.Print(INFO, correlationId, []string {
-    "Entering OaInterestRatePages/webfinances.",
-  })
+  logger.LogInfo("Entering OaInterestRatePages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     of := getOaInterestRateFields(userName)
@@ -77,10 +75,8 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
             oa.GetTimePeriod(of.Fd1TimePeriod[0], true),
             oa.GetCompoundingPeriod(of.Fd1Compound[0], true)) * 100.0, of.Fd1Compound)
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("n = %s, tp = %s, cp = %s, pv = %s, fv = %s, %s",
-            of.Fd1N, of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result),
-        })
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, cp = %s, pv = %s, fv = %s, %s", of.Fd1N,
+         of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -104,34 +100,35 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
         Fd1PV string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Interest Rate", m.DTF(), of.CurrentButton, newSession.CsrfToken,
-          of.Fd1N, of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result,
+      } { "Ordinary Annuity / Interest Rate", logger.DatetimeFormat(), of.CurrentButton,
+          newSession.CsrfToken, of.Fd1N, of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV,
+          of.Fd1Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
-      fmt.Printf("%s - %s\n", m.DTF(), errString)
+      logger.LogError(errString, "-1")
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      fmt.Println("*** Request timeout ***")
+      logger.LogWarning("*** Request timeout ***", "-1")
       if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
         of.Fd1Result = ""
       }
     }
     //
     if data, err := json.Marshal(of); err != nil {
-      fmt.Printf("%s - %s\n", m.DTF(), err)
+      logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/oainterestrate.txt", mainDir, userName)
       if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
-        fmt.Printf("%s - %s\n", m.DTF(), err)
+        logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    fmt.Printf("%s - %s\n", m.DTF(), errString)
+    logger.LogError(errString, "-1")
     panic(errString)
   }
 }

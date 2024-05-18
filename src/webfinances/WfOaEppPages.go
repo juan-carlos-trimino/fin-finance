@@ -8,6 +8,7 @@ import (
 	"finance/misc"
 	"finance/sessions"
   "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
   "html/template"
   "net/http"
 	"os"
@@ -26,10 +27,7 @@ func (o WfOaEppPages) OaEppPages(res http.ResponseWriter, req *http.Request) {
     return
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  logEntry := LogEntry{}
-  logEntry.Print(INFO, correlationId, []string {
-    "Entering OaEppPages/webfinances.",
-  })
+  logger.LogInfo("Entering OaEppPages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     of := getOaEppFields(userName)
@@ -77,10 +75,8 @@ func (o WfOaEppPages) OaEppPages(res http.ResponseWriter, req *http.Request) {
             oa.GetCompoundingPeriod(of.Fd1Compound[0], true), n,
             oa.GetTimePeriod(of.Fd1TimePeriod[0], true)))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, fv = %s, %s", of.Fd1N,
-            of.Fd1TimePeriod, of.Fd1Interest, of.Fd1Compound, of.Fd1FV, of.Fd1Result),
-        })
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, fv = %s, %s", of.Fd1N,
+         of.Fd1TimePeriod, of.Fd1Interest, of.Fd1Compound, of.Fd1FV, of.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -104,7 +100,7 @@ func (o WfOaEppPages) OaEppPages(res http.ResponseWriter, req *http.Request) {
         Fd1Compound string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Equal Periodic Payments", m.DTF(), of.CurrentButton,
+      } { "Ordinary Annuity / Equal Periodic Payments", logger.DatetimeFormat(), of.CurrentButton,
           newSession.CsrfToken, of.Fd1N, of.Fd1TimePeriod, of.Fd1Interest, of.Fd1Compound,
           of.Fd1FV, of.Fd1Result,
         })
@@ -132,10 +128,8 @@ func (o WfOaEppPages) OaEppPages(res http.ResponseWriter, req *http.Request) {
             oa.GetCompoundingPeriod(of.Fd2Compound[0], true), n,
             oa.GetTimePeriod(of.Fd2TimePeriod[0], true)))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", of.Fd2N,
-            of.Fd2TimePeriod, of.Fd2Interest, of.Fd2Compound, of.Fd2PV, of.Fd2Result),
-        })
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", of.Fd2N,
+         of.Fd2TimePeriod, of.Fd2Interest, of.Fd2Compound, of.Fd2PV, of.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -155,18 +149,18 @@ func (o WfOaEppPages) OaEppPages(res http.ResponseWriter, req *http.Request) {
         Fd2Compound string
         Fd2PV string
         Fd2Result string
-      } { "Ordinary Annuity / Equal Periodic Payments", m.DTF(), of.CurrentButton,
+      } { "Ordinary Annuity / Equal Periodic Payments", logger.DatetimeFormat(), of.CurrentButton,
           newSession.CsrfToken, of.Fd2N, of.Fd2TimePeriod, of.Fd2Interest, of.Fd2Compound,
           of.Fd2PV, of.Fd2Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
-      fmt.Printf("%s - %s\n", m.DTF(), errString)
+      logger.LogError(errString, "-1")
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      fmt.Println("*** Request timeout ***")
+      logger.LogWarning("*** Request timeout ***", "-1")
       if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
         of.Fd1Result = ""
       } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
@@ -175,17 +169,17 @@ func (o WfOaEppPages) OaEppPages(res http.ResponseWriter, req *http.Request) {
     }
     //
     if data, err := json.Marshal(of); err != nil {
-      fmt.Printf("%s - %s\n", m.DTF(), err)
+      logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/oaepp.txt", mainDir, userName)
       if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
-        fmt.Printf("%s - %s\n", m.DTF(), err)
+        logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    fmt.Printf("%s - %s\n", m.DTF(), errString)
+    logger.LogError(errString, "-1")
     panic(errString)
   }
 }
