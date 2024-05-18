@@ -1,18 +1,19 @@
 package webfinances
 
 import (
-	"context"
-	"encoding/json"
-	"finance/finances"
-	"finance/middlewares"
-	"finance/misc"
-	"finance/sessions"
-	"fmt"
-	"html/template"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
+  "context"
+  "encoding/json"
+  "finance/finances"
+  "finance/middlewares"
+  "finance/misc"
+  "finance/sessions"
+  "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
+  "html/template"
+  "net/http"
+  "os"
+  "strconv"
+  "strings"
 )
 
 var misc_notes = [...]string {
@@ -34,10 +35,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     return
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  logEntry := LogEntry{}
-  logEntry.Print(INFO, correlationId, []string {
-    "Entering MiscellaneousPages/webfinances.",
-  })
+  logger.LogInfo("Entering MiscellaneousPages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     mf := getMiscellaneousFields(userName)
@@ -75,10 +73,8 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
           mf.Fd1Result[1] = fmt.Sprintf("Effective Annual Rate: %.3f%%",
            a.NominalRateToEAR(nr / 100.0, a.GetCompoundingPeriod(mf.Fd1Compound[0], false)) * 100.0)
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("nominal rate = %s, cp = %s, %s", mf.Fd1Nominal, mf.Fd1Compound,
-           mf.Fd1Result[1]),
-        })
+        logger.LogInfo(fmt.Sprintf("nominal rate = %s, cp = %s, %s", mf.Fd1Nominal, mf.Fd1Compound,
+         mf.Fd1Result[1]), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -116,10 +112,8 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
           mf.Fd2Result[2] = fmt.Sprintf("Nominal Rate: %.3f%% %s", a.EARToNominalRate(ear / 100.0,
             a.GetCompoundingPeriod(mf.Fd2Compound[0], false)) * 100.0, mf.Fd2Compound)
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("effective rate = %s, cp = %s, %s", mf.Fd2Effective, mf.Fd2Compound,
-           mf.Fd2Result[2]),
-        })
+        logger.LogInfo(fmt.Sprintf("effective rate = %s, cp = %s, %s", mf.Fd2Effective,
+         mf.Fd2Compound, mf.Fd2Result[2]), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -156,10 +150,8 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
           mf.Fd3Result[3] = fmt.Sprintf("Real Interest Rate: %.3f%%", a.RealInterestRate(
            nr / 100.0, ir / 100.0) * 100.0)
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("nominal rate = %s, inflation rate = %s, %s", mf.Fd3Nominal, mf.Fd3Inflation,
-           mf.Fd3Result[3]),
-        })
+        logger.LogInfo(fmt.Sprintf("nominal rate = %s, inflation rate = %s, %s", mf.Fd3Nominal,
+         mf.Fd3Inflation, mf.Fd3Result[3]), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -218,10 +210,8 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
             a.GetCompoundingPeriod(mf.Fd4CurrentCompound[0], isCurrentDaily365),
             a.GetCompoundingPeriod(mf.Fd4NewCompound[0], isNewDaily365)) * 100.0)
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("current rate = %s, current compound = %s, new compound = %s, %s",
-          mf.Fd4CurrentRate, mf.Fd4CurrentCompound, mf.Fd4NewCompound, mf.Fd4Result),
-        })
+        logger.LogInfo(fmt.Sprintf("current rate = %s, current compound = %s, new compound = %s, %s",
+         mf.Fd4CurrentRate, mf.Fd4CurrentCompound, mf.Fd4NewCompound, mf.Fd4Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -265,10 +255,8 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
            ir / 100.0, a.GetCompoundingPeriod(mf.Fd5Compound[0], true)),
            a.TimePeriods(mf.Fd5Compound))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("interest rate = %s, cp = %s, factor = %s, %s\n", mf.Fd5Interest,
-           mf.Fd5Compound, mf.Fd5Factor, mf.Fd5Result),
-        })
+        logger.LogInfo(fmt.Sprintf("interest rate = %s, cp = %s, factor = %s, %s\n",
+         mf.Fd5Interest, mf.Fd5Compound, mf.Fd5Factor, mf.Fd5Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -307,9 +295,8 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
           var a finances.Annuities
           mf.Fd6Result[1] = fmt.Sprintf("Avg: %.3f%%", a.AverageRateOfReturn(values) * 100.0)
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("values = [%s], %s\n", mf.Fd6Values, mf.Fd6Result[1]),
-        })
+        logger.LogInfo(fmt.Sprintf("values = [%s], %s\n", mf.Fd6Values, mf.Fd6Result[1]),
+         correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -352,10 +339,9 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
            a.GetCompoundingPeriod(mf.Fd7Compound[0], false), time,
            a.GetTimePeriod(mf.Fd7TimePeriod[0], false)))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("time = %s, tp = %s, rate = %s, cp = %s, pv = %s, %s\n", mf.Fd7Time,
-           mf.Fd7TimePeriod, mf.Fd7Rate, mf.Fd7Compound, mf.Fd7PV, mf.Fd7Result),
-        })
+        logger.LogInfo(fmt.Sprintf("time = %s, tp = %s, rate = %s, cp = %s, pv = %s, %s\n",
+         mf.Fd7Time, mf.Fd7TimePeriod, mf.Fd7Rate, mf.Fd7Compound, mf.Fd7PV, mf.Fd7Result),
+         correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -380,12 +366,12 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", mf.CurrentPage)
-      fmt.Printf("%s - %s\n", m.DTF(), errString)
+      logger.LogError(errString, "-1")
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      fmt.Println("*** Request timeout ***")
+      logger.LogWarning("*** Request timeout ***", "-1")
       if strings.EqualFold(mf.CurrentPage, "rhs-ui1") {
         mf.Fd1Result[1] = ""
       } else if strings.EqualFold(mf.CurrentPage, "rhs-ui2") {
@@ -404,17 +390,17 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     }
     //
     if data, err := json.Marshal(mf); err != nil {
-      fmt.Printf("%s - %s\n", m.DTF(), err)
+      logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/miscellaneous.txt", mainDir, userName)
       if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
-        fmt.Printf("%s - %s\n", m.DTF(), err)
+        logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    fmt.Printf("%s - %s\n", m.DTF(), errString)
+    logger.LogError(errString, "-1")
     panic(errString)
   }
 }

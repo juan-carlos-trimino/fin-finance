@@ -1,25 +1,21 @@
 package webfinances
 
 import (
-	"context"
-	"encoding/json"
-	"finance/finances"
-	"finance/middlewares"
-	"finance/misc"
-	"finance/sessions"
-	"fmt"
-	"html/template"
+  "context"
+  "encoding/json"
+  "finance/finances"
+  "finance/middlewares"
+  "finance/misc"
+  "finance/sessions"
+  "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
+  "html/template"
   "math"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
+  "net/http"
+  "os"
+  "strconv"
+  "strings"
 )
-
-
-
-var m = misc.Misc{}
-
 
 var bond_notes = [...]string {
   "The Macaulay duration is a measure of a bond's sensitivity to interest rate changes. The " +
@@ -45,10 +41,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     return
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  logEntry := LogEntry{}
-  logEntry.Print(INFO, correlationId, []string {
-    "Entering BondsPages/webfinances.",
-  })
+  logger.LogInfo("Entering BondsPages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     bf := getBondsFields(userName)
@@ -97,10 +90,9 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           bf.Fd1Result = fmt.Sprintf("Taxable-Equivalent Yield: %.3f%%",
             b.TaxableVsTaxFreeYields(taxFree, cityTax, stateTax, federalTax) * 100.0)
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("tax free = %s, city tax = %s, state tax = %s, federal tax = %s, %s",
-            bf.Fd1TaxFree, bf.Fd1CityTax, bf.Fd1StateTax, bf.Fd1FederalTax, bf.Fd1Result),
-        })
+        logger.LogInfo(fmt.Sprintf(
+         "tax free = %s, city tax = %s, state tax = %s, federal tax = %s, %s", bf.Fd1TaxFree,
+         bf.Fd1CityTax, bf.Fd1StateTax, bf.Fd1FederalTax, bf.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -170,11 +162,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
             bf.Fd2Result = fmt.Sprintf("Current Price: $%.2f (discount)", currentPrice)
           }
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon rate = %s, current interest = %s, cp = %s, %s",
-            bf.Fd2FaceValue, bf.Fd2Time, bf.Fd2TimePeriod, bf.Fd2Coupon, bf.Fd2Current,
-            bf.Fd2Compound, bf.Fd2Result),
-        })
+        logger.LogInfo(fmt.Sprintf(
+         "fv = %s, time = %s, tp = %s, coupon rate = %s, current interest = %s, cp = %s, %s",
+         bf.Fd2FaceValue, bf.Fd2Time, bf.Fd2TimePeriod, bf.Fd2Coupon, bf.Fd2Current,
+         bf.Fd2Compound, bf.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -232,11 +223,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
             b.GetCompoundingPeriod(bf.Fd3Compound[0], true), timeToCall,
             b.GetTimePeriod(bf.Fd3TimePeriod[0], true), bondPrice, callPrice))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("fv = %s, coupon rate = %s, cp = %s, time to call = %s, tp = %s, bond price = %s, call price = %s, %s\n",
-            bf.Fd3FaceValue, bf.Fd3Coupon, bf.Fd3Compound, bf.Fd3TimeCall, bf.Fd3TimePeriod,
-            bf.Fd3BondPrice, bf.Fd3CallPrice, bf.Fd3Result),
-        })
+        logger.LogInfo(fmt.Sprintf(
+         "fv = %s, coupon rate = %s, cp = %s, time to call = %s, tp = %s, bond price = %s, call price = %s, %s",
+         bf.Fd3FaceValue, bf.Fd3Coupon, bf.Fd3Compound, bf.Fd3TimeCall, bf.Fd3TimePeriod,
+         bf.Fd3BondPrice, bf.Fd3CallPrice, bf.Fd3Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -330,11 +320,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           }
           bf.Fd4Result[1] = fmt.Sprintf("Current Yield = %.3f%%", b.CurrentYield(annualRate, fv, bondPrice) * 100.0)
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur radio = %s, cur interest = %s, bond price = %s, %s",
-            bf.Fd4FaceValue, bf.Fd4Time, bf.Fd4TimePeriod, bf.Fd4Coupon, bf.Fd4Compound,
-            bf.Fd4CurrentRadio, bf.Fd4CurInterest, bf.Fd4BondPrice, bf.Fd4Result),
-        })
+        logger.LogInfo(fmt.Sprintf(
+         "fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur radio = %s, cur interest = %s, bond price = %s, %s",
+         bf.Fd4FaceValue, bf.Fd4Time, bf.Fd4TimePeriod, bf.Fd4Coupon, bf.Fd4Compound,
+         bf.Fd4CurrentRadio, bf.Fd4CurInterest, bf.Fd4BondPrice, bf.Fd4Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -431,11 +420,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
               b.GetCompoundingPeriod(bf.Fd5Compound[0], true)))
           }
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur interest = %s, %s",
-            bf.Fd5FaceValue, bf.Fd5Time, bf.Fd5TimePeriod, bf.Fd5Coupon, bf.Fd5Compound,
-            bf.Fd5CurInterest, bf.Fd5Result),
-        })
+        logger.LogInfo(fmt.Sprintf(
+         "fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur interest = %s, %s",
+         bf.Fd5FaceValue, bf.Fd5Time, bf.Fd5TimePeriod, bf.Fd5Coupon, bf.Fd5Compound,
+         bf.Fd5CurInterest, bf.Fd5Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -657,12 +645,12 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     //     })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", bf.CurrentPage)
-      fmt.Printf("%s - %s\n", m.DTF(), errString)
+      logger.LogError(errString, "-1")
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      fmt.Println("*** Request timeout ***")
+      logger.LogWarning("*** Request timeout ***", "-1")
       if strings.EqualFold(bf.CurrentPage, "rhs-ui1") {
         bf.Fd1Result = ""
       } else if strings.EqualFold(bf.CurrentPage, "rhs-ui2") {
@@ -690,17 +678,17 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     }
     //
     if data, err := json.Marshal(bf); err != nil {
-      fmt.Printf("%s - %s\n", m.DTF(), err)
+      logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/bonds.txt", mainDir, userName)
       if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
-        fmt.Printf("%s - %s\n", m.DTF(), err)
+        logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    fmt.Printf("%s - %s\n", m.DTF(), errString)
+    logger.LogError(errString, "-1")
     panic(errString)
   }
 }
