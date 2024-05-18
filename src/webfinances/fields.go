@@ -1,15 +1,15 @@
 package webfinances
 
 import (
-	"encoding/json"
-	"errors"
-	"finance/misc"
-	"fmt"
-	"os"
+  "encoding/json"
+  "errors"
+  "finance/misc"
+  "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
+  "os"
 )
 
 var mainDir string = "/fields"
-var mt = misc.Misc{}
 
 func SetupDirStructure(dir string) {
   mainDir = dir + mainDir
@@ -100,12 +100,12 @@ func newMiscellaneousFields(dir1, dir2 string) *miscellaneousFields {
     err := json.Unmarshal(obj, &m)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &m
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &miscellaneousFields {
     CurrentPage: "rhs-ui1",
@@ -187,12 +187,12 @@ func newMortgageFields(dir1, dir2 string) *mortgageFields {
     err := json.Unmarshal(obj, &m)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &m
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &mortgageFields {
     CurrentPage: "rhs-ui1",
@@ -312,12 +312,12 @@ func newBondsFields(dir1, dir2 string) *bondsFields {
     err := json.Unmarshal(obj, &b)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &b
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &bondsFields {
     CurrentPage: "rhs-ui1",
@@ -429,12 +429,12 @@ func newAdFvFields(dir1, dir2 string) *adFvFields {
     err := json.Unmarshal(obj, &a)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &a
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &adFvFields {
     CurrentPage: "rhs-ui2",
@@ -490,12 +490,12 @@ func newAdPvFields(dir1, dir2 string) *adPvFields {
     err := json.Unmarshal(obj, &a)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &a
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &adPvFields {
     CurrentPage: "rhs-ui2",
@@ -555,12 +555,12 @@ func newAdCpFields(dir1, dir2 string) *adCpFields {
     err := json.Unmarshal(obj, &a)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &a
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &adCpFields {
     CurrentPage: "rhs-ui2",
@@ -620,12 +620,12 @@ func newAdEppFields(dir1, dir2 string) *adEppFields {
     err := json.Unmarshal(obj, &a)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &a
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &adEppFields {
     CurrentPage: "rhs-ui1",
@@ -689,12 +689,12 @@ func newOaCpFields(dir1, dir2 string) *oaCpFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &o
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &oaCpFields {
     CurrentPage: "rhs-ui1",
@@ -754,12 +754,12 @@ func newOaEppFields(dir1, dir2 string) *oaEppFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &o
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &oaEppFields {
     CurrentPage: "rhs-ui1",
@@ -811,12 +811,12 @@ func newOaFvFields(dir1, dir2 string) *oaFvFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &o
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &oaFvFields {
     CurrentPage: "rhs-ui1",
@@ -872,12 +872,12 @@ func newOaGaFields(dir1, dir2 string) *oaGaFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &o
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &oaGaFields {
     CurrentPage: "rhs-ui1",
@@ -926,12 +926,12 @@ func newOaInterestRateFields(dir1, dir2 string) *oaInterestRateFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &o
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &oaInterestRateFields {
     CurrentPage: "rhs-ui1",
@@ -977,12 +977,12 @@ func newOaPerpetuityFields(dir1, dir2 string) *oaPerpetuityFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &o
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &oaPerpetuityFields {
     CurrentPage: "rhs-ui1",
@@ -1035,12 +1035,12 @@ func newOaPvFields(dir1, dir2 string) *oaPvFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &o
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &oaPvFields {
     CurrentPage: "rhs-ui1",
@@ -1109,12 +1109,12 @@ func newSiAccurateFields(dir1, dir2 string) *siAccurateFields {
     err := json.Unmarshal(obj, &s)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &s
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &siAccurateFields {
     CurrentPage: "rhs-ui1",
@@ -1195,12 +1195,12 @@ func newSiBankersFields(dir1, dir2 string) *siBankersFields {
     err := json.Unmarshal(obj, &s)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &s
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &siBankersFields {
     CurrentPage: "rhs-ui1",
@@ -1280,12 +1280,12 @@ func newSiOrdinaryFields(dir1, dir2 string) *siOrdinaryFields {
     err := json.Unmarshal(obj, &s)
     if err != nil {
       //Write error, but continue with default values.
-      fmt.Printf("%s - %+v\n", mt.DTF(), err)
+      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
     } else {
       return &s
     }
   } else {
-    fmt.Printf("%s - %+v\n", mt.DTF(), err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   }
   return &siOrdinaryFields {
     CurrentPage: "rhs-ui1",

@@ -5,8 +5,15 @@
 package main
 
 /***
+Create a new Go module
+$ mkdir src
+$ cd src
+
+Next, create a go.mod file within the src directory to define the Go module itself.
+$ go mod init finance
+
 *****************************************************************************************
-*** To run the app in a K8s environment, do NOT set the environment variable NOT_K8S. ***
+*** To run the app in a K8s environment, set the environment variable K8S to true.    ***
 *****************************************************************************************
 
 To run the app as a standalone HTTP/HTTPS servers:
@@ -58,6 +65,7 @@ import (
   "net"
   "net/http"
   "net/http/pprof"
+  "github.com/juan-carlos-trimino/gplogger"
   "golang.org/x/crypto/acme/autocert"
   //	_ "net/http/pprof" //Blank import of pprof.
   "os"
@@ -88,8 +96,6 @@ const (
   bucketName string = "fin-finances"
   dataDirName string = "wsf_data_dir"
 )
-
-var m = misc.Misc{}
 
 /***
 In Go, a handler is an interface (type Handler interface) that has a method named ServeHTTP with
@@ -130,11 +136,11 @@ nonexported struct response; we're passing the struct by reference (we're passin
 response) and not by value.
 ***/
 func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering ServeHTTP/main.\n", m.DTF())
-  fmt.Printf("%s - Method: %s, Request URI: %s\n", m.DTF(), req.Method, req.RequestURI)
+  logger.LogInfo("Entering ServeHTTP/main.", "-1")
+  logger.LogInfo(fmt.Sprintf("Method: %s, Request URI: %s", req.Method, req.RequestURI), "-1")
   //Implement route forwarding.
   if handler, ok := h.mux[req.URL.Path]; ok {
-    fmt.Printf("%s - URL Path: %s\n", m.DTF(), req.URL.Path)
+    logger.LogInfo(fmt.Sprintf("URL Path: %s", req.URL.Path), "-1")
     handler(res, req)
     return
   }
@@ -199,7 +205,7 @@ func main() {
     if exists {
       HTTP_PORT = ev
     }
-    fmt.Printf("Using HTTP PORT: %s\n", HTTP_PORT)
+    logger.LogInfo(fmt.Sprintf("Using HTTP PORT: %s", HTTP_PORT), "-1")
   }
   //
   if HTTPS {
@@ -207,7 +213,7 @@ func main() {
     if exists {
       HTTPS_PORT = ev
     }
-    fmt.Printf("Using HTTPS PORT: %s\n", HTTPS_PORT)
+    logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %s", HTTPS_PORT), "-1")
   }
   ev, exists = os.LookupEnv("SHUTDOWN_TIMEOUT")
   if exists {
@@ -218,8 +224,8 @@ func main() {
       fmt.Printf("'%s' is not an int number.\n", ev)
     }
   }
-  fmt.Printf("Using SHUTDOWN_TIMEOUT: %d\n", SHUTDOWN_TIMEOUT)
-  fmt.Println("OS: " + misc.GetOS())
+  logger.LogInfo(fmt.Sprintf("Using SHUTDOWN_TIMEOUT: %d", SHUTDOWN_TIMEOUT), "-1")
+  logger.LogInfo(fmt.Sprintf("OS: %s", misc.GetOS()), "-1")
   homeDir, err := os.UserHomeDir()
   if err != nil {
     panic("home" + err.Error())
@@ -227,7 +233,7 @@ func main() {
   buffer := strings.Builder{}
   //Grow to a larger size to reduce future resizes of the buffer.
   buffer.Grow(1024)
-  fmt.Println("Home directory: " + homeDir)
+  logger.LogInfo(fmt.Sprintf("Home directory: %s", homeDir), "-1")
   if homeDir[len(homeDir) - 1] != '/' {
     buffer.WriteString(homeDir)
     buffer.WriteByte('/')
@@ -235,22 +241,22 @@ func main() {
     buffer.WriteString(homeDir)
   }
   dataDir := buffer.String() + dataDirName
-  fmt.Println("Data directory: " + dataDir)
+  logger.LogInfo(fmt.Sprintf("Data directory: %s", dataDir), "-1")
   numCpus, maxProcs := misc.CpusAvailable()
-  fmt.Println("Number of CPUs: ", numCpus)
-  fmt.Println("GOMAXPROCS: ", maxProcs)
+  logger.LogInfo(fmt.Sprintf("Number of CPUs: %d", numCpus), "-1")
+  logger.LogInfo(fmt.Sprintf("GOMAXPROCS: %d", maxProcs), "-1")
   if userName, err := misc.GetUsername(); err != nil {
-    fmt.Println(err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   } else {
-    fmt.Println("Username: " + userName)
+    logger.LogInfo(fmt.Sprintf("Username: %s", userName), "-1")
   }
   //
   if ok, err := misc.IsRoot(); err != nil {
-    fmt.Println(err)
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
   } else if ok {
-    fmt.Println("The current user is running as root.")
+    logger.LogInfo("The current user is running as root.", "-1")
   } else {
-    fmt.Println("The current user is not running as root.")
+    logger.LogInfo("The current user is not running as root.", "-1")
   }
   readUsers(dataDir, users)
   webfinances.SetupDirStructure(dataDir)
@@ -325,14 +331,14 @@ func main() {
         httpsServer.TLSConfig = makeTlsConfig()
       }
       go waitForServer(httpsServer, signalChan2, &wg)
-      fmt.Printf("%s - Starting the server at port %s...\n", m.DTF(), httpsServer.Addr)
+      logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpsServer.Addr), "-1")
       //Because the paths of the key and cert were set in the TLSConfig field, set the certFile and
       //keyFile arguments to empty strings.
       err := (*httpsServer).ListenAndServeTLS("", "")
       if errors.Is(err, http.ErrServerClosed) {
-        fmt.Printf("%s - Server has been closed at port %s.\n", m.DTF(), httpsServer.Addr)
+        logger.LogError(fmt.Sprintf("Server has been closed at port %s.", httpsServer.Addr), "-1")
       } else if err != nil {
-        fmt.Printf("%s - Server error: %+v\n", m.DTF(), err)
+        logger.LogInfo(fmt.Sprintf("Server error: %+v", err), "-1")
         signalChan2 <- syscall.SIGINT //Let the goroutine finish.
       }
     }()
@@ -355,7 +361,7 @@ func main() {
     }
     fmt.Println("*********** env ***************")
     env ***/
-    fmt.Printf("%s - Starting the server at port %s...\n", m.DTF(), httpServer.Addr)
+    logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpServer.Addr), "-1")
     /***
     ListenAndServe runs forever, or until the server fails (or fails to start) with an error,
     always non-nil, which it returns.
@@ -366,9 +372,9 @@ func main() {
     ***/
     err := (*httpServer).ListenAndServe()
     if errors.Is(err, http.ErrServerClosed) {
-      fmt.Printf("%s - Server has been closed at port %s.\n", m.DTF(), httpServer.Addr)
+      logger.LogInfo(fmt.Sprintf("Server has been closed at port %s.", httpServer.Addr), "-1")
     } else if err != nil {
-      fmt.Printf("%s - Server error: %+v\n", m.DTF(), err)
+      logger.LogError(fmt.Sprintf("Server error: %+v", err), "-1")
       signalChan1 <- syscall.SIGINT //Let the goroutine finish.
     }
   }
@@ -599,7 +605,7 @@ func makeHttpToHttpsRedirectHandler(port string) *handlers {
     u := req.URL
     u.Host = net.JoinHostPort(host, port)
     u.Scheme = "https"
-    fmt.Printf("%s - Redirecting to %s\n", m.DTF(), u.String())
+    logger.LogInfo(fmt.Sprintf("Redirecting to %s", u.String()), "-1")
     http.Redirect(res, req, u.String(), http.StatusMovedPermanently)
   }
   return h
@@ -694,7 +700,8 @@ func Timeout(res http.ResponseWriter, req *http.Request) {
 //////////////////////////
 
 func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.WaitGroup) {
-  fmt.Printf("%s - Waiting for notification to shut down the server at %s.\n", m.DTF(), server.Addr)
+  logger.LogInfo(fmt.Sprintf("Waiting for notification to shut down the server at %s.",
+   server.Addr), "-1")
   /***
   signal.Notify disables the default behavior for a given set of asynchronous signals and instead
   delivers them over one or more registered channels.
@@ -715,7 +722,7 @@ func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.Wait
   }()
   //https://pkg.go.dev/net/http#Server.Shutdown
   if err := server.Shutdown(ctx); err != nil {
-    fmt.Printf("%s - Server shutdown failed: %+v\n", m.DTF(), err)  //https://pkg.go.dev/fmt
+    logger.LogError(fmt.Sprintf("Server shutdown failed: %+v", err), "-1")  //https://pkg.go.dev/fmt
   }
 }
 
