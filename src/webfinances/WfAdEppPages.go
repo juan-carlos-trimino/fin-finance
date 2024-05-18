@@ -100,8 +100,9 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
         Fd1Compound string
         Fd1FV string
         Fd1Result string
-      } { "Annuity Due / Equal Periodic Payments", m.DTF(), af.CurrentButton, newSession.CsrfToken,
-          af.Fd1N, af.Fd1TimePeriod, af.Fd1Interest, af.Fd1Compound, af.Fd1FV, af.Fd1Result,
+      } { "Annuity Due / Equal Periodic Payments", logger.DatetimeFormat(), af.CurrentButton,
+          newSession.CsrfToken, af.Fd1N, af.Fd1TimePeriod, af.Fd1Interest, af.Fd1Compound,
+          af.Fd1FV, af.Fd1Result,
         })
     } else if strings.EqualFold(af.CurrentPage, "rhs-ui2") {
       af.CurrentButton = "lhs-button2"
@@ -148,8 +149,9 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
         Fd2Compound string
         Fd2PV string
         Fd2Result string
-      } { "Annuity Due / Equal Periodic Payments", m.DTF(), af.CurrentButton, newSession.CsrfToken,
-          af.Fd2N, af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound, af.Fd2PV, af.Fd2Result,
+      } { "Annuity Due / Equal Periodic Payments", logger.DatetimeFormat(), af.CurrentButton,
+          newSession.CsrfToken, af.Fd2N, af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound,
+          af.Fd2PV, af.Fd2Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)

@@ -142,8 +142,8 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Fd2Payment string
         Fd2PV string
         Fd2Result string
-      } { "Annuity Due / Compounding Periods", m.DTF(), af.CurrentButton, newSession.CsrfToken,
-          af.Fd2Interest, af.Fd2Compound, af.Fd2Payment, af.Fd2PV, af.Fd2Result,
+      } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), af.CurrentButton,
+          newSession.CsrfToken, af.Fd2Interest, af.Fd2Compound, af.Fd2Payment, af.Fd2PV, af.Fd2Result,
         })
     } else if strings.EqualFold(af.CurrentPage, "rhs-ui3") {
       af.CurrentButton = "lhs-button3"
@@ -188,8 +188,8 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Fd3Payment string
         Fd3FV string
         Fd3Result string
-      } { "Annuity Due / Compounding Periods", m.DTF(), af.CurrentButton, newSession.CsrfToken,
-          af.Fd3Interest, af.Fd3Compound, af.Fd3Payment, af.Fd3FV, af.Fd3Result,
+      } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), af.CurrentButton,
+          newSession.CsrfToken, af.Fd3Interest, af.Fd3Compound, af.Fd3Payment, af.Fd3FV, af.Fd3Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)
@@ -212,7 +212,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       filePath := fmt.Sprintf("%s/%s/adcp.txt", mainDir, userName)
       if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
-        fmt.Printf("%s - %s\n", m.DTF(), err)
+        logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }
     }
   } else {

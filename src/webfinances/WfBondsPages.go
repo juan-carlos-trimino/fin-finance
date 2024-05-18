@@ -115,8 +115,8 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd1StateTax string
         Fd1FederalTax string
         Fd1Result string
-      } { "Bonds", m.DTF(), bf.CurrentButton, newSession.CsrfToken, bf.Fd1TaxFree, bf.Fd1CityTax,
-          bf.Fd1StateTax, bf.Fd1FederalTax, bf.Fd1Result,
+      } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd1TaxFree,
+          bf.Fd1CityTax, bf.Fd1StateTax, bf.Fd1FederalTax, bf.Fd1Result,
         })
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui2") {
       bf.CurrentButton = "lhs-button2"
@@ -187,9 +187,9 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd2Current string
         Fd2Compound string
         Fd2Result string
-      } { "Bonds", m.DTF(), bf.CurrentButton, newSession.CsrfToken, bf.Fd2FaceValue, bf.Fd2Time,
-          bf.Fd2TimePeriod, bf.Fd2Coupon, bf.Fd2CompoundCoupon, bf.Fd2Current, bf.Fd2Compound,
-          bf.Fd2Result,
+      } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken,
+          bf.Fd2FaceValue, bf.Fd2Time, bf.Fd2TimePeriod, bf.Fd2Coupon, bf.Fd2CompoundCoupon,
+          bf.Fd2Current, bf.Fd2Compound, bf.Fd2Result,
         })
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui3") {
       bf.CurrentButton = "lhs-button3"
@@ -248,7 +248,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd3BondPrice string
         Fd3CallPrice string
         Fd3Result string
-      } { "Bonds", m.DTF(), bf.CurrentButton, newSession.CsrfToken, bf.Fd3FaceValue,
+      } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd3FaceValue,
           bf.Fd3TimeCall, bf.Fd3TimePeriod, bf.Fd3Coupon, bf.Fd3Compound, bf.Fd3BondPrice,
           bf.Fd3CallPrice, bf.Fd3Result,
         })
@@ -346,9 +346,9 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd4CurInterest string
         Fd4BondPrice string
         Fd4Result [2]string
-      } { "Bonds", m.DTF(), bf.CurrentButton, newSession.CsrfToken, bf.Fd4FaceValue, bf.Fd4Time,
-          bf.Fd4TimePeriod, bf.Fd4Coupon, bf.Fd4Compound, bf.Fd4CurrentRadio, bf.Fd4CurInterest,
-          bf.Fd4BondPrice, bf.Fd4Result,
+      } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd4FaceValue,
+          bf.Fd4Time, bf.Fd4TimePeriod, bf.Fd4Coupon, bf.Fd4Compound, bf.Fd4CurrentRadio,
+          bf.Fd4CurInterest, bf.Fd4BondPrice, bf.Fd4Result,
         })
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui5") {
       bf.CurrentButton = "lhs-button5"
@@ -445,9 +445,9 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd5CurInterest string
         Fd5Compound string
         Fd5Result [7]string
-      } { "Bonds", m.DTF(), bf.CurrentButton, newSession.CsrfToken, bf.Fd5FaceValue, bf.Fd5Time,
-          bf.Fd5TimePeriod, bf.Fd5Coupon, bf.Fd5CompoundCoupon, bf.Fd5CurInterest, bf.Fd5Compound,
-          bf.Fd5Result,
+      } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd5FaceValue,
+          bf.Fd5Time, bf.Fd5TimePeriod, bf.Fd5Coupon, bf.Fd5CompoundCoupon, bf.Fd5CurInterest,
+          bf.Fd5Compound, bf.Fd5Result,
         })
     // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui6") {
     //   bf.CurrentButton = "lhs-button6"

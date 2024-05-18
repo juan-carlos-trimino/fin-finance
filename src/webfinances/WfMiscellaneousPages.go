@@ -95,7 +95,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd1Nominal string
         Fd1Compound string
         Fd1Result [2]string
-      } { "Miscellaneous", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
+      } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd1Nominal, mf.Fd1Compound, mf.Fd1Result,
         })
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui2") {
@@ -130,7 +130,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd2Effective string
         Fd2Compound string
         Fd2Result [3]string
-      } { "Miscellaneous", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
+      } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd2Effective, mf.Fd2Compound, mf.Fd2Result,
         })
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui3") {
@@ -168,7 +168,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd3Nominal string
         Fd3Inflation string
         Fd3Result [4]string
-      } { "Miscellaneous", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
+      } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd3Nominal, mf.Fd3Inflation, mf.Fd3Result,
         })
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui4") {
@@ -233,7 +233,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd4CurrentCompound string
         Fd4NewCompound string
         Fd4Result string
-      } { "Miscellaneous", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
+      } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd4CurrentRate, mf.Fd4CurrentCompound, mf.Fd4NewCompound, mf.Fd4Result,
         })
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui5") {
@@ -274,7 +274,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd5Compound string
         Fd5Factor string
         Fd5Result string
-      } { "Miscellaneous", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
+      } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd5Interest, mf.Fd5Compound, mf.Fd5Factor, mf.Fd5Result,
         })
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui6") {
@@ -312,7 +312,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         CsrfToken string
         Fd6Values string
         Fd6Result [2]string
-      } { "Miscellaneous", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
+      } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd6Values, mf.Fd6Result,
         })
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui7") {
@@ -361,7 +361,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd7Compound string
         Fd7PV string
         Fd7Result string
-      } { "Miscellaneous", m.DTF(), mf.CurrentButton, newSession.CsrfToken,
+      } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd7Time, mf.Fd7TimePeriod, mf.Fd7Rate, mf.Fd7Compound, mf.Fd7PV, mf.Fd7Result,
         })
     } else {

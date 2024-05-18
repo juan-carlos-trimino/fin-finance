@@ -28,7 +28,7 @@ require (
 
 require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/juan-carlos-trimino/gplogger v1.0.3 // indirect
+	github.com/juan-carlos-trimino/gplogger v1.0.4 // indirect
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )

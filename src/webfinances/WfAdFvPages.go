@@ -147,8 +147,9 @@ func (a WfAdFvPages) AdFvPages(res http.ResponseWriter, req *http.Request) {
         Fd2Compound string
         Fd2PMT string
         Fd2Result string
-      } { "Annuity Due / Future Value", m.DTF(), af.CurrentButton, newSession.CsrfToken,
-          af.Fd2N, af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound, af.Fd2PMT, af.Fd2Result,
+      } { "Annuity Due / Future Value", logger.DatetimeFormat(), af.CurrentButton,
+          newSession.CsrfToken, af.Fd2N, af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound,
+          af.Fd2PMT, af.Fd2Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)

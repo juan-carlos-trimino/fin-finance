@@ -18,6 +18,8 @@ github.com/juan-carlos-trimino/gplogger v1.0.2 h1:vBy9//DBBq31/v7X5F6gw4zBB3cqvL
 github.com/juan-carlos-trimino/gplogger v1.0.2/go.mod h1:n8niBeKi0+U6uIUajS8Bddho3YzNb2FGXxec4k3nY3E=
 github.com/juan-carlos-trimino/gplogger v1.0.3 h1:/ejVNVI/uuiKCYa2fzgVObkvp3QCoE/A3UHxlxjc0PE=
 github.com/juan-carlos-trimino/gplogger v1.0.3/go.mod h1:n8niBeKi0+U6uIUajS8Bddho3YzNb2FGXxec4k3nY3E=
+github.com/juan-carlos-trimino/gplogger v1.0.4 h1:eerobvytjor84uaufu0He0Vgncm/KK7dFrYI3KJWikk=
+github.com/juan-carlos-trimino/gplogger v1.0.4/go.mod h1:n8niBeKi0+U6uIUajS8Bddho3YzNb2FGXxec4k3nY3E=
 github.com/oracle/oci-go-sdk/v56 v56.1.0 h1:HOr9P+MkwgrilEGTJCU7a6GMFrUG/RZAzvh/2JeRXvI=
 github.com/oracle/oci-go-sdk/v56 v56.1.0/go.mod h1:kDJAL3HEAF+4oQR8GfaOkY6rz2kU3/kZ6vYJnJXSCkA=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
