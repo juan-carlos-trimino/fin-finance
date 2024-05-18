@@ -85,9 +85,9 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
             periods.GetCompoundingPeriod(sif.Fd1Compound[0], true), n,
             daysInYear))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", sif.Fd1Time,
-         sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result),
-         correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, leap = %t, tp = %s, i = %s, cp = %s, pv = %s, %s",
+         sif.Fd1Time, len(sif.Fd1Leap) > 0, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound,
+         sif.Fd1PV, sif.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
