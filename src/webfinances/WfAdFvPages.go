@@ -157,7 +157,7 @@ func (a WfAdFvPages) AdFvPages(res http.ResponseWriter, req *http.Request) {
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogError("*** Request timeout ***", "-1")
+      logger.LogWarning("*** Request timeout ***", "-1")
       if strings.EqualFold(af.CurrentPage, "rhs-ui1") {
         af.Fd1Result = ""
       } else if strings.EqualFold(af.CurrentPage, "rhs-ui2") {

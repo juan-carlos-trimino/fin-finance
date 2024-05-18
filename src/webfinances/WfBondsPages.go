@@ -16,6 +16,11 @@ import (
 	"strings"
 )
 
+
+
+var m = misc.Misc{}
+
+
 var bond_notes = [...]string {
   "The Macaulay duration is a measure of a bond's sensitivity to interest rate changes. The " +
   "duration is the weighed-average number of years the investor must hold a bond until the " +

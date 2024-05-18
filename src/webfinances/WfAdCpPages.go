@@ -198,7 +198,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogInfo("*** Request timeout ***", "-1")
+      logger.LogWarning("*** Request timeout ***", "-1")
       if strings.EqualFold(af.CurrentPage, "rhs-ui2") {
         af.Fd2Result = ""
       } else if strings.EqualFold(af.CurrentPage, "rhs-ui3") {
