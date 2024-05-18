@@ -15,6 +15,11 @@ import (
 	"strings"
 )
 
+
+
+var m = misc.Misc{}
+
+
 var mortgage_notes = [...]string {
   "Refinance mortgage and HELOC with one load.",
   "If the blended interest rate is higher than what you could get on a new fixed-rate mortgage, consider it.",
