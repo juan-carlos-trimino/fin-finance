@@ -8,6 +8,7 @@ import (
 	"finance/misc"
 	"finance/sessions"
   "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
   "html/template"
   "net/http"
 	"os"
@@ -26,10 +27,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
     return
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  logEntry := LogEntry{}
-  logEntry.Print(INFO, correlationId, []string {
-    "Entering OaPerpetuityPages/webfinances.",
-  })
+  logger.LogInfo("Entering OaPerpetuityPages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     of := getOaPerpetuityFields(userName)
@@ -71,10 +69,8 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
           of.Fd1Result = fmt.Sprintf("Present Value of Perpetuity: $%.2f",
             oa.O_Perpetuity(i / 100.0, pmt, oa.GetCompoundingPeriod(of.Fd1Compound[0], true)))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("i = %s, cp = %s, pmt = %s, %s",
-            of.Fd1Interest, of.Fd1Compound, of.Fd1Pmt, of.Fd1Result),
-        })
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, %s", of.Fd1Interest, of.Fd1Compound,
+         of.Fd1Pmt, of.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -96,8 +92,8 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
         Fd1Compound string
         Fd1Pmt string
         Fd1Result string
-      } { "Ordinary Annuity / Perpetuities", m.DTF(), of.CurrentButton, newSession.CsrfToken,
-          of.Fd1Interest, of.Fd1Compound, of.Fd1Pmt, of.Fd1Result,
+      } { "Ordinary Annuity / Perpetuities", logger.DatetimeFormat(), of.CurrentButton,
+          newSession.CsrfToken, of.Fd1Interest, of.Fd1Compound, of.Fd1Pmt, of.Fd1Result,
         })
     } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
       of.CurrentButton = "lhs-button2"
@@ -122,10 +118,8 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
             oa.O_GrowingPerpetuity(i / 100.0, grow, pmt,
             oa.GetCompoundingPeriod(of.Fd2Compound[0], true)))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("i = %s, cp = %s, grow = %s, pmt = %s, %s",
-            of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result),
-        })
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, grow = %s, pmt = %s, %s", of.Fd2Interest,
+         of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -144,17 +138,17 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
         Fd2Grow string
         Fd2Pmt string
         Fd2Result string
-      } { "Ordinary Annuity / Perpetuities", m.DTF(), of.CurrentButton, newSession.CsrfToken,
-          of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result,
+      } { "Ordinary Annuity / Perpetuities", logger.DatetimeFormat(), of.CurrentButton,
+          newSession.CsrfToken, of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
-      fmt.Printf("%s - %s\n", m.DTF(), errString)
+      logger.LogError(errString, "-1")
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      fmt.Println("*** Request timeout ***")
+      logger.LogWarning("*** Request timeout ***", "-1")
       if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
         of.Fd1Result = ""
       } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
@@ -163,17 +157,17 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
     }
     //
     if data, err := json.Marshal(of); err != nil {
-      fmt.Printf("%s - %s\n", m.DTF(), err)
+      logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/oaperpetuity.txt", mainDir, userName)
       if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
-        fmt.Printf("%s - %s\n", m.DTF(), err)
+        logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    fmt.Printf("%s - %s\n", m.DTF(), errString)
+    logger.LogError(errString, "-1")
     panic(errString)
   }
 }

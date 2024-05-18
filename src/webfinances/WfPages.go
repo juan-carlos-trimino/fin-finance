@@ -3,7 +3,7 @@ package webfinances
 import (
   "finance/middlewares"
   "finance/sessions"
-  "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
   //Package template (html/template) implements data-driven templates for generating HTML output
   //safe against code injection. It provides the same interface as text/template and should be used
   //instead of text/template whenever the output is HTML.
@@ -20,7 +20,7 @@ should run the init() function once. Unlike the main() function that can only be
 init() function can be declared multiple times throughout a package.
 ***/
 func init() {
-  fmt.Printf("%s - Entering init/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering init/webfinances.", "-1")
   /***
   The Must function wraps around the ParseGlob function that returns a pointer to a template and an
   error, and it panics if the error is not nil.
@@ -42,12 +42,12 @@ func invalidSession(res http.ResponseWriter) {
 type WfPages struct{}
 
 func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering IndexPage/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering IndexPage/webfinances.", "-1")
   tmpl.ExecuteTemplate(res, "index_page", nil)
 }
 
 func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering LoginPage/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering LoginPage/webfinances.", "-1")
   un := req.PostFormValue("username")
   pw := req.PostFormValue("password")
   if !sessions.ValidateUser(un, pw) {
@@ -76,7 +76,7 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering LogoutPage/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering LogoutPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -90,7 +90,7 @@ func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering WelcomePage/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering WelcomePage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -99,12 +99,12 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
     tmpl.ExecuteTemplate(res, "welcome_page", struct {
       Header string
       Datetime string
-    } { "Investments", m.DTF() })
+    } { "Investments", logger.DatetimeFormat() })
   }
 }
 
 func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering ContactPage/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering ContactPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -113,12 +113,12 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
     tmpl.ExecuteTemplate(res, "contact_page", struct {
       Header string
       Datetime string
-    } { "Investments", m.DTF() })
+    } { "Investments", logger.DatetimeFormat() })
   }
 }
 
 func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering AboutPage/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering AboutPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -131,112 +131,112 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
     tmpl.ExecuteTemplate(res, "about_page", struct {
       Header string
       Datetime string
-    } { "Investments", m.DTF() })
+    } { "Investments", logger.DatetimeFormat() })
   }
 }
 
 func (p WfPages) PublicHomeFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicHomeFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicHomeFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/css/home.css")
 }
 
 func (p WfPages) PublicGetParamsFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicGetParamsFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicGetParamsFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/getParams.js")
 }
 
 func (p WfPages) PublicMortgageFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicMortgageFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicMortgageFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/mortgage.js")
 }
 
 func (p WfPages) PublicOaInterestRateFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicOaInterestRateFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicOaInterestRateFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/OaInterestRate.js")
 }
 
 func (p WfPages) PublicOaPresentValueFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicOaPresentValueFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicOaPresentValueFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/OaPresentValue.js")
 }
 
 func (p WfPages) PublicOaFutureValueFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicOaFutureValueFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicOaFutureValueFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/OaFutureValue.js")
 }
 
 func (p WfPages) PublicOaCompoundingPeriodsFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicOaCompoundingPeriodsFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicOaCompoundingPeriodsFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/OaCompoundingPeriods.js")
 }
 
 func (p WfPages) PublicOaEqualPeriodicPaymentsFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicOaEqualPeriodicPaymentsFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicOaEqualPeriodicPaymentsFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/OaEqualPeriodicPayments.js")
 }
 
 func (p WfPages) PublicOaGrowingAnnuityFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicOaGrowingAnnuityFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicOaGrowingAnnuityFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/OaGrowingAnnuity.js")
 }
 
 func (p WfPages) PublicOaPerpetuityFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicOaPerpetuityFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicOaPerpetuityFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/OaPerpetuity.js")
 }
 
 func (p WfPages) PublicAdCompoundingPeriodsFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicAdCompoundingPeriodsFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicAdCompoundingPeriodsFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/AdCompoundingPeriods.js")
 }
 
 func (p WfPages) PublicAdEqualPeriodicPaymentsFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicAdEqualPeriodicPaymentsFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicAdEqualPeriodicPaymentsFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/AdEqualPeriodicPayments.js")
 }
 
 func (p WfPages) PublicAdFutureValueFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicAdFutureValueFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicAdFutureValueFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/AdFutureValue.js")
 }
 
 func (p WfPages) PublicAdPresentValueFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicAdPresentValueFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicAdPresentValueFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/AdPresentValue.js")
 }
 
 func (p WfPages) PublicBondsFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicBondsFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicBondsFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/bonds.js")
 }
 
 func (p WfPages) PublicBondsYTMFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicBondsYTMFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicBondsYTMFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/bondsYTM.js")
 }
 
 func (p WfPages) PublicMiscellaneousFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicMiscellaneousFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicMiscellaneousFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/miscellaneous.js")
 }
 
 func (p WfPages) PublicSimpleInterestAccurateFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicSimpleInterestAccurateFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicSimpleInterestAccurateFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/SimpleInterestAccurate.js")
 }
 
 func (p WfPages) PublicSimpleInterestBankersFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicSimpleInterestBankersFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicSimpleInterestBankersFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/SimpleInterestBankers.js")
 }
 
 func (p WfPages) PublicSimpleInterestOrdinaryFile(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering PublicSimpleInterestOrdinaryFile/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering PublicSimpleInterestOrdinaryFile/webfinances.", "-1")
   http.ServeFile(res, req, "./webfinances/public/js/SimpleInterestOrdinary.js")
 }
 
 func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering FinancesPage/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering FinancesPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -245,12 +245,12 @@ func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
     tmpl.ExecuteTemplate(res, "finances_page", struct {
       Header string
       Datetime string
-    } { "Finances", m.DTF() })
+    } { "Finances", logger.DatetimeFormat() })
   }
 }
 
 func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering SimpleInterestPage/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering SimpleInterestPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -259,12 +259,12 @@ func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) 
     tmpl.ExecuteTemplate(res, "simple_interest_page", struct {
       Header string
       Datetime string
-    } { "Simple Interest", m.DTF() })
+    } { "Simple Interest", logger.DatetimeFormat() })
   }
 }
 
 func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering OrdinaryAnnuityPage/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering OrdinaryAnnuityPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -273,12 +273,12 @@ func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request)
     tmpl.ExecuteTemplate(res, "ordinary_annuity_page", struct {
       Header string
       Datetime string
-    } { "Ordinary Annuity", m.DTF() })
+    } { "Ordinary Annuity", logger.DatetimeFormat() })
   }
 }
 
 func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
-  fmt.Printf("%s - Entering AnnuityDuePage/webfinances.\n", m.DTF())
+  logger.LogInfo("Entering AnnuityDuePage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -287,8 +287,6 @@ func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
     tmpl.ExecuteTemplate(res, "annuity_due_page", struct {
       Header string
       Datetime string
-    } { "Annuity Due", m.DTF() })
+    } { "Annuity Due", logger.DatetimeFormat() })
   }
 }
-
-

@@ -8,6 +8,7 @@ import (
 	"finance/misc"
 	"finance/sessions"
   "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
   "html/template"
   "net/http"
 	"os"
@@ -25,7 +26,8 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
     invalidSession(res)
     return
   }
-  fmt.Printf("%s - Entering SimpleInterestOrdinaryPages/webfinances.\n", m.DTF())
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  logger.LogInfo("Entering SimpleInterestOrdinaryPages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     sif := getSiOrdinaryFields(userName)
@@ -74,8 +76,9 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
             i / 100.0, periods.GetCompoundingPeriod(sif.Fd1Compound[0], false), n,
             periods.GetTimePeriod(sif.Fd1TimePeriod[0], false)))
         }
-        fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s\n", m.DTF(), sif.Fd1Time,
-          sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", sif.Fd1Time,
+         sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result),
+         correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -95,9 +98,9 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         Fd1Compound string
         Fd1PV string
         Fd1Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), sif.CurrentButton, newSession.CsrfToken,
-          sif.Fd1Time, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV,
-          sif.Fd1Result,
+      } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton,
+          newSession.CsrfToken, sif.Fd1Time, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound,
+          sif.Fd1PV, sif.Fd1Result,
         })
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui2") {
       sif.CurrentButton = "lhs-button2"
@@ -122,8 +125,8 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
           sif.Fd2Result = fmt.Sprintf("Interest Rate: %.3f%%",
             si.OrdinaryRate(pv, a, n, periods.GetTimePeriod(sif.Fd2TimePeriod[0], false)) * 100.0)
         }
-        fmt.Printf("%s - n = %s, tp = %s, a = %s, pv = %s, %s\n", m.DTF(), sif.Fd2Time,
-          sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, a = %s, pv = %s, %s", sif.Fd2Time,
+         sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -142,8 +145,9 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         Fd2Amount string
         Fd2PV string
         Fd2Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), sif.CurrentButton, newSession.CsrfToken,
-          sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result,
+      } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton,
+          newSession.CsrfToken, sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV,
+          sif.Fd2Result,
         })
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui3") {
       sif.CurrentButton = "lhs-button3"
@@ -170,8 +174,9 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
             periods.GetCompoundingPeriod(sif.Fd3Compound[0], false), n,
             periods.GetTimePeriod(sif.Fd3TimePeriod[0], false)))
         }
-        fmt.Printf("%s - n = %s, tp = %s, i = %s, cp = %s, a = %s, %s\n", m.DTF(), sif.Fd3Time,
-          sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s", sif.Fd3Time,
+         sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result),
+         correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -191,9 +196,9 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         Fd3Compound string
         Fd3Amount string
         Fd3Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), sif.CurrentButton, newSession.CsrfToken,
-          sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount,
-          sif.Fd3Result,
+      } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton,
+          newSession.CsrfToken, sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound,
+          sif.Fd3Amount, sif.Fd3Result,
         })
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui4") {
       sif.CurrentButton = "lhs-button4"
@@ -219,8 +224,8 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
             periods.GetCompoundingPeriod(sif.Fd4Compound[0], false)),
             periods.TimePeriods(sif.Fd4Compound))
         }
-        fmt.Printf("%s - i = %s, cp = %s, a = %s, pv = %s, %s\n", m.DTF(),
-          sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result)
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, a = %s, pv = %s, %s", sif.Fd4Interest,
+         sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -239,17 +244,18 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         Fd4Amount string
         Fd4PV string
         Fd4Result string
-      } { "Simple Interest / Ordinary Interest", m.DTF(), sif.CurrentButton, newSession.CsrfToken,
-          sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result,
+      } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton,
+          newSession.CsrfToken, sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV,
+          sif.Fd4Result,
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", sif.CurrentPage)
-      fmt.Printf("%s - %s\n", m.DTF(), errString)
+      logger.LogError(errString, "-1")
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      fmt.Println("*** Request timeout ***")
+      logger.LogWarning("*** Request timeout ***", "-1")
       if strings.EqualFold(sif.CurrentPage, "rhs-ui1") {
         sif.Fd1Result = ""
       } else if strings.EqualFold(sif.CurrentPage, "rhs-ui2") {
@@ -262,17 +268,17 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
     }
     //
     if data, err := json.Marshal(sif); err != nil {
-      fmt.Printf("%s - %s\n", m.DTF(), err)
+      logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/siordinary.txt", mainDir, userName)
       if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
-        fmt.Printf("%s - %s\n", m.DTF(), err)
+        logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    fmt.Printf("%s - %s\n", m.DTF(), errString)
+    logger.LogError(errString, "-1")
     panic(errString)
   }
 }
