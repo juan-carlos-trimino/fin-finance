@@ -2,15 +2,16 @@ package webfinances
 
 import (
   "context"
-	"encoding/json"
+  "encoding/json"
   "finance/finances"
   "finance/middlewares"
-	"finance/misc"
-	"finance/sessions"
+  "finance/misc"
+  "finance/sessions"
   "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
   "html/template"
   "net/http"
-	"os"
+  "os"
   "strconv"
   "strings"
 )
@@ -26,10 +27,7 @@ func (a WfAdFvPages) AdFvPages(res http.ResponseWriter, req *http.Request) {
     return
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  logEntry := LogEntry{}
-  logEntry.Print(INFO, correlationId, []string {
-    "Entering AdFvPages/webfinances.",
-  })
+  logger.LogInfo("Entering AdFvPages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     af := getAdFvFields(userName)
@@ -127,10 +125,9 @@ func (a WfAdFvPages) AdFvPages(res http.ResponseWriter, req *http.Request) {
             oa.D_FutureValue_PMT(pmt, i / 100.0, oa.GetCompoundingPeriod(af.Fd2Compound[0], true),
             n, oa.GetTimePeriod(af.Fd2TimePeriod[0], true)))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s", af.Fd2N,
-            af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound, af.Fd2PMT, af.Fd2Result),
-        })
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s",
+         af.Fd2N, af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound, af.Fd2PMT, af.Fd2Result),
+         correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -155,12 +152,12 @@ func (a WfAdFvPages) AdFvPages(res http.ResponseWriter, req *http.Request) {
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)
-      fmt.Printf("%s - %s\n", m.DTF(), errString)
+      logger.LogError(errString, "-1")
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      fmt.Println("*** Request timeout ***")
+      logger.LogError("*** Request timeout ***", "-1")
       if strings.EqualFold(af.CurrentPage, "rhs-ui1") {
         af.Fd1Result = ""
       } else if strings.EqualFold(af.CurrentPage, "rhs-ui2") {
@@ -169,17 +166,17 @@ func (a WfAdFvPages) AdFvPages(res http.ResponseWriter, req *http.Request) {
     }
     //
     if data, err := json.Marshal(af); err != nil {
-      fmt.Printf("%s - %s\n", m.DTF(), err)
+      logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/adfv.txt", mainDir, userName)
       if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
-        fmt.Printf("%s - %s\n", m.DTF(), err)
+        logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    fmt.Printf("%s - %s\n", m.DTF(), errString)
+    logger.LogError(errString, "-1")
     panic(errString)
   }
 }

@@ -9,17 +9,12 @@ import (
   "finance/sessions"
   "fmt"
   "html/template"
-  // "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/gplogger"
   "net/http"
   "os"
   "strconv"
   "strings"
 )
-
-
-
-var m = misc.Misc{}
-
 
 type WfAdCpPages struct {
 }
@@ -32,10 +27,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     return
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  logEntry := LogEntry{}
-  logEntry.Print(INFO, correlationId, []string {
-    "Entering AdCpPages/webfinances.",
-  })
+  logger.LogInfo("Entering AdCpPages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     af := getAdCpFields(userName)
@@ -130,10 +122,8 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
             i / 100.0, oa.GetCompoundingPeriod(af.Fd2Compound[0], true)),
             oa.TimePeriods(af.Fd2Compound))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("i = %s, cp = %s, pmt = %s, pv = %s, %s",
-           af.Fd2Interest, af.Fd2Compound, af.Fd2Payment, af.Fd2PV, af.Fd2Result),
-        })
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, pv = %s, %s", af.Fd2Interest,
+         af.Fd2Compound, af.Fd2Payment, af.Fd2PV, af.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -178,10 +168,8 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
             i / 100.0, oa.GetCompoundingPeriod(af.Fd3Compound[0], true)),
             oa.TimePeriods(af.Fd3Compound))
         }
-        logEntry.Print(INFO, correlationId, []string {
-          fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", af.Fd3Interest,
-            af.Fd3Compound, af.Fd3Payment, af.Fd3FV, af.Fd3Result),
-        })
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", af.Fd3Interest,
+         af.Fd3Compound, af.Fd3Payment, af.Fd3FV, af.Fd3Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -205,12 +193,12 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)
-      fmt.Printf("%s - %s\n", m.DTF(), errString)
+      logger.LogError(errString, "-1")
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      fmt.Println("*** Request timeout ***")
+      logger.LogInfo("*** Request timeout ***", "-1")
       if strings.EqualFold(af.CurrentPage, "rhs-ui2") {
         af.Fd2Result = ""
       } else if strings.EqualFold(af.CurrentPage, "rhs-ui3") {
@@ -219,7 +207,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     }
     //
     if data, err := json.Marshal(af); err != nil {
-      fmt.Printf("%s - %s\n", m.DTF(), err)
+      logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/adcp.txt", mainDir, userName)
       if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
@@ -229,7 +217,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    fmt.Printf("%s - %s\n", m.DTF(), errString)
+    logger.LogError(errString, "-1")
     panic(errString)
   }
 }
