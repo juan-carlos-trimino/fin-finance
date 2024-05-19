@@ -5,10 +5,10 @@ import (
   "encoding/json"
   "finance/finances"
   "finance/middlewares"
-  "finance/misc"
   "finance/sessions"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/gposu"
   "html/template"
   "net/http"
   "os"
@@ -393,7 +393,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/miscellaneous.txt", mainDir, userName)
-      if _, err := misc.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
+      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
         logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }

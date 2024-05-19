@@ -3,9 +3,9 @@ package webfinances
 import (
   "encoding/json"
   "errors"
-  "finance/misc"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/gposu"
   "os"
 )
 
@@ -13,7 +13,7 @@ var mainDir string = "/fields"
 
 func SetupDirStructure(dir string) {
   mainDir = dir + mainDir
-  dirErr, err := misc.CreateDirs(0o077, 0o777, mainDir)
+  dirErr, err := osu.CreateDirs(0o077, 0o777, mainDir)
   if err != nil {
     panic("Cannot create directory '" + dirErr + "': " + err.Error())
   }
@@ -90,7 +90,7 @@ type miscellaneousFields struct {
 }
 
 func newMiscellaneousFields(dir1, dir2 string) *miscellaneousFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -177,7 +177,7 @@ type mortgageFields struct {
 }
 
 func newMortgageFields(dir1, dir2 string) *mortgageFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -302,7 +302,7 @@ type bondsFields struct {
 }
 
 func newBondsFields(dir1, dir2 string) *bondsFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -419,7 +419,7 @@ type adFvFields struct {
 }
 
 func newAdFvFields(dir1, dir2 string) *adFvFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -480,7 +480,7 @@ type adPvFields struct {
 }
 
 func newAdPvFields(dir1, dir2 string) *adPvFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -545,7 +545,7 @@ type adCpFields struct {
 }
 
 func newAdCpFields(dir1, dir2 string) *adCpFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -610,7 +610,7 @@ type adEppFields struct {
 }
 
 func newAdEppFields(dir1, dir2 string) *adEppFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -679,7 +679,7 @@ func getOaCpFields(userName string) *oaCpFields {
 }
 
 func newOaCpFields(dir1, dir2 string) *oaCpFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -744,7 +744,7 @@ func getOaEppFields(userName string) *oaEppFields {
 }
 
 func newOaEppFields(dir1, dir2 string) *oaEppFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -801,7 +801,7 @@ type oaFvFields struct {
 }
 
 func newOaFvFields(dir1, dir2 string) *oaFvFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -862,7 +862,7 @@ type oaGaFields struct {
 }
 
 func newOaGaFields(dir1, dir2 string) *oaGaFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -916,7 +916,7 @@ type oaInterestRateFields struct {
 }
 
 func newOaInterestRateFields(dir1, dir2 string) *oaInterestRateFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -967,7 +967,7 @@ type oaPerpetuityFields struct {
 }
 
 func newOaPerpetuityFields(dir1, dir2 string) *oaPerpetuityFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -1025,7 +1025,7 @@ type oaPvFields struct {
 }
 
 func newOaPvFields(dir1, dir2 string) *oaPvFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -1099,7 +1099,7 @@ type siAccurateFields struct {
 }
 
 func newSiAccurateFields(dir1, dir2 string) *siAccurateFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -1185,7 +1185,7 @@ type siBankersFields struct {
 }
 
 func newSiBankersFields(dir1, dir2 string) *siBankersFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -1270,7 +1270,7 @@ type siOrdinaryFields struct {
 }
 
 func newSiOrdinaryFields(dir1, dir2 string) *siOrdinaryFields {
-  dir, err := misc.CreateDirs(0o077, 0o777, dir1, dir2)
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
@@ -1363,9 +1363,9 @@ Notes about synchronization:
     conflict.
 ***/
 func readFields(filePath string) ([]byte, error) {
-  exists, err := misc.CheckFileExists(filePath)
+  exists, err := osu.CheckFileExists(filePath)
   if exists {
-    obj, err := misc.ReadAllShareLock1(filePath, os.O_RDONLY, 0o400)
+    obj, err := osu.ReadAllShareLock1(filePath, os.O_RDONLY, 0o400)
     if err != nil {
       return nil, errors.New(fmt.Sprintf("Couldn't open file %s: ", filePath) + err.Error())
     }
