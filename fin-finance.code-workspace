@@ -5,6 +5,15 @@
 		},
 		{
 			"path": "../gplogger"
+		},
+		{
+			"path": "../gposu"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../fin-finance-admin"
 		}
 	],
 	"settings": {}

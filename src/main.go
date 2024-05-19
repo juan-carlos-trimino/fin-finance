@@ -56,7 +56,6 @@ import (
   "crypto/tls"
   "errors"
   "finance/middlewares"
-  "finance/misc"
   "finance/s3_storage"
   "finance/security"
   "finance/sessions"
@@ -66,6 +65,7 @@ import (
   "net/http"
   "net/http/pprof"
   "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/gposu"
   "golang.org/x/crypto/acme/autocert"
   //	_ "net/http/pprof" //Blank import of pprof.
   "os"
@@ -225,7 +225,7 @@ func main() {
     }
   }
   logger.LogInfo(fmt.Sprintf("Using SHUTDOWN_TIMEOUT: %d", SHUTDOWN_TIMEOUT), "-1")
-  logger.LogInfo(fmt.Sprintf("OS: %s", misc.GetOS()), "-1")
+  logger.LogInfo(fmt.Sprintf("OS: %s", osu.GetOS()), "-1")
   homeDir, err := os.UserHomeDir()
   if err != nil {
     panic("home" + err.Error())
@@ -242,16 +242,16 @@ func main() {
   }
   dataDir := buffer.String() + dataDirName
   logger.LogInfo(fmt.Sprintf("Data directory: %s", dataDir), "-1")
-  numCpus, maxProcs := misc.CpusAvailable()
+  numCpus, maxProcs := osu.CpusAvailable()
   logger.LogInfo(fmt.Sprintf("Number of CPUs: %d", numCpus), "-1")
   logger.LogInfo(fmt.Sprintf("GOMAXPROCS: %d", maxProcs), "-1")
-  if userName, err := misc.GetUsername(); err != nil {
+  if userName, err := osu.GetUsername(); err != nil {
     logger.LogError(fmt.Sprintf("%+v", err), "-1")
   } else {
     logger.LogInfo(fmt.Sprintf("Username: %s", userName), "-1")
   }
   //
-  if ok, err := misc.IsRoot(); err != nil {
+  if ok, err := osu.IsRoot(); err != nil {
     logger.LogError(fmt.Sprintf("%+v", err), "-1")
   } else if ok {
     logger.LogInfo("The current user is running as root.", "-1")
@@ -612,13 +612,13 @@ func makeHttpToHttpsRedirectHandler(port string) *handlers {
 }
 
 func readUsers(dir, filename string) {
-  dirErr, err := misc.CreateDirs(0o077, 0o777, dir)
+  dirErr, err := osu.CreateDirs(0o077, 0o777, dir)
   if err != nil {
     panic("Cannot create directory '" + dirErr + "': " + err.Error())
   }
   filePath := dir + "/" + filename
   //If file exists, do not write the hard-coded users a second time.
-  if ok, _ := misc.CheckFileExists(filePath); !ok {
+  if ok, _ := osu.CheckFileExists(filePath); !ok {
     if err = sessions.AddUserToFile(filePath, USER_NAME, PASSWORD); err != nil {
       panic(err)
     } else if err = sessions.AddUserToFile(filePath, "b", "b"); err != nil {
