@@ -31,11 +31,6 @@ src/middlewares/*
 !src/middlewares/MwSecurityHeaders.go
 !src/middlewares/MwValidateSessions.go
 #
-!src/misc
-src/misc/*
-!src/misc/misc.go
-!src/misc/os-linux.go
-#
 !src/s3_storage
 src/s3_storage/*
 !src/s3_storage/oracle.go
