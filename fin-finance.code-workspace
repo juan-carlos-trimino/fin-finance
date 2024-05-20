@@ -14,6 +14,12 @@
 		},
 		{
 			"path": "../fin-finance-admin"
+		},
+		{
+			"path": "../gpmiddlewares"
+		},
+		{
+			"path": "../gpsessions"
 		}
 	],
 	"settings": {}

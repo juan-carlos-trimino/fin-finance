@@ -339,23 +339,23 @@ module "fin-finances" {
   }
   s3 storage ***/
   ]
-  service_account = {
-    name = "${local.svc_finances}-service-account"
-    # Note: The keys and the values in the map must be strings. In other words, you cannot use
-    #       numeric, boolean, list or other types for either the keys or the values.
-    # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-    annotations = {
-      "kubernetes.io/enforce-mountable-secrets" = "true"
-      "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
-    }
-    automount_service_account_token = true
-    secret = [{
-      name = "${local.svc_finances}-secrets"
-    },
-    {
-      name = "${local.svc_finances}-s3-storage"
-    }]
-  }
+  # service_account = {
+  #   name = "${local.svc_finances}-service-account"
+  #   # Note: The keys and the values in the map must be strings. In other words, you cannot use
+  #   #       numeric, boolean, list or other types for either the keys or the values.
+  #   # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+  #   # annotations = {
+  #   #   "kubernetes.io/enforce-mountable-secrets" = "true"
+  #   #   "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
+  #   # }
+  #   automount_service_account_token = true
+  #   secret = [{
+  #     name = "${local.svc_finances}-secrets"
+  #   },
+  #   {
+  #     name = "${local.svc_finances}-s3-storage"
+  #   }]
+  # }
   # Configure environment variables specific to the app.
   env = {
     # Set USER to any string to avoid the error:
