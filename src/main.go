@@ -57,7 +57,6 @@ import (
   "errors"
   "finance/s3_storage"
   "finance/security"
-  "finance/sessions"
   "finance/webfinances"
   "fmt"
   "net"
@@ -66,6 +65,7 @@ import (
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/gpmiddlewares"
   "github.com/juan-carlos-trimino/gposu"
+  "github.com/juan-carlos-trimino/gpsessions"
   "golang.org/x/crypto/acme/autocert"
   //	_ "net/http/pprof" //Blank import of pprof.
   "os"

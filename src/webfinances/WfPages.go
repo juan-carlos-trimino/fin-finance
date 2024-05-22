@@ -1,9 +1,9 @@
 package webfinances
 
 import (
-  "finance/sessions"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/gpmiddlewares"
+  "github.com/juan-carlos-trimino/gpsessions"
   //Package template (html/template) implements data-driven templates for generating HTML output
   //safe against code injection. It provides the same interface as text/template and should be used
   //instead of text/template whenever the output is HTML.
