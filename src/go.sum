@@ -1,5 +1,5 @@
-github.com/aws/aws-sdk-go v1.51.2 h1:Ruwgz5aqIXin5Yfcgc+PCzoqW5tEGb9aDL/JWDsre7k=
-github.com/aws/aws-sdk-go v1.51.2/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.53.8 h1:eoqGb1WOHIrCFKo1d51cMcnt1ralfLFaEqRkC5Zzv8k=
+github.com/aws/aws-sdk-go v1.53.8/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
@@ -14,6 +14,8 @@ github.com/juan-carlos-trimino/gpmiddlewares v1.0.0 h1:DCei2aIqX2/ZtLXl1MmDaCb/O
 github.com/juan-carlos-trimino/gpmiddlewares v1.0.0/go.mod h1:Y8xNEGrqIWCD/aWYbbXFpIth7mrgftqb69lxNVHyEZs=
 github.com/juan-carlos-trimino/gposu v1.0.0 h1:qiqDja/1KhBHezlhp4SZGj6L+qmTIdaMRqmNnA/5miY=
 github.com/juan-carlos-trimino/gposu v1.0.0/go.mod h1:FTY5/pejNnDP5AaQN2hv1X+08HV79TfGl+c7I3tpTJs=
+github.com/juan-carlos-trimino/gps3storage v1.0.0 h1:rfCwtnUS/u7W3Rlyg2S/UXTdYVrF/NZO5fVa8bNyOT8=
+github.com/juan-carlos-trimino/gps3storage v1.0.0/go.mod h1:V9iZkC62vXuPlDkx0SQ4OM3IztbM3wlhUsmsx3zwoSM=
 github.com/juan-carlos-trimino/gpsessions v1.0.0 h1:qU0IiyK11JpoIB4Oqflq/JkgE8/5jUzPKWxmctfxNbA=
 github.com/juan-carlos-trimino/gpsessions v1.0.0/go.mod h1:6T2x3R1hEzzqa/aM1NghgYeyiEeZ5ej5YjEeONDSG8c=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
