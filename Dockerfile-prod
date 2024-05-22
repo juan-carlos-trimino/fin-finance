@@ -29,7 +29,6 @@ COPY ./src/main.go ./
 COPY ./src/finances ./finances/
 COPY ./src/mathutil ./mathutil/
 COPY ./src/security ./security/
-COPY ./src/s3_storage ./s3_storage/
 COPY ./src/webfinances ./webfinances/
 
 # Download necessary Go modules; https://go.dev/ref/mod#go-mod-download
