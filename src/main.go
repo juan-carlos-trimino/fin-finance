@@ -55,7 +55,6 @@ import (
   "context"
   "crypto/tls"
   "errors"
-  "finance/middlewares"
   "finance/s3_storage"
   "finance/security"
   "finance/sessions"
@@ -65,6 +64,7 @@ import (
   "net/http"
   "net/http/pprof"
   "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/gpmiddlewares"
   "github.com/juan-carlos-trimino/gposu"
   "golang.org/x/crypto/acme/autocert"
   //	_ "net/http/pprof" //Blank import of pprof.
