@@ -20,6 +20,9 @@
 		},
 		{
 			"path": "../gpsessions"
+		},
+		{
+			"path": "../gps3storage"
 		}
 	],
 	"settings": {}
