@@ -231,20 +231,6 @@ src/webfinances/templates/simpleinterestordinary/*
 !src/webfinances/templates/simpleinterestordinary/principal.html
 !src/webfinances/templates/simpleinterestordinary/time.html
 # ... and this directory and its file...
-!src/middlewares/
-src/middlewares/*
-!src/middlewares/ChainMiddlewares.go
-!src/middlewares/MwCorrelationId.go
-!src/middlewares/MwContextKey.go
-!src/middlewares/MwSecurityHeaders.go
-!src/middlewares/MwValidateSessions.go
-# ... and this directory and its file...
-!src/sessions/
-src/sessions/*
-!src/sessions/share.go
-!src/sessions/session.go
-!src/sessions/users.go
-# ... and this directory and its file...
 !src/security/
 src/security/*
 !src/security/security.go
