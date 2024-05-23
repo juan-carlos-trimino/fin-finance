@@ -51,7 +51,6 @@ src/mathutil/*
 !src/webfinances/
 src/webfinances/*
 !src/webfinances/fields.go
-!src/webfinances/Messages.go
 !src/webfinances/WfBondsPages.go
 !src/webfinances/WfMiscellaneousPages.go
 !src/webfinances/WfMortgagePages.go
