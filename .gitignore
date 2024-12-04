@@ -11,7 +11,7 @@
 # ... and these files under the 'src' directory...
 !.vscode/
 .vscode/*
-!launch.json
+!.vscode/launch.json
 # ... and these files under the 'src' directory...
 # !files/
 # files/*
