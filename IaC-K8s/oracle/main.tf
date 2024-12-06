@@ -1,36 +1,65 @@
-#########
-# Login #
-#########
-# (1) https://www.oracle.com/cloud/sign-in.html
-# (2) Sign In using a Cloud Account Name
-# (3) Cloud Account Name
-
-####################################################################################
-# OCI CLI                                                                          #
-# https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm#Quickstart #
-####################################################################################
-# Once you have OCI CLI installed on your machine, execute the following command:
-# $ oci setup config
-# It will prompt you for all of the information require to generate the config file. You will need
-# the following:
-# (1) user's OCID (Profile->My profile)
-# (2) tenancy's OCID (Profile->Tenancy: <tenancy-name>)
-# (3) the region
-#
-# When creating the keys, decline creating a passphrase. Once the keys are generated, you'll need
-# to associate the public key to the user. From the Oracle Cloud web console, click on "Profile->
-# My profile->API keys" on the left and click on "Add API Key." Upload the public key's pem file.
-#
-# You can verify that everything is configured properly by running the following command:
-# $ oci iam compartment list -c <tenancy-ocid>
-#   where <tenancy-ocid> is your tenancy's OCID.
-# If there are no errors in the JSON reply, the config file was create (by default in ~/.oci). At
-# this point, you need to run Terraform to allocate your resources.
-
-###################################################################################
-# Terraform                                                                       #
-# https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli #
-###################################################################################
+###################################################################################################
+# Login                                                                                           #
+# (1) https://www.oracle.com/cloud/sign-in.html                                                   #
+# (2) Sign In using a Cloud Account Name                                                          #
+# (3) Cloud Account Name                                                                          #
+###################################################################################################
+# OCI CLI                                                                                         #
+# https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/climanualinst.htm#Manual_Installation    #
+# Manual Installation: Ubuntu                                                                     #
+# Step 1: Installing Python                                                                       #
+#  Before you install the CLI, run the following commands on a new Ubuntu image.                  #
+#  ~$ sudo apt update                                                                             #
+#  ~$ sudo apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev \       #
+#     libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev                        #
+#  ~$ sudo apt update && sudo apt install python3.12.0 python3.12.0-pip python3.12.0-venv         #
+# Step 2: Creating and Configuring a Virtual Environment                                          #
+#  The venv Python module is a virtual environment builder that lets you create isolated Python   #
+#  environments.                                                                                  #
+#  Installing and Activating your Virtual Environment                                             #
+#  After Python is installed, set up a virtual environment for your operating system using the    #
+#  following steps.                                                                               #
+#  1. Navigate to the directory in which you would like to create the virtual environment.        #
+#     $ mkdir -p ~/oci/python && cd ~/oci/python                                                  #
+#  2. Create the virtual environment using the version of Python installed.                       #
+#     ~/oci/python$ python3.12 -m venv oracle-cli                                                 #
+#  3. Activate the virtual environment.                                                           #
+#     ~/oci/python$ source oracle-cli/bin/activate                                                #
+# Step 3: Installing the Command Line Interface                                                   #
+#  To install using PyPI, run the following command:                                              #
+#  (oracle-cli) ~/oci/python$ pip install oci-cli                                                 #
+# Step 4: Setting up the Configuration File                                                       #
+#  Before using the CLI, you must create a configuration file that contains the required          #
+#  credentials for working with Oracle Cloud Infrastructure. The default location for the         #
+#  configuration file is ~/.oci.                                                                  #
+#  Use the Setup Dialog                                                                           #
+#  To have the CLI guide you through the first-time setup process, use the setup config command:  #
+#  (oracle-cli) ~/oci/python$ oci setup config                                                    #
+#  This command prompts you for the information required to create the configuration file and the #
+#  API public and private keys. The setup dialog uses this information to generate an API key pair#
+#  and creates the configuration file. After API keys are created, upload the public key using the#
+#  Console.                                                                                       #
+#  You will need the following:                                                                   #
+#  (1) user's OCID (Profile->My profile)                                                          #
+#  (2) tenancy's OCID (Profile->Tenancy: <tenancy-name>)                                          #
+#  (3) the region                                                                                 #
+#  When creating the keys, decline creating a passphrase. Once the keys are generated, you'll need#
+#  to associate the public key to the user. From the Oracle Cloud web console, click on "Profile->#
+#  My profile->API keys" on the left and click on "Add API Key." Upload the public key's pem file.#
+# Step 5: Verify that everything is configured properly                                           #
+#  You can verify that everything is configured properly by running the following command:        #
+#  (oracle-cli) ~/oci/python$ oci iam compartment list -c <tenancy-ocid>                          #
+#  where <tenancy-ocid> is your tenancy's OCID.                                                   #
+#  If there are no errors in the JSON reply, the config file was create (by default in ~/.oci). At#
+#  this point, you need to run Terraform to allocate your resources.                              #
+# Step 6: Deactivate the virtual environment.                                                     #
+#  (oracle-cli) ~/oci/python$ deactivate                                                          #
+# Step 7: Activate the virtual environment.                                                       #
+#  ~$ source ~/oci/python/oracle-cli/bin/activate                                                 #
+###################################################################################################
+# Terraform                                                                                       #
+# https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli                 #
+###################################################################################################
 # $ terraform version
 #
 # $ terraform init
