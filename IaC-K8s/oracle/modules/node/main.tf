@@ -20,7 +20,6 @@ variable cluster_cni_type {
 # list of supported versions.
 variable k8s_version {
   type = string
-  default = "v1.28.2"
 }
 variable nodes {
   type = number

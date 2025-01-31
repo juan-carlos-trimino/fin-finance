@@ -59,6 +59,15 @@
 ###################################################################################################
 # Terraform                                                                                       #
 # https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli                 #
+#                                                                                                 #
+# To install/upgrade Terraform on WSL                                                             #
+# $ sudo apt update && sudo apt upgrade -y                                                        #
+# $ sudo apt install wget unzip                                                                   #
+# $ wget https://releases.hashicorp.com/terraform/1.10.4/terraform_1.10.4_linux_amd64.zip \       #
+#   -O terraform.zip                                                                              #
+# $ unzip terraform.zip                                                                           #
+# $ sudo mv terraform /usr/local/bin                                                              #
+# $ rm terraform.zip                                                                              #
 ###################################################################################################
 # $ terraform version
 #
@@ -79,6 +88,7 @@
 #            learn, to always run "terraform destroy" on your project.                            #
 ###################################################################################################
 # $ terraform destroy
+# $ terraform destroy -auto-approve
 # $ terraform destroy -var-file="../tf_secrets.auto.tfvars"
 # $ terraform destroy -var="app_version=1.0.0" -auto-approve
 #
@@ -274,6 +284,7 @@ module "arm64-node-pool" {
   cluster_id = module.cluster.cluster-id
   cluster_cni_type = module.cluster.cluster-cni-type
   nodes = var.nodes
+  k8s_version = var.k8s_version
   public_key = local.public_key
   memory_per_node = var.memory_per_node
   ocpus_per_node = var.ocpus_per_node

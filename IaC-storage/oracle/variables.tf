@@ -19,6 +19,11 @@ variable user_ocid {
   sensitive = true
 }
 
+variable fingerprint {
+  type = string
+  sensitive = true
+}
+
 variable region {
   description = "An OCI region."
   type = string

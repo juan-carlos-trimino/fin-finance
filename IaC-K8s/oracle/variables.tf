@@ -123,6 +123,11 @@ variable memory_per_node {
 #   sensitive = true
 # }
 
+variable k8s_version {
+  type = string
+  default = "v1.31.1"
+}
+
 variable network_load_balancer {
   type = bool
   default = false

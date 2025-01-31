@@ -14,7 +14,6 @@ variable compartment_id {
 # supported versions.
 variable k8s_version {  # Container Engine for Kubernetes (OKE).
   type = string
-  default = "v1.28.2"
 }
 variable vcn_id {
   type = string

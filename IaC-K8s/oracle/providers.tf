@@ -25,6 +25,7 @@ provider "oci" {  # Oracle Cloud Infrastructure (OCI)
   user_ocid = var.user_ocid
   private_key_path = var.private_key_path
   fingerprint = var.fingerprint
+  # config_file_profile = "DEFAULT"
   region = var.region
 }
 
