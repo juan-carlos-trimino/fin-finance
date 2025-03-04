@@ -5,6 +5,46 @@ This repo contains the following four (4) directories:
 3. **IaC-storage**: The storage directory contains the Terraform code to set up access to the Oracle Cloud Infrastructure, which enables access to the Simple Storage Service (S3).
 4. **src**: This directory contains the code for the application.
 
+## Terraform
+https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
+
+To install/upgrade Terraform on Windows Subsystem for Linux (WSL)
+```
+$ sudo apt update && sudo apt upgrade -y
+$ sudo apt install wget unzip
+$ wget https://releases.hashicorp.com/terraform/1.10.4/terraform_1.10.4_linux_amd64.zip -O terraform.zip
+$ unzip terraform.zip
+$ sudo mv terraform /usr/local/bin
+$ rm terraform.zip
+```
+### Useful Commands
+To obtain the current version of Terraform and all installed plugins.
+```
+$ terraform version
+```
+To initialize a working directory containing Terraform configuration files. ***This is the first command you should run after writing a new Terraform configuration or cloning an existing configuration from version control. It is safe to run this command multiple times.***
+```
+$ terraform init
+$ terraform -chdir=../tf init
+  where -chdir=../tf allows you to declare where the root of your terraform project is located.
+```
+
+```
+$ terraform plan
+$ terraform plan -var-file="../tf_secrets.auto.tfvars"
+
+$ terraform apply
+$ terraform apply -auto-approve
+$ terraform apply -var-file="../tf_secrets.auto.tfvars"
+$ terraform apply -var="app_version=1.0.0" -auto-approve
+
+IMPORTANT: Resources you provision accrue costs while they are running. It's a good idea, as you learn, to always run "terraform destroy" on your project.
+$ terraform destroy
+$ terraform destroy -auto-approve
+$ terraform destroy -var-file="../tf_secrets.auto.tfvars"
+$ terraform destroy -var="app_version=1.0.0" -auto-approve
+```
+
 ## IaC-K8s
 TBD Enter description
 
