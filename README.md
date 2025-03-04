@@ -133,3 +133,12 @@ If there are no errors in the JSON reply, the config file was create (by default
 ```
 ~$ source ~/oci/python/oracle-cli/bin/activate
 ```
+
+## src
+### Debugging Go
+#### Delve
+To install the debugger in VS Code:<br>
+**(1)** Open the Command Palette (***Ctrl + Shift + P***).<br>
+**(2)** Find ***Go: Install/Update Tools*** and select ***dlv***.
+
+The settings for the debugger can be stored in the ***.code-workspace*** file or the ***.vscode/launch.json*** directory. For this project, the settings are stored in the ***.code-workspace*** file under the ***launch*** section.
