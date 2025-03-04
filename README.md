@@ -89,7 +89,7 @@ To install using PyPI, run the following command:
 
 **Step 4: Setting up the Configuration File**<br>
 Before using the CLI, you must create a configuration file that contains the required credentials for working with Oracle Cloud Infrastructure. The default location for the configuration file is ***~/.oci***.<br>
-**Use the Setup Dialog**<br>
+Use the Setup Dialog<br>
 To have the CLI guide you through the first-time setup process, use the setup config command:
 ```
 (oracle-cli) ~/oci/python$ oci setup config
