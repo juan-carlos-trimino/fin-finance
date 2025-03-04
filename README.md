@@ -65,8 +65,8 @@ Before you install the CLI, run the following commands on a new Ubuntu image.<br
 ```
 
 **Step 2: Creating and Configuring a Virtual Environment**<br>
-The ***venv*** Python module is a virtual environment builder that lets you create isolated Python environments.
-Installing and Activating your Virtual Environment
+The ***venv*** Python module is a virtual environment builder that lets you create isolated Python environments.<br>
+Installing and Activating your Virtual Environment<br>
 After Python is installed, set up a virtual environment for your operating system using the following steps.
 1. Navigate to the directory in which you would like to create the virtual environment.
    ```

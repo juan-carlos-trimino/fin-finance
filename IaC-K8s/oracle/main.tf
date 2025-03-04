@@ -1,18 +1,7 @@
 ###################################################################################################
-# Login                                                                                           #
-# (1) https://www.oracle.com/cloud/sign-in.html                                                   #
-# (2) Sign In using a Cloud Account Name                                                          #
-# (3) Cloud Account Name                                                                          #
-###################################################################################################
 # OCI CLI                                                                                         #
 # https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/climanualinst.htm#Manual_Installation    #
 # Manual Installation: Ubuntu                                                                     #
-# Step 1: Installing Python                                                                       #
-#  Before you install the CLI, run the following commands on a new Ubuntu image.                  #
-#  ~$ sudo apt update                                                                             #
-#  ~$ sudo apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev \       #
-#     libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev                        #
-#  ~$ sudo apt update && sudo apt install python3.12.0 python3.12.0-pip python3.12.0-venv         #
 # Step 2: Creating and Configuring a Virtual Environment                                          #
 #  The venv Python module is a virtual environment builder that lets you create isolated Python   #
 #  environments.                                                                                  #
