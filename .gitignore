@@ -9,10 +9,6 @@
 !LICENSE
 !README.md
 # ... and these files under the 'src' directory...
-!.vscode/
-.vscode/*
-!.vscode/launch.json
-# ... and these files under the 'src' directory...
 # !files/
 # files/*
 # ... and these files under the 'src' directory...
