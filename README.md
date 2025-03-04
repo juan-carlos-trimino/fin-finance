@@ -26,24 +26,38 @@ To initialize a working directory containing Terraform configuration files. ***T
 ```
 $ terraform init
 $ terraform -chdir=../tf init
-  where -chdir=../tf allows you to declare where the root of your terraform project is located.
 ```
+where -chdir=../tf allows you to declare where the root of your terraform project is located.
 
+This command creates an execution plan, which lets you preview the changes that Terraform plans to make to your infrastructure.
 ```
 $ terraform plan
 $ terraform plan -var-file="../tf_secrets.auto.tfvars"
+```
+where -var-file="../tf_secrets.auto.tfvars" sets values for potentially many input variables declared in the root module of the configuration, using definitions from a ***tfvars*** file. Use this option multiple times to include values from more than one file.
 
+This command executes the actions proposed in a Terraform plan.
+```
 $ terraform apply
 $ terraform apply -auto-approve
 $ terraform apply -var-file="../tf_secrets.auto.tfvars"
 $ terraform apply -var="app_version=1.0.0" -auto-approve
+```
+where -auto-approve skips interactive approval of the plan before applying. Terraform ignores this option when you pass a previously-saved plan file. This is because Terraform interprets the act of passing the plan file as the approval.<br>
+and<br>
+-var sets a value for a single input variable declared in the root module of the configuration. Use this option multiple times to set more than one variable.
 
-IMPORTANT: Resources you provision accrue costs while they are running. It's a good idea, as you learn, to always run "terraform destroy" on your project.
+***IMPORTANT***: Resources you provision accrue costs while they are running. It's a good idea, as you learn, to always run **terraform destroy** on your project.<br>
+To deprovision all objects managed by a Terraform configuration.
+```
 $ terraform destroy
 $ terraform destroy -auto-approve
 $ terraform destroy -var-file="../tf_secrets.auto.tfvars"
 $ terraform destroy -var="app_version=1.0.0" -auto-approve
 ```
+
+
+
 
 ## IaC-K8s
 TBD Enter description

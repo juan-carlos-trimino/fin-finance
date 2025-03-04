@@ -1,18 +1,4 @@
 ###################################################################################################
-# Terraform                                                                                       #
-# https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli                 #
-#                                                                                                 #
-# To install/upgrade Terraform on WSL                                                             #
-# $ sudo apt update && sudo apt upgrade -y                                                        #
-# $ sudo apt install wget unzip                                                                   #
-# $ wget https://releases.hashicorp.com/terraform/1.10.4/terraform_1.10.4_linux_amd64.zip \       #
-#   -O terraform.zip                                                                              #
-# $ unzip terraform.zip                                                                           #
-# $ sudo mv terraform /usr/local/bin                                                              #
-# $ rm terraform.zip                                                                              #
-###################################################################################################
-# $ terraform version
-#
 # $ terraform init
 # $ terraform -chdir=../tf init
 #   where -chdir=../tf allows you to declare where the root of your terraform project is located.
