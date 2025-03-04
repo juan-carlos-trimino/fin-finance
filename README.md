@@ -8,6 +8,9 @@ This repo contains the following four (4) directories:
 ## Terraform
 https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
 
+To troubleshoot the ***OCI Terraform Provider***:<br>
+https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformtroubleshooting.htm
+
 To install/upgrade Terraform on Windows Subsystem for Linux (WSL)
 ```
 $ sudo apt update && sudo apt upgrade -y
@@ -56,8 +59,29 @@ $ terraform destroy -var-file="../tf_secrets.auto.tfvars"
 $ terraform destroy -var="app_version=1.0.0" -auto-approve
 ```
 
+Once Terraform finish setting up your resources, you need to set up ***kubectl*** to access the cluster. See ***kubectl***.
 
+Finally, let's try to list the available nodes in the cluster.
+```
+$ kubectl get nodes
+```
+If the nodes are displayed, you are done.
 
+## kubectl
+https://kubernetes.io/docs/tasks/tools/
+
+To create a ***kubeconfig*** file for ***kubectl*** to access the cluster, execute the following command:
+```
+$ oci ce cluster create-kubeconfig --cluster-id <cluster OCID> --file ~/.kube/<name-of-config-file> --region <region> --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
+```
+See IaC-K8s/oracle/data.tf for token-version and kube-endpoint values.
+
+You will need the following:<br>
+**(1)** Cluster's OCID (Navigation menu->Developer Services->Kubernetes Clusters (OKE) [Under Containers & Artifacts]->Select the compartment that contains the cluster[Compartment]-> On the Clusters page, click the name of the cluster)<br>
+**(2)** Name for the config file<br>
+**(3)** The region<br>
+
+The command will create a ***kubeconfig*** file in the ***~/.kube directory***; the ***kubeconfig*** file will contain the keys and all of the configuration for ***kubectl*** to access the cluster.
 
 ## IaC-K8s
 TBD Enter description

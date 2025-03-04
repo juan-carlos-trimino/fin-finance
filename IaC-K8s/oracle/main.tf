@@ -1,15 +1,3 @@
-###################################################################################################
-#
-# To troubleshoot the OCI Terraform Provider:
-# https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformtroubleshooting.htm
-#
-# Once Terraform finish setting up your resources, you need to set up kubectl to access the cluster.
-# See null-resources.tf.
-#
-# Finally, let's try to list the available nodes in the cluster.
-# $ kubectl get nodes
-# If the nodes are displayed, you are done.
-
 # Virtual Cloud Network (VCN) or Virtual Private Cloud (VPC).
 module "vcn" {
   source = "oracle-terraform-modules/vcn/oci"

@@ -1,19 +1,3 @@
-###########################################
-# kubectl                                 #
-# https://kubernetes.io/docs/tasks/tools/ #
-###########################################
-# To create a kubeconfig file for kubectl to access the cluster, execute the following command:
-# $ oci ce cluster create-kubeconfig --cluster-id <cluster OCID> --file ~/.kube/<name-of-config-file>
-#   --region <region> --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
-# You will need the following:
-# (1) cluster's OCID (Navigation menu->Developer Services->Kubernetes Clusters (OKE) [Under
-#     Containers & Artifacts]->Select the compartment that contains the cluster[Compartment]->
-#     On the Clusters page, click the name of the cluster)
-# (2) name for the config file
-# (3) the region
-#
-# The command will create a kubeconfig file in the ~/.kube directory; the kubeconfig file will
-# contain the keys and all of the configuration for kubectl to access the cluster.
 resource "null_resource" "kubeconfig" {
   # The trigger value forces the provisioner to run during each plan/apply.
   triggers = {
