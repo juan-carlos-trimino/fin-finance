@@ -70,11 +70,18 @@ If the nodes are displayed, you are done.
 ## kubectl
 https://kubernetes.io/docs/tasks/tools/
 
-To create a ***kubeconfig*** file for ***kubectl*** to access the cluster, execute the following command:
+---
+**Note**
+
+A file that is used to configure access to a cluster is usually referred to as a ***kubeconfig file***. This is a conventional way of referring to a configuration file, often shortened to config file. It does not imply that a file named kubeconfig exists.
+
+---
+
+xxxTo create a kubeconfig file for ***kubectl*** to access the cluster, execute the following command:
 ```
 $ oci ce cluster create-kubeconfig --cluster-id <cluster OCID> --file ~/.kube/<name-of-config-file> --region <region> --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
 ```
-See IaC-K8s/oracle/data.tf for token-version and kube-endpoint values.
+See ***IaC-K8s/oracle/data.tf*** for appropriate values to the parameters --token-version and --kube-endpoint.
 
 You will need the following:<br>
 **(1)** Cluster's OCID (Navigation menu->Developer Services->Kubernetes Clusters (OKE) [Under Containers & Artifacts]->Select the compartment that contains the cluster[Compartment]-> On the Clusters page, click the name of the cluster)<br>
