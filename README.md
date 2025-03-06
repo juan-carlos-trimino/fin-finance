@@ -94,7 +94,7 @@ export KUBECONFIG="value"
 ```
 To reiterate, when an environment variable is set from the shell using the export command, its existence ends when the current session ends.
 
-To set the KUBECONFIG as a ***user-specific environment variable***, add the ***export*** command to ***~/.bashrc (bash), ~/.kshrc (ksh), or ~/.zshrc (zsh)***, depending on which shell you are using. By modifying the shell-specific configuration file, the environment variables will persist across sessions and system restarts. We will use bash:
+To set the KUBECONFIG environment variable as a ***user-specific environment variable***, add the ***export*** command to ***~/.bashrc (bash), ~/.kshrc (ksh), or ~/.zshrc (zsh)***, depending on which shell you are using. By modifying the shell-specific configuration file, the environment variable will persist across sessions and system restarts. We will use bash:
 ```
 $ echo 'export KUBECONFIG="value"' >> ~/.bashrc
 ```
@@ -123,7 +123,7 @@ $ printenv KUBECONFIG
 ```
 
 ## IaC-K8s
-TBD Enter description
+[Using Terraform and Oracle Cloud Infrastructure](https://docs.oracle.com/en-us/iaas/Content/dev/terraform/tutorials.htm).
 
 ### Login
 1. https://www.oracle.com/cloud/sign-in.html
