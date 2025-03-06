@@ -2,8 +2,8 @@
 module "vcn" {
   source = "oracle-terraform-modules/vcn/oci"
   version = "3.1.0"
-  vcn_name = "vcn-fiv"
-  vcn_dns_label = "findnslbl"
+  vcn_name = "fin-vcn"
+  vcn_dns_label = "fin-findnslbl"
   compartment_id = oci_identity_compartment.fin-compartment.id
   region = var.region
   # The DNS Domain Name for your virtual cloud network is: <your-dns-label>.oraclevcn.com
@@ -23,7 +23,7 @@ module "private-subnet" {
   ]
   source = "./modules/subnet"
   vcn_id = module.vcn.vcn_id
-  subnet_display_name = "private-subnet"
+  subnet_display_name = "fin-private-subnet"
   compartment_id = oci_identity_compartment.fin-compartment.id
   cidr_block = "10.0.1.0/24"  # Private subnet's CIDR block.
   # Caution: For the route table id, use module.vcn.nat_route_id.
@@ -33,7 +33,7 @@ module "private-subnet" {
   # VNICs created in this subnet cannot have public IP addresses.
   prohibit_public_ip_on_vnic = true
   #
-  sl_display_name = "private-subnet-security-list"
+  sl_display_name = "fin-private-subnet-security-list"
   sl_egress_security_rules = [{
     stateless = false  # No
     destination = "0.0.0.0/0"  # Allow all traffic to go out anywhere.
@@ -75,7 +75,7 @@ module "public-subnet" {
   ]
   source = "./modules/subnet"
   vcn_id = module.vcn.vcn_id
-  subnet_display_name = "public-subnet"
+  subnet_display_name = "fin-public-subnet"
   compartment_id = oci_identity_compartment.fin-compartment.id
   cidr_block = "10.0.0.0/24"    # Public subnet's CIDR block.
   route_table_id = module.vcn.ig_route_id
@@ -83,7 +83,7 @@ module "public-subnet" {
   # specified otherwise during instance launch or VNIC creation.
   prohibit_public_ip_on_vnic = false
   #
-  sl_display_name = "public-subnet-security-list"
+  sl_display_name = "fin-public-subnet-security-list"
   sl_egress_security_rules = [{
     stateless = false  # No
     destination = "0.0.0.0/0"  # Allow all traffic to go out anywhere.
@@ -157,7 +157,7 @@ module "cluster" {
     module.public-subnet
   ]
   source = "./modules/cluster"
-  name = "k8s-cluster"
+  name = "fin-k8s-cluster"
   type = "BASIC_CLUSTER"
   compartment_id = oci_identity_compartment.fin-compartment.id
   vcn_id = module.vcn.vcn_id
@@ -172,7 +172,7 @@ module "arm64-node-pool" {
     module.cluster
   ]
   source = "./modules/node"
-  name = "arm64-worker-pool"
+  name = "fin-arm64-worker-pool"
   tenancy_ocid = var.tenancy_ocid
   compartment_id = oci_identity_compartment.fin-compartment.id
   subnet_id = module.private-subnet.subnet-id
@@ -227,12 +227,10 @@ module "igw" {
   count = var.igw ? 1 : 0
   source = "./modules/igw"
   compartment_id = oci_identity_compartment.fin-compartment.id
-  name = "igw"
+  name = "fin-igw"
   enabled = true
   vcn_id = module.vcn.vcn_id
 }
-
-
 
 /***
 module "nat" {
