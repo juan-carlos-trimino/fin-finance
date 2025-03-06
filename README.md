@@ -77,18 +77,50 @@ A file that is used to configure access to a cluster is usually referred to as a
 
 ---
 
-xxxTo create a kubeconfig file for ***kubectl*** to access the cluster, execute the following command:
+You will need to create a kubeconfig file with authentication and configuration details, which will allow kubectl to communicate with your cluster. To create the kubeconfig file, you execute the command below, which requires the following information:<br>
+**(1)** Cluster's OCID (Navigation menu->Developer Services->Kubernetes Clusters (OKE) [Under Containers & Artifacts]->Select the compartment that contains the cluster[Compartment]-> On the Clusters page, click the name of the cluster)<br>
+**(2)** Name for the config file<br>
+**(3)** The region
 ```
 $ oci ce cluster create-kubeconfig --cluster-id <cluster OCID> --file ~/.kube/<name-of-config-file> --region <region> --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
 ```
-See ***IaC-K8s/oracle/data.tf*** for appropriate values to the parameters --token-version and --kube-endpoint.
+The command will create a kubeconfig file in the ***~/.kube*** directory; the kubeconfig file will contain the keys and all of the configuration for kubectl to access the cluster. See ***IaC-K8s/oracle/data.tf*** for appropriate values to the parameters ***--token-version*** and ***--kube-endpoint***.
 
-You will need the following:<br>
-**(1)** Cluster's OCID (Navigation menu->Developer Services->Kubernetes Clusters (OKE) [Under Containers & Artifacts]->Select the compartment that contains the cluster[Compartment]-> On the Clusters page, click the name of the cluster)<br>
-**(2)** Name for the config file<br>
-**(3)** The region<br>
+By default, kubectl looks for a file named ***config*** in the ***$HOME/.kube*** directory. You can specify other kubeconfig files by setting the ***KUBECONFIG*** environment variable or by setting the ***--kubeconfig*** flag.
 
-The command will create a ***kubeconfig*** file in the ***~/.kube directory***; the ***kubeconfig*** file will contain the keys and all of the configuration for ***kubectl*** to access the cluster.
+To export the KUBECONFIG environment variable ***only*** for the current shell and its children processes, you use the ***export*** command:
+```
+export KUBECONFIG="value"
+```
+To reiterate, when an environment variable is set from the shell using the export command, its existence ends when the current session ends.
+
+To set the KUBECONFIG as a ***user-specific environment variable***, add the ***export*** command to ***~/.bashrc (bash), ~/.kshrc (ksh), or ~/.zshrc (zsh)***, depending on which shell you are using. By modifying the shell-specific configuration file, the environment variables will persist across sessions and system restarts. We will use bash:
+```
+$ echo 'export KUBECONFIG="value"' >> ~/.bashrc
+```
+Next, reload the file to apply the changes:
+```
+$ source ~/.bashrc
+```
+
+To view all environment variables, use the ***printenv*** command. Since there are many variables on the list, use the ***less*** command to control the view:
+```
+$ printenv | less
+```
+The output shows the first page of the list and allows you to move forward by pressing ***Space*** to see the next page or ***Enter*** to display the next line. Exit the view with ***q***.
+
+To view a specific environment variable, use the ***set*** command:
+```
+$ set | grep KUBECONFIG
+```
+or
+```
+$ echo $KUBECONFIG
+```
+or
+```
+$ printenv KUBECONFIG
+```
 
 ## IaC-K8s
 TBD Enter description
