@@ -123,7 +123,9 @@ $ printenv KUBECONFIG
 ```
 
 ## IaC-K8s
-[Using Terraform and Oracle Cloud Infrastructure](https://docs.oracle.com/en-us/iaas/Content/dev/terraform/tutorials.htm).
+IaC-K8s contains the Terraform code for provisioning (i.e., creating, preparing, and activating the underlying infrastructure of a cloud environment) the Oracle Cloud Infrastructure (OCI), which is an Infrastructure as a Service (IaaS) and Platform as a Service (PaaS) offering. The OCI is a set of complementary cloud services that enable you to build and run a range of applications and services in a highly available hosted environment. OCI provides high-performance compute capabilities (as physical hardware instances) and storage capacity in a flexible overlay virtual network that is securely accessible from your on-premises network.
+
+For more OCI and Terraform documentation, please see [Using Terraform and Oracle Cloud Infrastructure](https://docs.oracle.com/en-us/iaas/Content/dev/terraform/tutorials.htm).
 
 ### Login
 1. https://www.oracle.com/cloud/sign-in.html
