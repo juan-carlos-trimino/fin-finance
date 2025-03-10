@@ -122,6 +122,47 @@ or
 $ printenv KUBECONFIG
 ```
 
+## Kubenertes (K8s)
+### Useful Commands
+Display the Kubernetes version running on the client and server.
+$ kubectl version
+
+Display the configuration of the cluster.
+```
+$ kubectl config view
+```
+
+Display a list of users.
+```
+$ kubectl config view -o jsonpath='{.users[*].name}'
+```
+
+Display endpoint information about the master and services in the cluster.
+$ kubectl cluster-info
+
+
+
+
+
+# $ kubectl get nodes
+# Confirm what platform is running on the cluster.
+# $ kubectl describe node | grep "kubernetes.io/arch"
+#
+# $ kubectl get all -n finances
+# $ kubectl get pods -n finances
+# $ kubectl delete pod -n finances <pod-name>
+# $ kubectl describe -n finances pod <pod-name>
+# $ kubectl get -n finances -o jsonpath='{.spec.containers[*].ports[*].containerPort}' pod <pod-name>
+# To see what node a pod is scheduled.
+# $ kubectl get po -o wide -n finances
+# To get detail pod information.
+# $ kubectl describe pod <pod-name> -n finances
+#
+
+
+
+
+
 ## IaC-K8s
 IaC-K8s contains the Terraform code for provisioning (i.e., creating, preparing, and activating the underlying infrastructure of a cloud environment) the Oracle Cloud Infrastructure (OCI), which is an Infrastructure as a Service (IaaS) and Platform as a Service (PaaS) offering. The OCI is a set of complementary cloud services that enable you to build and run a range of applications and services in a highly available hosted environment. OCI provides high-performance compute capabilities (as physical hardware instances) and storage capacity in a flexible overlay virtual network that is securely accessible from your on-premises network.
 
@@ -174,7 +215,7 @@ To have the CLI guide you through the first-time setup process, use the setup co
 (oracle-cli) ~/oci/python$ oci setup config
 ```
 This command prompts you for the information required to create the configuration file and the API public and private keys. The setup dialog uses this information to generate an API key pair and creates the configuration file. After API keys are created, upload the public key using the Console. You will need the following:<br>
-1. User's OCID (Profile->My profile)
+1. User's OCID (Profile->User settings or My profile)
 2. Tenancy's OCID (Profile->Tenancy: \<tenancy-name\>)
 3. The region
 

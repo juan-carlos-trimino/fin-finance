@@ -3,7 +3,7 @@ module "vcn" {
   source = "oracle-terraform-modules/vcn/oci"
   version = "3.1.0"
   vcn_name = "fin-vcn"
-  vcn_dns_label = "fin-findnslbl"
+  vcn_dns_label = "findnslbl"
   compartment_id = oci_identity_compartment.fin-compartment.id
   region = var.region
   # The DNS Domain Name for your virtual cloud network is: <your-dns-label>.oraclevcn.com

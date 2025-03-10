@@ -34,12 +34,13 @@ variable tenancy_ocid {
   sensitive = true
 }
 
+# Ensure "compartment_id" in outputs.tf has the correct name.
 variable compartment_name {
   type = string
   sensitive = true
 }
 
-# From the Profile menu, go to "My profile" and copy OCID.
+# From the Profile menu, go to "User settings" or "My profile" and copy OCID.
 variable user_ocid {
   type = string
   sensitive = true
