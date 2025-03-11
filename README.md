@@ -144,9 +144,14 @@ Display the configuration of the cluster.
 $ kubectl config view
 ```
 
-Display a list of users.
+Display all users.
 ```
-$ kubectl config view -o jsonpath='{.users[*].name}'
+$ kubectl config view -o jsonpath='{range .users[*]}{.name}{"\n"}{end}'
+```
+
+Retrieve one user details.
+```
+$ kubectl config view -o jsonpath='{.users[?(@.name == "<user-name>")].user}{"\n"}'
 ```
 
 Retrieve cluster details.
@@ -164,9 +169,19 @@ To retrieve nodes information.
 $ kubectl get nodes
 ```
 
+Display what node a pod is scheduled.
+```
+$ kubectl get pods -o wide -n <name-space>
+```
+
 Retrieve built-in resource types (pods, services, daemon sets, deployments, replica sets, jobs, cronjobs, and stateful sets) under a specific namespace.
 ```
 $ kubectl get all -n <name-space>
+```
+
+Retrieve a list of host IP addresses with the additional *phase* field indicating if the pod is running or not.
+```
+$ kubectl get pods -o jsonpath='{range .items[*]}{.status.hostIP}{"\t"}{.status.phase}{"\n"}{end}' -n <name-space>
 ```
 
 Retrieve pods under a specific namespace.
@@ -174,25 +189,20 @@ Retrieve pods under a specific namespace.
 $ kubectl get pods -n <name-space>
 ```
 
+Display details of a specific pod under a specific namespace.
+```
+$ kubectl describe pod <pod-name> -n <name-space>
+```
+
+Retrieve all containers in a pod with all of their ports.
+```
+$ kubectl get pod <pod-name> -o jsonpath='{range .spec.containers[*]}{.name}{"\t\t"}{range .ports[*]}{.name}{"="}{.containerPort}{"\t\t"}{end
+}{"\n"}{end}' -n <name-space>
+```
+
 Delete a pod under a specific namespace.
 ```
 $ kubectl delete pod <pod-name> -n <name-space>
-```
-
-
-
-[text](https://spacelift.io/blog/kubectl-delete-pod)
-# $ kubectl describe -n <name-space> pod <pod-name>
-# $ kubectl get -n <name-space> -o jsonpath='{.spec.containers[*].ports[*].containerPort}' pod <pod-name>
-
-Display what node a pod is scheduled.
-```
-$ kubectl get po -o wide -n <name-space>
-```
-
-Retrieve detail pod information.
-```
-$ kubectl describe pod <pod-name> -n <name-space>
 ```
 
 ## IaC-K8s
