@@ -135,7 +135,9 @@ $ printenv KUBECONFIG
 ## Kubenertes (K8s)
 ### Useful Commands
 Display the Kubernetes version running on the client and server.
+```
 $ kubectl version
+```
 
 Display the configuration of the cluster.
 ```
@@ -147,31 +149,37 @@ Display a list of users.
 $ kubectl config view -o jsonpath='{.users[*].name}'
 ```
 
-Display endpoint information about the master and services in the cluster.
+Retrieve cluster details.
+```
 $ kubectl cluster-info
+```
+
+Confirm what platform is running on the cluster.
+```
+$ kubectl describe node | grep "kubernetes.io/arch"
+```
+
+To retrieve nodes information.
+```
+$ kubectl get nodes
+```
 
 
-
-
-
-# $ kubectl get nodes
-# Confirm what platform is running on the cluster.
-# $ kubectl describe node | grep "kubernetes.io/arch"
-#
 # $ kubectl get all -n finances
 # $ kubectl get pods -n finances
 # $ kubectl delete pod -n finances <pod-name>
 # $ kubectl describe -n finances pod <pod-name>
 # $ kubectl get -n finances -o jsonpath='{.spec.containers[*].ports[*].containerPort}' pod <pod-name>
-# To see what node a pod is scheduled.
-# $ kubectl get po -o wide -n finances
-# To get detail pod information.
-# $ kubectl describe pod <pod-name> -n finances
-#
 
+Display what node a pod is scheduled.
+```
+$ kubectl get po -o wide -n finances
+```
 
-
-
+Retrieve detail pod information.
+```
+$ kubectl describe pod <pod-name> -n finances
+```
 
 ## IaC-K8s
 IaC-K8s contains the Terraform code for provisioning (i.e., creating, preparing, and activating the underlying infrastructure of a cloud environment) the Oracle Cloud Infrastructure (OCI), which is an Infrastructure as a Service (IaaS) and Platform as a Service (PaaS) offering. The OCI is a set of complementary cloud services that enable you to build and run a range of applications and services in a highly available hosted environment. OCI provides high-performance compute capabilities (as physical hardware instances) and storage capacity in a flexible overlay virtual network that is securely accessible from your on-premises network.

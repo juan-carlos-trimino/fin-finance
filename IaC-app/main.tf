@@ -11,20 +11,6 @@
 ####################
 # Kubectl Commands #
 ####################
-# $ kubectl cluster-info
-# $ kubectl get nodes
-# Confirm what platform is running on the cluster.
-# $ kubectl describe node | grep "kubernetes.io/arch"
-#
-# $ kubectl get all -n finances
-# $ kubectl get pods -n finances
-# $ kubectl delete pod -n finances <pod-name>
-# $ kubectl describe -n finances pod <pod-name>
-# $ kubectl get -n finances -o jsonpath='{.spec.containers[*].ports[*].containerPort}' pod <pod-name>
-# To see what node a pod is scheduled.
-# $ kubectl get po -o wide -n finances
-# To get detail pod information.
-# $ kubectl describe pod <pod-name> -n finances
 #
 # Execute commands in a running container.
 # $ kubectl exec -it -n finances <pod-name> -- /bin/sh
