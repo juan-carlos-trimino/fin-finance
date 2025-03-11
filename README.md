@@ -164,21 +164,35 @@ To retrieve nodes information.
 $ kubectl get nodes
 ```
 
+Retrieve built-in resource types (pods, services, daemon sets, deployments, replica sets, jobs, cronjobs, and stateful sets) under a specific namespace.
+```
+$ kubectl get all -n <name-space>
+```
 
-# $ kubectl get all -n finances
-# $ kubectl get pods -n finances
-# $ kubectl delete pod -n finances <pod-name>
-# $ kubectl describe -n finances pod <pod-name>
-# $ kubectl get -n finances -o jsonpath='{.spec.containers[*].ports[*].containerPort}' pod <pod-name>
+Retrieve pods under a specific namespace.
+```
+$ kubectl get pods -n <name-space>
+```
+
+Delete a pod under a specific namespace.
+```
+$ kubectl delete pod <pod-name> -n <name-space>
+```
+
+
+
+[text](https://spacelift.io/blog/kubectl-delete-pod)
+# $ kubectl describe -n <name-space> pod <pod-name>
+# $ kubectl get -n <name-space> -o jsonpath='{.spec.containers[*].ports[*].containerPort}' pod <pod-name>
 
 Display what node a pod is scheduled.
 ```
-$ kubectl get po -o wide -n finances
+$ kubectl get po -o wide -n <name-space>
 ```
 
 Retrieve detail pod information.
 ```
-$ kubectl describe pod <pod-name> -n finances
+$ kubectl describe pod <pod-name> -n <name-space>
 ```
 
 ## IaC-K8s
