@@ -86,17 +86,27 @@ $ oci ce cluster create-kubeconfig --cluster-id <cluster OCID> --file ~/.kube/<n
 ```
 The command will create a kubeconfig file in the ***~/.kube*** directory; the kubeconfig file will contain the keys and all of the configuration for kubectl to access the cluster. See ***IaC-K8s/oracle/data.tf*** for appropriate values to the parameters ***--token-version*** and ***--kube-endpoint***.
 
-By default, kubectl looks for a file named ***config*** in the ***$HOME/.kube*** directory. You can specify other kubeconfig files by setting the ***KUBECONFIG*** environment variable or by setting the ***--kubeconfig*** flag.
+---
+**Note**
+
+Setting the permissions of your ***~/.kube/\<name-of-config-file\>*** file to ***600*** ensures that only the owner (you) can read and write to it, enhancing security by limiting access to the Kubernetes configuration file.
+
+```
+$ chmod 600  ~/.kube/<name-of-config-file>
+```
+---
+
+By default, kubectl looks for a file named ***config*** in the ***$HOME/.kube (~/.kube)*** directory; hence, if the ***KUBECONFIG*** environment variable is not set, kubectl uses the default values ***~/.kube/config***. You can specify other kubeconfig files by setting the ***KUBECONFIG*** environment variable or by setting the ***--kubeconfig*** flag.
 
 To export the KUBECONFIG environment variable ***only*** for the current shell and its children processes, you use the ***export*** command:
 ```
-export KUBECONFIG="value"
+export KUBECONFIG=<name-of-config-file>
 ```
 To reiterate, when an environment variable is set from the shell using the export command, its existence ends when the current session ends.
 
-To set the KUBECONFIG environment variable as a ***user-specific environment variable***, add the ***export*** command to ***~/.bashrc (bash), ~/.kshrc (ksh), or ~/.zshrc (zsh)***, depending on which shell you are using. By modifying the shell-specific configuration file, the environment variable will persist across sessions and system restarts. We will use bash:
+To set the KUBECONFIG environment variable as a ***user-specific environment variable***, add the ***export*** command to ***~/.bashrc (bash), ~/.kshrc (ksh), or ~/.zshrc (zsh)***, depending on which shell you are using. By modifying the shell-specific configuration file, the environment variable will persist across sessions and system restarts. Below the bash shell is used:
 ```
-$ echo 'export KUBECONFIG="value"' >> ~/.bashrc
+$ echo 'export KUBECONFIG=<name-of-config-file>' >> ~/.bashrc
 ```
 Next, reload the file to apply the changes:
 ```
