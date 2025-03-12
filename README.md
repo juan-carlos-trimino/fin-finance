@@ -205,6 +205,25 @@ Delete a pod under a specific namespace.
 $ kubectl delete pod <pod-name> -n <name-space>
 ```
 
+---
+**Note:**
+
+The *kubectl delete* command might not be successful initially if you use *finalizers* to prevent accidental deletion. Finalizers are keys on resources that signal pre-delete operations. Finalizers control the garbage collection on resources, and they're designed to alert controllers about what cleanup operations to do before they remove a resource.
+
+If you try to delete a resource that has a finalizer on it, the resource remains in finalization until the controller removes the finalizer keys, or the finalizers are removed by using kubectl. After the finalizer list is emptied, Kubernetes can reclaim the resource and put it into a queue to be deleted from the registry.
+
+See [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/) for more information.
+
+---
+
+Remove a resource in the *Terminating* state.<br>
+To remove a *finalizer* from a resource, you typically update the resource's metadata to remove the finalizer entry. This action signals Kubernetes that the cleanup tasks are complete, allowing the resource to be fully deleted.
+
+To ensure the resource has one or more finalizers attach, you can use *kubectl get* or *kubectl describe*. If finalizers are attached, you remove them by executing the command below.
+```
+$ kubectl patch <resource> <resource-name> -p '{"metadata":{"finalizers":null}}'
+```
+
 ## IaC-K8s
 IaC-K8s contains the Terraform code for provisioning (i.e., creating, preparing, and activating the underlying infrastructure of a cloud environment) the Oracle Cloud Infrastructure (OCI), which is an Infrastructure as a Service (IaaS) and Platform as a Service (PaaS) offering. The OCI is a set of complementary cloud services that enable you to build and run a range of applications and services in a highly available hosted environment. OCI provides high-performance compute capabilities (as physical hardware instances) and storage capacity in a flexible overlay virtual network that is securely accessible from your on-premises network.
 
