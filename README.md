@@ -134,11 +134,13 @@ $ printenv KUBECONFIG
 
 ## Kubenertes (K8s)
 ### Useful Commands
+#### version
 Display the Kubernetes version running on the client and server.
 ```
 $ kubectl version
 ```
 
+#### config
 Display the configuration of the cluster.
 ```
 $ kubectl config view
@@ -154,11 +156,13 @@ Retrieve one user details.
 $ kubectl config view -o jsonpath='{.users[?(@.name == "<user-name>")].user}{"\n"}'
 ```
 
+#### cluster
 Retrieve cluster details.
 ```
 $ kubectl cluster-info
 ```
 
+#### node
 Confirm what platform is running on the cluster.
 ```
 $ kubectl describe node | grep "kubernetes.io/arch"
@@ -169,14 +173,10 @@ To retrieve nodes information.
 $ kubectl get nodes
 ```
 
+#### Pods
 Display what node a pod is scheduled.
 ```
 $ kubectl get pods -o wide -n <name-space>
-```
-
-Retrieve built-in resource types (pods, services, daemon sets, deployments, replica sets, jobs, cronjobs, and stateful sets) under a specific namespace.
-```
-$ kubectl get all -n <name-space>
 ```
 
 Retrieve a list of host IP addresses with the additional *phase* field indicating if the pod is running or not.
@@ -205,7 +205,40 @@ Delete a pod under a specific namespace.
 $ kubectl delete pod <pod-name> -n <name-space>
 ```
 
+#### logs
+Retrieve the logs for a pod under a specific namespace.
+```
+$ kubectl logs <pod-name> -n <name-space>
+```
+
+Retrieve the logs for a pod that was previously running under a specific namespace.
+```
+$ kubectl logs <pod-name> -n <name-space> --previous
+```
+
+Retrieve the logs for a specific container running in a pod under a specific namespace. If the pod has only one container, the container name is optional.
+```
+$ kubectl logs <pod-name> -c <container-name> -n <name-space>
+```
+
+#### Persistent Volumename
+
+ $ kubectl get pv
+ $ kubectl get pvc -n finances
+ $ kubectl get sc
+ To see more info about the standard storage class.
+ $ kubectl get sc oci-bv -o yaml
+
+
+
+
+#### Resources
+Retrieve built-in resource types (pods, services, daemon sets, deployments, replica sets, jobs, cronjobs, and stateful sets) under a specific namespace.
+```
+$ kubectl get all -n <name-space>
+```
 ---
+
 **Note:**
 
 The *kubectl delete* command might not be successful initially if you use *finalizers* to prevent accidental deletion. Finalizers are keys on resources that signal pre-delete operations. Finalizers control the garbage collection on resources, and they're designed to alert controllers about what cleanup operations to do before they remove a resource.

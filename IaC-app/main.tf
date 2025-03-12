@@ -14,17 +14,7 @@
 #
 # Execute commands in a running container.
 # $ kubectl exec -it -n finances <pod-name> -- /bin/sh
-#
-# $ kubectl logs -n finances <pod-name>
-# $ kubectl logs -n finances <pod-name> --previous
-# To view the logs of a specific container running in a pod.
-# $ kubectl logs -n finances <pod-name> -c <container-name>
-#
-# $ kubectl get pv
-# $ kubectl get pvc -n finances
-# $ kubectl get sc
-# To see more info about the standard storage class.
-# $ kubectl get sc oci-bv -o yaml
+
 ###########################
 # Troubleshooting Traefik #
 ###########################
