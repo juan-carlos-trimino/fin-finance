@@ -76,7 +76,6 @@ https://kubernetes.io/docs/tasks/tools/
 A file that is used to configure access to a cluster is usually referred to as a ***kubeconfig file***. This is a conventional way of referring to a configuration file, often shortened to config file. It does not imply that a file named kubeconfig exists.
 
 ---
-
 You will need to create a kubeconfig file with authentication and configuration details, which will allow kubectl to communicate with your cluster. To create the kubeconfig file, you execute the command below, which requires the following information:<br>
 **(1)** Cluster's OCID (Navigation menu->Developer Services->Kubernetes Clusters (OKE) [Under Containers & Artifacts]->Select the compartment that contains the cluster[Compartment]-> On the Clusters page, click the name of the cluster)<br>
 **(2)** Name for the config file<br>
@@ -95,7 +94,6 @@ Setting the permissions of your ***~/.kube/\<name-of-config-file\>*** file to **
 $ chmod 600  ~/.kube/<name-of-config-file>
 ```
 ---
-
 By default, kubectl looks for a file named ***config*** in the ***$HOME/.kube (~/.kube)*** directory; hence, if the ***KUBECONFIG*** environment variable is not set, kubectl uses the default values ***~/.kube/config***. You can specify other kubeconfig files by setting the ***KUBECONFIG*** environment variable or by setting the ***--kubeconfig*** flag.
 
 To export the KUBECONFIG environment variable ***only*** for the current shell and its children processes, you use the ***export*** command:
@@ -173,6 +171,17 @@ To retrieve nodes information.
 $ kubectl get nodes
 ```
 
+#### exec
+
+Execute commands in a running container.
+```
+$ kubectl exec -it -n finances <pod-name> -- /bin/sh
+```
+
+
+
+
+
 #### Pods
 Display what node a pod is scheduled.
 ```
@@ -221,16 +230,36 @@ Retrieve the logs for a specific container running in a pod under a specific nam
 $ kubectl logs <pod-name> -c <container-name> -n <name-space>
 ```
 
-#### Persistent Volumename
+#### Volumes
+---
+**Note:**
 
- $ kubectl get pv
- $ kubectl get pvc -n finances
- $ kubectl get sc
- To see more info about the standard storage class.
- $ kubectl get sc oci-bv -o yaml
+PersistentVolume resources are cluster-scoped and thus cannot be created in a specific namespace. On the other hand, PersistentVolumeClaims can only be created in a specific namespace, and they can then only be used by pods in the same namespace.
 
+For more in-depth information, see [Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
 
+---
+List all PersistentVolumes.
+```
+$ kubectl get pv
+```
 
+List all PersistentVolumeClaims.
+```
+$ kubectl get pvc -n <name-space>
+```
+
+List storage classes.
+```
+$ kubectl get storageclass
+or
+$ kubectl get sc
+```
+
+Display more information about the given storage class.
+```
+$ kubectl get sc <storage-class-name> -o yaml
+```
 
 #### Resources
 Retrieve built-in resource types (pods, services, daemon sets, deployments, replica sets, jobs, cronjobs, and stateful sets) under a specific namespace.
@@ -248,7 +277,6 @@ If you try to delete a resource that has a finalizer on it, the resource remains
 See [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/) for more information.
 
 ---
-
 Remove a resource in the *Terminating* state.<br>
 To remove a *finalizer* from a resource, you typically update the resource's metadata to remove the finalizer entry. This action signals Kubernetes that the cleanup tasks are complete, allowing the resource to be fully deleted.
 

@@ -11,10 +11,6 @@
 ####################
 # Kubectl Commands #
 ####################
-#
-# Execute commands in a running container.
-# $ kubectl exec -it -n finances <pod-name> -- /bin/sh
-
 ###########################
 # Troubleshooting Traefik #
 ###########################
