@@ -389,6 +389,52 @@ If there are no errors in the JSON reply, the config file was create (by default
 ~$ source ~/oci/python/oracle-cli/bin/activate
 ```
 
+## Traefik (Gateway/Reverse Proxy and Load Balancer)
+### Troubleshooting Traefik
+Execute commands in a running Traefik container.
+```
+$ kubectl exec -it -n finances $(kubectl get pods -n finances --selector "app.kubernetes.io/name=traefik" --output=name) -- /bin/sh
+```
+
+```
+$ kubectl get pod,middleware,ingressroute,svc -n finances
+$ kubectl get all -l "app.kubernetes.io/name=traefik" -n finances
+$ kubectl get all -l "app=finances" -n finances
+```
+### Troubleshooting Certificates
+```
+$ kubectl get svc,pods -n finances
+$ kubectl get Issuers,ClusterIssuers,Certificates,CertificateRequests,Orders,Challenges -n finances
+$ kubectl get Issuers,ClusterIssuers,Certificates,CertificateRequests,Orders,Challenges --all-namespaces
+$ kubectl describe Issuers,ClusterIssuers,Certificates,CertificateRequests,Orders,Challenges -A
+$ kubectl describe Issuers,ClusterIssuers,Certificates,CertificateRequests,Orders,Challenges -n finances
+```
+
+Check the certificate.
+```
+$ kubectl -n finances describe certificate <certificate-name>
+```
+
+Delete a certificate.
+```
+$ kubectl -n finances delete certificate <certificate-name>
+```
+
+To describe a specific resource (the resource name can be obtained from the kubectl get command).
+```
+$ kubectl -n finances describe Issuer <issuer-name>
+$ kubectl get ingressroute -A
+$ kubectl get ingressroute -n finances
+```
+
+# To delete a pending Challenge, see hereeeeeeeeeeeee and hereeeeeeeeeeeeeee. As per documentation, the order is important!!!
+```
+$ kubectl delete Issuer <issuer-name> -n finances
+$ kubectl delete Certificate <certificate-name> -n finances
+```
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
 ## src
 ### Debugging Go
 #### Delve
@@ -397,3 +443,13 @@ To install the debugger in VS Code:<br>
 **(2)** Find ***Go: Install/Update Tools*** and select ***dlv***.
 
 The settings for the debugger can be stored in the ***.code-workspace*** file or the ***.vscode/launch.json*** directory. For this project, the settings are stored in the ***.code-workspace*** file under the ***launch*** section.
+
+
+### Deploy the application.
+# $ terraform init
+# $ terraform apply -var="app_version=1.0.0" -auto-approve
+# $ terraform apply -auto-approve
+# $ terraform apply -var="app_version=1.0.0" -var="k8s_manifest_crd=false" -auto-approve
+# $ terraform apply -var="k8s_manifest_crd=false" -auto-approve
+# $ terraform destroy -var="app_version=1.0.0" -auto-approve
+# $ terraform destroy -auto-approve
