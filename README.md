@@ -177,13 +177,14 @@ $ kubectl get nodes
 
 The double dash (***--***) in the command signals the end of command options for *kubectl*. Everything after the double dash is the command that should be executed inside the pod; the double dash is required.
 
----
-
-To open an interactive shell (e.g.; *bash*) in a pod hosting one container, execute the command below. The command takes the following options:<br>
+The command takes the following options:<br>
 **-i** or **--stdin**: Keep stdin open even if not attached.<br>
 **-t** or **--tty**: Allocate a pseudo-TTY.<br>
 **-c** or **--container**: Specify the container name (useful for pods hosting multiple containers).<br>
 **-n** or **--namespace**: Specify the namespace of the pod.
+
+---
+To open an interactive shell (e.g.; *bash*) in a pod hosting one container, execute the command below.
 ```
 $ kubectl exec -it <pod-name> -n <name-space> -- /bin/bash
 ```
