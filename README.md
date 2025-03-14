@@ -120,13 +120,13 @@ The output shows the first page of the list and allows you to move forward by pr
 To view a specific environment variable, use the ***set*** command:
 ```
 $ set | grep KUBECONFIG
-```
+
 or
-```
+
 $ echo $KUBECONFIG
-```
+
 or
-```
+
 $ printenv KUBECONFIG
 ```
 
@@ -172,15 +172,31 @@ $ kubectl get nodes
 ```
 
 #### exec
+---
+***Note:***
 
-Execute commands in a running container.
+The double dash (***--***) in the command signals the end of command options for *kubectl*. Everything after the double dash is the command that should be executed inside the pod; the double dash is required.
+
+---
+
+To open an interactive shell (e.g.; *bash*) in a pod hosting one container, execute the command below. The command takes the following options:<br>
+**-i** or **--stdin**: Keep stdin open even if not attached.<br>
+**-t** or **--tty**: Allocate a pseudo-TTY.<br>
+**-c** or **--container**: Specify the container name (useful for pods hosting multiple containers).<br>
+**-n** or **--namespace**: Specify the namespace of the pod.
 ```
-$ kubectl exec -it -n finances <pod-name> -- /bin/sh
+$ kubectl exec -it <pod-name> -n <name-space> -- /bin/bash
 ```
 
+Since pods are capable of hosting multiple containers, you can specify a specific container by using the -c flag.
+```
+$ kubectl exec -it <pod-name> -c <container-name> -n <name-space> -- /bin/bash
+```
 
-
-
+To execute a single command without entering an interactive shell, use.
+```
+$ kubectl exec <pod-name> -n <name-space> -- env
+```
 
 #### Pods
 Display what node a pod is scheduled.
@@ -191,6 +207,11 @@ $ kubectl get pods -o wide -n <name-space>
 Retrieve a list of host IP addresses with the additional *phase* field indicating if the pod is running or not.
 ```
 $ kubectl get pods -o jsonpath='{range .items[*]}{.status.hostIP}{"\t"}{.status.phase}{"\n"}{end}' -n <name-space>
+```
+
+Retrieve pods across all namespaces.
+```
+$ kubectl get pods --all-namespaces
 ```
 
 Retrieve pods under a specific namespace.
@@ -212,6 +233,11 @@ $ kubectl get pod <pod-name> -o jsonpath='{range .spec.containers[*]}{.name}{"\t
 Delete a pod under a specific namespace.
 ```
 $ kubectl delete pod <pod-name> -n <name-space>
+```
+
+Delete all pods without specifying their names.
+```
+$ kubectl delete pods --all
 ```
 
 #### logs
