@@ -131,6 +131,8 @@ $ printenv KUBECONFIG
 ```
 
 ## Kubenertes (K8s)
+K8s is an open source container orchestration platform.
+
 ### Useful Commands
 #### version
 Display the Kubernetes version running on the client and server.
@@ -391,6 +393,8 @@ If there are no errors in the JSON reply, the config file was create (by default
 
 ## Traefik (Gateway/Reverse Proxy and Load Balancer)
 ### Troubleshooting Traefik
+For a more detailed explanation, please see [Traefik, Let’s Encrypt, Cert-Manager, and OpenShift using Terraform (Part 4)](https://trimino.com/simple-app/traefik-lets-encrypt-cert-manager-and-openshift-using-terraform-part-4/)
+
 Execute commands in a running Traefik container.
 ```
 $ kubectl exec -it -n finances $(kubectl get pods -n finances --selector "app.kubernetes.io/name=traefik" --output=name) -- /bin/sh
@@ -401,6 +405,7 @@ $ kubectl get pod,middleware,ingressroute,svc -n finances
 $ kubectl get all -l "app.kubernetes.io/name=traefik" -n finances
 $ kubectl get all -l "app=finances" -n finances
 ```
+
 ### Troubleshooting Certificates
 ```
 $ kubectl get svc,pods -n finances
@@ -427,13 +432,11 @@ $ kubectl get ingressroute -A
 $ kubectl get ingressroute -n finances
 ```
 
-# To delete a pending Challenge, see hereeeeeeeeeeeee and hereeeeeeeeeeeeeee. As per documentation, the order is important!!!
+To delete a pending Challenge, see [here](https://cert-manager.io/docs/installation/helm/#uninstalling) and [here](https://cert-manager.io/docs/installation/uninstall/). As per documentation, the order is important!!!
 ```
 $ kubectl delete Issuer <issuer-name> -n finances
 $ kubectl delete Certificate <certificate-name> -n finances
 ```
-
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ## src
 ### Debugging Go
@@ -445,11 +448,38 @@ To install the debugger in VS Code:<br>
 The settings for the debugger can be stored in the ***.code-workspace*** file or the ***.vscode/launch.json*** directory. For this project, the settings are stored in the ***.code-workspace*** file under the ***launch*** section.
 
 
-### Deploy the application.
-# $ terraform init
-# $ terraform apply -var="app_version=1.0.0" -auto-approve
-# $ terraform apply -auto-approve
-# $ terraform apply -var="app_version=1.0.0" -var="k8s_manifest_crd=false" -auto-approve
-# $ terraform apply -var="k8s_manifest_crd=false" -auto-approve
-# $ terraform destroy -var="app_version=1.0.0" -auto-approve
-# $ terraform destroy -auto-approve
+### Application Deployment Management
+Initialize a working directory containing Terraform configuration files.
+```
+$ terraform init
+```
+
+zzz
+```
+$ terraform apply -auto-approve
+```
+
+zzz
+```
+$ terraform apply -var="app_version=1.0.0" -auto-approve
+```
+
+zzz
+```
+$ terraform apply -var="app_version=1.0.0" -var="k8s_manifest_crd=false" -auto-approve
+```
+
+zzz
+```
+$ terraform apply -var="k8s_manifest_crd=false" -auto-approve
+```
+
+zzz
+```
+$ terraform destroy -var="app_version=1.0.0" -auto-approve
+```
+
+zzz
+```
+$ terraform destroy -auto-approve
+```
