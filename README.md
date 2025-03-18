@@ -25,7 +25,8 @@ To obtain the current version of Terraform and all installed plugins.
 ```
 $ terraform version
 ```
-To initialize a working directory containing Terraform configuration files. ***This is the first command you should run after writing a new Terraform configuration or cloning an existing configuration from version control. It is safe to run this command multiple times.***
+<a id="terraform_init"></a>
+This command initializes a working directory containing Terraform configuration files. ***This is the first command you should run after writing a new Terraform configuration or cloning an existing configuration from version control. It is safe to run this command multiple times.*** See [init](https://developer.hashicorp.com/terraform/cli/commands/init) for more information.
 ```
 $ terraform init
 $ terraform -chdir=../tf init
@@ -39,7 +40,8 @@ $ terraform plan -var-file="../tf_secrets.auto.tfvars"
 ```
 where -var-file="../tf_secrets.auto.tfvars" sets values for potentially many input variables declared in the root module of the configuration, using definitions from a ***tfvars*** file. Use this option multiple times to include values from more than one file.
 
-This command executes the actions proposed in a Terraform plan.
+<a id="terraform_apply"></a>
+This command executes the actions proposed in a Terraform plan. See [apply](https://developer.hashicorp.com/terraform/cli/commands/apply) for more information.
 ```
 $ terraform apply
 $ terraform apply -auto-approve
@@ -51,7 +53,8 @@ and<br>
 -var sets a value for a single input variable declared in the root module of the configuration. Use this option multiple times to set more than one variable.
 
 ***IMPORTANT***: Resources you provision accrue costs while they are running. It's a good idea, as you learn, to always run **terraform destroy** on your project.<br>
-To deprovision all objects managed by a Terraform configuration.
+<a id="terraform_destroy"></a>
+To deprovision all objects managed by a Terraform configuration. See  [destroy](https://developer.hashicorp.com/terraform/cli/commands/destroy)  for more information.
 ```
 $ terraform destroy
 $ terraform destroy -auto-approve
@@ -447,27 +450,24 @@ To install the debugger in VS Code:<br>
 
 The settings for the debugger can be stored in the ***.code-workspace*** file or the ***.vscode/launch.json*** directory. For this project, the settings are stored in the ***.code-workspace*** file under the ***launch*** section.
 
-
-### Application Deployment Management
-Initialize a working directory containing Terraform configuration files.
+### Application Deployment with Terraform
+See [terraform init](#terraform_init).
 ```
 $ terraform init
 ```
 
-zzz
+From the same directory where you invoked the *init* command, run the *apply* command; this command gathers together and executes all of our Terraform code files. The option *-auto-approve* runs Terraform in *non-interactive* mode. See [terraform apply](#terraform_apply).
 ```
 $ terraform apply -auto-approve
 ```
 
-zzz
+This command sets the variable *app_version*, enables non-interactive mode, and invokes *apply*.
 ```
-$ terraform apply -var="app_version=1.0.0" -auto-approve
+$ terraform apply -var="app_version=1.0.1" -auto-approve
 ```
 
-zzz
-```
-$ terraform apply -var="app_version=1.0.0" -var="k8s_manifest_crd=false" -auto-approve
-```
+
+
 
 zzz
 ```
@@ -476,10 +476,18 @@ $ terraform apply -var="k8s_manifest_crd=false" -auto-approve
 
 zzz
 ```
-$ terraform destroy -var="app_version=1.0.0" -auto-approve
+$ terraform apply -var="app_version=1.0.1" -var="k8s_manifest_crd=false" -auto-approve
 ```
 
 zzz
+
+
+
+This command destroys your current infrastructure that was created by Terraform. See [terraform destroy](#terraform_destroy).
 ```
 $ terraform destroy -auto-approve
+```
+
+```
+$ terraform destroy -var="app_version=1.0.1" -auto-approve
 ```
