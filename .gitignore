@@ -12,6 +12,12 @@
 # !files/
 # files/*
 # ... and these files under the 'src' directory...
+!.github/
+.github/*
+!.github/workflows/
+.github/workflows/*
+!.github/workflows/github-actions-demo.yml
+# ... and these files under the 'src' directory...
 !src/
 src/*
 !src/go.mod
