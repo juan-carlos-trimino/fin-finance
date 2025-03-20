@@ -481,3 +481,89 @@ $ terraform destroy -auto-approve
 ```
 $ terraform destroy -var="app_version=1.0.1" -auto-approve
 ```
+
+
+
+### Initializing a Go Project
+Create a new Go module.
+```
+$ mkdir -p fin-finance/src
+aqaaa
+$ cd src
+```
+
+Next, create a ***go.mod*** file within the src directory to define the Go module itself.
+```
+$ go mod init finance
+```
+
+---
+**Note:** To see all environment variables supported by the app, see **//Environment variables.** in [main.go](./src/main.go). To run the app in a *K8s* environment, set the environment variable **K8S** to true.
+
+---
+Compile and run the app as a standalone HTTP server (default) on port 8080 (default).
+```
+$ go build -o finance && ./finance
+or
+$ go build -o finance && HTTP=true HTTP_PORT=8080 ./finance
+```
+
+Compile and run the app as a standalone HTTPS server on port 8443 (default).
+```
+$ go build -o finance && HTTP=false HTTPS=true ./finance
+or
+$ go build -o finance && HTTP=false HTTPS=true HTTP_PORT=8443 ./finance
+```
+
+Compile and run the app as two standalone servers (HTTP and HTTPS ) using the default ports.
+```
+$ go build -o finance && HTTPS=true ./finance
+```
+
+Force rebuilding of packages that are already up-to-date and run the app.
+```
+$ go build -o finance -a && ./finance
+```
+
+To change an environment variable's value, set the environment variable to its new value; e.g., to change the default value of the environment variable HTTP_PORT, execute the command below.
+```
+$ HTTP_PORT=18080 ./finance
+for multiple environment variables
+$ HTTP_PORT=18080 HTTPS=true ./finance
+```
+
+The ampersand symbol (**&**) instructs the shell to execute the command as a separate background process. To compile and run the app in the background.
+```
+$ go build -o finance && ./finance &
+```
+
+Compile and run the named *main* Go package in the background.
+```
+$ go run main.go &
+```
+
+#### How to kill a process.
+##### Windows
+```
+C:\> netstat -ano | findstr :<port>
+C:\> taskkill /PID <PID> /F
+or
+C:\> npx kill-port <port>
+```
+
+##### Linux
+```
+$ ps -a
+$ kill <PID>
+```
+
+#### Display headers.
+##### Windows (PowerShell)
+```
+PS> curl.exe -IL "http://localhost:8080"
+```
+
+##### Linux
+```
+$ curl.exe -IL "http://localhost:8080"
+```

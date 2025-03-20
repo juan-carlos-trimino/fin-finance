@@ -4,53 +4,6 @@
 // HTTP server.
 package main
 
-/***
-Create a new Go module
-$ mkdir src
-$ cd src
-
-Next, create a go.mod file within the src directory to define the Go module itself.
-$ go mod init finance
-
-*****************************************************************************************
-*** To run the app in a K8s environment, set the environment variable K8S to true.    ***
-*****************************************************************************************
-
-To run the app as a standalone HTTP/HTTPS servers:
-Compile and run the app.
-$ go build -o finance && HTTPS=true ./finance
-
-To change the PORT.
-$ go build -o finance && HTTPS=true HTTPS_PORT=8181 ./finance
-
-Compile and run the app in the background.
-$ go build -o finance && HTTPS=true ./finance &
-$ go build -o finance && HTTP=true HTTPS=true LE_CERT=false ./finance
-
-Force rebuilding of packages.
-$ go build -o finance -a && HTTPS=true ./finance
-
-Compile and run (in the background) at the same time.
-$ HTTPS=true go run main.go &
-
-***************************************************************************************************
-
-How to kill a process using a port on localhost (Windows).
-C:\> netstat -ano | findstr :<port>
-C:\> taskkill /PID <PID> /F
-or
-C:\> npx kill-port <port>
-
-Linux
-$ ps -a
-$ kill <PID>
-
-To display the headers:
-$ curl.exe -IL "http://localhost:8080"
-
-PS> curl.exe "http://localhost:8080"
-***/
-
 import (
   "context"
   "crypto/tls"
