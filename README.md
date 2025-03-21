@@ -103,99 +103,181 @@ fin-finance
  | | └ variables.tf
  | └ .gitkeep
  ├ src
-
-
- | ├ cluster_config
- | | └ .gitkeep
- | ├ modules
- | | ├ deployment
- | | | └ main.tf
- | | ├ ELK
- | | | ├ elasticsearch
- | | | | └ main.tf
- | | | ├ filebeat
- | | | | └ main.tf
- | | | ├ kibana
- | | | | └ main.tf
- | | | └ logstash
- | | |   └ main.tf
- | | ├ mongodb-deploy
- | | | └ main.tf
- | | ├ mongodb-statefulset
- | | | └ main.tf
- | | ├ rabbitmq-deploy
- | | | └ main.tf
- | | ├ rabbitmq-statefulset
- | | | └ main.tf
- | | └ traefik
- | |   ├ cert-manager
- | |   | ├ acme-issuer
- | |   | | └ main.tf
- | |   | ├ cert-manager
- | |   | | └ main.tf
- | |   | └ certificates
- | |   |   └ main.tf
- | |   ├ error-page
- | |   | └ main.tf
- | |   ├ ingress-route
- | |   | └ main.tf
- | |   ├ middlewares
- | |   | ├ middleware-compress
- | |   | | └ main.tf
- | |   | ├ middleware-dashboard-basic-auth
- | |   | | └ main.tf
- | |   | ├ middleware-error-page
- | |   | | └ main.tf
- | |   | ├ middleware-gateway-basic-auth
- | |   | | └ main.tf
- | |   | ├ middleware-rabbitmq-basic-auth
- | |   | | └ main.tf
- | |   | ├ middleware-rate-limit
- | |   | | └ main.tf
- | |   | ├ middleware-redirect-https
- | |   | | └ main.tf
- | |   | └ middleware-security-headers
- | |   |   └ main.tf
- | |   ├ tlsoption
- | |   | └ main.tf
- | |   ├ tlsstore
- | |   | └ main.tf
- | |   └ traefik
- | |     └ main.tf
- | ├ utility-files
- | | ├ ELK
- | | | ├ filebeat
- | | | | ├ filebeat.yml
- | | | | └ mem-filebeat-scc.yaml
+ | ├ concurrency
+ | | ├ barrier.go
+ | | ├ channel.go
+ | | ├ rpReadWriteLock.go
+ | | ├ semaphore.go
+ | | ├ waitGroup.go
+ | | ├ waitGroupL.go
+ | | └ wpReadWriteLock.go
+ | ├ finances
+ | | ├ Annuities.go
+ | | ├ Annuities_test.go
+ | | ├ Bonds.go
+ | | ├ Bonds_test.go
+ | | ├ Mortgage.go
+ | | ├ Periods.go
+ | | ├ SimpleInterest.go
+ | | └ SimpleInterest_test.go
+ | ├ mathutil
+ | | ├ mathutil.go
+ | | └ mathutil_test.go
+ | ├ security
+ | | └ security.go
+ | ├ webfinances
+ | | ├ public
+ | | | ├ css
+ | | | | └ home.css
+ | | | ├ js
+ | | | | ├ AdCompoundingPeriods.js
+ | | | | ├ AdEqualPeriodicPayments.js
+ | | | | ├ AdFutureValue.js
+ | | | | ├ AdPresentValue.js
+ | | | | ├ OaCompoundingPeriods.js
+ | | | | ├ OaEqualPeriodicPayments.js
+ | | | | ├ OaFutureValue.js
+ | | | | ├ OaGrowingAnnuity.js
+ | | | | ├ OaInterestRate.js
+ | | | | ├ OaPerpetuity.js
+ | | | | ├ OaPresentValue.js
+ | | | | ├ SimpleInterestAccurate.js
+ | | | | ├ SimpleInterestBankers.js
+ | | | | ├ SimpleInterestOrdinary.js
+ | | | | ├ bonds.js
+ | | | | ├ bondsYTM.js
+ | | | | ├ getParams.js
+ | | | | ├ miscellaneous.js
+ | | | | └ mortgage.js
  | | | └ .gitkeep
- | | ├ mongodb
- | | | ├ certs
- | | | | └ .gitkeep
- | | | ├ configmaps
- | | | | └ mongod.conf
- | | | ├ scripts
- | | | | ├ entrypoint.sh
- | | | | └ start-replication.js
- | | | └ mem-mongodb-scc.yaml
- | | ├ rabbitmq
- | | | ├ configmaps
- | | | | └ rabbitmq.conf
- | | | ├ configmaps-deployment
- | | | | └ rabbitmq.conf
- | | | └ mem-rabbitmq-scc.yaml
- | | └ traefik
- | |   ├ mem-traefik-scc.yaml
- | |   └ values.yaml
- | ├ bootstrap.tf
- | ├ data.tf
- | ├ ELK.tf
- | ├ namespace.tf
- | ├ providers.tf
- | ├ variables_no_push.tf.template
- | └ variables.tf
+ | | ├ templates
+ | | | ├ annuitydue
+ | | | | ├ cp
+ | | | | | ├ cp.html
+ | | | | | ├ i-PMT-FV.html
+ | | | | | ├ i-PMT-PV.html
+ | | | | | └ i-PV-FV.html
+ | | | | ├ epp
+ | | | | | ├ epp.html
+ | | | | | ├ n-i-FV.html
+ | | | | | └ n-i-PV.html
+ | | | | ├ fv
+ | | | | | ├ fv.html
+ | | | | | ├ n-i-PMT.html
+ | | | | | └ n-i-PV.html
+ | | | | └ pv
+ | | | |   ├ n-i-FV.html
+ | | | |   ├ n-i-PMT.html
+ | | | |   └ pv.html
+ | | | ├ bonds
+ | | | | ├ bonds.html
+ | | | | ├ convexity.html
+ | | | | ├ currentprice.html
+ | | | | ├ duration.html
+ | | | | ├ macaulayduration.html
+ | | | | ├ modifiedduration.html
+ | | | | ├ taxfree.html
+ | | | | ├ yieldtocall.html
+ | | | | └ yieldtomaturity.html
+ | | | ├ miscellaneous
+ | | | | ├ averagerate.html
+ | | | | ├ compfrequencyconv.html
+ | | | | ├ depreciation.html
+ | | | | ├ effectiveannualrate.html
+ | | | | ├ growthdecay.html
+ | | | | ├ miscellaneous.html
+ | | | | ├ nominalrate.html
+ | | | | └ nominalratevs.html
+ | | | ├ mortgage
+ | | | | ├ amortizationtable.html
+ | | | | ├ costofmortgage.html
+ | | | | ├ heloc.html
+ | | | | └ mortgage.html
+ | | | ├ ordinaryannuity
+ | | | | ├ cp
+ | | | | | ├ cp.html
+ | | | | | ├ i-PMT-FV.html
+ | | | | | ├ i-PMT-PV.html
+ | | | | | └ i-PV-FV.html
+ | | | | ├ epp
+ | | | | | ├ epp.html
+ | | | | | ├ n-i-FV.html
+ | | | | | └ n-i-PV.html
+ | | | | ├ fv
+ | | | | | ├ fv.html
+ | | | | | ├ n-i-PMT.html
+ | | | | | └ n-i-PV.html
+ | | | | ├ ga
+ | | | | | ├ FV.html
+ | | | | | ├ PV.html
+ | | | | | └ ga.html
+ | | | | ├ interestrate
+ | | | | | ├ interestrate.html
+ | | | | | └ n-PV-FV.html
+ | | | | ├ perpetuity
+ | | | | | ├ gp.html
+ | | | | | ├ p.html
+ | | | | | └ perpetuity.html
+ | | | | └ pv
+ | | | |   ├ n-i-FV.html
+ | | | |   ├ n-i-PMT.html
+ | | | |   └ pv.html
+ | | | ├ simpleinterestaccurate
+ | | | | ├ accurate.html
+ | | | | ├ amountofinterest.html
+ | | | | ├ interestrate.html
+ | | | | ├ principal.html
+ | | | | └ time.html
+ | | | ├ simpleinterestbankers
+ | | | | ├ amountofinterest.html
+ | | | | ├ bankers.html
+ | | | | ├ interestrate.html
+ | | | | ├ principal.html
+ | | | | └ time.html
+ | | | ├ simpleinterestordinary
+ | | | | ├ amountofinterest.html
+ | | | | ├ interestrate.html
+ | | | | ├ ordinary.html
+ | | | | ├ principal.html
+ | | | | └ time.html
+ | | | ├ about.html
+ | | | ├ annuitydue.html
+ | | | ├ contact.html
+ | | | ├ finances.html
+ | | | ├ footer.html
+ | | | ├ header.html
+ | | | ├ index.html
+ | | | ├ ordinaryannuity.html
+ | | | ├ simpleinterest.html
+ | | | └ welcome.html
+ | | ├ WfAdCpPages.go
+ | | ├ WfAdEppPages.go
+ | | ├ WfAdFvPages.go
+ | | ├ WfAdPvPages.go
+ | | ├ WfBondsPages.go
+ | | ├ WfMiscellaneousPages.go
+ | | ├ WfMortgagePages.go
+ | | ├ WfOaCpPages.go
+ | | ├ WfOaEppPages.go
+ | | ├ WfOaFvPages.go
+ | | ├ WfOaGaPages.go
+ | | ├ WfOaInterestRatePages.go
+ | | ├ WfOaPerpetuityPages.go
+ | | ├ WfOaPvPages.go
+ | | ├ WfPages.go
+ | | ├ WfSiAccuratePages.go
+ | | ├ WfSiBankersPages.go
+ | | ├ WfSiOrdinaryPages.go
+ | | └ fields.go
+ | ├ go.mod
+ | ├ go.sum
+ | └ main.go
+ ├ .dockerignore
  ├ .gitignore
+ ├ Dockerfile-prod
  ├ LICENSE
- └ README.md
+ ├ README.md
+ └ fin-finance.code-workspace
 ```
 
 ## Terraform
