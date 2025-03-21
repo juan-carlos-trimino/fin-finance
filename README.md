@@ -10,7 +10,7 @@ fin-finance
  ├ .github
  | ├ workflows
  | | └ github-actions-demo.yml
- | └ .gitkeep xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ | └ .gitkeep
  ├ .vscode
  | ├ .gitignore
  | ├ LICENSE
