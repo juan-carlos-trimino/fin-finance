@@ -1,9 +1,202 @@
 # The fin-finance repo
 This repo contains the following four (4) directories:
-1. **IaC-app**: The *Infrastructure-as-Code (IaC)* application directory contains the Terraform code to deploy and manage the application in the cloud.
+1. **IaC-app**: The `Infrastructure-as-Code (IaC)` application directory contains the Terraform code to deploy and manage the application in the cloud.
 2. **IaC-K8s**: This directory contains the Terraform code to set up the Oracle Cloud Infrastructure.
 3. **IaC-storage**: The storage directory contains the Terraform code to set up access to the Oracle Cloud Infrastructure, which enables access to the Simple Storage Service (S3).
 4. **src**: This directory contains the code for the application.
+
+```
+fin-finance
+ ├ .github
+ | ├ workflows
+ | | └ github-actions-demo.yml
+ | └ .gitkeep xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ ├ .vscode
+ | ├ .gitignore
+ | ├ LICENSE
+ | ├ README.md
+ | └ settings.json
+ ├ IaC-K8s
+ | ├ oracle
+ | | ├ modules
+ | | | ├ cluster
+ | | | | └ main.tf
+ | | | ├ igw
+ | | | | └ main.tf
+ | | | ├ load-balancer
+ | | | | └ main.tf
+ | | | ├ nat
+ | | | | └ main.tf
+ | | | ├ network-load-balancer
+ | | | | └ main.tf
+ | | | ├ node
+ | | | | └ main.tf
+ | | | └ subnet
+ | | |   └ main.tf
+ | | ├ compartment.tf
+ | | ├ data.tf
+ | | ├ locals.tf
+ | | ├ main.tf
+ | | ├ null-resource.tf
+ | | ├ outputs.tf
+ | | ├ providers.tf
+ | | ├ ssh-key.tf
+ | | └ variables.tf
+ | └ .gitkeep
+ ├ IaC-app
+ | ├ modules
+ | | ├ deployment
+ | | | └ main.tf
+ | | ├ traefik
+ | | | ├ cert-manager
+ | | | | ├ acme-issuer
+ | | | | | └ main.tf
+ | | | | ├ cert-manager
+ | | | | | └ main.tf
+ | | | | └ certificates
+ | | | |   └ main.tf
+ | | | ├ error-page
+ | | | | └ main.tf
+ | | | ├ ingress-route
+ | | | | └ main.tf
+ | | | ├ middlewares
+ | | | | ├ middleware-compress
+ | | | | | └ main.tf
+ | | | | ├ middleware-dashboard-basic-auth
+ | | | | | └ main.tf
+ | | | | ├ middleware-error-page
+ | | | | | └ main.tf
+ | | | | ├ middleware-gateway-basic-auth
+ | | | | | └ main.tf
+ | | | | ├ middleware-kibana-basic-auth
+ | | | | | └ main.tf
+ | | | | ├ middleware-rabbitmq-basic-auth
+ | | | | | └ main.tf
+ | | | | ├ middleware-rate-limit
+ | | | | | └ main.tf
+ | | | | ├ middleware-redirect-https
+ | | | | | └ main.tf
+ | | | | └ middleware-security-headers
+ | | | |   └ main.tf
+ | | | ├ tlsoption
+ | | | | └ main.tf
+ | | | ├ tlsstore
+ | | | | └ main.tf
+ | | | └ traefik
+ | | |   ├ util
+ | | |   | └ values.yaml
+ | | |   └ main.tf
+ | | └ .gitkeep
+ | ├ main.tf
+ | ├ namespace.tf
+ | ├ providers.tf
+ | └ variables.tf
+ ├ IaC-storage
+ | ├ oracle
+ | | ├ modules
+ | | | ├ bucket
+ | | | | └ main.tf
+ | | | └ .gitkeep
+ | | ├ data.tf
+ | | ├ main.tf
+ | | ├ providers.tf
+ | | └ variables.tf
+ | └ .gitkeep
+ ├ src
+
+
+ | ├ cluster_config
+ | | └ .gitkeep
+ | ├ modules
+ | | ├ deployment
+ | | | └ main.tf
+ | | ├ ELK
+ | | | ├ elasticsearch
+ | | | | └ main.tf
+ | | | ├ filebeat
+ | | | | └ main.tf
+ | | | ├ kibana
+ | | | | └ main.tf
+ | | | └ logstash
+ | | |   └ main.tf
+ | | ├ mongodb-deploy
+ | | | └ main.tf
+ | | ├ mongodb-statefulset
+ | | | └ main.tf
+ | | ├ rabbitmq-deploy
+ | | | └ main.tf
+ | | ├ rabbitmq-statefulset
+ | | | └ main.tf
+ | | └ traefik
+ | |   ├ cert-manager
+ | |   | ├ acme-issuer
+ | |   | | └ main.tf
+ | |   | ├ cert-manager
+ | |   | | └ main.tf
+ | |   | └ certificates
+ | |   |   └ main.tf
+ | |   ├ error-page
+ | |   | └ main.tf
+ | |   ├ ingress-route
+ | |   | └ main.tf
+ | |   ├ middlewares
+ | |   | ├ middleware-compress
+ | |   | | └ main.tf
+ | |   | ├ middleware-dashboard-basic-auth
+ | |   | | └ main.tf
+ | |   | ├ middleware-error-page
+ | |   | | └ main.tf
+ | |   | ├ middleware-gateway-basic-auth
+ | |   | | └ main.tf
+ | |   | ├ middleware-rabbitmq-basic-auth
+ | |   | | └ main.tf
+ | |   | ├ middleware-rate-limit
+ | |   | | └ main.tf
+ | |   | ├ middleware-redirect-https
+ | |   | | └ main.tf
+ | |   | └ middleware-security-headers
+ | |   |   └ main.tf
+ | |   ├ tlsoption
+ | |   | └ main.tf
+ | |   ├ tlsstore
+ | |   | └ main.tf
+ | |   └ traefik
+ | |     └ main.tf
+ | ├ utility-files
+ | | ├ ELK
+ | | | ├ filebeat
+ | | | | ├ filebeat.yml
+ | | | | └ mem-filebeat-scc.yaml
+ | | | └ .gitkeep
+ | | ├ mongodb
+ | | | ├ certs
+ | | | | └ .gitkeep
+ | | | ├ configmaps
+ | | | | └ mongod.conf
+ | | | ├ scripts
+ | | | | ├ entrypoint.sh
+ | | | | └ start-replication.js
+ | | | └ mem-mongodb-scc.yaml
+ | | ├ rabbitmq
+ | | | ├ configmaps
+ | | | | └ rabbitmq.conf
+ | | | ├ configmaps-deployment
+ | | | | └ rabbitmq.conf
+ | | | └ mem-rabbitmq-scc.yaml
+ | | └ traefik
+ | |   ├ mem-traefik-scc.yaml
+ | |   └ values.yaml
+ | ├ bootstrap.tf
+ | ├ data.tf
+ | ├ ELK.tf
+ | ├ namespace.tf
+ | ├ providers.tf
+ | ├ variables_no_push.tf.template
+ | └ variables.tf
+ ├ .gitignore
+ ├ LICENSE
+ └ README.md
+```
 
 ## Terraform
 https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
@@ -31,14 +224,14 @@ This command initializes a working directory containing Terraform configuration 
 $ terraform init
 $ terraform -chdir=../tf init
 ```
-where -chdir=../tf allows you to declare where the root of your terraform project is located.
+where `-chdir=../tf` allows you to declare where the root of your terraform project is located.
 
 This command creates an execution plan, which lets you preview the changes that Terraform plans to make to your infrastructure.
 ```
 $ terraform plan
 $ terraform plan -var-file="../tf_secrets.auto.tfvars"
 ```
-where -var-file="../tf_secrets.auto.tfvars" sets values for potentially many input variables declared in the root module of the configuration, using definitions from a ***tfvars*** file. Use this option multiple times to include values from more than one file.
+where `-var-file="../tf_secrets.auto.tfvars"` sets values for potentially many input variables declared in the root module of the configuration, using definitions from a ***tfvars*** file. Use this option multiple times to include values from more than one file.
 
 <a id="terraform_apply"></a>
 This command executes the actions proposed in a Terraform plan. See [apply](https://developer.hashicorp.com/terraform/cli/commands/apply) for more information.
@@ -48,9 +241,9 @@ $ terraform apply -auto-approve
 $ terraform apply -var-file="../tf_secrets.auto.tfvars"
 $ terraform apply -var="app_version=1.0.0" -auto-approve
 ```
-where -auto-approve skips interactive approval of the plan before applying. Terraform ignores this option when you pass a previously-saved plan file. This is because Terraform interprets the act of passing the plan file as the approval.<br>
+where `-auto-approve` skips interactive approval of the plan before applying. Terraform ignores this option when you pass a previously-saved plan file. This is because Terraform interprets the act of passing the plan file as the approval.<br>
 and<br>
--var sets a value for a single input variable declared in the root module of the configuration. Use this option multiple times to set more than one variable.
+`-var` sets a value for a single input variable declared in the root module of the configuration. Use this option multiple times to set more than one variable.
 
 ***IMPORTANT***: Resources you provision accrue costs while they are running. It's a good idea, as you learn, to always run **terraform destroy** on your project.<br>
 <a id="terraform_destroy"></a>
@@ -284,7 +477,9 @@ $ kubectl get pvc -n <name-space>
 List storage classes.
 ```
 $ kubectl get storageclass
+
 or
+
 $ kubectl get sc
 ```
 
@@ -469,7 +664,9 @@ $ terraform apply -var="k8s_manifest_crd=false" -var="app_version=1.0.1" -auto-a
 To deploy the reverse proxy **Traefik** after initializing Terraform, you’ll execute any one of the two commands below (they are equivalent since the default value for the variable ***k8s_manifest_crd*** is true; see [variables.tf](./IaC-app/variables.tf)). For more information see [Deploying Traefik in Our OpenShift Cluster (Part 3)](https://trimino.com/simple-app/deploy-traefik-openshift/), section ***Building and Deploying Traefik***.
 ```
 $ terraform apply -var="app_version=1.0.1" -auto-approve
+
 or
+
 $ terraform apply -var="k8s_manifest_crd=true" -var="app_version=1.0.1" -auto-approve
 ```
 
@@ -482,7 +679,7 @@ $ terraform destroy -auto-approve
 $ terraform destroy -var="app_version=1.0.1" -auto-approve
 ```
 
-
+111111111111111111111111111111111111
 
 ### Initializing a Go Project
 Create a new Go module.
@@ -497,6 +694,8 @@ Next, create a ***go.mod*** file within the src directory to define the Go modul
 $ go mod init finance
 ```
 
+1111111111111111111
+
 ---
 **Note:** To see all environment variables supported by the app, see **//Environment variables.** in [main.go](./src/main.go). To run the app in a *K8s* environment, set the environment variable **K8S** to true.
 
@@ -504,14 +703,18 @@ $ go mod init finance
 Compile and run the app as a standalone HTTP server (default) on port 8080 (default).
 ```
 $ go build -o finance && ./finance
+
 or
+
 $ go build -o finance && HTTP=true HTTP_PORT=8080 ./finance
 ```
 
 Compile and run the app as a standalone HTTPS server on port 8443 (default).
 ```
 $ go build -o finance && HTTP=false HTTPS=true ./finance
+
 or
+
 $ go build -o finance && HTTP=false HTTPS=true HTTP_PORT=8443 ./finance
 ```
 
@@ -528,7 +731,9 @@ $ go build -o finance -a && ./finance
 To change an environment variable's value, set the environment variable to its new value; e.g., to change the default value of the environment variable HTTP_PORT, execute the command below.
 ```
 $ HTTP_PORT=18080 ./finance
+
 for multiple environment variables
+
 $ HTTP_PORT=18080 HTTPS=true ./finance
 ```
 
@@ -547,7 +752,9 @@ $ go run main.go &
 ```
 C:\> netstat -ano | findstr :<port>
 C:\> taskkill /PID <PID> /F
+
 or
+
 C:\> npx kill-port <port>
 ```
 
