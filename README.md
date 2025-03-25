@@ -1,8 +1,8 @@
 # The fin-finance repo
 This repo contains the following four (4) directories:
-1. **IaC-app**: The `Infrastructure-as-Code (IaC)` application directory contains the Terraform code to deploy and manage the application in the cloud.
-2. **IaC-K8s**: This directory contains the Terraform code to set up the Oracle Cloud Infrastructure.
-3. **IaC-storage**: The storage directory contains the Terraform code to set up access to the Oracle Cloud Infrastructure, which enables access to the Simple Storage Service (S3).
+1. **IaC-app**: The `Infrastructure-as-Code (IaC)` application directory contains the `Terraform` code to deploy and manage the application in the cloud.
+2. **IaC-K8s**: This directory contains the `Terraform` code to set up the `Oracle Cloud Infrastructure`.
+3. **IaC-storage**: The storage directory contains the `Terraform` code to set up access to the `Oracle Cloud Infrastructure`, which enables access to the `Simple Storage Service (S3)`.
 4. **src**: This directory contains the code for the application.
 
 ```
@@ -281,12 +281,12 @@ fin-finance
 ```
 
 ## Terraform
-https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
+[To install `Terraform`](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli), download the binary executable for the Operating System (OS) being used to a directory in the system's PATH environment variable.
 
-To troubleshoot the ***OCI Terraform Provider***:<br>
+To troubleshoot the `OCI Terraform Provider`:<br>
 https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraformtroubleshooting.htm
 
-To install/upgrade Terraform on Windows Subsystem for Linux (WSL)
+To install/upgrade `Terraform on Windows Subsystem for Linux (WSL)`.
 ```
 $ sudo apt update && sudo apt upgrade -y
 $ sudo apt install wget unzip
