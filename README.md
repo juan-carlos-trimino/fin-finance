@@ -326,7 +326,7 @@ $ terraform apply -var="app_version=1.0.0" -auto-approve
 Notice the usage of the `-auto-approve` and `-var` options. The former skips interactive approval of the plan before applying. `Terraform` ignores this option when you pass a previously-saved plan file. This is because `Terraform` interprets the act of passing the plan file as the approval. The latter sets a value for a single input variable declared in the root module of the configuration. Use this option multiple times to set more than one variable.
 
 ---
-***IMPORTANT***
+**IMPORTANT**
 
 Resources you provision accrue costs while they are running. It's a good idea, as you learn, to always run `terraform destroy` on your project.
 
