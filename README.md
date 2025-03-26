@@ -306,14 +306,14 @@ This command initializes a working directory containing Terraform configuration 
 $ terraform init
 $ terraform -chdir=../tf init
 ```
-where `-chdir=../tf` allows you to declare where the root of your terraform project is located.
+Note the usage of the `-chdir` option. This option allows you to declare where the root of your terraform project is located.
 
 This command creates an execution plan, which lets you preview the changes that Terraform plans to make to your infrastructure.
 ```
 $ terraform plan
 $ terraform plan -var-file="../tf_secrets.auto.tfvars"
 ```
-where `-var-file="../tf_secrets.auto.tfvars"` sets values for potentially many input variables declared in the root module of the configuration, using definitions from a ***tfvars*** file. Use this option multiple times to include values from more than one file.
+Note the use of the `-var-file` option. It sets values for potentially many input variables declared in the root module of the configuration, using definitions from a `tfvars` file. Use this option multiple times to include values from more than one file.
 
 <a id="terraform_apply"></a>
 This command executes the actions proposed in a Terraform plan. See [apply](https://developer.hashicorp.com/terraform/cli/commands/apply) for more information.
@@ -323,13 +323,16 @@ $ terraform apply -auto-approve
 $ terraform apply -var-file="../tf_secrets.auto.tfvars"
 $ terraform apply -var="app_version=1.0.0" -auto-approve
 ```
-where `-auto-approve` skips interactive approval of the plan before applying. Terraform ignores this option when you pass a previously-saved plan file. This is because Terraform interprets the act of passing the plan file as the approval.<br>
-and<br>
-`-var` sets a value for a single input variable declared in the root module of the configuration. Use this option multiple times to set more than one variable.
+Notice the usage of the `-auto-approve` and `-var` options. The former skips interactive approval of the plan before applying. `Terraform` ignores this option when you pass a previously-saved plan file. This is because `Terraform` interprets the act of passing the plan file as the approval. The latter sets a value for a single input variable declared in the root module of the configuration. Use this option multiple times to set more than one variable.
 
-***IMPORTANT***: Resources you provision accrue costs while they are running. It's a good idea, as you learn, to always run **terraform destroy** on your project.<br>
+---
+***IMPORTANT***
+
+Resources you provision accrue costs while they are running. It's a good idea, as you learn, to always run `terraform destroy` on your project.
+
+---
 <a id="terraform_destroy"></a>
-To deprovision all objects managed by a Terraform configuration. See  [destroy](https://developer.hashicorp.com/terraform/cli/commands/destroy)  for more information.
+To deprovision all objects managed by a `Terraform` configuration. See  [destroy](https://developer.hashicorp.com/terraform/cli/commands/destroy)  for more information.
 ```
 $ terraform destroy
 $ terraform destroy -auto-approve
@@ -337,7 +340,7 @@ $ terraform destroy -var-file="../tf_secrets.auto.tfvars"
 $ terraform destroy -var="app_version=1.0.0" -auto-approve
 ```
 
-Once Terraform finish setting up your resources, you need to set up ***kubectl*** to access the cluster. See ***kubectl***.
+Once `Terraform` finish setting up your resources, you need to set up `kubectl` to access the cluster. See [kubectl](#kubectl).
 
 Finally, let's try to list the available nodes in the cluster.
 ```
@@ -351,7 +354,7 @@ https://kubernetes.io/docs/tasks/tools/
 ---
 **Note**
 
-A file that is used to configure access to a cluster is usually referred to as a ***kubeconfig file***. This is a conventional way of referring to a configuration file, often shortened to config file. It does not imply that a file named kubeconfig exists.
+A file that is used to configure access to a cluster is usually referred to as a `kubeconfig file`. This is a conventional way of referring to a configuration file, often shortened to config file. It does not imply that a file named kubeconfig exists.
 
 ---
 You will need to create a kubeconfig file with authentication and configuration details, which will allow kubectl to communicate with your cluster. To create the kubeconfig file, you execute the command below, which requires the following information:<br>
@@ -361,41 +364,41 @@ You will need to create a kubeconfig file with authentication and configuration 
 ```
 $ oci ce cluster create-kubeconfig --cluster-id <cluster OCID> --file ~/.kube/<name-of-config-file> --region <region> --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
 ```
-The command will create a kubeconfig file in the ***~/.kube*** directory; the kubeconfig file will contain the keys and all of the configuration for kubectl to access the cluster. See ***IaC-K8s/oracle/data.tf*** for appropriate values to the parameters ***--token-version*** and ***--kube-endpoint***.
+The command will create a kubeconfig file in the `~/.kube` directory; the kubeconfig file will contain the keys and all of the configuration for `kubectl` to access the cluster. See `IaC-K8s/oracle/data.tf` for appropriate values to the parameters `--token-version` and `--kube-endpoint`.
 
 ---
 **Note**
 
-Setting the permissions of your ***~/.kube/\<name-of-config-file\>*** file to ***600*** ensures that only the owner (you) can read and write to it, enhancing security by limiting access to the Kubernetes configuration file.
+Setting the permissions of your `~/.kube/\<name-of-config-file\>` file to `600` ensures that only the owner (you) can read and write to it, enhancing security by limiting access to the Kubernetes configuration file.
 
 ```
 $ chmod 600  ~/.kube/<name-of-config-file>
 ```
 ---
-By default, kubectl looks for a file named ***config*** in the ***$HOME/.kube (~/.kube)*** directory; hence, if the ***KUBECONFIG*** environment variable is not set, kubectl uses the default values ***~/.kube/config***. You can specify other kubeconfig files by setting the ***KUBECONFIG*** environment variable or by setting the ***--kubeconfig*** flag.
+By default, `kubectl` looks for a file named `config` in the `$HOME/.kube (~/.kube)` directory; hence, if the `KUBECONFIG` environment variable is not set, `kubectl` uses the default values `~/.kube/config`. You can specify other kubeconfig files by setting the `KUBECONFIG` environment variable or by setting the `--kubeconfig` flag.
 
-To export the KUBECONFIG environment variable ***only*** for the current shell and its children processes, you use the ***export*** command:
+To export the `KUBECONFIG` environment variable ***only*** for the current shell and its children processes, you use the `export` command.
 ```
 export KUBECONFIG=<name-of-config-file>
 ```
 To reiterate, when an environment variable is set from the shell using the export command, its existence ends when the current session ends.
 
-To set the KUBECONFIG environment variable as a ***user-specific environment variable***, add the ***export*** command to ***~/.bashrc (bash), ~/.kshrc (ksh), or ~/.zshrc (zsh)***, depending on which shell you are using. By modifying the shell-specific configuration file, the environment variable will persist across sessions and system restarts. Below the bash shell is used:
+To set the `KUBECONFIG` environment variable as a `user-specific environment variable`, add the `export` command to `~/.bashrc (bash), ~/.kshrc (ksh), or ~/.zshrc (zsh)`, depending on which shell you are using. By modifying the shell-specific configuration file, the environment variable will persist across sessions and system restarts. Note the use of the `bash shell` below.
 ```
 $ echo 'export KUBECONFIG=<name-of-config-file>' >> ~/.bashrc
 ```
-Next, reload the file to apply the changes:
+Next, reload the file to apply the changes.
 ```
 $ source ~/.bashrc
 ```
 
-To view all environment variables, use the ***printenv*** command. Since there are many variables on the list, use the ***less*** command to control the view:
+To view all environment variables, use the `printenv` command. Since there are many variables on the list, use the `less` command to control the view.
 ```
 $ printenv | less
 ```
-The output shows the first page of the list and allows you to move forward by pressing ***Space*** to see the next page or ***Enter*** to display the next line. Exit the view with ***q***.
+The output shows the first page of the list and allows you to move forward by pressing `Space` to see the next page or `Enter` to display the next line. Exit the view with `q`.
 
-To view a specific environment variable, use the ***set*** command:
+To view a specific environment variable, use the `set` command.
 ```
 $ set | grep KUBECONFIG
 
@@ -409,11 +412,11 @@ $ printenv KUBECONFIG
 ```
 
 ## Kubenertes (K8s)
-K8s is an open source container orchestration platform.
+`K8s` is an open source container orchestration platform.
 
 ### Useful Commands
 #### version
-Display the Kubernetes version running on the client and server.
+Display the `Kubernetes` version running on the client and server.
 ```
 $ kubectl version
 ```
@@ -453,23 +456,23 @@ $ kubectl get nodes
 
 #### exec
 ---
-***Note:***
+***Note***
 
-The double dash (***--***) in the command signals the end of command options for *kubectl*. Everything after the double dash is the command that should be executed inside the pod; the double dash is required.
+The double dash (`--`) in the command signals the end of command options for `kubectl`. Everything after the double dash is the command that should be executed inside the pod; the double dash is required.
 
 The command takes the following options:<br>
-**-i** or **--stdin**: Keep stdin open even if not attached.<br>
-**-t** or **--tty**: Allocate a pseudo-TTY.<br>
-**-c** or **--container**: Specify the container name (useful for pods hosting multiple containers).<br>
-**-n** or **--namespace**: Specify the namespace of the pod.
+`-i` or `--stdin`: Keep stdin open even if not attached.<br>
+`-t` or `--tty`: Allocate a pseudo-TTY.<br>
+`-c` or `--container`: Specify the container name (useful for pods hosting multiple containers).<br>
+`-n` or `--namespace`: Specify the namespace of the pod.
 
 ---
-To open an interactive shell (e.g.; *bash*) in a pod hosting one container, execute the command below.
+To open an interactive shell (e.g.; `bash`) in a pod hosting one container, execute the command below.
 ```
 $ kubectl exec -it <pod-name> -n <name-space> -- /bin/bash
 ```
 
-Since pods are capable of hosting multiple containers, you can specify a specific container by using the -c flag.
+Since pods are capable of hosting multiple containers, you can specify a specific container by using the `-c` flag.
 ```
 $ kubectl exec -it <pod-name> -c <container-name> -n <name-space> -- /bin/bash
 ```
@@ -485,7 +488,7 @@ Display what node a pod is scheduled.
 $ kubectl get pods -o wide -n <name-space>
 ```
 
-Retrieve a list of host IP addresses with the additional *phase* field indicating if the pod is running or not.
+Retrieve a list of host IP addresses with the additional `phase` field indicating if the pod is running or not.
 ```
 $ kubectl get pods -o jsonpath='{range .items[*]}{.status.hostIP}{"\t"}{.status.phase}{"\n"}{end}' -n <name-space>
 ```
@@ -539,7 +542,7 @@ $ kubectl logs <pod-name> -c <container-name> -n <name-space>
 
 #### Volumes
 ---
-**Note:**
+**Note**
 
 PersistentVolume resources are cluster-scoped and thus cannot be created in a specific namespace. On the other hand, PersistentVolumeClaims can only be created in a specific namespace, and they can then only be used by pods in the same namespace.
 
@@ -576,28 +579,27 @@ Retrieve built-in resource types (pods, services, daemon sets, deployments, repl
 $ kubectl get all -n <name-space>
 ```
 ---
+**Note**
 
-**Note:**
+The `kubectl delete` command might not be successful initially if you use `finalizers` to prevent accidental deletion. Finalizers are keys on resources that signal pre-delete operations. Finalizers control the garbage collection on resources, and they're designed to alert controllers about what cleanup operations to do before they remove a resource.
 
-The *kubectl delete* command might not be successful initially if you use *finalizers* to prevent accidental deletion. Finalizers are keys on resources that signal pre-delete operations. Finalizers control the garbage collection on resources, and they're designed to alert controllers about what cleanup operations to do before they remove a resource.
-
-If you try to delete a resource that has a finalizer on it, the resource remains in finalization until the controller removes the finalizer keys, or the finalizers are removed by using kubectl. After the finalizer list is emptied, Kubernetes can reclaim the resource and put it into a queue to be deleted from the registry.
+If you try to delete a resource that has a finalizer on it, the resource remains in finalization until the controller removes the finalizer keys, or the finalizers are removed by using `kubectl`. After the finalizer list is emptied, `Kubernetes` can reclaim the resource and put it into a queue to be deleted from the registry.
 
 See [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/) for more information.
 
 ---
-Remove a resource in the *Terminating* state.<br>
-To remove a *finalizer* from a resource, you typically update the resource's metadata to remove the finalizer entry. This action signals Kubernetes that the cleanup tasks are complete, allowing the resource to be fully deleted.
+Remove a resource in the `Terminating` state.<br>
+To remove a `finalizer` from a resource, you typically update the resource's metadata to remove the finalizer entry. This action signals `Kubernetes` that the cleanup tasks are complete, allowing the resource to be fully deleted.
 
-To ensure the resource has one or more finalizers attach, you can use *kubectl get* or *kubectl describe*. If finalizers are attached, you remove them by executing the command below.
+To ensure the resource has one or more finalizers attach, you can use `kubectl get` or `kubectl describe`. If finalizers are attached, you remove them by executing the command below.
 ```
 $ kubectl patch <resource> <resource-name> -p '{"metadata":{"finalizers":null}}'
 ```
 
 ## IaC-K8s
-IaC-K8s contains the Terraform code for provisioning (i.e., creating, preparing, and activating the underlying infrastructure of a cloud environment) the Oracle Cloud Infrastructure (OCI), which is an Infrastructure as a Service (IaaS) and Platform as a Service (PaaS) offering. The OCI is a set of complementary cloud services that enable you to build and run a range of applications and services in a highly available hosted environment. OCI provides high-performance compute capabilities (as physical hardware instances) and storage capacity in a flexible overlay virtual network that is securely accessible from your on-premises network.
+IaC-K8s contains the `Terraform` code for provisioning (i.e., creating, preparing, and activating the underlying infrastructure of a cloud environment) the `Oracle Cloud Infrastructure (OCI)`, which is an `Infrastructure as a Service (IaaS)` and `Platform as a Service (PaaS)` offering. The `OCI` is a set of complementary cloud services that enable you to build and run a range of applications and services in a highly available hosted environment. `OCI` provides high-performance compute capabilities (as physical hardware instances) and storage capacity in a flexible overlay virtual network that is securely accessible from your on-premises network.
 
-For more OCI and Terraform documentation, please see [Using Terraform and Oracle Cloud Infrastructure](https://docs.oracle.com/en-us/iaas/Content/dev/terraform/tutorials.htm).
+For more `OCI` and `Terraform` documentation, please see [Using Terraform and Oracle Cloud Infrastructure](https://docs.oracle.com/en-us/iaas/Content/dev/terraform/tutorials.htm).
 
 ### Login
 1. https://www.oracle.com/cloud/sign-in.html
@@ -616,7 +618,7 @@ Before you install the CLI, run the following commands on a new Ubuntu image.<br
 ```
 
 **Step 2: Creating and Configuring a Virtual Environment**<br>
-The ***venv*** Python module is a virtual environment builder that lets you create isolated Python environments.<br>
+The `venv` Python module is a virtual environment builder that lets you create isolated Python environments.<br>
 Installing and Activating your Virtual Environment<br>
 After Python is installed, set up a virtual environment for your operating system using the following steps.
 1. Navigate to the directory in which you would like to create the virtual environment.
@@ -633,15 +635,15 @@ After Python is installed, set up a virtual environment for your operating syste
    ```
 
 **Step 3: Installing the Command Line Interface**<br>
-To install using PyPI, run the following command:
+To install using `PyPI`, run the following command.
 ```
 (oracle-cli) ~/oci/python$ pip install oci-cli
 ```
 
 **Step 4: Setting up the Configuration File**<br>
-Before using the CLI, you must create a configuration file that contains the required credentials for working with Oracle Cloud Infrastructure. The default location for the configuration file is ***~/.oci***.<br>
+Before using the CLI, you must create a configuration file that contains the required credentials for working with `Oracle Cloud Infrastructure`. The default location for the configuration file is `~/.oci`.<br>
 Use the Setup Dialog<br>
-To have the CLI guide you through the first-time setup process, use the setup config command:
+To have the CLI guide you through the first-time setup process, use the setup config command.
 ```
 (oracle-cli) ~/oci/python$ oci setup config
 ```
@@ -650,16 +652,16 @@ This command prompts you for the information required to create the configuratio
 2. Tenancy's OCID (Profile->Tenancy: \<tenancy-name\>)
 3. The region
 
-When creating the keys, decline creating a passphrase. Once the keys are generated, you'll need to associate the public key to the user. From the Oracle Cloud web console, click on ***Profile-> My profile->API keys*** on the left and click on ***Add API Key***. Upload the public key's pem file.
+When creating the keys, decline creating a passphrase. Once the keys are generated, you'll need to associate the public key to the user. From the Oracle Cloud web console, click on `Profile-> My profile->API keys`* on the left and click on `Add API Key`. Upload the public key's pem file.
 
 **Step 5: Verify that everything is configured properly**<br>
-You can verify that everything is configured properly by running the following command:
+You can verify that everything is configured properly by running the following command.
 ```
 (oracle-cli) ~/oci/python$ oci iam compartment list -c <tenancy-ocid>
 ```
 where \<tenancy-ocid\> is your tenancy's OCID.
 
-If there are no errors in the JSON reply, the config file was create (by default in ***~/.oci***). At this point, you need to run Terraform to allocate your resources.
+If there are no errors in the `JSON` reply, the config file was create (by default in `~/.oci`). At this point, you need to run `Terraform` to allocate your resources.
 
 **Step 6: Deactivate the virtual environment.**
 ```
@@ -672,10 +674,12 @@ If there are no errors in the JSON reply, the config file was create (by default
 ```
 
 ## Traefik (Gateway/Reverse Proxy and Load Balancer)
+In a typical microservices deployment, microservices are **not** exposed directly to client applications; i.e., microservices are behind a set of APIs that is exposed to the outside world via a gateway. **The gateway is the entry point to the microservices deployment, which screens all incoming messages for security and other quality of service (QoS) features.** Since the gateway deals with **north/south traffic**, it is mostly about **edge security**. To reiterate, **the gateway is the only component publicly accessible for requests originating from the external internet**. Besides `Traefik`, there are many options for reverse proxies available such as `Nginx`, `Pomerium` (free), `Apache`, `Caddy`, `Envoy`, `Zuul`, and `HAProxy`.
+
 ### Troubleshooting Traefik
 For a more detailed explanation, please see [Traefik, Let’s Encrypt, Cert-Manager, and OpenShift using Terraform (Part 4)](https://trimino.com/simple-app/traefik-lets-encrypt-cert-manager-and-openshift-using-terraform-part-4/)
 
-Execute commands in a running Traefik container.
+Execute commands in a running `Traefik` container.
 ```
 $ kubectl exec -it -n finances $(kubectl get pods -n finances --selector "app.kubernetes.io/name=traefik" --output=name) -- /bin/sh
 ```
@@ -712,7 +716,7 @@ $ kubectl get ingressroute -A
 $ kubectl get ingressroute -n finances
 ```
 
-To delete a pending Challenge, see [here](https://cert-manager.io/docs/installation/helm/#uninstalling) and [here](https://cert-manager.io/docs/installation/uninstall/). As per documentation, the order is important!!!
+To delete a pending `Challenge`, see [here](https://cert-manager.io/docs/installation/helm/#uninstalling) and [here](https://cert-manager.io/docs/installation/uninstall/). As per documentation, the order is important!!!
 ```
 $ kubectl delete Issuer <issuer-name> -n finances
 $ kubectl delete Certificate <certificate-name> -n finances
@@ -725,7 +729,7 @@ To install the debugger in VS Code:<br>
 **(1)** Open the Command Palette (***Ctrl + Shift + P***).<br>
 **(2)** Find ***Go: Install/Update Tools*** and select ***dlv***.
 
-The settings for the debugger can be stored in the ***.code-workspace*** file or the ***.vscode/launch.json*** directory. For this project, the settings are stored in the ***.code-workspace*** file under the ***launch*** section.
+The settings for the debugger can be stored in the `.code-workspace` file or the `.vscode/launch.json` directory. For this project, the settings are stored in the `.code-workspace` file under the `launch` section.
 
 ### Application Deployment with Terraform
 See [terraform init](#terraform_init).
@@ -733,17 +737,17 @@ See [terraform init](#terraform_init).
 $ terraform init
 ```
 
-From the same directory where you invoked the *init* command, run the *apply* command; this command gathers together and executes all of our Terraform code files. The option *-auto-approve* runs Terraform in *non-interactive* mode. See [terraform apply](#terraform_apply).
+From the same directory where you invoked the `init` command, run the `apply` command; this command gathers together and executes all of our `Terraform` code files. The option `-auto-approve` runs Terraform in `non-interactive` mode. See [terraform apply](#terraform_apply).
 ```
 $ terraform apply -var="k8s_manifest_crd=false" -auto-approve
 ```
 
-This command sets the variable *app_version*, enables non-interactive mode, and invokes *apply*.
+This command sets the variable `app_version`, enables non-interactive mode, and invokes `apply`.
 ```
 $ terraform apply -var="k8s_manifest_crd=false" -var="app_version=1.0.1" -auto-approve
 ```
 
-To deploy the reverse proxy **Traefik** after initializing Terraform, you’ll execute any one of the two commands below (they are equivalent since the default value for the variable ***k8s_manifest_crd*** is true; see [variables.tf](./IaC-app/variables.tf)). For more information see [Deploying Traefik in Our OpenShift Cluster (Part 3)](https://trimino.com/simple-app/deploy-traefik-openshift/), section ***Building and Deploying Traefik***.
+To deploy the reverse proxy `Traefik` after initializing `Terraform`, you’ll execute any one of the two commands below (they are equivalent since the default value for the variable `k8s_manifest_crd` is true; see [variables.tf](./IaC-app/variables.tf)). For more information see [Deploying Traefik in Our OpenShift Cluster (Part 3)](https://trimino.com/simple-app/deploy-traefik-openshift/), section `Building and Deploying Traefik`.
 ```
 $ terraform apply -var="app_version=1.0.1" -auto-approve
 
@@ -752,7 +756,7 @@ or
 $ terraform apply -var="k8s_manifest_crd=true" -var="app_version=1.0.1" -auto-approve
 ```
 
-This command destroys your current infrastructure that was created by Terraform. See [terraform destroy](#terraform_destroy).
+This command destroys your current infrastructure that was created by `Terraform`. See [terraform destroy](#terraform_destroy).
 ```
 $ terraform destroy -auto-approve
 ```
@@ -764,14 +768,14 @@ $ terraform destroy -var="app_version=1.0.1" -auto-approve
 111111111111111111111111111111111111
 
 ### Initializing a Go Project
-Create a new Go module.
+Create a new `Go` module.
 ```
 $ mkdir -p fin-finance/src
 aqaaa
 $ cd src
 ```
 
-Next, create a ***go.mod*** file within the src directory to define the Go module itself.
+Next, create a `go.mod` file within the src directory to define the Go module itself.
 ```
 $ go mod init finance
 ```
@@ -779,7 +783,9 @@ $ go mod init finance
 1111111111111111111
 
 ---
-**Note:** To see all environment variables supported by the app, see **//Environment variables.** in [main.go](./src/main.go). To run the app in a *K8s* environment, set the environment variable **K8S** to true.
+**Note**
+
+To see all environment variables supported by the app, see `//Environment variables.` in [main.go](./src/main.go). To run the app in a `K8s` environment, set the environment variable `K8S` to true.
 
 ---
 Compile and run the app as a standalone HTTP server (default) on port 8080 (default).
@@ -819,12 +825,12 @@ for multiple environment variables
 $ HTTP_PORT=18080 HTTPS=true ./finance
 ```
 
-The ampersand symbol (**&**) instructs the shell to execute the command as a separate background process. To compile and run the app in the background.
+The ampersand symbol (`&`) instructs the shell to execute the command as a separate background process. To compile and run the app in the background.
 ```
 $ go build -o finance && ./finance &
 ```
 
-Compile and run the named *main* Go package in the background.
+Compile and run the named `main` Go package in the background.
 ```
 $ go run main.go &
 ```
