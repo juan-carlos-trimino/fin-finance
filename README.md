@@ -369,7 +369,7 @@ The command will create a kubeconfig file in the `~/.kube` directory; the kubeco
 ---
 **Note**
 
-Setting the permissions of your `~/.kube/\<name-of-config-file\>` file to `600` ensures that only the owner (you) can read and write to it, enhancing security by limiting access to the Kubernetes configuration file.
+Setting the permissions of your `~/.kube/<name-of-config-file>` file to `600` ensures that only the owner (you) can read and write to it, enhancing security by limiting access to the Kubernetes configuration file.
 
 ```
 $ chmod 600  ~/.kube/<name-of-config-file>
@@ -731,22 +731,61 @@ To install the debugger in VS Code:<br>
 
 The settings for the debugger can be stored in the `.code-workspace` file or the `.vscode/launch.json` directory. For this project, the settings are stored in the `.code-workspace` file under the `launch` section.
 
+### Upgrade Go
+To find the system architecture type, execute.
+```
+$ dpkg --print-architecture
+```
+Update the package index files on the system, which contain information about available packages and their versions. It downloads the most recent package information from the sources listed in the `/etc/apt/sources.list` file that contains your sources list.
+```
+$ sudo apt-get update
+```
+Install the newest versions of all packages currently installed on the system from the sources enumerated in `/etc/apt/sources.list`.
+```
+$ sudo apt-get -y upgrade
+```
+Remove the existing `Go` installation, if any. To find the location of your current `Go` installation.
+```
+$ which go
+```
+Remove the directory found in the previous step, if any.
+```
+$ sudo rm -rf /usr/local/go
+```
+Download the [latest Go version](https://go.dev/dl/). Notice the version and system architecture type: 1.22.0.linux-xxxxx
+```
+$ wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
+```
+Extract the archive (replace with the actual filename).
+```
+$ sudo tar -xvf go1.22.0.linux-amd64.tar.gz -C /usr/local
+```
+Update the `PATH environment variable`. Open a shell configuration file; e.g., `~/.bashrc`, `~/.zshrc`, `~/.profile`, etc. Add the following line to the `~/.bashrc` config file.
+```
+$ echo "export PATH=/usr/local/go/bin:$PATH" >> ~/.bashrc
+```
+Reload the file.
+```
+$ source ~/.bashrc
+```
+Verify the installation.
+```
+$ go version
+```
+
 ### Application Deployment with Terraform
 See [terraform init](#terraform_init).
 ```
 $ terraform init
 ```
-
 From the same directory where you invoked the `init` command, run the `apply` command; this command gathers together and executes all of our `Terraform` code files. The option `-auto-approve` runs Terraform in `non-interactive` mode. See [terraform apply](#terraform_apply).
 ```
 $ terraform apply -var="k8s_manifest_crd=false" -auto-approve
 ```
-
 This command sets the variable `app_version`, enables non-interactive mode, and invokes `apply`.
 ```
 $ terraform apply -var="k8s_manifest_crd=false" -var="app_version=1.0.1" -auto-approve
 ```
-
 To deploy the reverse proxy `Traefik` after initializing `Terraform`, you’ll execute any one of the two commands below (they are equivalent since the default value for the variable `k8s_manifest_crd` is true; see [variables.tf](./IaC-app/variables.tf)). For more information see [Deploying Traefik in Our OpenShift Cluster (Part 3)](https://trimino.com/simple-app/deploy-traefik-openshift/), section `Building and Deploying Traefik`.
 ```
 $ terraform apply -var="app_version=1.0.1" -auto-approve
@@ -755,33 +794,35 @@ or
 
 $ terraform apply -var="k8s_manifest_crd=true" -var="app_version=1.0.1" -auto-approve
 ```
-
 This command destroys your current infrastructure that was created by `Terraform`. See [terraform destroy](#terraform_destroy).
 ```
 $ terraform destroy -auto-approve
-```
 
-```
+or
+
 $ terraform destroy -var="app_version=1.0.1" -auto-approve
 ```
 
-111111111111111111111111111111111111
-
 ### Initializing a Go Project
-Create a new `Go` module.
+In version 1.13, `Go` added a new way of managing the libraries a `Go project` depends on, called [Go modules](https://go.dev/ref/mod). A `Go module` has a number of `Go` code files implementing the functionality of a `package`, but it also has two additional and important files in the root: the `go.mod` and `go.sum` files. These files contain information the go tool uses to keep track of the module's configuration and are commonly maintained by the tool.
+
+With `Go modules`, it is possible for `Go projects` to be located anywhere on the filesystem instead of a specific directory defined by `Go`. Having said that, you'll create the project directory `fin-finance` with the module directory `src`.
 ```
 $ mkdir -p fin-finance/src
-aqaaa
-$ cd src
+$ cd fin-finance/src
 ```
-
-Next, create a `go.mod` file within the src directory to define the Go module itself.
+Notice the usage of the `-p` option to create parent directories that do not exist. Once you've executed the `mkdir` command, the directory structure will look like
 ```
-$ go mod init finance
+fin-finance
+ └ src
 ```
+Next, you'll create a `go.mod` file within the `src` directory to define the `Go module` itself. To do this, you'll use the go tool's `mod init` command and provide it with the module's name, which in this case is `finance`. Usually, the module's directory name is the same as the module name, but in your case they will not be the same.
+```
+~/fin-finance/src$ go mod init finance
+```
+Once created, the `go.mod` file contains the name of the module and versions of other modules your own module depends on. It can also contain other directives, such as replace, which can be helpful for doing development on multiple modules at once.
 
-1111111111111111111
-
+### Compile and Run the App
 ---
 **Note**
 
@@ -796,7 +837,6 @@ or
 
 $ go build -o finance && HTTP=true HTTP_PORT=8080 ./finance
 ```
-
 Compile and run the app as a standalone HTTPS server on port 8443 (default).
 ```
 $ go build -o finance && HTTP=false HTTPS=true ./finance
@@ -805,17 +845,14 @@ or
 
 $ go build -o finance && HTTP=false HTTPS=true HTTP_PORT=8443 ./finance
 ```
-
 Compile and run the app as two standalone servers (HTTP and HTTPS ) using the default ports.
 ```
 $ go build -o finance && HTTPS=true ./finance
 ```
-
 Force rebuilding of packages that are already up-to-date and run the app.
 ```
 $ go build -o finance -a && ./finance
 ```
-
 To change an environment variable's value, set the environment variable to its new value; e.g., to change the default value of the environment variable HTTP_PORT, execute the command below.
 ```
 $ HTTP_PORT=18080 ./finance
@@ -824,12 +861,10 @@ for multiple environment variables
 
 $ HTTP_PORT=18080 HTTPS=true ./finance
 ```
-
 The ampersand symbol (`&`) instructs the shell to execute the command as a separate background process. To compile and run the app in the background.
 ```
 $ go build -o finance && ./finance &
 ```
-
 Compile and run the named `main` Go package in the background.
 ```
 $ go run main.go &
@@ -852,7 +887,7 @@ $ ps -a
 $ kill <PID>
 ```
 
-#### Display headers.
+#### Display Headers
 ##### Windows (PowerShell)
 ```
 PS> curl.exe -IL "http://localhost:8080"
