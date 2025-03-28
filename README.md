@@ -732,7 +732,7 @@ To install the debugger in VS Code:<br>
 The settings for the debugger can be stored in the `.code-workspace` file or the `.vscode/launch.json` directory. For this project, the settings are stored in the `.code-workspace` file under the `launch` section.
 
 ### Upgrade Go
-To find the system architecture type, execute.
+Find the system architecture type.
 ```
 $ dpkg --print-architecture
 ```
@@ -744,7 +744,7 @@ Install the newest versions of all packages currently installed on the system fr
 ```
 $ sudo apt-get -y upgrade
 ```
-Remove the existing `Go` installation, if any. To find the location of your current `Go` installation.
+Remove the existing `Go` installation, if any. Find the location of your current `Go` installation.
 ```
 $ which go
 ```
@@ -752,7 +752,7 @@ Remove the directory found in the previous step, if any.
 ```
 $ sudo rm -rf /usr/local/go
 ```
-Download the [latest Go version](https://go.dev/dl/). Notice the version and system architecture type: 1.22.0.linux-xxxxx
+Download the [latest Go version](https://go.dev/dl/). Notice the version and system architecture type; e.g., go**1.22.0.linux-amd64**.tar.gz
 ```
 $ wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
 ```
@@ -760,11 +760,11 @@ Extract the archive (replace with the actual filename).
 ```
 $ sudo tar -xvf go1.22.0.linux-amd64.tar.gz -C /usr/local
 ```
-Update the `PATH environment variable`. Open a shell configuration file; e.g., `~/.bashrc`, `~/.zshrc`, `~/.profile`, etc. Add the following line to the `~/.bashrc` config file.
+Update the `PATH environment variable`. Open a shell configuration file; e.g., `~/.bashrc`, `~/.zshrc`, `~/.profile`, etc. Add the following line to the `~/.bashrc` config file; note the use of the bash shell below.
 ```
 $ echo "export PATH=/usr/local/go/bin:$PATH" >> ~/.bashrc
 ```
-Reload the file.
+Reload the file to apply the changes.
 ```
 $ source ~/.bashrc
 ```
@@ -772,6 +772,7 @@ Verify the installation.
 ```
 $ go version
 ```
+Finally, you may need to update the `go.mod` file with the new compiler version.
 
 ### Application Deployment with Terraform
 See [terraform init](#terraform_init).
