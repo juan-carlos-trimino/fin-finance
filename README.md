@@ -606,7 +606,7 @@ For more `OCI` and `Terraform` documentation, please see [Using Terraform and Or
 2. Sign In using a Cloud Account Name
 3. Cloud Account Name
 
-### OCI CLI
+### Oracle Cloud Infrastructure (OCI) Command Line Interface (CLI)
 https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/climanualinst.htm#Manual_Installation<br><br>
 Manual Installation: Ubuntu<br>
 **Step 1: Installing Python**<br>
@@ -723,15 +723,26 @@ $ kubectl delete Certificate <certificate-name> -n finances
 ```
 
 ## src
-### Debugging Go
-#### Delve
-To install the debugger in VS Code:<br>
-**(1)** Open the Command Palette (***Ctrl + Shift + P***).<br>
-**(2)** Find ***Go: Install/Update Tools*** and select ***dlv***.
+### Initializing a Go Project
+In version 1.13, `Go` added a new way of managing the libraries a `Go project` depends on, called [Go modules](https://go.dev/ref/mod). A `Go module` has a number of `Go` code files implementing the functionality of a `package`, but it also has two additional and important files in the root: the `go.mod` and `go.sum` files. These files contain information the go tool uses to keep track of the module's configuration and are commonly maintained by the tool.
 
-The settings for the debugger can be stored in the `.code-workspace` file or the `.vscode/launch.json` directory. For this project, the settings are stored in the `.code-workspace` file under the `launch` section.
+With `Go modules`, it is possible for `Go projects` to be located anywhere on the filesystem instead of a specific directory defined by `Go`. Having said that, you'll create the project directory `fin-finance` with the module directory `src`.
+```
+$ mkdir -p fin-finance/src
+$ cd fin-finance/src
+```
+Notice the usage of the `-p` option to create parent directories that do not exist. Once you've executed the `mkdir` command, the directory structure will look like
+```
+fin-finance
+ └ src
+```
+Next, you'll create a `go.mod` file within the `src` directory to define the `Go module` itself. To do this, you'll use the go tool's `mod init` command and provide it with the module's name, which in this case is `finance`. Usually, the module's directory name is the same as the module name, but in your case they will not be the same.
+```
+~/fin-finance/src$ go mod init finance
+```
+Once created, the `go.mod` file contains the name of the module and versions of other modules your own module depends on. It can also contain other directives, such as replace, which can be helpful for doing development on multiple modules at once.
 
-### Upgrade Go
+### Upgrading Go
 Find the system architecture type.
 ```
 $ dpkg --print-architecture
@@ -774,6 +785,18 @@ $ go version
 ```
 Finally, you may need to update the `go.mod` file with the new compiler version.
 
+### Debugging Go
+#### Delve
+To install the debugger in VS Code:<br>
+**(1)** Open the Command Palette (***Ctrl + Shift + P***).<br>
+**(2)** Find ***Go: Install/Update Tools*** and select ***dlv***.
+
+The settings for the debugger can be stored in the `.code-workspace` file or the `.vscode/launch.json` directory. For this project, the settings are stored in the `.code-workspace` file under the `launch` section.
+
+### Profiling Go with pprof
+
+
+
 ### Application Deployment with Terraform
 See [terraform init](#terraform_init).
 ```
@@ -803,25 +826,6 @@ or
 
 $ terraform destroy -var="app_version=1.0.1" -auto-approve
 ```
-
-### Initializing a Go Project
-In version 1.13, `Go` added a new way of managing the libraries a `Go project` depends on, called [Go modules](https://go.dev/ref/mod). A `Go module` has a number of `Go` code files implementing the functionality of a `package`, but it also has two additional and important files in the root: the `go.mod` and `go.sum` files. These files contain information the go tool uses to keep track of the module's configuration and are commonly maintained by the tool.
-
-With `Go modules`, it is possible for `Go projects` to be located anywhere on the filesystem instead of a specific directory defined by `Go`. Having said that, you'll create the project directory `fin-finance` with the module directory `src`.
-```
-$ mkdir -p fin-finance/src
-$ cd fin-finance/src
-```
-Notice the usage of the `-p` option to create parent directories that do not exist. Once you've executed the `mkdir` command, the directory structure will look like
-```
-fin-finance
- └ src
-```
-Next, you'll create a `go.mod` file within the `src` directory to define the `Go module` itself. To do this, you'll use the go tool's `mod init` command and provide it with the module's name, which in this case is `finance`. Usually, the module's directory name is the same as the module name, but in your case they will not be the same.
-```
-~/fin-finance/src$ go mod init finance
-```
-Once created, the `go.mod` file contains the name of the module and versions of other modules your own module depends on. It can also contain other directives, such as replace, which can be helpful for doing development on multiple modules at once.
 
 ### Compile and Run the App
 ---
