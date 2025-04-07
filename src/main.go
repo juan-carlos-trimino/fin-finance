@@ -13,14 +13,14 @@ import (
   "fmt"
   "net"
   "net/http"
-  "net/http/pprof"
+  // "net/http/pprof"
+  _ "net/http/pprof" //Blank import of pprof.
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/gpmiddlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gps3storage"
   "github.com/juan-carlos-trimino/gpsessions"
   "golang.org/x/crypto/acme/autocert"
-  //	_ "net/http/pprof" //Blank import of pprof.
   "os"
   "os/signal"
   "strconv"
@@ -495,8 +495,9 @@ func makeHandlers() *handlers {
   $ go tool pprof -http=:{port1} http://{url}:{port2}/debug/pprof/{prof1}?seconds={x}
   $ go tool pprof -http=:{port1} http://{url}:{port2}/debug/pprof/{prof2}
   ***/
+	/***
   h.mux["/debug/pprof/"] = pprof.Index
-  // h.mux["/debug/pprof/heap"] = pprof.Index
+  //h.mux["/debug/pprof/heap"] = pprof.Index
   h.mux["/debug/pprof/heap"] = pprof.Handler("heap").ServeHTTP
   h.mux["/debug/pprof/block"] = pprof.Handler("block").ServeHTTP
   h.mux["/debug/pprof/goroutine"] = pprof.Handler("goroutine").ServeHTTP
@@ -504,6 +505,7 @@ func makeHandlers() *handlers {
   h.mux["/debug/pprof/profile"] = pprof.Profile
   h.mux["/debug/pprof/symbol"] = pprof.Symbol
   h.mux["/debug/pprof/trace"] = pprof.Trace
+	***/
   commonMiddlewares := []middlewares.Middleware{
     middlewares.SecurityHeaders,
     middlewares.CorrelationId,

@@ -348,8 +348,8 @@ $ kubectl get nodes
 ```
 If the nodes are displayed, you are done.
 
-## kubectl
-https://kubernetes.io/docs/tasks/tools/
+## Installing kubectl
+`kubectl` is a [command line tool](https://kubernetes.io/docs/tasks/tools/) for communicating with a `Kubernetes` cluster's control plane, using the `Kubernetes API`.
 
 ---
 **Note**
@@ -606,9 +606,10 @@ For more `OCI` and `Terraform` documentation, please see [Using Terraform and Or
 2. Sign In using a Cloud Account Name
 3. Cloud Account Name
 
-### Oracle Cloud Infrastructure (OCI) Command Line Interface (CLI)
-https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/climanualinst.htm#Manual_Installation<br><br>
-Manual Installation: Ubuntu<br>
+### Installing Oracle Cloud Infrastructure (OCI) Command Line Interface (CLI)
+[OCI CLI](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/climanualinst.htm#Manual_Installation) is a tool that allows users to interact with OCI services directly from the command line.
+
+**Manual Installation: Ubuntu**<br>
 **Step 1: Installing Python**<br>
 Before you install the CLI, run the following commands on a new Ubuntu image.<br>
 ```
@@ -794,6 +795,56 @@ To install the debugger in VS Code:<br>
 The settings for the debugger can be stored in the `.code-workspace` file or the `.vscode/launch.json` directory. For this project, the settings are stored in the `.code-workspace` file under the `launch` section.
 
 ### Profiling Go with pprof
+One way to enable the `Go profiler (pprof)` is to use the `net/http/pprof` package to serve the profiling data via `HTTP`. By using the `blank import`, it leads to a side effect that allows us to reach the `pprof URL http://{url}:{port}/debug/pprof`. Note that [enabling pprof is safe](https://go.dev/doc/diagnostics#profiling) even in production. The profiles that impact performance, such as CPU profiling, aren't enabled by default, nor do they run continuously; they are activated only for a specific period.
+
+To view all available profiles, open your browser and type the following address into the browser's address bar: `http://{url}:{port}/debug/pprof/`.
+
+Please note you will need to have [graphviz](https://graphviz.org/) installed for web visualizations. To install it in a Linux system, run the commands below:
+(If the universe repo is not enabled, enable it.)
+```
+$ sudo add-apt-repository universe
+$ sudo apt update
+$ sudo apt install graphviz
+```
+
+**CPU Profiling**
+When it is activated, the application asks the OS to interrupt it every 10ms (default). When the application is interrupted, it suspends the current activity and transfers the execution to the profiler. The profiler collects execution statistics, and then it transfers execution back to the application.
+
+To active the CPU profiling, you access the `debug/pprof/profile` endpoint. Accessing this endpoint will execute CPU profiling for 30 seconds by default. For 30 seconds, the application is interrupted every 10ms.
+
+To write the output to a file, use the command below:
+```
+$ curl http://{url}:{port}/debug/pprof/{prof1}?seconds={x} --output {filename}
+```
+    where {prof1} is trace or profile.
+
+```
+$ curl http://{url}:{port}/debug/pprof/{prof2} --output {filename}
+```
+where {prof2} is heap.
+
+To inspect a file.
+```
+$ go tool pprof {filename}
+```
+
+To inspect the result using the graphical user interface.
+```
+$ go tool pprof -http=:{port1} {filename}
+```
+
+To directly connect to the debug point.
+```
+$ go tool pprof http://{url}:{port}/debug/pprof/{prof1}?seconds={x}
+$ go tool pprof http://{url}:{port}/debug/pprof/{prof2}
+```
+
+To inspect the result using the graphical user interface, use the command below:
+```
+$ go tool pprof -http=:{port1} http://{url}:{port2}/debug/pprof/{prof1}?seconds={x}
+$ go tool pprof -http=:{port1} http://{url}:{port2}/debug/pprof/{prof2}
+```
+
 
 
 

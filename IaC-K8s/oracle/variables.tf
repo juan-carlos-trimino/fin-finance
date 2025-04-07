@@ -126,7 +126,7 @@ variable memory_per_node {
 
 variable k8s_version {
   type = string
-  default = "v1.31.1"
+  default = "v1.32.1"
 }
 
 variable network_load_balancer {
