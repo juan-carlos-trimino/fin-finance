@@ -795,23 +795,39 @@ To install the debugger in VS Code:<br>
 The settings for the debugger can be stored in the `.code-workspace` file or the `.vscode/launch.json` directory. For this project, the settings are stored in the `.code-workspace` file under the `launch` section.
 
 ### Profiling Go with pprof
-Because performance is an important aspect of software development, profiling is a valuable tool for understanding and improving the performance of Go applications. The `Go profiler (pprof)` is a tool for profiling Go programs. It is part of the Go standard library and can be used to generate detailed profiles of Go programs, including CPU, memory, and concurrency profiles. It reads profiling samples in the `profile.proto` format.
+Because performance is an important aspect of software development, profiling is a valuable tool for understanding and improving the performance of Go applications. The `Go profiler (pprof)` is a tool for profiling Go applications. It is part of the Go standard library and can be used to generate detailed profiles of Go applications, including CPU, memory, and concurrency profiles. It reads profiling samples in the `profile.proto` format.
 
-One way to enable `pprof` is to use the [net/http/pprof](https://pkg.go.dev/net/http/pprof) package to serve the profiling data via `HTTP`. (This assumes that your application has an HTTP server running; otherwise, you will need to start one.) If you use the `blank import`, the profile package will **only** register its handlers with the default multiplexer (`http.DefaultServeMux`). If you are not using the default multiplexer, you will require to register the pprof handlers with the multiplexer you're using. Once the handlers are registered, you can reach the `pprof URL` via `http://{url}:{port}/debug/pprof`.
+One way to enable `pprof` is to use the [net/http/pprof](https://pkg.go.dev/net/http/pprof) package to serve the profiling data via `HTTP`. (This assumes that your application has an HTTP server running; otherwise, you will need to start one.) If you use the `blank import`, the profile package will **only** register its handlers with the default multiplexer (`http.DefaultServeMux`). If you are not using the default multiplexer, you will need to register the handlers with the multiplexer you're using. Once the handlers are registered, you can reach the `pprof URL` via `http://{url}:{port}/debug/pprof`.
 
+ Note that [enabling pprof is safe](https://go.dev/doc/diagnostics#profiling) even in production. The profiles that impact performance, such as CPU profiling, aren't enabled by default, nor do they run continuously; they are activated only for a specific period. Nonetheless, exposing `pprof` endpoints can lead to potential security risks and unintended performance degradation; it's crucial to secure access to the endpoints. To view all available profiles, open your browser and type the following address into the browser's address bar: `http://{url}:{port}/debug/pprof/`.
 
+---
+**Note**
 
- Note that [enabling pprof is safe](https://go.dev/doc/diagnostics#profiling) even in production. The profiles that impact performance, such as CPU profiling, aren't enabled by default, nor do they run continuously; they are activated only for a specific period. Nonetheless, exposing pprof endpoints can lead to potential security risks and unintended performance impacts. Hence, it's crucial to secure access to the endpoints.
+The `graphviz` package is part of the `universe` repository, which is enabled by default on most Ubuntu installations.
 
-To view all available profiles, open your browser and type the following address into the browser's address bar: `http://{url}:{port}/debug/pprof/`.
-
-Please note you will need to have [graphviz](https://graphviz.org/) installed for web visualizations. To install it in a Linux system, run the commands below:
-(If the universe repo is not enabled, enable it.)
+The `Universe` repository is a standard repository for `Ubuntu`. The repository is community-maintained and provides free and open-source software. By default, the repository is enabled in the latest versions of Ubuntu, but if for some reason is not enabled, use the following command to enable it.
 ```
 $ sudo add-apt-repository universe
 $ sudo apt update
+```
+The second command performs an update to the package list cache.
+
+To remove the repository, use the command below. The command will **not** remove packages that were installed from the repository, if any.
+```
+$ sudo add-apt-repository -r universe
+$ sudo apt update
+```
+Again, the second command performs an update to the package list cache thereby ensuring the repository is no longer usable.
+
+---
+Please note that you will need to have [graphviz](https://graphviz.org/) installed for web visualizations. To install it, run the command below.
+```
 $ sudo apt install graphviz
 ```
+
+
+
 
 **CPU Profiling**
 When it is activated, the application asks the OS to interrupt it every 10ms (default). When the application is interrupted, it suspends the current activity and transfers the execution to the profiler. The profiler collects execution statistics, and then it transfers execution back to the application.
