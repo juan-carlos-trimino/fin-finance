@@ -795,7 +795,13 @@ To install the debugger in VS Code:<br>
 The settings for the debugger can be stored in the `.code-workspace` file or the `.vscode/launch.json` directory. For this project, the settings are stored in the `.code-workspace` file under the `launch` section.
 
 ### Profiling Go with pprof
-One way to enable the `Go profiler (pprof)` is to use the `net/http/pprof` package to serve the profiling data via `HTTP`. By using the `blank import`, it leads to a side effect that allows us to reach the `pprof URL http://{url}:{port}/debug/pprof`. Note that [enabling pprof is safe](https://go.dev/doc/diagnostics#profiling) even in production. The profiles that impact performance, such as CPU profiling, aren't enabled by default, nor do they run continuously; they are activated only for a specific period.
+Because performance is an important aspect of software development, profiling is a valuable tool for understanding and improving the performance of Go applications. The `Go profiler (pprof)` is a tool for profiling Go programs. It is part of the Go standard library and can be used to generate detailed profiles of Go programs, including CPU, memory, and concurrency profiles. It reads profiling samples in the `profile.proto` format.
+
+One way to enable `pprof` is to use the [net/http/pprof](https://pkg.go.dev/net/http/pprof) package to serve the profiling data via `HTTP`. (This assumes that your application has an HTTP server running; otherwise, you will need to start one.) If you use the `blank import`, the profile package will **only** register its handlers with the default multiplexer (`http.DefaultServeMux`). If you are not using the default multiplexer, you will require to register the pprof handlers with the multiplexer you're using. Once the handlers are registered, you can reach the `pprof URL` via `http://{url}:{port}/debug/pprof`.
+
+
+
+ Note that [enabling pprof is safe](https://go.dev/doc/diagnostics#profiling) even in production. The profiles that impact performance, such as CPU profiling, aren't enabled by default, nor do they run continuously; they are activated only for a specific period. Nonetheless, exposing pprof endpoints can lead to potential security risks and unintended performance impacts. Hence, it's crucial to secure access to the endpoints.
 
 To view all available profiles, open your browser and type the following address into the browser's address bar: `http://{url}:{port}/debug/pprof/`.
 
@@ -848,36 +854,6 @@ $ go tool pprof -http=:{port1} http://{url}:{port2}/debug/pprof/{prof2}
 
 
 
-### Application Deployment with Terraform
-See [terraform init](#terraform_init).
-```
-$ terraform init
-```
-From the same directory where you invoked the `init` command, run the `apply` command; this command gathers together and executes all of our `Terraform` code files. The option `-auto-approve` runs Terraform in `non-interactive` mode. See [terraform apply](#terraform_apply).
-```
-$ terraform apply -var="k8s_manifest_crd=false" -auto-approve
-```
-This command sets the variable `app_version`, enables non-interactive mode, and invokes `apply`.
-```
-$ terraform apply -var="k8s_manifest_crd=false" -var="app_version=1.0.1" -auto-approve
-```
-To deploy the reverse proxy `Traefik` after initializing `Terraform`, you’ll execute any one of the two commands below (they are equivalent since the default value for the variable `k8s_manifest_crd` is true; see [variables.tf](./IaC-app/variables.tf)). For more information see [Deploying Traefik in Our OpenShift Cluster (Part 3)](https://trimino.com/simple-app/deploy-traefik-openshift/), section `Building and Deploying Traefik`.
-```
-$ terraform apply -var="app_version=1.0.1" -auto-approve
-
-or
-
-$ terraform apply -var="k8s_manifest_crd=true" -var="app_version=1.0.1" -auto-approve
-```
-This command destroys your current infrastructure that was created by `Terraform`. See [terraform destroy](#terraform_destroy).
-```
-$ terraform destroy -auto-approve
-
-or
-
-$ terraform destroy -var="app_version=1.0.1" -auto-approve
-```
-
 ### Compile and Run the App
 ---
 **Note**
@@ -924,6 +900,36 @@ $ go build -o finance && ./finance &
 Compile and run the named `main` Go package in the background.
 ```
 $ go run main.go &
+```
+
+### Application Deployment with Terraform
+See [terraform init](#terraform_init).
+```
+$ terraform init
+```
+From the same directory where you invoked the `init` command, run the `apply` command; this command gathers together and executes all of our `Terraform` code files. The option `-auto-approve` runs Terraform in `non-interactive` mode. See [terraform apply](#terraform_apply).
+```
+$ terraform apply -var="k8s_manifest_crd=false" -auto-approve
+```
+This command sets the variable `app_version`, enables non-interactive mode, and invokes `apply`.
+```
+$ terraform apply -var="k8s_manifest_crd=false" -var="app_version=1.0.1" -auto-approve
+```
+To deploy the reverse proxy `Traefik` after initializing `Terraform`, you’ll execute any one of the two commands below (they are equivalent since the default value for the variable `k8s_manifest_crd` is true; see [variables.tf](./IaC-app/variables.tf)). For more information see [Deploying Traefik in Our OpenShift Cluster (Part 3)](https://trimino.com/simple-app/deploy-traefik-openshift/), section `Building and Deploying Traefik`.
+```
+$ terraform apply -var="app_version=1.0.1" -auto-approve
+
+or
+
+$ terraform apply -var="k8s_manifest_crd=true" -var="app_version=1.0.1" -auto-approve
+```
+This command destroys your current infrastructure that was created by `Terraform`. See [terraform destroy](#terraform_destroy).
+```
+$ terraform destroy -auto-approve
+
+or
+
+$ terraform destroy -var="app_version=1.0.1" -auto-approve
 ```
 
 #### How to kill a process.
