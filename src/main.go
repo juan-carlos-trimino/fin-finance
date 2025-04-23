@@ -13,8 +13,21 @@ import (
   "fmt"
   "net"
   "net/http"
-  // "net/http/pprof"
-  _ "net/http/pprof" //Blank import of pprof.
+  "net/http/pprof"
+  /***
+  In Go, it is an error to import a package but not refer any of its exported identifiers directly.
+  However, on occasion you must import a package merely for the side effects of doing so; e.g.;
+  evaluation of the initializer expressions of its package-level variables and execution of its
+  init functions. To suppress the "unused import" error you would otherwise encounter, you must use
+  an alias import in which the alternative name is _, the blank identifier. As usual, the blank
+  identifier can never be referenced. This is known as a blank import.
+  ***/
+  /***
+  The package is typically only imported for the side effect of registering its HTTP handlers.
+  However, if you use the `blank import`, the profile package will only register its handlers with
+  the default multiplexer (http.DefaultServeMux).
+  **/
+  // _ "net/http/pprof" //Blank import of pprof.
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/gpmiddlewares"
   "github.com/juan-carlos-trimino/gposu"
@@ -40,6 +53,7 @@ var (  //Environment variables.
   LE_CERT bool = false
   MAX_RETRIES int = 10
   SHUTDOWN_TIMEOUT int = 15
+  ENABLE_PPROF bool = false
   USER_NAME string = "a"
   PASSWORD string = "a"
 )
@@ -448,64 +462,29 @@ func makeHandlers() *handlers {
   h.mux["/fin/simpleinterest/bankers"] = middlewares.ValidateSessions(wfsib.SimpleInterestBankersPages)
   h.mux["/fin/simpleinterest/ordinary"] = middlewares.ValidateSessions(wfsio.SimpleInterestOrdinaryPages)
   h.mux["/fin/miscellaneous"] = middlewares.ValidateSessions(wfmisc.MiscellaneousPages)
-  /***
-  Handlers for pprof.
-
-  One way to enable the Go profiler (pprof) is to use the net/http/pprof package to serve the
-  profiling data via HTTP. By using the blank import, it leads to a side effect that allows us to
-  reach the pprof URL http://{url}:{port}/debug/pprof. Note that enabling pprof is safe even in
-  production (https://go.dev/doc/diagnostics#profiling). The profiles that impact performance, such
-  as CPU profiling, aren't enabled by default, nor do they run continuously; they are activated
-  only for a specific period.
-
-  To view all available profiles, open your browser and type the following address into the
-  browser's address bar:
-  http://{url}:{port}/debug/pprof/
-
-  Please note you will need to have graphviz (https://graphviz.org/) installed for web
-  visualizations. To install it in a Linux system, run the commands below:
-  (If the universe repo is not enabled, enable it.)
-  $ sudo add-apt-repository universe
-  $ sudo apt update
-  $ sudo apt install graphviz
-
-  CPU Profiling
-  -------------
-  When it is activated, the application asks the OS to interrupt it every 10ms (default). When the
-  application is interrupted, it suspends the current activity and transfers the execution to the
-  profiler. The profiler collects execution statistics, and then it transfers execution back to the
-  application.
-
-  To active the CPU profiling, you access the debug/pprof/profile endpoint. Accessing this endpoint
-  will execute CPU profiling for 30 seconds by default. For 30 seconds, the application is
-  interrupted every 10ms.
-  To write the output to a file, use the command below:
-  $ curl http://{url}:{port}/debug/pprof/{prof1}?seconds={x} --output {filename}
-    where {prof1} is trace or profile.
-  $ curl http://{url}:{port}/debug/pprof/{prof2} --output {filename}
-    where {prof2} is heap.
-  To inspect a file, use the command below:
-  $ go tool pprof {filename}
-  To inspect the result using the graphical user interface, use the command below:
-  $ go tool pprof -http=:{port1} {filename}
-  To directly connect to the debug point, use the command below:
-  $ go tool pprof http://{url}:{port}/debug/pprof/{prof1}?seconds={x}
-  $ go tool pprof http://{url}:{port}/debug/pprof/{prof2}
-  To inspect the result using the graphical user interface, use the command below:
-  $ go tool pprof -http=:{port1} http://{url}:{port2}/debug/pprof/{prof1}?seconds={x}
-  $ go tool pprof -http=:{port1} http://{url}:{port2}/debug/pprof/{prof2}
-  ***/
-	/***
-  h.mux["/debug/pprof/"] = pprof.Index
-  //h.mux["/debug/pprof/heap"] = pprof.Index
-  h.mux["/debug/pprof/heap"] = pprof.Handler("heap").ServeHTTP
-  h.mux["/debug/pprof/block"] = pprof.Handler("block").ServeHTTP
-  h.mux["/debug/pprof/goroutine"] = pprof.Handler("goroutine").ServeHTTP
-  h.mux["/debug/pprof/cmdline"] = pprof.Cmdline
-  h.mux["/debug/pprof/profile"] = pprof.Profile
-  h.mux["/debug/pprof/symbol"] = pprof.Symbol
-  h.mux["/debug/pprof/trace"] = pprof.Trace
-	***/
+  var exists bool = false
+  var ev string
+  ev, exists = os.LookupEnv("ENABLE_PPROF")
+  if exists {
+    b, err := strconv.ParseBool(ev)
+    if err == nil {
+      ENABLE_PPROF = b
+    } else {
+      fmt.Printf("'%s' is not a boolean.\n", ev)
+    }
+  }
+  //
+  if ENABLE_PPROF {
+    h.mux["/debug/pprof/"] = pprof.Index
+    //h.mux["/debug/pprof/heap"] = pprof.Index
+    h.mux["/debug/pprof/heap"] = pprof.Handler("heap").ServeHTTP
+    h.mux["/debug/pprof/block"] = pprof.Handler("block").ServeHTTP
+    h.mux["/debug/pprof/goroutine"] = pprof.Handler("goroutine").ServeHTTP
+    h.mux["/debug/pprof/cmdline"] = pprof.Cmdline
+    h.mux["/debug/pprof/profile"] = pprof.Profile
+    h.mux["/debug/pprof/symbol"] = pprof.Symbol
+    h.mux["/debug/pprof/trace"] = pprof.Trace
+  }
   commonMiddlewares := []middlewares.Middleware{
     middlewares.SecurityHeaders,
     middlewares.CorrelationId,
