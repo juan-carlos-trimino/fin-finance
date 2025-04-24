@@ -111,6 +111,8 @@ fin-finance
  | | ├ waitGroup.go
  | | ├ waitGroupL.go
  | | └ wpReadWriteLock.go
+ | ├ config
+ | | └ config.go
  | ├ finances
  | | ├ Annuities.go
  | | ├ Annuities_test.go

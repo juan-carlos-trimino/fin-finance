@@ -35,6 +35,10 @@ src/concurrency/*
 !src/concurrency/waitGroupL.go
 !src/concurrency/wpReadWriteLock.go
 # ... and this directory and its file...
+!src/config/
+src/config/*
+!src/config/config.go
+# ... and this directory and its file...
 !src/finances/
 src/finances/*
 !src/finances/Annuities_test.go
