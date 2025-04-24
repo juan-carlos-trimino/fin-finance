@@ -8,6 +8,7 @@ import (
   "context"
   "crypto/tls"
   "errors"
+  "finance/config"
   "finance/security"
   "finance/webfinances"
   "fmt"
@@ -44,16 +45,6 @@ import (
 )
 
 var (  //Environment variables.
-  K8S bool = false
-  SERVER string = "localhost"
-  HTTP bool = true
-  HTTP_PORT string = "8080"
-  HTTPS bool = false
-  HTTPS_PORT string = "8443"
-  LE_CERT bool = false
-  MAX_RETRIES int = 10
-  SHUTDOWN_TIMEOUT int = 15
-  ENABLE_PPROF bool = false
   USER_NAME string = "a"
   PASSWORD string = "a"
 )
@@ -115,83 +106,20 @@ func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-  var exists bool = false
-  var ev string
-  ev, exists = os.LookupEnv("SERVER")
-  if exists {
-    SERVER = ev
-  }
-  //
-  ev, exists = os.LookupEnv("HTTPS")
-  if exists {
-    b, err := strconv.ParseBool(ev)
-    if err == nil {
-      HTTPS = b
-    } else {
-      fmt.Printf("'%s' is not a boolean.\n", ev)
-    }
-  }
-  //
-  ev, exists = os.LookupEnv("K8S")
-  if exists {
-    b, err := strconv.ParseBool(ev)
-    if err == nil {
-      K8S = b
-    } else {
-      fmt.Printf("'%s' is not a boolean.\n", ev)
-    }
-  }
-  //
-  ev, exists = os.LookupEnv("HTTP")
-  if exists {
-    b, err := strconv.ParseBool(ev)
-    if err == nil {
-      HTTP = b
-    } else {
-      fmt.Printf("'%s' is not a boolean.\n", ev)
-    }
-  }
-  //
-  if !HTTP && !HTTPS {
+  if !config.GetHttp() && !config.GetHttps() {
     fmt.Println("You can run only HTTP (default), only HTTPS (set environment variables to:" +
                 " HTTP=false and HTTPS=true), or both (set environment variable to: HTTPS=true).")
     return
   }
-  ev, exists = os.LookupEnv("LE_CERT")
-  if exists {
-    b, err := strconv.ParseBool(ev)
-    if err == nil {
-      LE_CERT = b
-    } else {
-      fmt.Printf("'%s' is not a boolean.\n", ev)
-    }
+  //
+  if config.GetHttp() {
+    logger.LogInfo(fmt.Sprintf("Using HTTP PORT: %d", config.GetHttpPort()), "-1")
   }
   //
-  if HTTP {
-    ev, exists = os.LookupEnv("HTTP_PORT")
-    if exists {
-      HTTP_PORT = ev
-    }
-    logger.LogInfo(fmt.Sprintf("Using HTTP PORT: %s", HTTP_PORT), "-1")
+  if config.GetHttps() {
+    logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %d", config.GetHttpsPort()), "-1")
   }
-  //
-  if HTTPS {
-    ev, exists = os.LookupEnv("HTTPS_PORT")
-    if exists {
-      HTTPS_PORT = ev
-    }
-    logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %s", HTTPS_PORT), "-1")
-  }
-  ev, exists = os.LookupEnv("SHUTDOWN_TIMEOUT")
-  if exists {
-    tm, err := strconv.Atoi(ev)
-    if err == nil {
-      SHUTDOWN_TIMEOUT = tm
-    } else {
-      fmt.Printf("'%s' is not an int number.\n", ev)
-    }
-  }
-  logger.LogInfo(fmt.Sprintf("Using SHUTDOWN_TIMEOUT: %d", SHUTDOWN_TIMEOUT), "-1")
+  logger.LogInfo(fmt.Sprintf("Using SHUTDOWN_TIMEOUT: %d", config.GetShutDownTimeout()), "-1")
   logger.LogInfo(fmt.Sprintf("OS: %s", osu.GetOS()), "-1")
   homeDir, err := os.UserHomeDir()
   if err != nil {
@@ -233,16 +161,16 @@ func main() {
   ***/
   var wg sync.WaitGroup = sync.WaitGroup{}
   var httpServer *http.Server
-  if HTTP {
-    if K8S {
-      httpServer = makeServer(HTTP_PORT, makeHandlersS3(makeHandlers()))
+  if config.GetHttp() {
+    if config.GetK8s() {
+      httpServer = makeServer(config.GetHttpPort(), makeHandlersS3(makeHandlers()))
     } else {
-      httpServer = makeServer(HTTP_PORT, makeHandlers())
+      httpServer = makeServer(config.GetHttpPort(), makeHandlers())
     }
   }
   //https://pkg.go.dev/golang.org/x/crypto/acme/autocert
   var certMan autocert.Manager
-  if LE_CERT {
+  if config.GetLetsEncryptCert() {
     certMan = autocert.Manager{
       //It always returns true to indicate acceptance of the CA's Terms of Service during account
       //registration.
@@ -252,7 +180,7 @@ func main() {
     }
   }
   //
-  if HTTPS {
+  if config.GetHttps() {
     wg.Add(1)
     /***
     A channel is a communication mechanism that lets one goroutine send values to another
@@ -266,24 +194,24 @@ func main() {
     ***/
     //Buffered channel capacity 1; notifier will not block.
     var signalChan2 chan os.Signal = make(chan os.Signal, 1)
-    if HTTP {
-      if LE_CERT {
+    if config.GetHttp() {
+      if config.GetLetsEncryptCert() {
         //https://pkg.go.dev/golang.org/x/crypto/acme/autocert#Manager.HTTPHandler
         httpServer.Handler = certMan.HTTPHandler(nil)
       } else {
-        httpServer.Handler = makeHttpToHttpsRedirectHandler(HTTPS_PORT)
+        httpServer.Handler = makeHttpToHttpsRedirectHandler(config.GetHttpsPort())
       }
     }
     signalChan2 = make(chan os.Signal, 1) //Buffered channel capacity 1; notifier will not block.
     go func() {
       var httpsServer *http.Server = nil
-      if K8S {
-        httpsServer = makeServer(HTTPS_PORT, makeHandlersS3(makeHandlers()))
+      if config.GetK8s() {
+        httpsServer = makeServer(config.GetHttpsPort(), makeHandlersS3(makeHandlers()))
       } else {
-        httpsServer = makeServer(HTTPS_PORT, makeHandlers())
+        httpsServer = makeServer(config.GetHttpsPort(), makeHandlers())
       }
       //
-      if LE_CERT {
+      if config.GetLetsEncryptCert() {
         httpsServer.TLSConfig = &tls.Config{
           MinVersion: tls.VersionTLS13,
           CipherSuites: nil,
@@ -311,7 +239,7 @@ func main() {
     }()
   }
   //
-  if HTTP {
+  if config.GetHttp() {
     wg.Add(1)
     signalChan1 := make(chan os.Signal, 1)
     /***
@@ -462,21 +390,8 @@ func makeHandlers() *handlers {
   h.mux["/fin/simpleinterest/bankers"] = middlewares.ValidateSessions(wfsib.SimpleInterestBankersPages)
   h.mux["/fin/simpleinterest/ordinary"] = middlewares.ValidateSessions(wfsio.SimpleInterestOrdinaryPages)
   h.mux["/fin/miscellaneous"] = middlewares.ValidateSessions(wfmisc.MiscellaneousPages)
-  var exists bool = false
-  var ev string
-  ev, exists = os.LookupEnv("ENABLE_PPROF")
-  if exists {
-    b, err := strconv.ParseBool(ev)
-    if err == nil {
-      ENABLE_PPROF = b
-    } else {
-      fmt.Printf("'%s' is not a boolean.\n", ev)
-    }
-  }
-  //
-  if ENABLE_PPROF {
+  if config.GetPprof() {
     h.mux["/debug/pprof/"] = pprof.Index
-    //h.mux["/debug/pprof/heap"] = pprof.Index
     h.mux["/debug/pprof/heap"] = pprof.Handler("heap").ServeHTTP
     h.mux["/debug/pprof/block"] = pprof.Handler("block").ServeHTTP
     h.mux["/debug/pprof/goroutine"] = pprof.Handler("goroutine").ServeHTTP
@@ -528,7 +443,7 @@ func makeHandlersS3(h *handlers) *handlers {
   return h
 }
 
-func makeHttpToHttpsRedirectHandler(port string) *handlers {
+func makeHttpToHttpsRedirectHandler(port int) *handlers {
   /***
   The Go web server will route requests to different functions depending on the requested URL.
   ***/
@@ -537,7 +452,7 @@ func makeHttpToHttpsRedirectHandler(port string) *handlers {
   h.mux["/"] = func(res http.ResponseWriter, req *http.Request) {
     host, _, _ := net.SplitHostPort(req.Host)
     u := req.URL
-    u.Host = net.JoinHostPort(host, port)
+    u.Host = net.JoinHostPort(host, strconv.Itoa(port))
     u.Scheme = "https"
     logger.LogInfo(fmt.Sprintf("Redirecting to %s", u.String()), "-1")
     http.Redirect(res, req, u.String(), http.StatusMovedPermanently)
@@ -646,7 +561,7 @@ func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.Wait
     syscall.SIGTERM, //Kubernetes sends a SIGTERM.
   )
   <- signalChan //Waiting for the signal; signal is discarded.
-  ctx, cancel := context.WithTimeout(context.Background(), time.Duration(SHUTDOWN_TIMEOUT) * time.Second)
+  ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.GetShutDownTimeout()) * time.Second)
   defer func() {
     //Extra handling goes here...
     close(signalChan)
@@ -660,13 +575,13 @@ func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.Wait
   }
 }
 
-func makeServer(port string, h *handlers) *http.Server {
+func makeServer(port int, h *handlers) *http.Server {
   server := &http.Server{  //https://pkg.go.dev/net/http#ServeMux
     /***
     By not specifying an IP address before the colon, the server will listen on every IP address
     associated with the computer, and it will listen on port PORT.
     ***/
-    Addr: ":" + port,
+    Addr: config.GetServer() + ":" + strconv.Itoa(port),
     /***
     Set timeouts so that a slow or malicious client doesn't hold resources forever.
 
