@@ -801,7 +801,10 @@ Because performance is an important aspect of software development, profiling is
 
 One way to enable `pprof` is to use the [net/http/pprof](https://pkg.go.dev/net/http/pprof) package to serve the profiling data via `HTTP`. (This assumes that your application has an HTTP server running; otherwise, you will need to start one.) If you use the `blank import`, the profile package will **only** register its handlers with the default multiplexer (`http.DefaultServeMux`). If you are not using the default multiplexer, you will need to register the handlers with the multiplexer you're using. Once the handlers are registered, you can reach the `pprof URL` via `http://{url}:{port}/debug/pprof`.
 
-Note that [enabling pprof is safe](https://go.dev/doc/diagnostics#profiling) even in production. The profiles that impact performance, such as CPU profiling, aren't enabled by default, nor do they run continuously; they are activated only for a specific period. Nonetheless, exposing `pprof` endpoints can lead to potential security risks and unintended performance degradation; it's crucial to secure access to the endpoints. To view all available profiles, open your browser and type the following address into the browser's address bar: `http://{url}:{port}/debug/pprof/`.
+Note that [enabling pprof is safe](https://go.dev/doc/diagnostics#profiling) even in production. The profiles that impact performance, such as CPU profiling, aren't enabled by default, nor do they run continuously; they are activated only for a specific period. Nonetheless, exposing `pprof` endpoints can lead to potential security risks and unintended performance degradation; it's crucial to secure access to the endpoints.
+
+#### Pprof Endpoints (Profiles)
+To view all available profiles, open your browser and type the following address into the browser's address bar: `http://{url}:{port}/debug/pprof/`.
 
 ---
 **Note**
