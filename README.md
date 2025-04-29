@@ -841,6 +841,11 @@ $ sudo apt update
 #### Pprof Endpoints (Profiles)
 To view all available profiles, open your browser and type the following address into the browser's address bar: `http://{url}:{port}/debug/pprof/`.
 
+**CPU Profiling**<br>
+When it is activated, the application asks the OS to interrupt it every 10ms (default). When the application is interrupted, it suspends the current activity and transfers the execution to the profiler. The profiler collects execution statistics, and then it transfers execution back to the application.
+
+To active the CPU profiling, you access the `debug/pprof/profile` endpoint. Accessing this endpoint will execute CPU profiling for 30 seconds by default. For 30 seconds, the application is interrupted every 10ms.
+
 #### Analyzing the Results of pprof
 To analyze the results of `pprof`, you can use the command `go tool pprof`. You can run the command on interactive mode or via a web interface; furthermore, the command can read a profile from a file or directly from a server via `HTTP`.
 
@@ -900,53 +905,7 @@ $ go tool pprof -http="{url}:{port}" ./{filename}
 ```
 go tool pprof -http={url1}:{port1} http://{url2}:{port2}/debug/pprof/{endpoint}?seconds{x}
 ```
-In the preceding command, **url1:port1** will be used by the server displaying the profiling statistics whereas **url2:port2** refers the application being profiled.
-
-
-[text](https://pkg.go.dev/net/http/pprof#pkg-overview)
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-
-**CPU Profiling**
-When it is activated, the application asks the OS to interrupt it every 10ms (default). When the application is interrupted, it suspends the current activity and transfers the execution to the profiler. The profiler collects execution statistics, and then it transfers execution back to the application.
-
-To active the CPU profiling, you access the `debug/pprof/profile` endpoint. Accessing this endpoint will execute CPU profiling for 30 seconds by default. For 30 seconds, the application is interrupted every 10ms.
-
-To write the output to a file, use the command below:
-```
-$ curl http://{url}:{port}/debug/pprof/{prof1}?seconds={x} --output {filename}
-```
-    where {prof1} is trace or profile.
-
-```
-$ curl http://{url}:{port}/debug/pprof/{prof2} --output {filename}
-```
-where {prof2} is heap.
-
-To inspect a file.
-```
-$ go tool pprof {filename}
-```
-
-To inspect the result using the graphical user interface.
-```
-$ go tool pprof -http=:{port1} {filename}
-```
-
-To directly connect to the debug point.
-```
-$ go tool pprof http://{url}:{port}/debug/pprof/{prof1}?seconds={x}
-$ go tool pprof http://{url}:{port}/debug/pprof/{prof2}
-```
-
-To inspect the result using the graphical user interface, use the command below:
-```
-$ go tool pprof -http=:{port1} http://{url}:{port2}/debug/pprof/{prof1}?seconds={x}
-$ go tool pprof -http=:{port1} http://{url}:{port2}/debug/pprof/{prof2}
-```
-
-
-
+In the preceding command, **url1:port1** will be used by the server displaying the profiling statistics whereas **url2:port2** will be used by the application being profiled.
 
 ### Compile and Run the App
 ---
