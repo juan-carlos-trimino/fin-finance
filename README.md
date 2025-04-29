@@ -862,6 +862,12 @@ or
 
 $ go tool pprof -help
 ```
+To run `pprof` in interactive mode directly from a server via `HTTP`, you will use the command shown below.
+```
+$ go tool pprof http://{url}:{port}/debug/pprof/{endpoint}?seconds={x}
+```
+
+##### Web Interface
 ---
 **Note**
 
@@ -879,15 +885,9 @@ To set the `BROWSER` environment variable, you can use the command
 ```
 export BROWSER='/mnt/c/Windows/explorer.exe'
 ```
-This command sets the default web browser to the `Windows File Explorer`. This allows opening files in the host `Windows` environment's default browser. To make this change permanent, as with Linux, you need to add this command to your `.bashrc` file or another relevant startup script.
+This command sets the default web browser to the `Windows File Explorer`; i.e., it will use the default browser of the host `Windows`. To make this change permanent, as with Linux, you need to add this command to your `.bashrc` file or another relevant startup script.
 
 ---
-To run `pprof` in interactive mode directly from a server via `HTTP`, you will use the command shown below.
-```
-$ go tool pprof http://{url}:{port}/debug/pprof/{endpoint}?seconds={x}
-```
-
-##### Web Interface
 To analyze the profiling statistics from a file, export the statistics using [`curl`](https://curl.se/docs/manpage.html).
 ```
 $ curl http://{url}:{port}/debug/pprof/{endpoint}?seconds={x} -o ./{filename}
