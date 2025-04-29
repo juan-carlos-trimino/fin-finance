@@ -803,13 +803,10 @@ One way to enable `pprof` is to use the [net/http/pprof](https://pkg.go.dev/net/
 
 Note that [enabling pprof is safe](https://go.dev/doc/diagnostics#profiling) even in production. The profiles that impact performance, such as CPU profiling, aren't enabled by default, nor do they run continuously; they are activated only for a specific period. Nonetheless, exposing `pprof` endpoints can lead to potential security risks and unintended performance degradation; it's crucial to secure access to the endpoints.
 
-#### Pprof Endpoints (Profiles)
-To view all available profiles, open your browser and type the following address into the browser's address bar: `http://{url}:{port}/debug/pprof/`.
-
 ---
 **Note**
 
-The `graphviz` package is part of the `universe` repository, which is enabled by default on most Ubuntu installations.
+The `graphviz` package is part of the `Universe` repository, which is enabled by default on most Ubuntu installations.
 
 The `Universe` repository is a standard repository for `Ubuntu`. The repository is community-maintained and provides free and open-source software. By default, the repository is enabled in the latest versions of Ubuntu, but if for some reason is not enabled, use the following command to enable it.
 ```
@@ -840,6 +837,9 @@ To remove `graphviz`, use the commands below.
 $ sudo apt purge graphviz
 $ sudo apt update
 ```
+
+#### Pprof Endpoints (Profiles)
+To view all available profiles, open your browser and type the following address into the browser's address bar: `http://{url}:{port}/debug/pprof/`.
 
 #### Analyzing the Results of pprof
 To analyze the results of `pprof`, you can use the command `go tool pprof`. You can run the command on interactive mode or via a web interface; furthermore, the command can read a profile from a file or directly from a server via `HTTP`.
