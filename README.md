@@ -841,10 +841,10 @@ $ sudo apt update
 #### Pprof Endpoints (Profiles)
 To view all available profiles, open your browser and type the following address into the browser's address bar: `http://{url}:{port}/debug/pprof/`.
 
-**CPU Profiling**<br>
+##### CPU Profiling
 When it is activated, the application asks the OS to interrupt it every 10ms (default). When the application is interrupted, it suspends the current activity and transfers the execution to the profiler. The profiler collects execution statistics, and then it transfers execution back to the application.
 
-To active the CPU profiling, you access the `debug/pprof/profile` endpoint. Accessing this endpoint will execute CPU profiling for 30 seconds by default. For 30 seconds, the application is interrupted every 10ms.
+To active the CPU profiling, you access the `debug/pprof/profile` endpoint. Accessing this endpoint will execute CPU profiling for 30 seconds by default. For 30 seconds, the application is interrupted every 10ms. If you need to customize the duration for which a CPU profile is collected, you can append the parameter `?seconds=<number>` to the `pprof` command; e.g., to collect a 5-minute CPU profile, you would use `debug/pprof/profile?seconds=300`.
 
 #### Analyzing the Results of pprof
 To analyze the results of `pprof`, you can use the command `go tool pprof`. You can run the command on interactive mode or via a web interface; furthermore, the command can read a profile from a file or directly from a server via `HTTP`.
