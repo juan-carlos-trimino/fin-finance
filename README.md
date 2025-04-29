@@ -845,7 +845,7 @@ To view all available profiles, open your browser and type the following address
 To analyze the results of `pprof`, you can use the command `go tool pprof`. You can run the command on interactive mode or via a web interface; furthermore, the command can read a profile from a file or directly from a server via `HTTP`.
 
 ##### Interactive Mode
-To read the profiling statistics from a file, export the statistics using [`curl`](https://curl.se/docs/manpage.html).
+**To read the profiling statistics from a file**, export the statistics using [`curl`](https://curl.se/docs/manpage.html).
 ```
 $ curl http://{url}:{port}/debug/pprof/{endpoint}?seconds={x} --output ./{filename}
 ```
@@ -862,7 +862,7 @@ or
 
 $ go tool pprof -help
 ```
-To run `pprof` in interactive mode directly from a server via `HTTP`, you will use the command shown below.
+**To run `pprof` in interactive mode directly from a server via `HTTP`**, you will use the command shown below.
 ```
 $ go tool pprof http://{url}:{port}/debug/pprof/{endpoint}?seconds={x}
 ```
@@ -888,19 +888,19 @@ export BROWSER='/mnt/c/Windows/explorer.exe'
 This command sets the default web browser to the `Windows File Explorer`; i.e., it will use the default browser of the host `Windows`. To make this change permanent, as with Linux, you need to add this command to your `.bashrc` file or another relevant startup script.
 
 ---
-To analyze the profiling statistics from a file, export the statistics using [`curl`](https://curl.se/docs/manpage.html).
+**To analyze the profiling statistics from a file**, export the statistics using [`curl`](https://curl.se/docs/manpage.html).
 ```
 $ curl http://{url}:{port}/debug/pprof/{endpoint}?seconds={x} -o ./{filename}
 ```
-Next, analyze the result using the web interface. Note that when the `-http` flag is specified, `pprof` starts a web server at the specified **url:port** that provides an interactive web-based interface to `pprof`. Both **url** and **port** are optional. The default value for **url** is **localhost**. For **port**, its default value is **a random available port**; otherwise, any port not being used by another application. Hence, **-http=":"** starts a server locally at a random port. This command should automatically open the web browser at the right page; if not, manually navigate to the specified **url:port** in the web browser.
+Next, analyze the result using the web interface. Note that when the `-http` flag is specified, `pprof` starts a web server at the specified **url:port** that provides an interactive web-based interface. Both **url** and **port** are optional. The default value for **url** is **localhost**. For **port**, its default value is **a random available port**; otherwise, any port not being used by another application. Hence, **-http=":"** starts a server locally at a random port. This command should automatically open the web browser at the right page; if not, manually navigate to the specified **url:port** in the web browser.
 ```
 $ go tool pprof -http="{url}:{port}" ./{filename}
 ```
-To analyze the profiling statistics directly from a server via `HTTP`, use the command shown below.
+**To analyze the profiling statistics directly from a server via `HTTP`**, use the command shown below.
 ```
 go tool pprof -http={url1}:{port1} http://{url2}:{port2}/debug/pprof/{endpoint}?seconds{x}
 ```
-In the preceding command, the url1:port1 refers to the server that will display the profiling statistics whereas url2:port2 refers the application being profiled.
+In the preceding command, **url1:port1** will be used by the server displaying the profiling statistics whereas **url2:port2** refers the application being profiled.
 
 
 [text](https://pkg.go.dev/net/http/pprof#pkg-overview)
