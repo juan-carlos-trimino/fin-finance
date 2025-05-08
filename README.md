@@ -298,27 +298,42 @@ $ sudo mv terraform /usr/local/bin
 $ rm terraform.zip
 ```
 ### Generated Files
+`Terraform` generates several types of files during the provisioning of infrastructure.
 
 #### terraform.tfstate
 It is the file that `Terraform` uses to track the state of the infrastructure it manages. The state file contains information about the resources that `Terraform` is managing to determine which resources need to be created, updated, or deleted to match the current configuration. After invoking the command `terraform apply` for the first time, `Terraform` will generate the state file `terraform.tfstate`. Subsequent invocations of `terraform apply` use the state file as input. `Terraform` loads the state file and then *refreshes* it from the current infrastructure.
 
 `Terraform` stores its state files in a backend (backend.tf). But if a backend is not explicitly specified, `Terraform` uses the local backend. By default, the local backend stores the file, which is named `terraform.tfstate`, in the same directory where the command `terraform apply` was run. But since `Terraform` state files contain all data in plain text, it is a security problem for certain `Terraform` resources that need to store sensitive data. Hence, **it is not recommended to store state files in a source control**; sensitive data must always be stored in a secure location and never in a source control. Furthermore, when working with a team of developers, each member of the team requires access to the same state file; i.e., the file needs to be stored in a shared location. Unfortunately, most source control systems do not allow the locking of files, which may cause issues when multiple users attempt to access the file at the same time.
 
-The question then is how to persist the state file? `Terraform` has a solution to this; external storage can be provided to store the state file. But to implement the solution, a two-step process is required:<br>
-**(1)**	Write `Terraform` code to create the external storage (let’s say *Simple Storage Service* or *S3*). Once the S3 storage is ready for use, deploy the application with a local backend.<br>
-**(2)**	In the `Terraform` code written to deploy the application, change the backend to use the S3 storage and run the command `terraform init` to copy the local state to the S3 storage.
+The question then is how to persist the state file? `Terraform` provides a solution that uses external storage to store the state file. To implement the solution, a three-step process is required:<br>
+**(1)**	Write `Terraform` code to create the external storage (let’s say *Simple Storage Service* or *S3*). Then deploy the code with a local backend.<br>
+**(2)**	In the `Terraform` code written to deploy the S3 storage, change the backend to use the S3 storage and run the command `terraform init` to copy the local state to the S3 storage.
+**(3)**	In the `Terraform` code written to deploy the application, change the backend to use the S3 storage and run the command `terraform init` to copy the local state to the S3 storage. ENSURE THE PATH/FILE NAMES ARE DIFFERENT TO AVOID OVERRIDING THE FILE STATES.
 
-If there is a need to delete the S3 storage, repeat the two-step process in reverse:<br>
+If there is a need to delete the S3 storage, repeat the three-step process in reverse:<br>
 **(1)**	In the `Terraform` code written to deploy the application, remove the backend configuration. Then run the command `terraform init` to copy the `Terraform` state back to the local disk.<br>
-**(2)**	Execute the command `terraform destroy` to delete the S3 storage.
+**(2)**	In the `Terraform` code written to deploy the S3 storage, remove the backend configuration. Then run the command `terraform init` to copy the `Terraform` state back to the local disk.<br>
+**(3)**	Execute the command `terraform destroy` to delete the S3 storage.
 
-
-
+Although this solution is a bit awkward, keep in mind that after the S3 storage exists, the rest of the `Terraform` code can simply specify the backend configuration right from the start without any extra steps. But perhaps the most [awkward limitation](https://developer.hashicorp.com/terraform/language/backend#define-a-backend-block) is that the backend block in `Terraform` does not allow the use of variables or references.
 
 #### terraform.tfstate.backup
 It is the backup file of the `terraform.tfstate` file. `Terraform` automatically creates a backup of the state file before making any changes to the state file. This ensures recovering from a corrupted or lost state file possible. This file is stored in the same directory as the `terraform.tfstate` file.
 
 The `terraform.tfstate.backup` file can be used to restore the `Terraform` state to the previous version. To do so, just rename the `terraform.tfstate.backup` file to `terraform.tfstate` and run the command `terraform init`.
+
+#### .terraform.lock.hcl
+`Terraform` automatically creates or updates the dependency lock file each time the command `terraform init` is run.
+It tracks the versions of providers and modules used in a configuration thereby ensuring all subsequent runs of `terraform apply` or `terraform plan` use the same provider versions, preventing unexpected changes due to updates or different environments. The file is typically located in the same directory as the root module and is recommended to be included in [version control](https://developer.hashicorp.com/terraform/language/files/dependency-lock#lock-file-location).
+
+#### .terraform/
+`Terraform` creates a hidden `.terraform/` directory, which serves as a working directory to cache provider plugins and modules, record which workspace is currently active, and record the last known backend configuration. `Terraform` automatically manages this directory and is created during initialization. Since this directory may contain sensitive credentials for the remote backend, do not check it into [version control](https://developer.hashicorp.com/terraform/language/backend#initialize-the-backend), nor modify this directory's contents directly.
+
+
+
+[text](https://developer.hashicorp.com/terraform/cli/commands/init#backend-initialization)
+
+
 ### Useful Commands
 To obtain the current version of Terraform and all installed plugins.
 ```
