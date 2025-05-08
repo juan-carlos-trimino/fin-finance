@@ -297,6 +297,28 @@ $ unzip terraform.zip
 $ sudo mv terraform /usr/local/bin
 $ rm terraform.zip
 ```
+### Generated Files
+
+#### terraform.tfstate
+It is the file that `Terraform` uses to track the state of the infrastructure it manages. The state file contains information about the resources that `Terraform` is managing to determine which resources need to be created, updated, or deleted to match the current configuration. After invoking the command `terraform apply` for the first time, `Terraform` will generate the state file `terraform.tfstate`. Subsequent invocations of `terraform apply` use the state file as input. `Terraform` loads the state file and then *refreshes* it from the current infrastructure.
+
+`Terraform` stores its state files in a backend. But if a state backend is not explicitly specified, `Terraform` uses the local backend. By default, the local backend stores the file, which is named `terraform.tfstate`, in the same directory where the command `terraform apply` was run. But since `Terraform` state files contain all data in plain text, it is a problem for certain `Terraform` resources that need to store sensitive data. Hence, **it is not recommended to store state files in a source control**; sensitive data must always be stored in a secure location and never in a source control. Furthermore, when working with a team of developers, each member of the team requires access to the same state file; i.e., the file needs to be stored in a shared location. But unfortunately, most source control systems do not allow the locking of files, which may cause issues when multiple users attempt to access the file at the same time.
+
+The question then is how to persist the state file? `Terraform` has a solution to this; external storage can be provided to store the state file. But to implement the solution, the following two-step process is required:<br>
+**(1)**	Write `Terraform` code to create the external storage (let’s say *Simple Storage Service* or *S3*). Next, deploy the code with a local backend.<br>
+**(2)**	Go to the `Terraform` code written to deploy the application, change the backend to use the S3 storage and run the command `terraform init` to copy the local state to the S3 storage.
+
+If there is a need to delete the S3 storage, repeat the two-step process in reverse:<br>
+**(1)**	Go to the `Terraform` code written to deploy the application and remove the backend configuration. Next, run the command `terraform init` to copy the `Terraform` state back to the local disk.<br>
+**(2)**	Execute the command `terraform destroy` to delete the S3 storage.
+
+
+
+
+#### terraform.tfstate.backup
+It is the backup file of the `terraform.tfstate` file. `Terraform` automatically creates a backup of the state file before making any changes to the state file. This ensures recovering from a corrupted or lost state file possible. This file is stored in the same directory as the `terraform.tfstate` file.
+
+The `terraform.tfstate.backup` file can be used to restore the `Terraform` state to the previous version. To do so, just rename the `terraform.tfstate.backup` file to `terraform.tfstate` and run the command `terraform init`.
 ### Useful Commands
 To obtain the current version of Terraform and all installed plugins.
 ```
