@@ -1,6 +1,6 @@
 
 terraform {
   backend "local" {
-    path = "$HOME/repos/IaC-app/terraform.tfstate"
+    path = "../../../tf-states/IaC-app/terraform.tfstate"
   }
 }
