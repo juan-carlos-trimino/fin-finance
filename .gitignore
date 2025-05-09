@@ -282,9 +282,11 @@ IaC-K8s/oracle/modules/subnet/*
 !IaC-app/
 IaC-app/*
 !IaC-app/backend.tf
+!IaC-app/deploy.sh
 !IaC-app/main.tf
 !IaC-app/namespace.tf
 !IaC-app/providers.tf
+!IaC-app/set-ev.sh
 !IaC-app/variables.tf
 !IaC-app/modules/
 IaC-app/modules/*
