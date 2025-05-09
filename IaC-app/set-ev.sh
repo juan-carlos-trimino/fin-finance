@@ -1,4 +1,4 @@
-
+#
 # The "Dot Space Script" Trick for Running Bash Scripts in the "Current Shell"
 # In Bash, a dot (".") is a command, which is synonymous with the "source" command. It executes the
 # content of a specified script in the current shell environment. This differs from running a
@@ -12,6 +12,6 @@
 # for maximum compatibility use the period.
 #
 export APP_VERSION=1.0.0
-echo $(printenv APP_VERSION)
+echo "APP_VERSION=$(printenv APP_VERSION)"
 export K8S_MANIFEST_CRD=false
-echo $(printenv K8S_MANIFEST_CRD)
+echo "K8S_MANIFEST_CRD=$(printenv K8S_MANIFEST_CRD)"
