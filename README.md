@@ -88,9 +88,11 @@ fin-finance
  | | |   └ main.tf
  | | └ .gitkeep
  | ├ backend.tf
+ | ├ deploy.sh
  | ├ main.tf
  | ├ namespace.tf
  | ├ providers.tf
+ | ├ set-ev.tf
  | └ variables.tf
  ├ IaC-storage
  | ├ oracle
