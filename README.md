@@ -92,7 +92,7 @@ fin-finance
  | ├ main.tf
  | ├ namespace.tf
  | ├ providers.tf
- | ├ set-ev.tf
+ | ├ set-ev.sh
  | └ variables.tf
  ├ IaC-storage
  | ├ oracle
