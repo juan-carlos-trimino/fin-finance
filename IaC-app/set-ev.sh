@@ -13,5 +13,5 @@
 #
 export APP_VERSION=1.0.0
 echo "APP_VERSION=$(printenv APP_VERSION)"
-export K8S_MANIFEST_CRD=false
+export K8S_MANIFEST_CRD=true
 echo "K8S_MANIFEST_CRD=$(printenv K8S_MANIFEST_CRD)"
