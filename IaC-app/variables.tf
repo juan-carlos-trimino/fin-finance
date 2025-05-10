@@ -66,7 +66,7 @@ variable region {
   sensitive = true
 }
 
-# Profile menu -> My Profile -> Under Resources -> Customer secret keys
+# Profile menu -> User settings -> My groups -> Customer secret keys
 variable aws_access_key_id {
   type = string
   sensitive = true
