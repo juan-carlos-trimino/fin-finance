@@ -87,6 +87,7 @@ fin-finance
  | | |   | └ values.yaml
  | | |   └ main.tf
  | | └ .gitkeep
+ | ├ .terraform.lock.hcl
  | ├ backend.tf
  | ├ deploy.sh
  | ├ main.tf
@@ -326,7 +327,7 @@ It is the backup file of the `terraform.tfstate` file. `Terraform` automatically
 The `terraform.tfstate.backup` file can be used to restore the `Terraform` state to the previous version. To do so, just rename the `terraform.tfstate.backup` file to `terraform.tfstate` and run the command `terraform init`.
 xxxok
 #### .terraform.lock.hcl
-`Terraform` automatically creates or updates the dependency lock file each time the command `terraform init` is run. This file tracks the versions of providers and modules used in a configuration thereby ensuring all subsequent runs of `terraform apply` or `terraform plan` use the same provider versions, preventing unexpected changes due to updates or different environments. The file is typically located in the same directory as the root module and is recommended to be included in [version control](https://developer.hashicorp.com/terraform/language/files/dependency-lock#lock-file-location).
+`Terraform` automatically creates or updates the dependency lock file each time the command `terraform init` is run. This file tracks the versions of providers and modules used in a configuration thereby ensuring all subsequent runs of `terraform apply` or `terraform plan` use the same provider versions, preventing unexpected changes due to updates or different environments. The file is typically located in the same directory as the root module and **is recommended to be included in [version control](https://developer.hashicorp.com/terraform/language/files/dependency-lock#lock-file-location)**.
 
 #### .terraform/
 `Terraform` creates a hidden `.terraform/` directory, which serves as a working directory to cache provider plugins and modules, record which workspace is currently active, and record the last known backend configuration. `Terraform` automatically manages this directory and is created during initialization. Since this directory may contain sensitive credentials for the remote backend, do not check it into [version control](https://developer.hashicorp.com/terraform/language/backend#initialize-the-backend), nor modify this directory's contents directly.
