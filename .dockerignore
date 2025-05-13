@@ -11,6 +11,10 @@ src/*
 !src/go.sum
 !src/main.go
 #
+!src/config
+src/config/*
+!src/config/config.go
+#
 !src/finances
 src/finances/*
 !src/finances/Annuities.go
