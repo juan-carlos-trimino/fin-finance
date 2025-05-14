@@ -327,7 +327,9 @@ It is the backup file of the `terraform.tfstate` file. `Terraform` automatically
 The `terraform.tfstate.backup` file can be used to restore the `Terraform` state to the previous version. To do so, just rename the `terraform.tfstate.backup` file to `terraform.tfstate` and run the command `terraform init`.
 
 #### .terraform.lock.hcl
-`Terraform` automatically creates or updates the dependency lock file each time the command `terraform init` is run. This file tracks the versions of providers and modules used in a configuration thereby ensuring all subsequent runs of `terraform apply` or `terraform plan` use the same provider versions, preventing unexpected changes due to updates or different environments. The file is typically located in the same directory as the root module and **is recommended to be included in [version control](https://developer.hashicorp.com/terraform/language/files/dependency-lock#lock-file-location)**.
+`Terraform` automatically creates or updates the [dependency lock](https://developer.hashicorp.com/terraform/language/files/dependency-lock) file each time the command `terraform init` is run. This file tracks the versions of providers and modules used in a configuration thereby ensuring all subsequent runs of `terraform apply` or `terraform plan` use the same provider versions, preventing unexpected changes due to updates or different environments. The file is [typically located](https://developer.hashicorp.com/terraform/language/files/dependency-lock#lock-file-location) in the same directory as the root module and **is recommended to be included in [version control](https://developer.hashicorp.com/terraform/language/files/dependency-lock#lock-file-location)**.
+
+When the backend configuration changes to a different location, the state and lock files will be moved to the new location specified in the backend configuration. These files are managed by the backend and are typically located alongside each other. To prevent the corruption of the state file, the lock file ensures that only one process can modify the state file at a time.
 
 #### .terraform/
 `Terraform` creates a hidden `.terraform/` directory, which serves as a working directory to cache provider plugins and modules, records which workspace is currently active, and records the last known backend configuration. `Terraform` automatically manages this directory and creates it during initialization. Since this directory may contain sensitive credentials for the remote backend, **it should not be included in a [version control](https://developer.hashicorp.com/terraform/language/backend#initialize-the-backend)**, nor should the contents of the directory be modified directly.
@@ -368,6 +370,7 @@ Notice the usage of the `-auto-approve` and `-var` options. The former skips int
 Resources you provision accrue costs while they are running. It's a good idea, as you learn, to always run `terraform destroy` on your project.
 
 ---
+
 <a id="terraform_destroy"></a>
 To deprovision all objects managed by a `Terraform` configuration. See  [destroy](https://developer.hashicorp.com/terraform/cli/commands/destroy)  for more information.
 ```
@@ -394,6 +397,7 @@ If the nodes are displayed, you are done.
 A file that is used to configure access to a cluster is usually referred to as a `kubeconfig file`. This is a conventional way of referring to a configuration file, often shortened to config file. It does not imply that a file named kubeconfig exists.
 
 ---
+
 You will need to create a kubeconfig file with authentication and configuration details, which will allow kubectl to communicate with your cluster. To create the kubeconfig file, you execute the command below, which requires the following information:<br>
 **(1)** Cluster's OCID (Navigation menu->Developer Services->Kubernetes Clusters (OKE) [Under Containers & Artifacts]->Select the compartment that contains the cluster[Compartment]-> On the Clusters page, click the name of the cluster)<br>
 **(2)** Name for the config file<br>
@@ -412,6 +416,7 @@ Setting the permissions of your `~/.kube/<name-of-config-file>` file to `600` en
 $ chmod 600  ~/.kube/<name-of-config-file>
 ```
 ---
+
 By default, `kubectl` looks for a file named `config` in the `$HOME/.kube (~/.kube)` directory; hence, if the `KUBECONFIG` environment variable is not set, `kubectl` uses the default values `~/.kube/config`. You can specify other kubeconfig files by setting the `KUBECONFIG` environment variable or by setting the `--kubeconfig` flag.
 
 To export the `KUBECONFIG` environment variable ***only*** for the current shell and its children processes, you use the `export` command.
@@ -420,6 +425,7 @@ export KUBECONFIG=<name-of-config-file>
 ```
 To reiterate, when an environment variable is set from the shell using the export command, its existence ends when the current session ends.
 
+<a id="shell"></a>
 To set the `KUBECONFIG` environment variable as a `user-specific environment variable`, add the `export` command to `~/.bashrc (bash), ~/.kshrc (ksh), or ~/.zshrc (zsh)`, depending on which shell you are using. By modifying the shell-specific configuration file, the environment variable will persist across sessions and system restarts. Note the use of the `bash shell` below.
 ```
 $ echo 'export KUBECONFIG=<name-of-config-file>' >> ~/.bashrc
@@ -586,6 +592,7 @@ PersistentVolume resources are cluster-scoped and thus cannot be created in a sp
 For more in-depth information, see [Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
 
 ---
+
 List all PersistentVolumes.
 ```
 $ kubectl get pv
@@ -858,6 +865,7 @@ $ sudo apt update
 Again, the second command performs an update to the package list cache thereby ensuring the repository is no longer usable.
 
 ---
+
 Please note that you will need to have [graphviz](https://graphviz.org/) installed for web visualizations. To install it, run the commands below.
 ```
 $ sudo apt install graphviz
@@ -918,7 +926,7 @@ To set a default browser in `Linux` using environment variables, you can use the
 ```
 export BROWSER=/path/to/desired/browser
 ```
-This will set the `BROWSER` environment variable to the path of your desired browser. To make this change permanent, you need to add this command to your `.bashrc` file or another relevant startup script.
+This will set the `BROWSER` environment variable to the path of your desired browser. To make this [change permanent](#shell), you need to add this command to your `.bashrc` file or another relevant startup script.
 
 ***Windows Subsystem for Linux (WSL)***<br>
 To set the `BROWSER` environment variable, you can use the command
@@ -928,6 +936,7 @@ export BROWSER='/mnt/c/Windows/explorer.exe'
 This command sets the default web browser to the `Windows File Explorer`; i.e., it will use the default browser of the host `Windows`. To make this change permanent, as with Linux, you need to add this command to your `.bashrc` file or another relevant startup script.
 
 ---
+
 **To analyze the profiling statistics from a file**, export the statistics using [`curl`](https://curl.se/docs/manpage.html).
 ```
 $ curl http://{url}:{port}/debug/pprof/{endpoint}?seconds={x} -o ./{filename}
@@ -938,7 +947,7 @@ $ go tool pprof -http="{url}:{port}" ./{filename}
 ```
 **To analyze the profiling statistics directly from a server via `HTTP`**, use the command shown below.
 ```
-go tool pprof -http={url1}:{port1} http://{url2}:{port2}/debug/pprof/{endpoint}?seconds{x}
+$ go tool pprof -http={url1}:{port1} http://{url2}:{port2}/debug/pprof/{endpoint}?seconds={x}
 ```
 In the preceding command, **url1:port1** will be used by the server displaying the profiling statistics whereas **url2:port2** will be used by the application being profiled.
 
@@ -949,6 +958,7 @@ In the preceding command, **url1:port1** will be used by the server displaying t
 To see all environment variables supported by the app, see `//Environment variables.` in [main.go](./src/main.go). To run the app in a `K8s` environment, set the environment variable `K8S` to true.
 
 ---
+
 Compile and run the app as a standalone HTTP server (default) on port 8080 (default).
 ```
 $ go build -o finance && ./finance
