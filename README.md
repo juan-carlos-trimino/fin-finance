@@ -558,7 +558,7 @@ $ kubectl delete pod <pod-name> -n <name-space>
 
 Delete all pods without specifying their names.
 ```
-$ kubectl delete pods --all
+$ kubectl delete pods --all -n <name-space>
 ```
 
 #### logs
