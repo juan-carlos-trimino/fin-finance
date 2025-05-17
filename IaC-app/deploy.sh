@@ -45,4 +45,14 @@ terraform init
 terraform apply -auto-approve \
   -var "app_version=$APP_VERSION" \
   -var "k8s_manifest_crd=$K8S_MANIFEST_CRD"
+echo "*********************"
+echo "Copying the lock file"
+echo "*********************"
+# Copy lock file so that it can be saved in the repo.
+if [ -f ../../../tf-states/IaC-app/.terraform.lock.hcl ]
+then
+  echo "$(cp -v -a ../../../tf-states/IaC-app/.terraform.lock.hcl .terraform.lock.hcl)"
+else
+  echo "The lock file does not exists."
+fi
 echo "Done..."
