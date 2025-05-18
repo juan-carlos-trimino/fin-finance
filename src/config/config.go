@@ -118,3 +118,11 @@ func GetLetsEncryptCert() bool {
   }
   return false
 }
+
+func GetUser() string {
+  ev, exists := os.LookupEnv("USER")
+  if !exists {
+    return ""  //Default value.
+  }
+  return ev
+}
