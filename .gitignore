@@ -55,6 +55,10 @@ src/mathutil/*
 !src/mathutil/mathutil_test.go
 !src/mathutil/mathutil.go
 # ... and this directory and its file...
+!src/security/
+src/security/*
+!src/security/security.go
+# ... and this directory and its file...
 !src/webfinances/
 src/webfinances/*
 !src/webfinances/fields.go
@@ -231,10 +235,6 @@ src/webfinances/templates/simpleinterestordinary/*
 !src/webfinances/templates/simpleinterestordinary/interestrate.html
 !src/webfinances/templates/simpleinterestordinary/principal.html
 !src/webfinances/templates/simpleinterestordinary/time.html
-# ... and this directory and its file...
-!src/security/
-src/security/*
-!src/security/security.go
 ################################
 # Infrastructure as Code (IaC) #
 ################################
