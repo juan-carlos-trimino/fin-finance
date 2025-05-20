@@ -12,12 +12,18 @@
 # To stop a running container.
 # $ docker stop <container-id>
 # To run commands inside an image.
-# Alpine images provide the Almquist shell (ash) from BusyBox.
 # $ docker exec -it <container-id> ash
+# Alpine images provide the Almquist shell (ash) from BusyBox.
 # -------------------------------------------------------------------------------------------------
 # Use an offical golang image to create the binary.
+# Select an image comparable to target architecture.
 # Alpine images provide the Almquist shell (ash) from BusyBox.
-FROM --platform=amd64 golang:1.24.3-alpine3.21 AS builder
+# https://docs.docker.com/build/building/multi-platform/#cross-compilation
+FROM --platform=$BUILDPLATFORM golang:1.24.3-alpine3.21 AS builder
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
 
 # Create a working directory in the image.
 WORKDIR /goapp/
@@ -35,27 +41,61 @@ COPY ./src/webfinances ./webfinances/
 # Download necessary Go modules; https://go.dev/ref/mod#go-mod-download
 RUN go mod download
 
+# The error "Current requires cgo or $USER set in environment" when building a Go application in a
+# Dockerfile with CGO_ENABLED=0 arises because the Go runtime, in certain scenarios, needs either
+# cgo enabled or the $USER environment variable set to determine the current user. When CGO_ENABLED
+# is set to 0, cgo is disabled, and if $USER is not explicitly set, the runtime cannot determine
+# the user, leading to the error.
+#
+# To resolve this issue, you can set the $USER environment variable in your Dockerfile.
+# FROM golang:latest AS builder
+# ...
+# FROM scratch
+# ...
+# USER nobody
+# ...
+# In this Dockerfile, the USER nobody instruction sets the user for the final image, which
+# implicitly sets the $USER environment variable. This satisfies the requirement of the Go runtime
+# when CGO_ENABLED=0.
+#
+# Alternatively, you can set the $USER variable directly using ENV.
+# FROM golang:latest AS builder
+# ...
+# FROM scratch
+# ...
+# ENV USER=root
+# ...
+# It's important to note that setting $USER might have implications for file permissions and user
+# context within the container. If you need specific user configurations, adjust the USER
+# instruction or ENV USER accordingly.
 # Build the binary; https://go.googlesource.com/sublime-build/+/HEAD/docs/configuration.md
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./godir/webserver -v main.go
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a -ldflags="-s -w" \
+    -o ./godir/webserver -v main.go
 
-FROM alpine:3.21
+###############
+# Final Stage #
+###############
+# FROM --platform=$TARGETPLATFORM scratch
+FROM --platform=$TARGETPLATFORM alpine:3.21
 
 WORKDIR /goapp/
 
 # Same as env = {} in modules.
-# ENV HTTP=true
-# Set USER to any string to avoid the error:
-# user: Current requires cgo or $USER set in environment
-# ENV USER="wsf-user"
-# ENV HTTP_PORT="8080"
+ENV USER="wsf-user"
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /goapp/godir/ ./
 COPY --from=builder /goapp/webfinances/public/ ./webfinances/public/
 COPY --from=builder /goapp/webfinances/templates/ ./webfinances/templates/
 
-EXPOSE 8080
+# It can be overridden in K8s. While EXPOSE indicates which ports the container expects to use
+# internally, it doesn't automatically publish those ports to the host network. K8s, through its
+# service definition, controls which ports are actually exposed and how they are mapped to the
+# host.
+EXPOSE 8080/tcp 8443/tcp
 
+# If omitted, the container runs as root.
+# It can be overridden in K8s using the securityContext field within the Pod's container definition.
 USER 1100:1100
 
 # Run the web service on container startup.
