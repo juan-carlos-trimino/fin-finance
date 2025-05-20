@@ -955,7 +955,7 @@ In the preceding command, **url1:port1** will be used by the server displaying t
 ---
 **Note**
 
-To see all environment variables supported by the app, see `//Environment variables.` in [main.go](./src/main.go). To run the app in a `K8s` environment, set the environment variable `K8S` to true.
+To see all environment variables supported by the app, see [config.go](./src/config/config.go). To run the app in a `K8s` environment, set the environment variable `K8S` to true.
 
 ---
 
