@@ -969,17 +969,27 @@ A short description of the compiler switches being use follows:
 `-s`: This flag strips the symbol table from the executable. The symbol table is used for debugging and contains information about function and variable names. Removing it reduces the binary size but makes debugging more difficult.<br>
 `-w`: This flag strips the DWARF debugging information from the executable. DWARF is a standardized debugging data format. Removing it further reduces the binary size but also hinders debugging capabilities.
 
+`-installsuffix cgo`: The `go build` command uses this flag when the environment variable `CGO_ENABLED=1` thereby building and installing `Go` packages that utilize `cgo`, which enables `Go` code to interface with `C` code. The flag modifies the install path of the compiled package by adding *cgo* as a suffix to the installation directory. This ensures that `cgo-enabled packages` are installed separately from `regular Go packages` preventing potential conflicts between `cgo` and `non-cgo` builds.<br>
+`CGO_ENABLED`: It is an environment variable that controls whether the `Go` tool enables the `cgo` tool. `Cgo` enables `Go` programs to call `C` code. `CGO_ENABLED` can have one of two values:<br>
+`0`: Disable `cgo`. `Go` code **cannot call** `C` functions.<br>
+`1`: Enable `cgo`. `Go` code **can call** `C` functions.<br>
+If `cgo` is disabled, `Go` programs cannot use `C` libraries thereby limiting the functionality of some programs, especially those that need to interact with system-level APIs or existing `C` codebases.
+
 Compile and run the app as a standalone HTTP server (default) on port 8080 (default).
 ```
-$ go build -o finance && ./finance
+$ CGO_ENABLED=0 go build -o finance && ./finance
 
-or
+or (the application does not require cgo to be enabled)
 
-$ go build -o finance && HTTP=true HTTP_PORT=8080 ./finance
+$ CGO_ENABLED=0 go build -o finance && HTTP=true HTTP_PORT=8080 ./finance
 
-or
+or (once the application does not require debugging information)
 
-$ go build -a -ldflags="-s -w" -o finance && HTTP=true HTTP_PORT=8080 ./finance
+$ CGO_ENABLED=0 go build -a -ldflags="-s -w" -o finance && HTTP=true HTTP_PORT=8080 ./finance
+
+or (same as above, but with cgo enabled)
+
+$ CGO_ENABLED=1 go build -a -ldflags="-s -w" -installsuffix cgo -o finance && HTTP=true HTTP_PORT=8080 ./finance
 
 ```
 
