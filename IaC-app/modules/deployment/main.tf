@@ -223,8 +223,6 @@ variable service_type {
   default = "ClusterIP"
   type = string
 }
-
-
 variable secrets {
   default = []
   type = list(object({
@@ -236,8 +234,6 @@ variable secrets {
   }))
   sensitive = true
 }
-
-
 variable service_account {
   default = null
   type = object({
@@ -310,17 +306,17 @@ variable volume_config_map {
     volume_name = string
     # Name of the ConfigMap containing the files to add to the container.
     config_map_name = string
+    # Although ConfigMaps should be used for non-sensitive configuration data, you may want to
+    # make the file readable and writeble only to the user and group that owned the file; e.g.,
+    # default_mode = "6600" (-rw-rw------)
+    # The default permission is "6440" (-rw-r--r----)
+    default_mode = optional(string)
     # An array of keys from the ConfigMap to create as files.
     items = optional(list(object({
       # Include the entry under this key.
       key = string
       # The entry's value should be stored in this file.
       path = string
-      # Although ConfigMaps should be used for non-sensitive configuration data, you may want to
-      # make the file readable and writeble only to the user and group that owned the file; e.g.,
-      # default_mode = "6600" (-rw-rw------)
-      # The default permission is "6440" (-rw-r--r----)
-      default_mode = optional(string)
     })), [])
   }))
 }
@@ -373,7 +369,7 @@ resource "null_resource" "docker_build" {
   }
   #
   provisioner "local-exec" {
-    command = "docker build -t ${local.image_tag} --file ${var.dir_path}/${var.dockerfile_name} ${var.dir_path}"
+    command = "docker build --platform linux/amd64,linux/arm64 --tag ${local.image_tag} --file ${var.dir_path}/${var.dockerfile_name} ${var.dir_path}"
   }
 }
 
@@ -389,8 +385,7 @@ resource "null_resource" "docker_login" {
   }
   #
   provisioner "local-exec" {
-    # command = "docker login ${var.cr_login_server} -T -u ${var.cr_username} --password-stdin"
-    command = "docker login ${var.cr_login_server} -u ${var.cr_username} -p ${var.cr_password}"
+    command = "docker login ${var.cr_login_server} --username ${var.cr_username} --password ${var.cr_password}"
   }
 }
 
@@ -479,9 +474,8 @@ resource "kubernetes_persistent_volume_claim" "pvc" {
   }
 }
 
-# Declare a K8s deployment to deploy a microservice; it instantiates the container for the
-# microservice into the K8s cluster.
-resource "kubernetes_deployment" "deployment" {
+# Deployment -> Stateless.
+resource "kubernetes_deployment" "stateless" {
   depends_on = [
     null_resource.docker_push
   ]
@@ -751,9 +745,16 @@ resource "kubernetes_deployment" "deployment" {
         }
         # Set volumes at the Pod level, then mount them into containers inside that Pod.
         #
-        # By default, the filesystem owner of a volume is root:root. If a Pod is running as a
-        # non-root user and needs to create files or directories on the volume, this will fail due
-        # to insufficient or incorrect permissions.
+        # By default, K8s emptyDir volumes are created with root:root ownership and 750
+        # permissions. This means that the directory created by K8s for the emptyDir volume is
+        # owned by the root user and group, which translates to read-write-execute permissions for
+        # the owner (root), read-execute permissions for the group, and no permissions for others.
+        # (For directories, execute permission is required to access the contents of the
+        # directory.)
+        # In many cases, especially when running containers as non-root users, this default
+        # ownership can lead to permission issues when containers try to write to the emptyDir
+        # volume. To address this, you might need to adjust the ownership and permissions of the
+        # emptyDir volume or consider using other volume types or approaches.
         dynamic "volume" {
           for_each = var.volume_empty_dir
           content {
@@ -771,13 +772,13 @@ resource "kubernetes_deployment" "deployment" {
             name = it.value["volume_name"]
             config_map {
               name = it.value["config_map_name"]
+              default_mode = it.value["default_mode"]
               dynamic "items" {
                 for_each = it.value["items"]
                 iterator = itn
                 content {
                   key = itn.value["key"]
                   path = itn.value["path"]
-                  default_mode = itn.value["default_mode"]
                 }
               }
             }
