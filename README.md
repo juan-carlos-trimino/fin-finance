@@ -959,6 +959,16 @@ To see all environment variables supported by the app, see [config.go](./src/con
 
 ---
 
+A short description of the compiler switches being use follows:
+
+`-a`: Force rebuilding of packages that are already up-to-date.
+
+`-o`: The `go build` command specifies the output file name for the compiled binary. By default, without the `-o` flag, the output executable will have the same name as the source file (or the directory name if building a package) and no extension (or source_file.exe on `Windows`). The `-o` flag allows the customization of the name and optionally the location of the output file. The `-o` flag only affects the name of the final executable; it does not change the package name or any other aspects of the Go code.
+
+`-ldflags="-s -w"`: In Go, the `go build` command allows the use of `ldflags` to modify the behavior of the linker. The `-s` and `-w` flags are commonly used with `ldflags` to reduce the size of the final executable.<br>
+`-s`: This flag strips the symbol table from the executable. The symbol table is used for debugging and contains information about function and variable names. Removing it reduces the binary size but makes debugging more difficult.<br>
+`-w`: This flag strips the DWARF debugging information from the executable. DWARF is a standardized debugging data format. Removing it further reduces the binary size but also hinders debugging capabilities.
+
 Compile and run the app as a standalone HTTP server (default) on port 8080 (default).
 ```
 $ go build -o finance && ./finance
@@ -966,7 +976,13 @@ $ go build -o finance && ./finance
 or
 
 $ go build -o finance && HTTP=true HTTP_PORT=8080 ./finance
+
+or
+
+$ go build -a -ldflags="-s -w" -o finance && HTTP=true HTTP_PORT=8080 ./finance
+
 ```
+
 Compile and run the app as a standalone HTTPS server on port 8443 (default).
 ```
 $ go build -o finance && HTTP=false HTTPS=true ./finance
@@ -975,14 +991,17 @@ or
 
 $ go build -o finance && HTTP=false HTTPS=true HTTP_PORT=8443 ./finance
 ```
+
 Compile and run the app as two standalone servers (HTTP and HTTPS ) using the default ports.
 ```
 $ go build -o finance && HTTPS=true ./finance
 ```
+
 Force rebuilding of packages that are already up-to-date and run the app.
 ```
 $ go build -o finance -a && ./finance
 ```
+
 To change an environment variable's value, set the environment variable to its new value; e.g., to change the default value of the environment variable HTTP_PORT, execute the command below.
 ```
 $ HTTP_PORT=18080 ./finance
@@ -991,10 +1010,12 @@ for multiple environment variables
 
 $ HTTP_PORT=18080 HTTPS=true ./finance
 ```
+
 The ampersand symbol (`&`) instructs the shell to execute the command as a separate background process. To compile and run the app in the background.
 ```
 $ go build -o finance && ./finance &
 ```
+
 Compile and run the named `main` Go package in the background.
 ```
 $ go run main.go &
