@@ -640,6 +640,96 @@ To ensure the resource has one or more finalizers attach, you can use `kubectl g
 $ kubectl patch <resource> <resource-name> -p '{"metadata":{"finalizers":null}}'
 ```
 
+## Docker
+`Docker` is a platform for packaging and deploying containers. You use `Docker` to:
+1. Package your microservice into a `Docker` image.
+2. Publish your image to your private image registry.
+3. Run your microservice in a container.
+
+To install `Docker`, go to the `Docker` website at https://docs.docker.com. Once there, find the `Get Docker` link and follow the instructions to install `Docker` for your platform.
+
+With `Docker` installed, you package your microservice with the following steps:
+1. Create a `Dockerfile` for your microservice.
+2. Package your microservice as a `Docker` image.
+3. Publish your image to the image registry.
+4. Test the published image by running it as a container.
+
+Some popular `Docker` registries for publishing images are:
+1. https://hub.docker.com/
+2. https://quay.io/
+3. https://cloud.google.com/container-registry
+4. https://aws.amazon.com/ecr/
+
+---
+**Permission Issues with WSL**
+
+When you run `Docker` commands from within `WSL`, you may encounter `access denied` errors. If so, the issue often originates from how `Docker` manages credentials across different environments, particularly related to the `config.json` file and `credsStore` property. To fix the issue, locate the `config.json` file, which is usually found in the `~/.docker/` directory of the `WSL` distribution. Next, open the file with a text editor and look for a line containing the property `"credsStore":`. If it's set to `"desktop.exe"` or `"wincred"`, it indicates that `Docker` is trying to use `Windows-based` credentials, which can cause issues in `WSL`. The simplest solution is to delete the entire line containing `"credsStore": "desktop.exe"` or rename `credsStore` to `credStore` (note the missing `**s**`). This forces `Docker` to rely on the default credentials within WSL.
+
+---
+
+### Useful Commands
+#### version
+Display the current version of Docker.
+```
+$ docker --version
+```
+
+#### Login to private registry
+Before you can push to your registry, you must first login. If the password or username contains special characters, you need to use quotes (""); otherwise, you can omit them.
+```
+$ docker login docker.io --username <user-name> --password "<password>"
+```
+
+#### Build image
+The basic syntax of the command follows:
+1. The image will be built (my actual machine) on a `linux/amd64` platform, but the image will be run on a `linux/arm64` platform (Oracle). Create an image for each platform.
+2. Tagging (`--tag or -t`) the image requires the following: image registry (`docker.io` is the default), the user's or organization's name, image repository, and the tag (`latest` is the default).
+3. By default, `Docker` assumes that the `Dockerfile` is named `Dockerfile` and is located in the build context's root. If the `Dockerfile` has a different name or is located in a different directory, the `--file or -f` option can specify its path.
+4. The final `..` in the command provides the path to the [build context](https://docs.docker.com/build/concepts/context/#what-is-a-build-context). At this location, the builder will find the `Dockerfile` and other referenced files.
+```
+$ docker build --platform linux/amd64,linux/arm64 --tag docker.io/jctrimino/finances:1.0.0 --file ../Dockerfile-prod ..
+```
+
+#### Push image to private registry
+Publish the image to the registry.
+```
+$ docker push docker.io/jctrimino/finances:1.0.0
+```
+
+#### List the images
+List the images stored on the local repository.
+```
+$ docker images
+
+or
+
+$ docker image ls
+```
+
+
+
+#### To remove an image
+```
+docker rmi <image-id>
+```
+
+
+# To start a container.
+# docker run -d --name finances -p 8000:8000 webserver
+# To list all running containers.
+# docker ps
+# To stop a running container.
+# $ docker stop <container-id>
+# To run commands inside an image.
+# $ docker exec -it <container-id> ash
+# Alpine images provide the Almquist shell (ash) from BusyBox.
+
+
+
+
+
+
+
 ## IaC-K8s
 IaC-K8s contains the `Terraform` code for provisioning (i.e., creating, preparing, and activating the underlying infrastructure of a cloud environment) the `Oracle Cloud Infrastructure (OCI)`, which is an `Infrastructure as a Service (IaaS)` and `Platform as a Service (PaaS)` offering. The `OCI` is a set of complementary cloud services that enable you to build and run a range of applications and services in a highly available hosted environment. `OCI` provides high-performance compute capabilities (as physical hardware instances) and storage capacity in a flexible overlay virtual network that is securely accessible from your on-premises network.
 
