@@ -1,23 +1,6 @@
-# To test the image using docker:
-# Build the image.
-# $ docker build -t webserver:1.0.0 . --file Dockerfile-prod
-# List the images.
-# $ docker image ls
-# To remove an image.
-# docker rmi <image-id>
-# To start a container.
-# docker run -d --name finances -p 8000:8000 webserver
-# To list all running containers.
-# docker ps
-# To stop a running container.
-# $ docker stop <container-id>
-# To run commands inside an image.
-# $ docker exec -it <container-id> ash
-# Alpine images provide the Almquist shell (ash) from BusyBox.
-# -------------------------------------------------------------------------------------------------
 # Use an offical golang image to create the binary.
 # Select an image comparable to target architecture.
-# Alpine images provide the Almquist shell (ash) from BusyBox.
+# Alpine images provide the Almquist shell (ash or sh) from BusyBox.
 # https://docs.docker.com/build/building/multi-platform/#cross-compilation
 FROM --platform=$BUILDPLATFORM golang:1.24.3-alpine3.21 AS builder
 ARG TARGETPLATFORM
