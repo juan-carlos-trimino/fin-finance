@@ -668,67 +668,133 @@ When you run `Docker` commands from within `WSL`, you may encounter `access deni
 ---
 
 ### Useful Commands
-#### version
+---
+**Note**
+
+The `$()` syntax in `Bash` is used for command substitution. It allows you to execute a command and substitute its output in place of the `$()` expression. This is useful when you want to use the output of a command as an argument for another command or assign it to a variable.
+
+---
+
+#### Version
 Display the current version of Docker.
 ```
 $ docker --version
 ```
 
-#### Login to private registry
+#### Private registry
 Before you can push to your registry, you must first login. If the password or username contains special characters, you need to use quotes (""); otherwise, you can omit them.
 ```
 $ docker login docker.io --username <user-name> --password "<password>"
 ```
 
-#### Build image
 The basic syntax of the command follows:
-1. The image will be built (my actual machine) on a `linux/amd64` platform, but the image will be run on a `linux/arm64` platform (Oracle). Create an image for each platform.
+1. The image will be built on a `linux/amd64` platform (my machine), but the image will be run on a `linux/arm64` platform (Oracle). Create an image for each platform.
 2. Tagging (`--tag or -t`) the image requires the following: image registry (`docker.io` is the default), the user's or organization's name, image repository, and the tag (`latest` is the default).
 3. By default, `Docker` assumes that the `Dockerfile` is named `Dockerfile` and is located in the build context's root. If the `Dockerfile` has a different name or is located in a different directory, the `--file or -f` option can specify its path.
 4. The final `..` in the command provides the path to the [build context](https://docs.docker.com/build/concepts/context/#what-is-a-build-context). At this location, the builder will find the `Dockerfile` and other referenced files.
 ```
-$ docker build --platform linux/amd64,linux/arm64 --tag docker.io/jctrimino/finances:1.0.0 --file ../Dockerfile-prod ..
+$ docker build --platform linux/amd64,linux/arm64 --tag <registry>/<user's name>/<repo>:<tag> --file ../Dockerfile-prod ..
 ```
 
-#### Push image to private registry
 Publish the image to the registry.
 ```
-$ docker push docker.io/jctrimino/finances:1.0.0
+$ docker push <registry>/<user's name>/<repo>:<tag>
 ```
 
-#### List the images
-List the images stored on the local repository.
+Pull a single image from a repository.
+```
+$ docker pull <registry>/<user's name>/<repo>:<tag>
+```
+
+Pull all images from a repository; use the `--all-tags or -a` option.
+```
+docker pull --all-tags <registry>/<user's name>/<repo>
+```
+
+#### Listing images
+List the images.
 ```
 $ docker images
-
-or
-
 $ docker image ls
 ```
 
-
-
-#### To remove an image
+#### Removing images
+Delete one or more images.
 ```
-docker rmi <image-id>
+$ docker rmi <image-id> <image-id>
 ```
 
+Remove all dangling images. If `-a` is specified, also remove all images not referenced by any container. To avoid confirmation prompts, specify the `-f` option.
+```
+$ docker image prune --all --force
+```
 
-# To start a container.
-# docker run -d --name finances -p 8000:8000 webserver
-# To list all running containers.
-# docker ps
-# To stop a running container.
-# $ docker stop <container-id>
-# To run commands inside an image.
-# $ docker exec -it <container-id> ash
-# Alpine images provide the Almquist shell (ash) from BusyBox.
+Remove all images **older** than 6 months => 4320h = 24 hour/day * 30 days/month * 6 months. To avoid confirmation prompts, specify the `--force or -f` option.
+```
+$ docker image prune --all --filter "until=4320h"
+$ docker image prune --all --force --filter "until=4320h"
+```
 
+Remove all images. The `docker images -q` command lists only the image ids.
+```
+$ docker rmi $(docker images -q)
+```
 
+Remove all dangling images. Docker images consist of multiple layers. Dangling images are layers that have no relationship to any tagged images. They no longer serve a purpose and consume disk space.
+```
+$ docker rmi $(docker images -qf "dangling=true")
+```
 
+#### Running containers
+Run a command in a new container; pull the image, if needed, and start the container. The `--rm` option automatically removes the container and its associated anonymous volumes when it exits.
+```
+$ docker run --rm <user's name>/<repo>:<tag> ls -al
+```
 
+#### Starting containers
+Run a command in a new container; pull the image, if needed, and start the container. The options are:<br>
+`--detach or -d` runs container in the background and displays the container id.<br>
+`--name` assigns a name to the container.
+```
+$ docker run -d --name finances <user's name>/<repo>:<tag>
+```
 
+#### Executing commands
+Execute a command in a running container.
+(Alpine images provide the Almquist shell (ash or sh) from BusyBox.)
+```
+$ docker exec -it <container-id-or-name> ash
+$ docker exec -it <container-id-or-name> ls -al
+$ docker exec -it <container-id-or-name> sh -c "echo a && echo b"
+```
 
+#### List containers
+List all running containers.
+```
+$ docker ps
+```
+
+List all containers.
+```
+$ docker ps -a
+```
+
+# Stopping containers
+Stop one or more running containers.
+```
+$ docker stop <container-id> <container-id>
+```
+
+#### Killing containers
+Kill one or more running containers.
+```
+$ docker kill <container-id-or-name> <container-id-or-name>
+```
+
+Kill a container and send a custom signal.
+```
+$ docker kill --signal=SIGKILL <container-id-or-name>
+```
 
 ## IaC-K8s
 IaC-K8s contains the `Terraform` code for provisioning (i.e., creating, preparing, and activating the underlying infrastructure of a cloud environment) the `Oracle Cloud Infrastructure (OCI)`, which is an `Infrastructure as a Service (IaaS)` and `Platform as a Service (PaaS)` offering. The `OCI` is a set of complementary cloud services that enable you to build and run a range of applications and services in a highly available hosted environment. `OCI` provides high-performance compute capabilities (as physical hardware instances) and storage capacity in a flexible overlay virtual network that is securely accessible from your on-premises network.
