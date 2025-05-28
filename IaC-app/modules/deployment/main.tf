@@ -463,6 +463,7 @@ resource "kubernetes_persistent_volume_claim" "pvc" {
     }
   }
   spec {
+    # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
     access_modes = var.persistent_volume_claims[count.index].access_modes
     volume_mode = var.persistent_volume_claims[count.index].volume_mode
     resources {
@@ -606,7 +607,8 @@ resource "kubernetes_deployment" "stateless" {
           }
           # Liveness probes keep pods healthy by killing unhealthy containers and replacing them
           # with new healthy containers; readiness probes ensure that only pods with containers
-          # that are ready to serve requests receive them.
+          # that are ready to serve requests receive them. Unlike liveness probes, if a container
+          # fails the readiness check, it won't be killed or restarted.
           dynamic "readiness_probe" {
             for_each = var.readiness_probe
             content {
@@ -615,6 +617,9 @@ resource "kubernetes_deployment" "stateless" {
               timeout_seconds = readiness_probe.value["timeout_seconds"]
               failure_threshold = readiness_probe.value["failure_threshold"]
               success_threshold = readiness_probe.value["success_threshold"]
+              # K8s can probe a container using one of the three probes:
+              # The HTTP GET probe sends an HTTP GET request to the container, and the HTTP status
+              # code of the response determines whether the container is ready or not.
               dynamic "http_get" {
                 for_each = readiness_probe.value.http_get
                 content {
@@ -631,6 +636,8 @@ resource "kubernetes_deployment" "stateless" {
                   }
                 }
               }
+              # The Exec probe executes a process. The container's status is determined by the
+              # process' exit status code.
               dynamic "exec" {
                 # for_each = it.value["exec"] != null ? [it.value["exec"]] : []
                 for_each = readiness_probe.value["exec"] != null ? [readiness_probe.value["exec"]] : []
@@ -638,6 +645,8 @@ resource "kubernetes_deployment" "stateless" {
                   command = exec.value.command
                 }
               }
+              # The TCP Socket probe opens a TCP connection to a specified port of the container.
+              # If the connection is established, the container is considered ready.
               dynamic "tcp_socket" {
                 # for_each = it.value["tcp_socket"] != null ? [it.value["tcp_socket"]] : []
                 for_each = readiness_probe.value["tcp_socket"] != null ? [readiness_probe.value["tcp_socket"]] : []
@@ -656,6 +665,12 @@ resource "kubernetes_deployment" "stateless" {
               timeout_seconds = it.value["timeout_seconds"]
               failure_threshold = it.value["failure_threshold"]
               success_threshold = it.value["success_threshold"]
+              # K8s can probe a container using one of the three probes:
+              # The HTTP GET probe performs an HTTP GET request on the container. If the probe
+              # receives a response that doesn't represent an error (HTTP response code is 2xx or
+              # 3xx), the probe is considered successful. If the server returns an error response
+              # code or it doesn't respond at all, the probe is considered a failure and the
+              # container will be restarted as a result.
               dynamic "http_get" {
                 for_each = it.value.http_get
                 iterator = it1
@@ -674,12 +689,18 @@ resource "kubernetes_deployment" "stateless" {
                   }
                 }
               }
+              # The Exec probe executes an arbitrary command inside the container and checks the
+              # command's exit status code. If the status code is 0, the probe is successful. All
+              # other codes are considered failures.
               dynamic "exec" {
                 for_each = it.value["exec"] != null ? [it.value["exec"]] : []
                 content {
                   command = exec.value.command
                 }
               }
+              # The TCP Socket probe tries to open a TCP connection to the specified port of the
+              # container. If the connection is established successfully, the probe is successful.
+              # Otherwise, the container is restarted.
               dynamic "tcp_socket" {
                 for_each = it.value["tcp_socket"] != null ? [it.value["tcp_socket"]] : []
                 content {
