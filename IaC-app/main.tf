@@ -1,4 +1,5 @@
 locals {
+  mod_finances = "fin-finances"
   namespace = kubernetes_namespace.ns.metadata[0].name
   cr_login_server = "docker.io"
   ###########
@@ -155,7 +156,7 @@ module "cert-manager" {
   count = var.reverse_proxy ? 1 : 0
   source = "./modules/traefik/cert-manager/cert-manager"
   namespace = local.namespace
-  chart_version = "1.14.4"
+  chart_version = "1.17.2"
   service_name = "fin-cert-manager"
 }
 
@@ -194,7 +195,8 @@ module "certificate" {
 # Application                                                                                     #
 ###################################################################################################
 module "fin-finances" {
-  count = var.k8s_manifest_crd ? 0 : 1
+#  count = var.k8s_manifest_crd ? 0 : 1
+  count = local.mod_finances == "fin-finances" ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ".."
@@ -206,31 +208,6 @@ module "fin-finances" {
   cr_username = var.cr_username
   cr_password = var.cr_password
   replicas = 1
-  /*** init_container
-  init_container = [{
-    name = "file-permission"
-    image = "busybox:1.34.1"
-    image_pull_policy = "IfNotPresent"
-    command = [
-      "/bin/sh",
-      "-c",
-      "chown -v -R 1100:1100 /wsf_data_dir"
-      # "chmod -R 660 /wsf_data_dir"
-    ]
-    volume_mounts = [{
-      name = "wsf"
-      mount_path = "/wsf_data_dir"
-      read_only = false
-    }]
-    security_context = [{
-      run_as_non_root = false
-      run_as_user = 0
-      run_as_group = 0
-      read_only_root_filesystem = true
-      privileged = true
-    }]
-  }]
-  init_container ***/
   # Limits and requests for CPU resources are measured in millicores. If the container needs one
   # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
   # value of '250m.'
@@ -238,7 +215,7 @@ module "fin-finances" {
     limits_cpu = "300m"
     limits_memory = "300Mi"
   }
-  #### https://kubernetes.io/docs/concepts/configuration/secret/
+  # https://kubernetes.io/docs/concepts/configuration/secret/
   # If the order of Secrets changes, the Deployment must be changed accordingly.
   secrets = [{
     name = "${local.svc_finances}-registry-credentials"
@@ -254,18 +231,18 @@ module "fin-finances" {
     }
     type = "kubernetes.io/dockerconfigjson"
   },
-  /*** s3 storage
-  {
-    name = "${local.svc_finances}-s3-storage"
-    data = {
-      obj_storage_ns = var.obj_storage_ns
-      region = var.region
-      aws_access_key_id = var.aws_access_key_id
-      aws_secret_access_key = var.aws_secret_access_key
-    }
-    type = "Opaque"
-  }
-  s3 storage ***/
+  # *** s3 storage ***
+  # {
+  #   name = "${local.svc_finances}-s3-storage"
+  #   data = {
+  #     obj_storage_ns = var.obj_storage_ns
+  #     region = var.region
+  #     aws_access_key_id = var.aws_access_key_id
+  #     aws_secret_access_key = var.aws_secret_access_key
+  #   }
+  #   type = "Opaque"
+  # }
+  # *** s3 storage ***
   ]
   # service_account = {
   #   name = "${local.svc_finances}-service-account"
@@ -286,46 +263,313 @@ module "fin-finances" {
   # }
   # Configure environment variables specific to the app.
   env = {
-    # Set USER to any string to avoid the error:
-    # user: Current requires cgo or $USER set in environment
-    USER = "wsf-user"
-    #
     K8S = true
     HTTP_PORT = "8080"
     SVC_NAME = local.svc_finances
     APP_NAME_VER = "${var.app_name} ${var.app_version}"
-    MAX_RETRIES = 20
-    SERVER = "http://${local.svc_dns_finances}"
+    MAX_RETRIES = 3
   }
-  /*** s3 storage
-  env_secret = [{
-    env_name = "AWS_SECRET_ACCESS_KEY"
-    secret_name = "${local.svc_finances}-s3-storage"
-    secret_key = "aws_secret_access_key"
-  },
-  {
-    env_name = "OBJ_STORAGE_NS"
-    secret_name = "${local.svc_finances}-s3-storage"
-    secret_key = "obj_storage_ns"
-  },
-  {
-    env_name = "AWS_REGION"
-    secret_name = "${local.svc_finances}-s3-storage"
-    secret_key = "region"
-  },
-  {
-    env_name = "AWS_ACCESS_KEY_ID"
-    secret_name = "${local.svc_finances}-s3-storage"
-    secret_key = "aws_access_key_id"
+  # *** s3 storage ***
+  # env_secret = [{
+  #   env_name = "AWS_SECRET_ACCESS_KEY"
+  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_key = "aws_secret_access_key"
+  # },
+  # {
+  #   env_name = "OBJ_STORAGE_NS"
+  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_key = "obj_storage_ns"
+  # },
+  # {
+  #   env_name = "AWS_REGION"
+  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_key = "region"
+  # },
+  # {
+  #   env_name = "AWS_ACCESS_KEY_ID"
+  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_key = "aws_access_key_id"
+  # }]
+  # *** s3 storage ***
+  # *** env_field ***
+  # env_field = [{
+  #   env_name = "POD_ID"
+  #   field_path = "status.podIP"
+  # }]
+  # *** env_field ***
+  ports = [{
+    name = "ports"
+    service_port = 80
+    target_port = 8080
+    protocol = "TCP"
   }]
-  s3 storage ***/
-  /*** env_field
-  env_field = [{
-    env_name = "POD_ID"
-    field_path = "status.podIP"
+  volume_mount = [{
+    name = "wsf"
+    mount_path = "/wsf_data_dir"
+    read_only = false
   }]
-  env_field ***/
-  /*** NodePort
+  volume_pv = [{
+    pv_name = "wsf"
+    claim_name = "finances-pvc"
+  }]
+  persistent_volume_claims = [{
+    pvc_name = "finances-pvc"
+    ################## A volume with volumeMode: Filesystem is mounted into Pods into a directory. (default)
+    volume_mode = "Filesystem"
+    # The volume can be mounted as read-write by many nodes.
+    access_modes = ["ReadWriteOnce"]
+    # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
+    # for less than 50GB, the request is rounded up to 50GB.
+    storage_size = "50Gi"
+    storage_class_name = "oci-bv"
+  }]
+  pod_security_context = [{
+    fs_group = 2200
+  }]
+  security_context = [{
+    run_as_non_root = true
+    run_as_user = 1100
+    run_as_group = 1100
+    read_only_root_filesystem = true
+  }]
+  # You should always define a readiness probe, even if it's as simple as sending an HTTP request
+  # to the base URL.
+  readiness_probe = [{
+    # Always remember to set an initial delay to account for your app's startup time.
+    initial_delay_seconds = 2
+    period_seconds = 25
+    timeout_seconds = 1
+    failure_threshold = 3
+    success_threshold = 1
+    http_get = [{
+      path = "/readiness"
+      port = 8080
+      scheme = "HTTP"
+    }]
+    # tcp_socket = {
+    #   port = 8088
+    # }
+    # exec = {
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "ls -al /wsf_data_dir"
+    # ]}
+  }]
+  # You should always define a liveness probe. Keep probes light.
+  liveness_probe = [{
+    initial_delay_seconds = 5
+    period_seconds = 20
+    timeout_seconds = 1
+    # Don't bother implementing retry loops; K8s will retry the probe.
+    failure_threshold = 1
+    success_threshold = 1
+    http_get = [{
+      path = "/liveness"
+      port = 8080
+      scheme = "HTTP"
+    }]
+    # tcp_socket = {
+    #   port = 8080
+    # }
+    # exec = {
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "ls -al /wsf_data_dir"
+    # ]}
+  }]
+#   # /*** NodePort
+#   #########################################
+#   # Exposing services to external clients #
+#   #########################################
+#   # Use a NodePort service #
+#   ##########################
+#   # Setting the service type to NodePort – For a NodePort service, each node in the cluster opens
+#   # a port on the node itself (the same port number is used across all nodes) and redirects
+#   # traffic received on that port to the underlying service. The service isn't accessible only at
+#   # the internal cluster IP and port, but also through a dedicated port on all nodes. Specifying
+#   # the port isn't mandatory; K8s will choose a random port if it is omitted.
+#   # Note: By default, the range of the service NodePorts is 30000-32768. This range contains 2768
+#   # ports, which means that you can create up to 2768 services with NodePorts.
+#   #
+#   # For NodePort, it's required to allow communication on ALL protocols in the worker node subnet.
+#   ports = [{
+#     name = "ports"
+#     service_port = 80
+#     target_port = 8080
+#     node_port = var.nlb_node_port
+#     protocol = "TCP"
+#   }]
+#   service_type = "NodePort"
+#   NodePort ***/
+  service_type = "ClusterIP"
+  service_name = local.svc_finances
+}
+
+module "fin-finances-b" {  # Using emptyDir.
+  count = local.mod_finances == "fin-finances-b" ? 1 : 0
+#  count = var.k8s_manifest_crd ? 0 : 1
+  # Specify the location of the module, which contains the file main.tf.
+  source = "./modules/deployment"
+  dir_path = ".."
+  app_name = var.app_name
+  app_version = var.app_version
+  namespace = local.namespace
+  region = var.region
+  cr_login_server = local.cr_login_server
+  cr_username = var.cr_username
+  cr_password = var.cr_password
+  replicas = 1
+  # See empty_dir.
+  init_container = [{
+    name = "file-permission"
+    image = "busybox:1.34.1"
+    image_pull_policy = "IfNotPresent"
+    command = [
+      "/bin/sh",
+      "-c",
+      "chown -v -R 1100:1100 /wsf_data_dir && chmod -R 750 /wsf_data_dir"
+    ]
+    volume_mounts = [{
+      name = "wsf"
+      mount_path = "/wsf_data_dir"
+      read_only = false
+    }]
+    security_context = [{
+      run_as_non_root = false
+      run_as_user = 0
+      run_as_group = 0
+      read_only_root_filesystem = true
+      privileged = true
+    }]
+  }]
+  # Limits and requests for CPU resources are measured in millicores. If the container needs one
+  # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
+  # value of '250m.'
+  resources = {  # QoS - Guaranteed
+    limits_cpu = "300m"
+    limits_memory = "300Mi"
+  }
+  # https://kubernetes.io/docs/concepts/configuration/secret/
+  # If the order of Secrets changes, the Deployment must be changed accordingly.
+  secrets = [{
+    name = "${local.svc_finances}-registry-credentials"
+    # Plain-text data.
+    data = {
+      ".dockerconfigjson" = jsonencode({
+        auths = {
+          "${local.cr_login_server}" = {
+            auth = base64encode("${var.cr_username}:${var.cr_password}")
+          }
+        }
+      })
+    }
+    type = "kubernetes.io/dockerconfigjson"
+  }]
+  # service_account = {
+  #   name = "${local.svc_finances}-service-account"
+  #   # Note: The keys and the values in the map must be strings. In other words, you cannot use
+  #   #       numeric, boolean, list or other types for either the keys or the values.
+  #   # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+  #   # annotations = {
+  #   #   "kubernetes.io/enforce-mountable-secrets" = "true"
+  #   #   "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
+  #   # }
+  #   automount_service_account_token = true
+  #   secret = [{
+  #     name = "${local.svc_finances}-secrets"
+  #   },
+  #   {
+  #     name = "${local.svc_finances}-s3-storage"
+  #   }]
+  # }
+  # Configure environment variables specific to the app.
+  env = {
+    K8S = true
+    HTTP_PORT = "8080"
+    SVC_NAME = local.svc_finances
+    APP_NAME_VER = "${var.app_name} ${var.app_version}"
+    MAX_RETRIES = 3
+  }
+  # *** env_field ***
+  # env_field = [{
+  #  env_name = "POD_ID"
+  #  field_path = "status.podIP"
+  # }]
+  # *** env_field ***
+  ports = [{
+    name = "ports"
+    service_port = 80
+    target_port = 8080
+    protocol = "TCP"
+  }]
+  # When using the emptyDir{}, the init_container is required.
+  volume_empty_dir = [{
+    name = "wsf"
+  }]
+  volume_mount = [{
+    name = "wsf"
+    mount_path = "/wsf_data_dir"
+    read_only = false
+  }]
+  pod_security_context = [{
+    fs_group = 2200
+  }]
+  security_context = [{
+    run_as_non_root = true
+    run_as_user = 1100
+    run_as_group = 1100
+    read_only_root_filesystem = true
+  }]
+  # You should always define a readiness probe, even if it's as simple as sending an HTTP request
+  # to the base URL.
+  readiness_probe = [{
+    # Always remember to set an initial delay to account for your app's startup time.
+    initial_delay_seconds = 2
+    period_seconds = 25
+    timeout_seconds = 1
+    failure_threshold = 3
+    success_threshold = 1
+    http_get = [{
+      path = "/readiness"
+      port = 8080
+      scheme = "HTTP"
+    }]
+    # tcp_socket = {
+    #   port = 8088
+    # }
+    # exec = {
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "ls -al /wsf_data_dir"
+    # ]}
+  }]
+  # You should always define a liveness probe. Keep probes light.
+  liveness_probe = [{
+    initial_delay_seconds = 5
+    period_seconds = 20
+    timeout_seconds = 1
+    # Don't bother implementing retry loops; K8s will retry the probe.
+    failure_threshold = 1
+    success_threshold = 1
+    http_get = [{
+      path = "/liveness"
+      port = 8080
+      scheme = "HTTP"
+    }]
+    # tcp_socket = {
+    #   port = 8080
+    # }
+    # exec = {
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "ls -al /wsf_data_dir"
+    # ]}
+  }]
+  # *** NodePort ***
   #########################################
   # Exposing services to external clients #
   #########################################
@@ -340,97 +584,15 @@ module "fin-finances" {
   # ports, which means that you can create up to 2768 services with NodePorts.
   #
   # For NodePort, it's required to allow communication on ALL protocols in the worker node subnet.
-  ports = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8080
-    node_port = var.nlb_node_port
-    protocol = "TCP"
-  }]
-  service_type = "NodePort"
-  NodePort ***/
-  ports = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8080
-    protocol = "TCP"
-  }]
-  volume_mount = [{
-    name = "wsf"
-    mount_path = "/wsf_data_dir"
-    read_only = false
-  }]
-  /*** empty_dir
-  volume_empty_dir = [{
-    name = "wsf"
-  }]
-  empty_dir ***/
-  volume_pv = [{
-    pv_name = "wsf"
-    claim_name = "finances-pvc"
-  }]
-  persistent_volume_claims = [{
-    pvc_name = "finances-pvc"
-    volume_mode = "Filesystem"
-    access_modes = ["ReadWriteOnce"]
-    storage_size = "2Gi"
-    storage_class_name = "oci-bv"
-  }]
-  pod_security_context = [{
-    fs_group = 2200
-  }]
-  security_context = [{
-    run_as_non_root = true
-    run_as_user = 1100
-    run_as_group = 1100
-    read_only_root_filesystem = true
-  }]
-  # /*** readiness_probe
-  readiness_probe = [{
-    initial_delay_seconds = 5
-    period_seconds = 25
-    timeout_seconds = 1
-    failure_threshold = 3
-    success_threshold = 1
-    # http_get = [{
-    #   path = "/readiness"
-    #   port = 8080
-    #   scheme = "HTTP"
-    # }]
-    tcp_socket = {
-      port = 8080
-    }
-    # exec = {
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "ls -al /wsf_data_dir"
-    # ]}
-  }]
-  # readiness_probe **/
-  # /*** liveness_probe
-  liveness_probe = [{
-    initial_delay_seconds = 5
-    period_seconds = 20
-    timeout_seconds = 1
-    failure_threshold = 3
-    success_threshold = 1
-    # http_get = [{
-    #   path = "/liveness"
-    #   port = 8080
-    #   scheme = "HTTP"
-    # }]
-    tcp_socket = {
-      port = 8080
-    }
-    # exec = {
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "ls -al /wsf_data_dir"
-    # ]}
-  }]
-  # liveness_probe ***/
+  # ports = [{
+  #   name = "ports"
+  #   service_port = 80
+  #   target_port = 8080
+  #   node_port = var.nlb_node_port
+  #   protocol = "TCP"
+  # }]
+  # service_type = "NodePort"
+  # *** NodePort ***
   service_type = "ClusterIP"
   service_name = local.svc_finances
 }
