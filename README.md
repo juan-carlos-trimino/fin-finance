@@ -779,7 +779,7 @@ List all containers.
 $ docker ps -a
 ```
 
-# Stopping containers
+#### Stopping containers
 Stop one or more running containers.
 ```
 $ docker stop <container-id> <container-id>
