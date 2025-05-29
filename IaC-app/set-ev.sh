@@ -24,7 +24,7 @@ then
   echo -e "\nError: Please provide an even number of arguments."
   usage
 else
-  # echo "Elements in \$@: $@"
+  echo "Elements in \$@: $@"
   arr=()
   for arg in "$@"
   do
