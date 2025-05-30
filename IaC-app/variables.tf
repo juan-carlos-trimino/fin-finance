@@ -19,6 +19,12 @@ variable deployment_type {
   default = "empty-dir"
 }
 
+variable pprof {
+  type = bool
+  description = "Enable/disable profiling (pprof)."
+  default = "false"
+}
+
 # The limitations of the kubernetes_manifest resource
 # ---------------------------------------------------
 # If you want to create arbitrary Kubernetes resources in a cluster using Terraform, particularly
@@ -37,7 +43,7 @@ variable k8s_manifest_crd {
   default = "true"
 }
 
-variable nlb_node_port {  # Network load balancer.
+variable node_port {  # NodePort: Range 30000-32767.
   type = number
   default = 31600
 }
