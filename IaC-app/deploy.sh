@@ -17,9 +17,10 @@ display_help() {
   # -e   Enable interpretation of backslash escapes.
   # -n   Do not output the trailing newline.
   echo -e "Usage: $0 [OPTIONS]\n"
-  echo -e "  -h, --help             Display help\n"
-  echo -e "  -av, --app_version     Application version; e.g., 1.0.0\n"
-  echo -e "  -rp, --reverse_proxy   Use a reverse proxy; e.g., true or false (default)\n\n"
+  echo -e "  -h, --help                 Display help\n"
+  echo -e "  -av, --app_version         Application version; e.g., 1.0.0\n"
+  echo -e "  -dt, --deployment_type     Deployment type: empty-dir (default) or persistent-disk\n"
+  echo -e "  -rp, --reverse_proxy       Use a reverse proxy; e.g., true or false (default)\n\n"
   exit 0
 }
 
@@ -31,11 +32,11 @@ checkOptions() {
     arr+=("$arg")
   done
   # echo "Elements in arr: ${arr[@]}"
-  local -i av_missing=1
   local -i ndx=0
   local -i size="${#arr[@]}"
-  local app_version=""
+  local app_version="1.0.0"
   local reverse_proxy="false"
+  local deployment_type="empty-dir"
   for (( ndx = 0; ndx < size; ))
   do
     flag=${arr[ndx]}
@@ -50,7 +51,9 @@ checkOptions() {
         ;;
       "-av" | "--app_version")
         app_version=$value
-        av_missing=0
+        ;;
+      "-dt" | "--deployment_type")
+        deployment_type=$value
         ;;
       "-rp" | "--reverse_proxy")
         reverse_proxy=$value
@@ -62,13 +65,18 @@ checkOptions() {
     esac
   done
   #
-  export APP_VERSION=$app_version
   if [ "$reverse_proxy" != "true" ] && [ "$reverse_proxy" != "false" ]
   then
     echo -e "Valid values for the flag -rp/--reverse_proxy: 'true' or 'false'.\n"
     exit 1
+  elif [ "$deployment_type" != "empty-dir" ] && [ "$deployment_type" != "persistent-disk" ]
+  then
+    echo -e "Valid values for the flag -dt/--deployment_type: 'empty-dir' or 'persistent-disk'.\n"
+    exit 1
   else
+    export APP_VERSION=$app_version
     export K8S_MANIFEST_CRD=$reverse_proxy
+    export DEPLOYMENT_TYPE=$deployment_type
   fi
   return
 }
@@ -92,6 +100,7 @@ echo "Environment variables"
 echo "*********************"
 echo "APP_VERSION = $(printenv APP_VERSION)"
 echo -e "K8S_MANIFEST_CRD = $(printenv K8S_MANIFEST_CRD)\n"
+echo -e "DEPLOYMENT_TYPE = $(printenv DEPLOYMENT_TYPE)\n"
 echo "*****************"
 echo "Current directory"
 echo "*****************"
@@ -125,7 +134,8 @@ echo "*************************"
 terraform init
 terraform apply -auto-approve \
   -var "app_version=$APP_VERSION" \
-  -var "k8s_manifest_crd=$K8S_MANIFEST_CRD"
+  -var "k8s_manifest_crd=$K8S_MANIFEST_CRD" \
+  -var "deployment_type=$DEPLOYMENT_TYPE"
 echo -e "\n*********************"
 echo "Copying the lock file"
 echo "*********************"
