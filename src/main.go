@@ -8,7 +8,7 @@ import (
   "context"
   "crypto/tls"
   "errors"
-  "finance/config"
+	"finance/config"
   "finance/security"
   "finance/webfinances"
   "fmt"
@@ -115,7 +115,7 @@ func main() {
   if config.GetHttp() {
     logger.LogInfo(fmt.Sprintf("Using HTTP PORT: %d", config.GetHttpPort()), "-1")
   }
-  //
+  logger.LogInfo(fmt.Sprintf("Server: %s", config.GetServer()), "-1")
   if config.GetHttps() {
     logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %d", config.GetHttpsPort()), "-1")
   }
@@ -145,6 +145,7 @@ func main() {
   } else {
     logger.LogInfo(fmt.Sprintf("Username: %s", userName), "-1")
   }
+  logger.LogInfo(fmt.Sprintf("Username: %s", config.GetUser()), "-1")
   //
   if ok, err := osu.IsRoot(); err != nil {
     logger.LogError(fmt.Sprintf("%+v", err), "-1")
