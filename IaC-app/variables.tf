@@ -13,6 +13,12 @@ variable app_version {
   default = "1.0.0"
 }
 
+variable deployment_type {
+  type = string
+  description = "Deployment type: empty-dir (default) or persistent-disk."
+  default = "empty-dir"
+}
+
 # The limitations of the kubernetes_manifest resource
 # ---------------------------------------------------
 # If you want to create arbitrary Kubernetes resources in a cluster using Terraform, particularly
