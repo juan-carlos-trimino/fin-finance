@@ -1,5 +1,4 @@
 locals {
-  mod_finances = "fin-finances"
   namespace = kubernetes_namespace.ns.metadata[0].name
   cr_login_server = "docker.io"
   ###########
@@ -194,9 +193,9 @@ module "certificate" {
 ###################################################################################################
 # Application                                                                                     #
 ###################################################################################################
-module "fin-finances" {
+module "fin-finances-persistent" {
 #  count = var.k8s_manifest_crd ? 0 : 1
-  count = local.mod_finances == "fin-finances" ? 1 : 0
+  count = var.deployment_type == "persistent-disk" ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ".."
@@ -407,8 +406,8 @@ module "fin-finances" {
   service_name = local.svc_finances
 }
 
-module "fin-finances-b" {  # Using emptyDir.
-  count = local.mod_finances == "fin-finances-b" ? 1 : 0
+module "fin-finances-empty" {  # Using emptyDir.
+  count = var.deployment_type == "empty-dir" ? 1 : 0
 #  count = var.k8s_manifest_crd ? 0 : 1
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
