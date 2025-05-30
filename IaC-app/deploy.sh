@@ -17,10 +17,11 @@ display_help() {
   # -e   Enable interpretation of backslash escapes.
   # -n   Do not output the trailing newline.
   echo -e "Usage: $0 [OPTIONS]\n"
-  echo -e "  -h, --help                 Display help\n"
-  echo -e "  -av, --app_version         Application version; e.g., 1.0.0\n"
-  echo -e "  -dt, --deployment_type     Deployment type: empty-dir (default) or persistent-disk\n"
-  echo -e "  -rp, --reverse_proxy       Use a reverse proxy; e.g., true or false (default)\n\n"
+  echo -e "  -h, --help               Display help\n"
+  echo -e "  -av, --app_version       Application version; e.g., 1.0.0\n"
+  echo -e "  -dt, --deployment_type   Deployment type: empty-dir (default) or persistent-disk\n"
+  echo -e "  -rp, --reverse_proxy     Use a reverse proxy; e.g., true or false (default)\n\n"
+  echo -e "  -p, --pprof              Enable/disable pprof; e.g., true or false (default)\n\n"
   exit 0
 }
 
@@ -36,6 +37,7 @@ checkOptions() {
   local -i size="${#arr[@]}"
   local app_version="1.0.0"
   local reverse_proxy="false"
+  local pprof="false"
   local deployment_type="empty-dir"
   for (( ndx = 0; ndx < size; ))
   do
@@ -51,6 +53,9 @@ checkOptions() {
         ;;
       "-av" | "--app_version")
         app_version=$value
+        ;;
+      "-p" | "--pprof")
+        pprof=$value
         ;;
       "-dt" | "--deployment_type")
         deployment_type=$value
@@ -69,6 +74,10 @@ checkOptions() {
   then
     echo -e "Valid values for the flag -rp/--reverse_proxy: 'true' or 'false'.\n"
     exit 1
+  elif [ "$pprof" != "true" ] && [ "$pprof" != "false" ]
+  then
+    echo -e "Valid values for the flag -p/--pprof: 'true' or 'false'.\n"
+    exit 1
   elif [ "$deployment_type" != "empty-dir" ] && [ "$deployment_type" != "persistent-disk" ]
   then
     echo -e "Valid values for the flag -dt/--deployment_type: 'empty-dir' or 'persistent-disk'.\n"
@@ -77,6 +86,7 @@ checkOptions() {
     export APP_VERSION=$app_version
     export K8S_MANIFEST_CRD=$reverse_proxy
     export DEPLOYMENT_TYPE=$deployment_type
+    export PPROF=$pprof
   fi
   return
 }
@@ -95,6 +105,8 @@ set -u
 # Checks that expected input environment variables are provided.
 : "$APP_VERSION"
 : "$K8S_MANIFEST_CRD"
+: "$DEPLOYMENT_TYPE"
+: "$PPROF"
 echo "*********************"
 echo "Environment variables"
 echo "*********************"
@@ -135,7 +147,8 @@ terraform init
 terraform apply -auto-approve \
   -var "app_version=$APP_VERSION" \
   -var "k8s_manifest_crd=$K8S_MANIFEST_CRD" \
-  -var "deployment_type=$DEPLOYMENT_TYPE"
+  -var "deployment_type=$DEPLOYMENT_TYPE" \
+  -var "pprof=$PPROF"
 echo -e "\n*********************"
 echo "Copying the lock file"
 echo "*********************"
