@@ -378,7 +378,7 @@ module "fin-finances-persistent" {
     #     "ls -al /wsf_data_dir"
     # ]}
   }]
-#   # /*** NodePort
+  # /*** NodePort
 #   #########################################
 #   # Exposing services to external clients #
 #   #########################################
@@ -485,6 +485,7 @@ module "fin-finances-empty" {  # Using emptyDir.
   # }
   # Configure environment variables specific to the app.
   env = {
+    PPROF = var.pprof
     K8S = true
     HTTP_PORT = "8080"
     SVC_NAME = local.svc_finances
@@ -497,12 +498,6 @@ module "fin-finances-empty" {  # Using emptyDir.
   #  field_path = "status.podIP"
   # }]
   # *** env_field ***
-  ports = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8080
-    protocol = "TCP"
-  }]
   # When using the emptyDir{}, the init_container is required.
   volume_empty_dir = [{
     name = "wsf"
@@ -568,7 +563,7 @@ module "fin-finances-empty" {  # Using emptyDir.
     #     "ls -al /wsf_data_dir"
     # ]}
   }]
-  # *** NodePort ***
+  # /*** NodePort ***
   #########################################
   # Exposing services to external clients #
   #########################################
@@ -583,15 +578,23 @@ module "fin-finances-empty" {  # Using emptyDir.
   # ports, which means that you can create up to 2768 services with NodePorts.
   #
   # For NodePort, it's required to allow communication on ALL protocols in the worker node subnet.
-  # ports = [{
-  #   name = "ports"
-  #   service_port = 80
-  #   target_port = 8080
-  #   node_port = var.nlb_node_port
-  #   protocol = "TCP"
-  # }]
-  # service_type = "NodePort"
-  # *** NodePort ***
-  service_type = "ClusterIP"
+  ports = [{
+    name = "ports"
+    service_port = 80
+    target_port = 8080
+    node_port = var.node_port
+    protocol = "TCP"
+  }]
+  service_type = "NodePort"
+  # *** NodePort ***/
+  /*** ClusterIP ***
+  ports = [{
+    name = "ports"
+    service_port = 80
+    target_port = 8080
+    protocol = "TCP"
+  }]
+  service_type = "ClusterIP"  # Internal.
+  *** ClusterIP ***/
   service_name = local.svc_finances
 }
