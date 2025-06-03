@@ -89,7 +89,7 @@ fin-finance
  | | └ .gitkeep
  | ├ .terraform.lock.hcl
  | ├ backend.tf
- | ├ deploy.sh
+ | ├ iac.sh
  | ├ main.tf
  | ├ namespace.tf
  | ├ providers.tf

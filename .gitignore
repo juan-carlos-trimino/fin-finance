@@ -283,11 +283,10 @@ IaC-K8s/oracle/modules/subnet/*
 IaC-app/*
 !IaC-app/.terraform.lock.hcl
 !IaC-app/backend.tf
-!IaC-app/deploy.sh
+!IaC-app/iac.sh
 !IaC-app/main.tf
 !IaC-app/namespace.tf
 !IaC-app/providers.tf
-!IaC-app/set-ev.sh
 !IaC-app/variables.tf
 !IaC-app/modules/
 IaC-app/modules/*
