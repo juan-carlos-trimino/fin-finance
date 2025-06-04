@@ -97,7 +97,14 @@ checkOptions() {
 echo -e "\n"
 if [ "$1" == "destroy" ]
 then
-  terraform destroy -auto-approve
+  declare -i arguments="$#"
+  if (( arguments > 1 ))  # Number of arguments > 1?
+  then
+    display_help
+  else
+    terraform destroy -auto-approve
+    echo -e "\n"
+  fi
 elif [ "$1" == "deploy" ]
 then
   checkOptions $@
