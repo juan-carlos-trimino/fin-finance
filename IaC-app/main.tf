@@ -54,7 +54,7 @@ module "traefik" {
 }
 
 module "middleware-gateway-basic-auth" {
-  count = var.reverse_proxy && !var.k8s_manifest_crd ? 1 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/middlewares/middleware-gateway-basic-auth"
   app_name = var.app_name
   namespace = local.namespace
@@ -64,7 +64,7 @@ module "middleware-gateway-basic-auth" {
 }
 
 module "middleware-dashboard-basic-auth" {
-  count = var.reverse_proxy && !var.k8s_manifest_crd ? 1 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/middlewares/middleware-dashboard-basic-auth"
   app_name = var.app_name
   namespace = local.namespace
@@ -75,7 +75,7 @@ module "middleware-dashboard-basic-auth" {
 }
 
 module "middleware-compress" {
-  count = var.reverse_proxy && !var.k8s_manifest_crd ? 1 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/middlewares/middleware-compress"
   app_name = var.app_name
   namespace = local.namespace
@@ -83,7 +83,7 @@ module "middleware-compress" {
 }
 
 module "middleware-rate-limit" {
-  count = var.reverse_proxy && !var.k8s_manifest_crd ? 1 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/middlewares/middleware-rate-limit"
   app_name = var.app_name
   namespace = local.namespace
@@ -94,7 +94,7 @@ module "middleware-rate-limit" {
 }
 
 module "middleware-security-headers" {
-  count = var.reverse_proxy && !var.k8s_manifest_crd ? 1 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/middlewares/middleware-security-headers"
   app_name = var.app_name
   namespace = local.namespace
@@ -102,7 +102,7 @@ module "middleware-security-headers" {
 }
 
 module "middleware-redirect-https" {
-  count = var.reverse_proxy && !var.k8s_manifest_crd ? 1 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/middlewares/middleware-redirect-https"
   app_name = var.app_name
   namespace = local.namespace
@@ -110,7 +110,7 @@ module "middleware-redirect-https" {
 }
 
 module "tlsstore" {
-  count = var.reverse_proxy && !var.k8s_manifest_crd ? 1 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/tlsstore"
   app_name = var.app_name
   namespace = "default"
@@ -119,7 +119,7 @@ module "tlsstore" {
 }
 
 module "tlsoptions" {
-  count = var.reverse_proxy && !var.k8s_manifest_crd ? 1 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/tlsoptions"
   app_name = var.app_name
   namespace = local.namespace
@@ -127,7 +127,7 @@ module "tlsoptions" {
 }
 
 module "ingress-route" {
-  count = var.reverse_proxy && !var.k8s_manifest_crd ? 1 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/ingress-route"
   app_name = var.app_name
   namespace = local.namespace
@@ -160,7 +160,7 @@ module "cert-manager" {
 }
 
 module "acme-issuer" {
-  count = var.reverse_proxy && !var.k8s_manifest_crd ? 1 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/cert-manager/acme-issuer"
   app_name = var.app_name
   namespace = local.namespace
@@ -176,7 +176,7 @@ module "acme-issuer" {
 }
 
 module "certificate" {
-  count = var.reverse_proxy && !var.k8s_manifest_crd ? 1 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/cert-manager/certificates"
   app_name = var.app_name
   namespace = local.namespace
@@ -194,8 +194,7 @@ module "certificate" {
 # Application                                                                                     #
 ###################################################################################################
 module "fin-finances-persistent" {
-#  count = var.k8s_manifest_crd ? 0 : 1
-  count = var.deployment_type == "persistent-disk" ? 1 : 0
+  count = var.deployment_type == "persistent-disk" && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ".."
@@ -407,8 +406,7 @@ module "fin-finances-persistent" {
 }
 
 module "fin-finances-empty" {  # Using emptyDir.
-  count = var.deployment_type == "empty-dir" ? 1 : 0
-#  count = var.k8s_manifest_crd ? 0 : 1
+  count = var.deployment_type == "empty-dir" && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ".."
