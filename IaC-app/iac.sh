@@ -86,7 +86,8 @@ checkOptions() {
     exit 1
   else
     export APP_VERSION=$app_version
-    export K8S_MANIFEST_CRD=$reverse_proxy
+    export REVERSE_PROXY=$reverse_proxy
+    export K8S_CRDS=$reverse_proxy
     export DEPLOYMENT_TYPE=$deployment_type
     export PPROF=$pprof
   fi
@@ -118,15 +119,17 @@ then
   set -u
   # Checks that expected input environment variables are provided.
   : "$APP_VERSION"
-  : "$K8S_MANIFEST_CRD"
+  : "$K8S_CRDS"
   : "$DEPLOYMENT_TYPE"
   : "$PPROF"
   echo "*********************"
   echo "Environment variables"
   echo "*********************"
   echo "APP_VERSION = $(printenv APP_VERSION)"
-  echo -e "K8S_MANIFEST_CRD = $(printenv K8S_MANIFEST_CRD)\n"
-  echo -e "DEPLOYMENT_TYPE = $(printenv DEPLOYMENT_TYPE)\n"
+  echo "REVERSE_PROXY = $(printenv REVERSE_PROXY)"
+  echo "K8S_CRDS = $(printenv K8S_CRDS)"
+  echo "DEPLOYMENT_TYPE = $(printenv DEPLOYMENT_TYPE)"
+  echo -e "PPROF = $(printenv PPROF)\n"
   echo "*****************"
   echo "Current directory"
   echo "*****************"
@@ -160,7 +163,8 @@ then
   terraform init
   terraform apply -auto-approve \
     -var "app_version=$APP_VERSION" \
-    -var "k8s_manifest_crd=$K8S_MANIFEST_CRD" \
+    -var "reverse_proxy=$REVERSE_PROXY" \
+    -var "k8s_crds=$K8S_CRDS" \
     -var "deployment_type=$DEPLOYMENT_TYPE" \
     -var "pprof=$PPROF"
   echo -e "\n*********************"
