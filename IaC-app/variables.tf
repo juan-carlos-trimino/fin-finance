@@ -22,7 +22,7 @@ variable deployment_type {
 variable pprof {
   type = bool
   description = "Enable/disable profiling (pprof)."
-  default = "false"
+  default = false
 }
 
 # The limitations of the kubernetes_manifest resource
@@ -38,9 +38,21 @@ variable pprof {
 #     phase. That is, it is required to use two (2) separate Terraform apply steps: (1) Install the
 #     CRDs; (2) Install the resources that are using the CRDs.
 # This are Terraform limitations, not specific to Kubernetes.
-variable k8s_manifest_crd {
+# See https://github.com/hashicorp/terraform-provider-kubernetes/issues/1782.
+variable k8s_crds {  # CustomResourceDefinitions
   type = bool
-  default = "true"
+  default = false
+}
+
+# Phase 1:
+# reverse_proxy = true
+# k8s_crds = true
+# Phase 2:
+# reverse_proxy = true
+# k8s_crds = false
+variable reverse_proxy {
+  type = bool
+  default = false
 }
 
 variable node_port {  # NodePort: Range 30000-32767.
@@ -107,12 +119,6 @@ variable cr_password {
 ###########
 # Traefik #
 ###########
-variable reverse_proxy {
-  description = "Use a reverse proxy."
-  type = bool
-  default = false
-}
-
 # Helm chart deployment can sometimes take longer than the default 5 minutes.
 variable "helm_traefik_timeout_seconds" {
   type = number
