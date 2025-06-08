@@ -26,9 +26,10 @@ locals {
   ####################
   # Name of Services #
   ####################
-  svc_traefik = "fin-traefik"
   svc_finances = "fin-finances"
+  svc_gateway = "fin-gateway"
   svc_error_page = "fin-error-page"
+  svc_traefik = "fin-traefik"
   ############
   # Services #
   ############
@@ -261,6 +262,7 @@ module "fin-finances-persistent" {
   # }
   # Configure environment variables specific to the app.
   env = {
+    PPROF = var.pprof
     K8S = true
     HTTP_PORT = "8080"
     SVC_NAME = local.svc_finances
@@ -295,12 +297,6 @@ module "fin-finances-persistent" {
   #   field_path = "status.podIP"
   # }]
   # *** env_field ***
-  ports = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8080
-    protocol = "TCP"
-  }]
   volume_mount = [{
     name = "wsf"
     mount_path = "/wsf_data_dir"
@@ -377,30 +373,12 @@ module "fin-finances-persistent" {
     #     "ls -al /wsf_data_dir"
     # ]}
   }]
-  # /*** NodePort
-#   #########################################
-#   # Exposing services to external clients #
-#   #########################################
-#   # Use a NodePort service #
-#   ##########################
-#   # Setting the service type to NodePort – For a NodePort service, each node in the cluster opens
-#   # a port on the node itself (the same port number is used across all nodes) and redirects
-#   # traffic received on that port to the underlying service. The service isn't accessible only at
-#   # the internal cluster IP and port, but also through a dedicated port on all nodes. Specifying
-#   # the port isn't mandatory; K8s will choose a random port if it is omitted.
-#   # Note: By default, the range of the service NodePorts is 30000-32768. This range contains 2768
-#   # ports, which means that you can create up to 2768 services with NodePorts.
-#   #
-#   # For NodePort, it's required to allow communication on ALL protocols in the worker node subnet.
-#   ports = [{
-#     name = "ports"
-#     service_port = 80
-#     target_port = 8080
-#     node_port = var.nlb_node_port
-#     protocol = "TCP"
-#   }]
-#   service_type = "NodePort"
-#   NodePort ***/
+  ports = [{
+    name = "ports"
+    service_port = 80
+    target_port = 8080
+    protocol = "TCP"
+  }]
   service_type = "ClusterIP"
   service_name = local.svc_finances
 }
@@ -561,31 +539,6 @@ module "fin-finances-empty" {  # Using emptyDir.
     #     "ls -al /wsf_data_dir"
     # ]}
   }]
-  # /*** NodePort ***
-  #########################################
-  # Exposing services to external clients #
-  #########################################
-  # Use a NodePort service #
-  ##########################
-  # Setting the service type to NodePort – For a NodePort service, each node in the cluster opens
-  # a port on the node itself (the same port number is used across all nodes) and redirects
-  # traffic received on that port to the underlying service. The service isn't accessible only at
-  # the internal cluster IP and port, but also through a dedicated port on all nodes. Specifying
-  # the port isn't mandatory; K8s will choose a random port if it is omitted.
-  # Note: By default, the range of the service NodePorts is 30000-32768. This range contains 2768
-  # ports, which means that you can create up to 2768 services with NodePorts.
-  #
-  # For NodePort, it's required to allow communication on ALL protocols in the worker node subnet.
-  ports = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8080
-    node_port = var.node_port
-    protocol = "TCP"
-  }]
-  service_type = "NodePort"
-  # *** NodePort ***/
-  /*** ClusterIP ***
   ports = [{
     name = "ports"
     service_port = 80
@@ -593,6 +546,84 @@ module "fin-finances-empty" {  # Using emptyDir.
     protocol = "TCP"
   }]
   service_type = "ClusterIP"  # Internal.
-  *** ClusterIP ***/
   service_name = local.svc_finances
+}
+
+module "fin-gateway" {
+  count = var.k8s_crds ? 0 : 0
+  # Specify the location of the module, which contains the file main.tf.
+  source = "./modules/deployment"
+  dir_path = ".."
+  app_name = var.app_name
+  app_version = var.app_version
+  namespace = local.namespace
+  region = var.region
+  cr_login_server = local.cr_login_server
+  cr_username = var.cr_username
+  cr_password = var.cr_password
+  replicas = 1
+  resources = {
+    limits_cpu = "400m"
+    limits_memory = "400Mi"
+  }
+  # Configure environment variables specific to the gateway.
+  env = {
+    HTTP_PORT: "8081"
+    # SVC_NAME: local.svc_gateway
+    # SVC_DNS_METADATA: local.svc_dns_metadata
+    # SVC_DNS_HISTORY: local.svc_dns_history
+    # SVC_DNS_VIDEO_UPLOAD: local.svc_dns_video_upload
+    # SVC_DNS_VIDEO_STREAMING: local.svc_dns_video_streaming
+    # SVC_DNS_KIBANA: local.svc_dns_kibana
+    APP_NAME_VER = "${var.app_name} ${var.app_version}"
+    MAX_RETRIES = 3
+  }
+  security_context = [{
+    run_as_non_root = true
+    run_as_user = 2100
+    run_as_group = 2100
+    read_only_root_filesystem = true
+  }]
+  readiness_probe = [{
+    initial_delay_seconds = 3
+    period_seconds = 20
+    timeout_seconds = 1
+    failure_threshold = 3
+    success_threshold = 1
+    http_get = [{
+      path = "/readiness"
+      port = 8081  # Same as target port.
+      scheme = "HTTP"
+    }]
+  }]
+  liveness_probe = [{
+    initial_delay_seconds = 5
+    period_seconds = 20
+    timeout_seconds = 1
+    # Don't bother implementing retry loops; K8s will retry the probe.
+    failure_threshold = 1
+    success_threshold = 1
+    http_get = [{
+      path = "/liveness"
+      port = 8081
+      scheme = "HTTP"
+    }]
+    # tcp_socket = {
+    #   port = 8081
+    # }
+    # exec = {
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "ls -al /wsf_data_dir"
+    # ]}
+  }]
+  ports = [{
+    name = "ports"
+    service_port = 80
+    target_port = 8081
+    protocol = "TCP"
+  }]
+  service_type = "LoadBalancer"
+  service_name = local.svc_gateway
 }
