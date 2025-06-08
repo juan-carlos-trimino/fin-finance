@@ -55,11 +55,6 @@ variable reverse_proxy {
   default = false
 }
 
-variable node_port {  # NodePort: Range 30000-32767.
-  type = number
-  default = 31600
-}
-
 ######################################
 # CONFIDENTIAL/SENSITIVE INFORMATION #
 ###################################################################################################
