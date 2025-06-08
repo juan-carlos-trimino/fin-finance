@@ -39,6 +39,7 @@ checkOptions() {
   local -i size="${#arr[@]}"
   local app_version="1.0.0"
   local reverse_proxy="false"
+  local k8s_crds=$reverse_proxy
   local pprof="false"
   local deployment_type="empty-dir"
   for (( ndx = 1; ndx < size; ))  # Move pass the first argument.
@@ -64,6 +65,7 @@ checkOptions() {
         ;;
       "-rp" | "--reverse_proxy")
         reverse_proxy=$value
+        k8s_crds=$reverse_proxy
         ;;
       *)  #Default.
         echo -e "Unknown flag: $flag\n"
@@ -87,7 +89,7 @@ checkOptions() {
   else
     export APP_VERSION=$app_version
     export REVERSE_PROXY=$reverse_proxy
-    export K8S_CRDS=$reverse_proxy
+    export K8S_CRDS=$k8s_crds
     export DEPLOYMENT_TYPE=$deployment_type
     export PPROF=$pprof
   fi
@@ -120,6 +122,7 @@ then
   # Checks that expected input environment variables are provided.
   : "$APP_VERSION"
   : "$K8S_CRDS"
+  : "REVERSE_PROXY"
   : "$DEPLOYMENT_TYPE"
   : "$PPROF"
   echo "*********************"
@@ -161,6 +164,13 @@ then
   echo "Deploying the application"
   echo "*************************"
   terraform init
+  if [ "$REVERSE_PROXY" == "true" ]
+  then
+    terraform apply -auto-approve \
+      -var "reverse_proxy=$REVERSE_PROXY" \
+      -var "k8s_crds=$K8S_CRDS"
+    export K8S_CRDS="false"
+  fi
   terraform apply -auto-approve \
     -var "app_version=$APP_VERSION" \
     -var "reverse_proxy=$REVERSE_PROXY" \
