@@ -1187,33 +1187,23 @@ $ go run main.go &
 ```
 
 ### Application Deployment with Terraform
-See [terraform init](#terraform_init).
+To provision or deprovision resources required by the application, you use the script `iac.sh`. For a brief description of its usage, invoke the script with the option `-h` or `--help`.
 ```
-$ terraform init
+$ ./iac.sh -h
 ```
-From the same directory where you invoked the `init` command, run the `apply` command; this command gathers together and executes all of our `Terraform` code files. The option `-auto-approve` runs Terraform in `non-interactive` mode. See [terraform apply](#terraform_apply).
-```
-$ terraform apply -var="k8s_manifest_crd=false" -auto-approve
-```
-This command sets the variable `app_version`, enables non-interactive mode, and invokes `apply`.
-```
-$ terraform apply -var="k8s_manifest_crd=false" -var="app_version=1.0.1" -auto-approve
-```
-To deploy the reverse proxy `Traefik` after initializing `Terraform`, you’ll execute any one of the two commands below (they are equivalent since the default value for the variable `k8s_manifest_crd` is true; see [variables.tf](./IaC-app/variables.tf)). For more information see [Deploying Traefik in Our OpenShift Cluster (Part 3)](https://trimino.com/simple-app/deploy-traefik-openshift/), section `Building and Deploying Traefik`.
-```
-$ terraform apply -var="app_version=1.0.1" -auto-approve
 
-or
-
-$ terraform apply -var="k8s_manifest_crd=true" -var="app_version=1.0.1" -auto-approve
+The command below will deploy the application the following options:
+reverse proxy: `Traefik`
+deployment type: persistent disk
+application version: 1.31.2
+pprof: disable
 ```
-This command destroys your current infrastructure that was created by `Terraform`. See [terraform destroy](#terraform_destroy).
+$ ./iac.sh deploy -rp "true" -dt "persistent-disk" -av "1.31.2"
 ```
-$ terraform destroy -auto-approve
 
-or
-
-$ terraform destroy -var="app_version=1.0.1" -auto-approve
+To deprovision the resources, use the command below.
+```
+$ ./iac.sh destroy
 ```
 
 #### How to kill a process.
