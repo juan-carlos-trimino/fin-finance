@@ -248,10 +248,10 @@ module "fin-finances-persistent" {
   #   # Note: The keys and the values in the map must be strings. In other words, you cannot use
   #   #       numeric, boolean, list or other types for either the keys or the values.
   #   # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-  #   # annotations = {
-  #   #   "kubernetes.io/enforce-mountable-secrets" = "true"
-  #   #   "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
-  #   # }
+  #   annotations = {
+  #     "kubernetes.io/enforce-mountable-secrets" = "true"
+  #     "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
+  #   }
   #   automount_service_account_token = true
   #   secret = [{
   #     name = "${local.svc_finances}-secrets"
