@@ -1,0 +1,51 @@
+# The resource SecurityContextConstraints (SCC) is associated with the API group
+# security.openshift.io.
+kind: SecurityContextConstraints
+apiVersion: security.openshift.io/v1
+metadata:
+  name: fin-traefik-scc
+  annotations:
+    kubernetes.io/description: fin-traefik-scc provides all features of the restricted SCC but allows users to run with any UID and any GID.
+priority: 10
+allowPrivilegedContainer: false
+allowPrivilegeEscalation: false
+allowHostDirVolumePlugin: false
+allowHostNetwork: false
+allowHostPorts: false
+allowHostPID: false
+allowHostIPC: false
+readOnlyRootFilesystem: true
+allowedCapabilities: [
+]
+defaultAddCapabilities: [
+]
+requiredDropCapabilities: [
+  ALL
+]
+runAsUser:
+  type: RunAsAny
+fsGroup:
+  type: RunAsAny
+supplementalGroups:
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+# The users and groups fields on the SCC control which users can access the SCC. All authenticated
+# users are granted access to the Restricted SCC.
+# system:serviceaccount:<serviceaccount_namespace>:<serviceaccount_name>
+users: [
+  system:serviceaccount:finances:fin-traefik-service-account
+]
+groups: [
+  system:authenticated
+]
+# For backwards compatibility, the usage of allowHostDirVolumePlugin overrides settings in the
+# volumes field.
+volumes: [
+  configMap,
+  downwardAPI,
+  emptyDir,
+  persistentVolumeClaim,
+  projected,
+  secret
+]
