@@ -351,6 +351,7 @@ IaC-app/modules/traefik/tlsstore/*
 IaC-app/modules/traefik/traefik/*
 !IaC-app/modules/traefik/traefik/util/
 IaC-app/modules/traefik/traefik/util/*
+!IaC-app/modules/traefik/traefik/util/traefik-scc.yaml
 !IaC-app/modules/traefik/traefik/util/values.yaml
 !IaC-app/modules/traefik/traefik/main.tf
 !IaC-app/modules/.gitkeep
