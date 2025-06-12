@@ -84,6 +84,7 @@ fin-finance
  | | | | └ main.tf
  | | | └ traefik
  | | |   ├ util
+ | | |   | ├ traefik-scc.yaml
  | | |   | └ values.yaml
  | | |   └ main.tf
  | | └ .gitkeep
