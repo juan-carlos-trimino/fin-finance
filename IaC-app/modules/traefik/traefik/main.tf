@@ -16,9 +16,6 @@ variable service_name {
 variable api_auth_token {
   type = string
 }
-variable timeout {
-  type = number
-}
 variable chart_name {
   type = string
   description = "Ingress Controller Helm chart name."
@@ -33,6 +30,24 @@ variable chart_version {
   type = string
   # To use the latest version, go to https://artifacthub.io/ and type "traefik" on the edit box.
   description = "Ingress Controller Helm repository version."
+}
+variable timeout {
+  type = number
+}
+
+resource "null_resource" "scc-traefik" {
+  triggers = {
+    always_run = timestamp()
+  }
+  #
+  provisioner "local-exec" {
+    command = "kubectl apply -f ./modules/traefik/traefik/util/traefik-scc.yaml"
+  }
+  #
+  provisioner "local-exec" {
+    when = destroy
+    command = "kubectl delete scc fin-traefik-scc"
+  }
 }
 
 # See 'env:' in ./modules/traefik/traefik/util/values.yaml.
@@ -121,6 +136,18 @@ resource "kubernetes_role" "role" {
     api_groups = ["extensions", "networking.k8s.io"]
     verbs = ["update"]
     resources = ["ingresses/status"]
+  }
+  rule {
+    # The resource SecurityContextConstraints (SCC) is associated with the API group
+    # security.openshift.io. SCCs in OpenShift are a security feature that allows cluster
+    # administrators to control permissions and access to security features for pods within a
+    # cluster. While SCCs were historically exposed under the core Kubernetes API group, this is
+    # deprecated, and the recommended approach is to use the security.openshift.io group for
+    # management.
+    api_groups = ["security.openshift.io"]
+    verbs = ["use"]
+    resources = ["securitycontextconstraints"]
+    resource_names = ["fin-traefik-scc"]
   }
 }
 
