@@ -4,6 +4,16 @@
 #
 # Default values for Traefik
 #
+# Enable Access logs.
+# accessLog:
+#   filters:
+#     statusCodes:
+#       - "200"
+#       - "400-599"
+#     # Keep the access logs when at least one retry has happened.
+#     retryAttempts: true
+#     # Keep access logs when requests take longer than the specified duration.
+#     minDuration: "10ms"
 # additionalArguments:
   # Prometheus metrics exporter type.
   # - "--metrics.prometheus=true"
@@ -78,16 +88,17 @@ deployment:
   #     volumeMounts:
   #       - name: traefik-certs
   #         mountPath: /traefik-certs
-  # Amount of time (in seconds) before Kubernetes will send the SIGKILL signal if Traefik does not shut down.
+  # Amount of time (in seconds) before Kubernetes will send the SIGKILL signal if Traefik does not
+  # shut down.
   terminationGracePeriodSeconds: 60
-  # The minimum number of seconds Traefik needs to be up and running before the DaemonSet/Deployment
-  # controller considers it available.
+  # The minimum number of seconds Traefik needs to be up and running before the
+  # DaemonSet/Deployment controller considers it available.
   minReadySeconds: 0
   # Use process namespace sharing.
   shareProcessNamespace: false
 #
 entryPoints:
-  # Traefik will listen to incoming request on the port 80 (http).
+  # Traefik will listen to incoming request on port 80 (http).
   web:
     address: ':80'
     # Targeted entry point of the redirection.
@@ -99,7 +110,7 @@ entryPoints:
           scheme: https
           # Apply a permanent redirection.
           permanent: true
-  # Traefik will listen to incoming request on the port 443 (https).
+  # Traefik will listen to incoming request on port 443 (https).
   websecure:
     address: ':443'
     http:
@@ -119,10 +130,9 @@ env: [
     }
   }
 ]
-# If hostNetwork is true, runs traefik in the host network namespace
-# To prevent unschedulabel pods due to port collisions, if hostNetwork=true
-# and replicas>1, a pod anti-affinity is recommended and will be set if the
-# affinity is left as default.
+# If hostNetwork is true, run traefik in the host network namespace
+# To prevent unschedulabel pods due to port collisions, if hostNetwork=true and replicas>1, a pod
+# anti-affinity is recommended and will be set if the affinity is left as default.
 hostNetwork: false
 image:
   name: traefik
@@ -176,10 +186,11 @@ logs:
       # Keep access logs when requests take longer than the specified duration.
       minDuration: "10ms"
   general:
-    # By default, the logs use a text format (common), but you can
-    # also ask for the json format in the format option
+    # By default, the logs use a text format (common), but you can also ask for the json format in
+    # the format option
     format: json
-    # By default, the level is set to ERROR. Alternative logging levels are DEBUG, PANIC, FATAL, ERROR, WARN, and INFO.
+    # By default, the level is set to ERROR. Alternative logging levels are DEBUG, PANIC, FATAL,
+    # ERROR, WARN, and INFO.
     # level: ERROR
     level: DEBUG
 #
@@ -208,7 +219,8 @@ podDisruptionBudget:
   enabled: false
 podSecurityContext:
   fsGroup: 1234
-# Enable to create a PodSecurityPolicy and assign it to the Service Account via RoleBinding or ClusterRoleBinding.
+# Enable to create a PodSecurityPolicy and assign it to the Service Account via RoleBinding or
+# ClusterRoleBinding.
 podSecurityPolicy:
   enabled: false
 # Configure ports
@@ -218,7 +230,8 @@ ports:
     # DO NOT expose the traefik port on production deployments. To access it from outside of the
     # cluster, use `kubectl port-forward` or create a secure ingress.
     # $ kubectl port-forward -n finances $(kubectl get pods -n finances --selector "app.kubernetes.io/name=traefik" --output=name) 9000:9000
-    # From a browser, use http://127.0.0.1:9000/dashboard/ to see the Traefik dashboard; the trailing slash / in /dashboard/ is mandatory.
+    # From a browser, use http://127.0.0.1:9000/dashboard/ to see the Traefik dashboard; the
+    # trailing slash / in /dashboard/ is mandatory.
     expose: false
     # The exposed port for this service.
     exposedPort: 9000
@@ -300,12 +313,12 @@ securityContext:
   runAsGroup: 1234
   runAsNonRoot: true
   runAsUser: 1234
-# Options for the main traefik service, where the entrypoints traffic comes
-# from.
+# Options for the main traefik service, where the entrypoints traffic comes from.
 service:
   enabled: true
   type: LoadBalancer
-  # Additional annotations applied to both TCP and UDP services (e.g. for cloud provider specific config)
+  # Additional annotations applied to both TCP and UDP services (e.g. for cloud provider specific
+  # config)
   annotations: {}
   # Additional annotations for TCP service only
   annotationsTCP: {}
