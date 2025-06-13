@@ -1,7 +1,16 @@
 /***
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
--------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+The Automated Certificate Management Environment (ACME) protocol is a communications protocol for
+automating interactions between certificate authorities and their users' web servers; it allows the
+automated deployment of public key infrastructure at very low cost. It was designed by the Internet
+Security Research Group (ISRG) for its Let's Encrypt service. The ACME Issuer type represents a
+single account registered with the ACME Certificate Authority server. When you create a new ACME
+Issuer, cert-manager will generate a private key, which is used to identify you with the ACME
+server. Just keep in mind that since an Issuer is a namespaced resource, it is not possible to
+issue certificates from an Issuer in a different namespace.
+---------------------------------------------------------------------------------------------------
 Define input variables to the module.
 ***/
 variable app_name {

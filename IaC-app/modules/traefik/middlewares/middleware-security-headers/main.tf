@@ -2,6 +2,8 @@
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
 -------------------------------------------------------
+It manages the headers of requests and responses.
+-------------------------------------------------
 Define input variables to the module.
 ***/
 variable app_name {

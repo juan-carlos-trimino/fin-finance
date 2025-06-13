@@ -37,6 +37,11 @@ certificatesResolvers:
       # ./modules/traefik/cert-manager/acme-issuer.
       # email address used for registration.
       # email: 'someone@trimino.xyz'
+      # The CA server. The staging environment (default) will not issue trusted certificates, but
+      # it is used to ensure that the verification process is working properly before moving to
+      # production. The production environment imposes much stricter rate limits; hence, to reduce
+      # the chance of you hitting those limits, it is highly recommended to start by using the
+      # staging environment.
       # Production.
       # caServer: https://acme-v02.api.letsencrypt.org/directory
       # Staging.

@@ -1,7 +1,10 @@
 /***
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
--------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+The TLS options allow you to configure some parameters of the TLS connection. For more information,
+see https://doc.traefik.io/traefik/https/tls/#tls-options.
+---------------------------------------------------------------------------------------------------
 Define input variables to the module.
 ***/
 variable app_name {

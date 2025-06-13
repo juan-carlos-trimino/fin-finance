@@ -1,7 +1,19 @@
 /***
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
--------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+Traefik is an edge router or reverse proxy that works as an ingress controller (router in
+OpenShift) for a Kubernetes cluster. It is responsible for ensuring that when traffic from a web
+application hits the cluster, it will go to the right Service; furthermore, Traefik supports ACME
+and Let's Encrypt thereby making it very easy to manage and assign an SSL/TLS certificate to a web
+application.
+
+Traefik will be deployed as the reverse proxy with Basic Authentication (credentials are base64
+encoded but not encrypted, see RFC7617) over SSL/TLS (HTTPS). However, since you are using the
+Traefik Community Edition, only a single instance of Traefik with Let's Encrypt is supported, and,
+by extension, a single point of failure is introduced to the deployment. (Traefik Enterprise
+Edition with Let's Encrypt supports High Availability (HA).)
+---------------------------------------------------------------------------------------------------
 Define input variables to the module.
 ***/
 variable app_name {
@@ -35,6 +47,9 @@ variable timeout {
   type = number
 }
 
+# The null_resource can be used to create Terraform resources that don't have any particular
+# resource type, and the local-exec is used to invoke commands on the local computer. The timestamp
+# forces the commands to always be invoked.
 resource "null_resource" "scc-traefik" {
   triggers = {
     always_run = timestamp()
@@ -137,13 +152,15 @@ resource "kubernetes_role" "role" {
     verbs = ["update"]
     resources = ["ingresses/status"]
   }
+  # This rule adds the custom SCC to the Role.
   rule {
     # The resource SecurityContextConstraints (SCC) is associated with the API group
     # security.openshift.io. SCCs in OpenShift are a security feature that allows cluster
     # administrators to control permissions and access to security features for pods within a
-    # cluster. While SCCs were historically exposed under the core Kubernetes API group, this is
-    # deprecated, and the recommended approach is to use the security.openshift.io group for
-    # management.
+    # cluster. SCCs are cluster-level resources requiring administrators to have cluster-admin
+    # privileges to manage them. While SCCs were historically exposed under the core Kubernetes API
+    # group, this is deprecated, and the recommended approach is to use the security.openshift.io
+    # group for management.
     api_groups = ["security.openshift.io"]
     verbs = ["use"]
     resources = ["securitycontextconstraints"]

@@ -1,7 +1,15 @@
 /***
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
--------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+An Ingress (entryway) exposes HTTP and HTTPS routes from outside the cluster to services within the
+cluster. Traffic routing is controlled by rules defined on the Ingress resource. An Ingress
+operates at the application layer of the network stack (for example HTTP) and can provide features
+that a service cannot. But in order to make an Ingress resource work, an Ingress controller needs
+to be running in the cluster. Different Kubernetes environments use different implementations of
+the controller, but several do not provide a controller at all; e.g., OpenShift uses an Ingress
+controller that is based on HAProxy. Here we are using Traefik.
+---------------------------------------------------------------------------------------------------
 Define input variables to the module.
 ***/
 variable app_name {

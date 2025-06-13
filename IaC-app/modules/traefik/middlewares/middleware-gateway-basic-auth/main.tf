@@ -1,7 +1,9 @@
 /***
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
--------------------------------------------------------
+--------------------------------------------------------------
+It uses basic authentication with SSL/TLS for the application.
+--------------------------------------------------------------
 Define input variables to the module.
 ***/
 variable app_name {

@@ -1,7 +1,12 @@
 /***
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
--------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+In Traefik, certificates are grouped together in certificates stores, and the TLS Store allows you
+to configure the default TLS store. For more information, see
+https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/#kind-tlsstore and
+https://doc.traefik.io/traefik/https/tls/#tls-options
+---------------------------------------------------------------------------------------------------
 Define input variables to the module.
 ***/
 variable app_name {

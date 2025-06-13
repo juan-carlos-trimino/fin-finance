@@ -1,7 +1,10 @@
 /***
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
--------------------------------------------------------
+--------------------------------------------------------------------------------------------
+It redirects the request if the request scheme is different from the configured scheme; this
+implementation uses the EntryPoint redirection.
+--------------------------------------------------------------------------------------------
 Define input variables to the module.
 ***/
 variable app_name {

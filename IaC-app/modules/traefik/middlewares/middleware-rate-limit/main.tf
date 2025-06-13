@@ -1,7 +1,10 @@
 /***
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
--------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+It ensures that services will receive a fair amount of requests and allows you to define what fair
+is.
+---------------------------------------------------------------------------------------------------
 Define input variables to the module.
 ***/
 variable app_name {

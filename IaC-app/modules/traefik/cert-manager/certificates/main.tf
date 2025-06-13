@@ -1,7 +1,11 @@
 /***
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
--------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+cert-manager can be used to obtain certificates from a CA using the ACME protocol. A certificate is
+a namespaced resource that references an Issuer or ClusterIssuer and defines a desired X.509
+certificate that will be renewed and kept up to date.
+---------------------------------------------------------------------------------------------------
 Define input variables to the module.
 ***/
 variable app_name {

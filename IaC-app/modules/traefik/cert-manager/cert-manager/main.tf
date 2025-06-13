@@ -1,7 +1,15 @@
 /***
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
--------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+cert-manager is a powerful and extensible X.509 certificate management for Kubernetes. It will
+obtain certificates from a variety of issuers; it ensures the certificates are valid and
+up-to-date; and it will attempt to renew certificates at a configured time before expiry. On the
+other hand, Traefik is capable of handling certificates in your cluster, but only when there is a
+single pod of Traefik running. This, of course, is not acceptable because this pod becomes a single
+point of failure in the infrastructure. To solve this issue, you’ll use cert-manager to request,
+issue, renew, and store your certificates.
+---------------------------------------------------------------------------------------------------
 Define input variables to the module.
 ***/
 variable namespace {

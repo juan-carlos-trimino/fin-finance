@@ -1,7 +1,9 @@
 /***
 -------------------------------------------------------
 A Terraform reusable module for deploying microservices
--------------------------------------------------------
+----------------------------------------------------------------------------------------
+It compresses responses before sending them to the client; it uses the gzip compression.
+----------------------------------------------------------------------------------------
 Define input variables to the module.
 ***/
 variable app_name {

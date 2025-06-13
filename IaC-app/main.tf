@@ -55,7 +55,7 @@ module "traefik" {
 }
 
 module "middleware-gateway-basic-auth" {
-  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
+  count = var.k8s_crds ? 0 : 0
   source = "./modules/traefik/middlewares/middleware-gateway-basic-auth"
   app_name = var.app_name
   namespace = local.namespace
