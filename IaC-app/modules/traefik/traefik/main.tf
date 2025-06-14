@@ -50,20 +50,20 @@ variable timeout {
 # The null_resource can be used to create Terraform resources that don't have any particular
 # resource type, and the local-exec is used to invoke commands on the local computer. The timestamp
 # forces the commands to always be invoked.
-resource "null_resource" "scc-traefik" {
-  triggers = {
-    always_run = timestamp()
-  }
-  #
-  provisioner "local-exec" {
-    command = "kubectl apply -f ./modules/traefik/traefik/util/traefik-scc.yaml"
-  }
-  #
-  provisioner "local-exec" {
-    when = destroy
-    command = "kubectl delete scc fin-traefik-scc"
-  }
-}
+# resource "null_resource" "scc-traefik" {
+#   triggers = {
+#     always_run = timestamp()
+#   }
+#   #
+#   provisioner "local-exec" {
+#     command = "kubectl apply -f ./modules/traefik/traefik/util/traefik-scc.yaml"
+#   }
+#   #
+#   provisioner "local-exec" {
+#     when = destroy
+#     command = "kubectl delete scc fin-traefik-scc"
+#   }
+# }
 
 # See 'env:' in ./modules/traefik/traefik/util/values.yaml.
 resource "kubernetes_secret" "secret" {
@@ -153,19 +153,19 @@ resource "kubernetes_role" "role" {
     resources = ["ingresses/status"]
   }
   # This rule adds the custom SCC to the Role.
-  rule {
-    # The resource SecurityContextConstraints (SCC) is associated with the API group
-    # security.openshift.io. SCCs in OpenShift are a security feature that allows cluster
-    # administrators to control permissions and access to security features for pods within a
-    # cluster. SCCs are cluster-level resources requiring administrators to have cluster-admin
-    # privileges to manage them. While SCCs were historically exposed under the core Kubernetes API
-    # group, this is deprecated, and the recommended approach is to use the security.openshift.io
-    # group for management.
-    api_groups = ["security.openshift.io"]
-    verbs = ["use"]
-    resources = ["securitycontextconstraints"]
-    resource_names = ["fin-traefik-scc"]
-  }
+  # rule {
+  #   # The resource SecurityContextConstraints (SCC) is associated with the API group
+  #   # security.openshift.io. SCCs in OpenShift are a security feature that allows cluster
+  #   # administrators to control permissions and access to security features for pods within a
+  #   # cluster. SCCs are cluster-level resources requiring administrators to have cluster-admin
+  #   # privileges to manage them. While SCCs were historically exposed under the core Kubernetes API
+  #   # group, this is deprecated, and the recommended approach is to use the security.openshift.io
+  #   # group for management.
+  #   api_groups = ["security.openshift.io"]
+  #   verbs = ["use"]
+  #   resources = ["securitycontextconstraints"]
+  #   resource_names = ["fin-traefik-scc"]
+  # }
 }
 
 # Bind the role to the service account.
