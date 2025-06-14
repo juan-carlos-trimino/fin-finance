@@ -369,7 +369,9 @@ resource "null_resource" "docker_build" {
   }
   #
   provisioner "local-exec" {
-    command = "docker build --platform linux/amd64,linux/arm64 --tag ${local.image_tag} --file ${var.dir_path}/${var.dockerfile_name} ${var.dir_path}"
+    # Multi-platform build.
+    # command = "docker build --platform linux/amd64,linux/arm64 --tag ${local.image_tag} --file ${var.dir_path}/${var.dockerfile_name} ${var.dir_path}"
+    command = "docker build --platform linux/arm64 --tag ${local.image_tag} --file ${var.dir_path}/${var.dockerfile_name} ${var.dir_path}"
   }
 }
 
