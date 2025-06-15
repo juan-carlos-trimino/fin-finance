@@ -140,7 +140,6 @@ module "ingress-route" {
   middleware_dashboard_basic_auth = local.middleware_dashboard_basic_auth
   middleware_security_headers = local.middleware_security_headers
   svc_finances = local.svc_finances
-  # svc_gateway = local.svc_gateway
   secret_name = local.traefik_secret_cert_name
   issuer_name = local.issuer_name
   # host_name = "169.46.98.220.nip.io"
@@ -215,9 +214,13 @@ module "fin-finances-persistent" {
     limits_memory = "300Mi"
   }
   # https://kubernetes.io/docs/concepts/configuration/secret/
-  # If the order of Secrets changes, the Deployment must be changed accordingly.
+  # If the order of Secrets changes, the Deployment must be changed accordingly. See
+  # spec.image_pull_secrets.
   secrets = [{
     name = "${local.svc_finances}-registry-credentials"
+    annotations = {
+      "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
+    }
     # Plain-text data.
     data = {
       ".dockerconfigjson" = jsonencode({
@@ -427,9 +430,13 @@ module "fin-finances-empty" {  # Using emptyDir.
     limits_memory = "300Mi"
   }
   # https://kubernetes.io/docs/concepts/configuration/secret/
-  # If the order of Secrets changes, the Deployment must be changed accordingly.
+  # If the order of Secrets changes, the Deployment must be changed accordingly. See
+  # spec.image_pull_secrets.
   secrets = [{
     name = "${local.svc_finances}-registry-credentials"
+    annotations = {
+      "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
+    }
     # Plain-text data.
     data = {
       ".dockerconfigjson" = jsonencode({
@@ -442,23 +449,23 @@ module "fin-finances-empty" {  # Using emptyDir.
     }
     type = "kubernetes.io/dockerconfigjson"
   }]
-  # service_account = {
-  #   name = "${local.svc_finances}-service-account"
-  #   # Note: The keys and the values in the map must be strings. In other words, you cannot use
-  #   #       numeric, boolean, list or other types for either the keys or the values.
-  #   # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-  #   # annotations = {
-  #   #   "kubernetes.io/enforce-mountable-secrets" = "true"
-  #   #   "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
-  #   # }
-  #   automount_service_account_token = true
-  #   secret = [{
-  #     name = "${local.svc_finances}-secrets"
-  #   },
-  #   {
-  #     name = "${local.svc_finances}-s3-storage"
-  #   }]
-  # }
+  service_account = {
+    name = "${local.svc_finances}-service-account"
+    # Note: The keys and the values in the map must be strings. In other words, you cannot use
+    #       numeric, boolean, list or other types for either the keys or the values.
+    # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+    annotations = {
+      "kubernetes.io/enforce-mountable-secrets" = "true"
+    }
+    automount_service_account_token = false
+    secret = [{
+      name = "${local.svc_finances}-registry-credentials"
+    },
+    # {
+    #   name = "${local.svc_finances}-s3-storage"
+    # }
+    ]
+  }
   # Configure environment variables specific to the app.
   env = {
     PPROF = var.pprof
