@@ -160,17 +160,23 @@ then
   #   simple, never => Always make simple backups
   # -S, --suffix=SUFFIX => Override the usual backup suffix.
   echo -e "$(cp -v -a --backup="simple" -S=".bak" tf_secrets.auto.tfvars ../../../tf-secret-vars/IaC-app/tf_secrets.auto.tfvars)\n"
-  echo "*************************"
-  echo "Deploying the application"
-  echo "*************************"
+  echo "**********************"
+  echo "Initializing Terraform"
+  echo "**********************"
   terraform init
   if [ "$REVERSE_PROXY" == "true" ]
   then
+    echo "*****************************************"
+    echo "Creating CustomResourceDefinitions (CRDs)"
+    echo "*****************************************"
     terraform apply -auto-approve \
       -var "reverse_proxy=$REVERSE_PROXY" \
       -var "k8s_crds=$K8S_CRDS"
     export K8S_CRDS="false"
   fi
+  echo "*************************"
+  echo "Deploying the application"
+  echo "*************************"
   terraform apply -auto-approve \
     -var "app_version=$APP_VERSION" \
     -var "reverse_proxy=$REVERSE_PROXY" \
