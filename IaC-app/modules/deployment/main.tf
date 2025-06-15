@@ -240,7 +240,7 @@ variable service_account {
     name = string
     annotations = optional(map(string), {})
     automount_service_account_token = optional(bool, true)
-    secret = optional(list(object({
+    secrets = optional(list(object({
       name = string
     })), [])
   })
@@ -443,12 +443,15 @@ resource "kubernetes_service_account" "service_account" {
     }
     annotations = var.service_account.annotations
   }
-  # To enable automatic mounting of the service account token; it defaults to true.
+  # If you don't want the kubelet to automatically mount a ServiceAccount's API credentials, you
+  # can opt out of the default behavior. You can opt out of automounting API credentials on
+  # /var/run/secrets/kubernetes.io/serviceaccount/token for a service account by setting
+  # automountServiceAccountToken: false on the ServiceAccount.
   automount_service_account_token = var.service_account.automount_service_account_token
   dynamic "secret" {
-    for_each = var.service_account.secret
+    for_each = var.service_account.secrets
     content {
-      name = secret.value["name"]
+      name = secrets.value["name"]
     }
   }
 }
