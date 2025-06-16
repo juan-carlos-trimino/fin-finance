@@ -238,12 +238,20 @@ variable service_account {
   default = null
   type = object({
     name = string
+    # Note: The keys and the values in the map must be strings. In other words, you cannot use
+    #       numeric, boolean, list or other types for either the keys or the values.
+    labels = optional(map(string), {})
+    # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
     annotations = optional(map(string), {})
     automount_service_account_token = optional(bool, true)
     secrets = optional(list(object({
       name = string
     })), [])
   })
+}
+variable automount_service_account_token {
+  default = false
+  type = bool
 }
 # The service normally forwards each connection to a randomly selected backing pod. To ensure that
 # connections from a particular client are passed to the same Pod each time, set the service's
@@ -426,6 +434,8 @@ resource "kubernetes_secret" "secrets" {
   # Plain-text data.
   data = var.secrets[count.index].data
   binary_data = var.secrets[count.index].binary_data
+  # https://kubernetes.io/docs/concepts/configuration/secret/#secret-types
+  # https://kubernetes.io/docs/concepts/configuration/secret/#serviceaccount-token-secrets
   type = var.secrets[count.index].type
 }
 
@@ -438,15 +448,14 @@ resource "kubernetes_service_account" "service_account" {
   metadata {
     name = var.service_account.name
     namespace = var.namespace
-    labels = {
-      app = var.app_name
-    }
+    labels = var.service_account.labels
+    # https://kubernetes.io/docs/concepts/security/service-accounts/#enforce-mountable-secrets
     annotations = var.service_account.annotations
   }
   # If you don't want the kubelet to automatically mount a ServiceAccount's API credentials, you
   # can opt out of the default behavior. You can opt out of automounting API credentials on
   # /var/run/secrets/kubernetes.io/serviceaccount/token for a service account by setting
-  # automountServiceAccountToken: false on the ServiceAccount.
+  # 'automountServiceAccountToken: false' on the ServiceAccount.
   automount_service_account_token = var.service_account.automount_service_account_token
   dynamic "secret" {
     for_each = var.service_account.secrets
@@ -526,6 +535,13 @@ resource "kubernetes_deployment" "stateless" {
           name = kubernetes_secret.secrets[0].metadata[0].name  # registry-credentials
         }
         service_account_name = var.service_account == null ? "default" : var.service_account.name
+        # In version 1.6+, you can opt out of automounting API credentials for a service account by
+        # setting 'automountServiceAccountToken: false' on the service account.
+        # In version 1.6+, you can also opt out of automounting API credentials for a particular
+        # pod.
+        # The pod spec takes precedence over the service account if both specify an
+        # 'automountServiceAccountToken' value.
+        automount_service_account_token = var.automount_service_account_token
         # Security context options at the pod level serve as a default for all the pod's containers
         # but can be overridden at the container level.
         dynamic "security_context" {

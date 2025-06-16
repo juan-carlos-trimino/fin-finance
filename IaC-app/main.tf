@@ -434,9 +434,6 @@ module "fin-finances-empty" {  # Using emptyDir.
   # spec.image_pull_secrets.
   secrets = [{
     name = "${local.svc_finances}-registry-credentials"
-    annotations = {
-      "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
-    }
     # Plain-text data.
     data = {
       ".dockerconfigjson" = jsonencode({
@@ -451,12 +448,10 @@ module "fin-finances-empty" {  # Using emptyDir.
   }]
   service_account = {
     name = "${local.svc_finances}-service-account"
-    # Note: The keys and the values in the map must be strings. In other words, you cannot use
-    #       numeric, boolean, list or other types for either the keys or the values.
-    # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-    annotations = {
-      "kubernetes.io/enforce-mountable-secrets" = "true"
+    labels = {
+      "app" = var.app_name
     }
+    annotations = {}
     automount_service_account_token = false
     secret = [{
       name = "${local.svc_finances}-registry-credentials"
