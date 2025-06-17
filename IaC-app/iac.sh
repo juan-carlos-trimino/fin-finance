@@ -27,7 +27,7 @@ display_help() {
   exit 0
 }
 
-checkOptions() {
+check_options() {
   # echo "Elements in \$@: $@"
   arr=()
   for arg in "$@"
@@ -96,8 +96,28 @@ checkOptions() {
   return
 }
 
+print_time_elapsed() {
+  echo -e "\n*************************************************"
+  echo "Done..."
+  local end_time=$(date)
+  echo "$end_time"
+  start_time_seconds=$(date -d "$1" +"%s")
+  end_time_seconds=$(date -d "$end_time" +"%s")
+  duration=$(( $end_time_seconds - $start_time_seconds ))
+  printf "Time Elapsed: %02d hours %02d minutes and %02d seconds.\n" "$(($duration / 3600))" \
+         "$(($duration % 3600 / 60))" "$(($duration % 60))"
+  echo -e "*************************************************\n"
+  return
+}
+
 # Main program
 echo -e "\n"
+check_options $@
+echo "****************************"
+echo "Starting deployment..."
+start_time=$(date)
+echo "$start_time"
+echo -e "****************************\n"
 if [ "$1" == "destroy" ]
 then
   declare -i arguments="$#"
@@ -106,16 +126,10 @@ then
     display_help
   else
     terraform destroy -auto-approve
-    echo -e "\n"
+    print_time_elapsed "$start_time"
   fi
 elif [ "$1" == "deploy" ]
 then
-  checkOptions $@
-  echo "****************************"
-  echo "Starting deployment..."
-  start_time=$(date)
-  echo "$start_time"
-  echo -e "****************************\n"
   # Treats unset or undefined variables as an error when substituting (during parameter expansion).
   # Does not apply to special parameters such as wildcard * or @.
   set -u
@@ -193,15 +207,7 @@ then
   else
     echo "The lock file does not exist."
   fi
-  echo -e "\n****************************"
-  echo "Done..."
-  end_time=$(date)
-  echo "$end_time"
-  start_time_seconds=$(date -d "$start_time" +"%s")
-  end_time_seconds=$(date -d "$end_time" +"%s")
-  duration=$(( $end_time_seconds - $start_time_seconds ))
-  echo "Time Elapsed: $(($duration / 3600)) hours $(($duration % 3600 / 60)) minutes and $(($duration % 60)) seconds."
-  echo -e "****************************\n"
+  print_time_elapsed "$start_time"
 else
   display_help
 fi
