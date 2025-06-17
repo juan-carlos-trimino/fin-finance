@@ -218,9 +218,6 @@ module "fin-finances-persistent" {
   # spec.image_pull_secrets.
   secrets = [{
     name = "${local.svc_finances}-registry-credentials"
-    annotations = {
-      "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
-    }
     # Plain-text data.
     data = {
       ".dockerconfigjson" = jsonencode({
@@ -246,23 +243,54 @@ module "fin-finances-persistent" {
   # }
   # *** s3 storage ***
   ]
-  # service_account = {
-  #   name = "${local.svc_finances}-service-account"
-  #   # Note: The keys and the values in the map must be strings. In other words, you cannot use
-  #   #       numeric, boolean, list or other types for either the keys or the values.
-  #   # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-  #   annotations = {
-  #     "kubernetes.io/enforce-mountable-secrets" = "true"
-  #     "kubernetes.io/service-account.name" = "${local.svc_finances}-service-account"
-  #   }
-  #   automount_service_account_token = true
-  #   secret = [{
-  #     name = "${local.svc_finances}-secrets"
-  #   },
-  #   {
-  #     name = "${local.svc_finances}-s3-storage"
-  #   }]
-  # }
+  service_account = {
+    name = "${local.svc_finances}-service-account"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    annotations = {}
+    automount_service_account_token = false
+    secrets = [{
+      name = "${local.svc_finances}-registry-credentials"
+    },
+    # {
+    #   name = "${local.svc_finances}-s3-storage"
+    # }
+    ]
+  }
+  role = {
+    name = "${local.svc_finances}-role"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    annotations = {}
+    rules = [{
+      # It provides read-only access to information without allowing modification.
+      api_groups = [""]
+      resources = ["pods", "configmaps"]
+      verbs = ["get", "watch", "list"]
+    }]
+  }
+  role_binding = {
+    name = "${local.svc_finances}-role-binding"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    annotations = {}
+    role_ref = {
+      kind = "Role"
+      name = "${local.svc_finances}-role"
+      api_group = "rbac.authorization.k8s.io"
+    }
+    subjects = [{
+      kind = "ServiceAccount"
+      name = "${local.svc_finances}-service-account"
+      namespace = local.namespace
+    }]
+  }
   # Configure environment variables specific to the app.
   env = {
     PPROF = var.pprof
@@ -474,22 +502,7 @@ module "fin-finances-empty" {  # Using emptyDir.
       api_groups = [""]
       resources = ["pods", "configmaps"]
       verbs = ["get", "watch", "list"]
-    },
-    # {
-    #   api_groups = ["traefik.containo.us/v1alpha1"]
-    #   verbs = ["get", "watch", "list"]
-    #   resources = [
-    #     "middlewares",
-    #     "ingressroutes",
-    #     "traefikservices",
-    #     "ingressroutetcps",
-    #     "ingressrouteudps",
-    #     "tlsoptions",
-    #     "tlsstores",
-    #     "serverstransports"
-    #   ]
-    # }
-    ]
+    }]
   }
   role_binding = {
     name = "${local.svc_finances}-role-binding"
