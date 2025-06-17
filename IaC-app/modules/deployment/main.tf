@@ -238,6 +238,7 @@ variable service_account {
   default = null
   type = object({
     name = string
+    namespace = string
     # Note: The keys and the values in the map must be strings. In other words, you cannot use
     #       numeric, boolean, list or other types for either the keys or the values.
     labels = optional(map(string), {})
@@ -247,6 +248,56 @@ variable service_account {
     secrets = optional(list(object({
       name = string
     })), [])
+  })
+}
+variable role {
+  default = null
+  type = object({
+    name = string
+    namespace = string
+    labels = optional(map(string), {})
+    annotations = optional(map(string), {})
+    rules = optional(list(object({
+      api_groups = set(string)
+      resources = set(string)
+      resource_names = optional(set(string))
+      verbs = set(string)
+    })), [])
+  })
+}
+variable role_binding {
+  default = null
+  type = object({
+    # Name of the role binding, must be unique.
+    name = string
+    namespace = string
+    labels = optional(map(string), {})
+    annotations = optional(map(string), {})
+    # A RoleBinding always references a single Role, but it can bind the Role to multiple subjects.
+    # The Role to bind Subjects to.
+    role_ref = object({
+      kind = string
+      # 'name' must match the name of the Role or ClusterRole you wish to bind to.
+      name = string
+      # The API group to drive authorization decisions. This value must be and defaults to
+      # 'rbac.authorization.k8s.io'.
+      api_group = string
+    })
+    # The Users, Groups, or ServiceAccounts to grand permissions to.
+    # More than one 'subject' is allowed.
+    subjects = list(object({
+      # The type of binding to use. This value must be ServiceAccount, User or Group.
+      kind = string
+      # The name of this Role to bind Subjects to.
+      # 'name' is case sensitive.
+      name = string
+      # Namespace defines the namespace of the ServiceAccount to bind to. This value only applies
+      # to kind ServiceAccount.
+      namespace = optional(string)
+      # The API group to drive authorization decisions. This value only applies to kind User and
+      # Group. It must be 'rbac.authorization.k8s.io'.
+      api_group = optional(string)
+    }))
   })
 }
 variable automount_service_account_token {
@@ -447,7 +498,7 @@ resource "kubernetes_service_account" "service_account" {
   count = var.service_account == null ? 0 : 1
   metadata {
     name = var.service_account.name
-    namespace = var.namespace
+    namespace = var.service_account.namespace
     labels = var.service_account.labels
     # https://kubernetes.io/docs/concepts/security/service-accounts/#enforce-mountable-secrets
     annotations = var.service_account.annotations
@@ -459,8 +510,54 @@ resource "kubernetes_service_account" "service_account" {
   automount_service_account_token = var.service_account.automount_service_account_token
   dynamic "secret" {
     for_each = var.service_account.secrets
+    iterator = it
     content {
-      name = secrets.value["name"]
+      name = it.value["name"]
+    }
+  }
+}
+
+resource "kubernetes_role" "role" {
+  count = var.role == null ? 0 : 1
+  metadata {
+    name = var.role.name
+    namespace = var.role.namespace
+    labels = var.role.labels
+    annotations = var.role.annotations
+  }
+  dynamic "rule" {
+    for_each = var.role.rules
+    iterator = it
+    content {
+      api_groups = it.value["api_groups"]
+      verbs = it.value["verbs"]
+      resources = it.value["resources"]
+      resource_names = it.value["resource_names"]
+    }
+  }
+}
+
+resource "kubernetes_role_binding" "role_binding" {
+  count = var.role_binding == null ? 0 : 1
+  metadata {
+    name = var.role_binding.name
+    namespace = var.role_binding.namespace
+    labels = var.role_binding.labels
+    annotations = var.role_binding.annotations
+  }
+  role_ref {
+    kind = var.role_binding.role_ref.kind
+    name = var.role_binding.role_ref.name
+    api_group = var.role_binding.role_ref.api_group
+  }
+  dynamic "subject" {
+    for_each = var.role_binding.subjects
+    iterator = it
+    content {
+      kind = it.value["kind"]
+      name = it.value["name"]
+      namespace = it.value["namespace"]
+      api_group = it.value["api_group"]
     }
   }
 }
