@@ -448,18 +448,66 @@ module "fin-finances-empty" {  # Using emptyDir.
   }]
   service_account = {
     name = "${local.svc_finances}-service-account"
+    namespace = local.namespace
     labels = {
       "app" = var.app_name
     }
     annotations = {}
     automount_service_account_token = false
-    secret = [{
+    secrets = [{
       name = "${local.svc_finances}-registry-credentials"
     },
     # {
     #   name = "${local.svc_finances}-s3-storage"
     # }
     ]
+  }
+  role = {
+    name = "${local.svc_finances}-role"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    annotations = {}
+    rules = [{
+      # It provides read-only access to information without allowing modification.
+      api_groups = [""]
+      resources = ["pods", "configmaps"]
+      verbs = ["get", "watch", "list"]
+    },
+    # {
+    #   api_groups = ["traefik.containo.us/v1alpha1"]
+    #   verbs = ["get", "watch", "list"]
+    #   resources = [
+    #     "middlewares",
+    #     "ingressroutes",
+    #     "traefikservices",
+    #     "ingressroutetcps",
+    #     "ingressrouteudps",
+    #     "tlsoptions",
+    #     "tlsstores",
+    #     "serverstransports"
+    #   ]
+    # }
+    ]
+  }
+  role_binding = {
+    name = "${local.svc_finances}-role-binding"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    annotations = {}
+    role_ref = {
+      kind = "Role"
+      name = "${local.svc_finances}-role"
+      api_group = "rbac.authorization.k8s.io"
+    }
+    subjects = [{
+      kind = "ServiceAccount"
+      name = "${local.svc_finances}-service-account"
+      namespace = local.namespace
+    }]
   }
   # Configure environment variables specific to the app.
   env = {
