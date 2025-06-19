@@ -127,7 +127,7 @@ resource "kubernetes_manifest" "ingress-route" {
         },
         {
           kind = "Rule"
-          match = "Host(`${var.host_name}`, `www.${var.host_name}`) && PathPrefix(`/ping`)"
+          match = "(Host(`${var.host_name}`) || Host(`www.${var.host_name}`)) && PathPrefix(`/ping`)"
           priority = 40
           middlewares = [
             {
