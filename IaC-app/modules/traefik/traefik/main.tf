@@ -36,7 +36,7 @@ variable chart_name {
 variable chart_repo {
   type = string
   description = "Using the official Traefik helm chart (Ingress Controller)."
-  default = "https://helm.traefik.io/traefik"
+  default = "https://traefik.github.io/charts"
 }
 variable chart_version {
   type = string
@@ -124,23 +124,15 @@ resource "kubernetes_role" "role" {
   rule {
     # Resources in the core apiGroup, which has no name - hence the "".
     api_groups = [""]
-    verbs = ["get", "watch", "list"]
     # The plural form must be used when specifying resources.
-    resources = ["services", "endpoints", "secrets"]
+    resources = ["services", "secrets"]
+    verbs = ["get", "watch", "list"]
   }
   rule {
-    api_groups = ["traefik.containo.us/v1alpha1"]
-    verbs = ["get", "watch", "list"]
-    resources = [
-      "middlewares",
-      "ingressroutes",
-      "traefikservices",
-      "ingressroutetcps",
-      "ingressrouteudps",
-      "tlsoptions",
-      "tlsstores",
-      "serverstransports"
-    ]
+    api_groups = ["discovery.k8s.io"]
+    verbs = ["list", "watch"]
+    resources = ["endpointslices"]
+
   }
   rule {
     api_groups = ["extensions", "networking.k8s.io"]
@@ -151,6 +143,23 @@ resource "kubernetes_role" "role" {
     api_groups = ["extensions", "networking.k8s.io"]
     verbs = ["update"]
     resources = ["ingresses/status"]
+  }
+  rule {
+    # api_groups = ["traefik.containo.us/v1alpha1"]
+    api_groups = ["traefik.io"]
+    verbs = ["get", "watch", "list"]
+    resources = [
+      "middlewares",
+      "middlewaretcps",
+      "ingressroutes",
+      "traefikservices",
+      "ingressroutetcps",
+      "ingressrouteudps",
+      "tlsoptions",
+      "tlsstores",
+      "serverstransports",
+      "serverstransporttcps"
+    ]
   }
   # This rule adds the custom SCC to the Role.
   # rule {
@@ -194,11 +203,11 @@ resource "kubernetes_role_binding" "role_binding" {
 }
 
 resource "helm_release" "traefik" {
+  name = var.service_name
   chart = var.chart_name
   repository = var.chart_repo
   version = var.chart_version
   namespace = var.namespace
-  name = var.service_name
   values = [file("./modules/traefik/traefik/util/values.yaml")]
   # timeout = var.timeout
 }

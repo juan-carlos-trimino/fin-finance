@@ -48,14 +48,14 @@ module "traefik" {
   source = "./modules/traefik/traefik"
   app_name = var.app_name
   namespace = local.namespace
-  chart_version = "26.1.0"
+  chart_version = "27.0.2"  # Traefik Proxy to v2.11.2; released 12 Apr, 2024.
   api_auth_token = var.traefik_dns_api_token
   timeout = var.helm_traefik_timeout_seconds
   service_name = local.svc_traefik
 }
 
 module "middleware-gateway-basic-auth" {
-  count = var.k8s_crds ? 0 : 0
+  count = var.reverse_proxy && !var.k8s_crds ? 1 : 0
   source = "./modules/traefik/middlewares/middleware-gateway-basic-auth"
   app_name = var.app_name
   namespace = local.namespace
@@ -189,6 +189,30 @@ module "certificate" {
   dns_names = ["trimino.xyz", "www.trimino.xyz"]
   secret_name = local.traefik_secret_cert_name
 }
+
+
+
+
+###################################################################################################
+# whoami                                                                                          #
+# Web service app for testing Traefik                                                             #
+###################################################################################################
+module "whoiam" {
+  count = var.deployment_type == "whoami" && !var.k8s_crds ? 1 : 0
+  source = "./modules/deployment"
+  dir_path = ".."
+  app_name = var.app_name
+  app_version = var.app_version
+  namespace = local.namespace
+  region = var.region
+  cr_login_server = local.cr_login_server
+  cr_username = var.cr_username
+  cr_password = var.cr_password
+  service_name = "fin-whoami"
+}
+
+
+
 
 ###################################################################################################
 # Application                                                                                     #

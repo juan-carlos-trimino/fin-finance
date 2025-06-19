@@ -22,7 +22,7 @@ variable minResponseBodyBytes {
 
 resource "kubernetes_manifest" "middleware" {
   manifest = {
-    apiVersion = "traefik.containo.us/v1alpha1"
+    apiVersion = "traefik.io/v1alpha1"
     kind = "Middleware"
     metadata = {
       name = var.service_name

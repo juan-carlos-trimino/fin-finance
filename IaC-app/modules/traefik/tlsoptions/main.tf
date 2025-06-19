@@ -19,7 +19,7 @@ variable service_name {
 
 resource "kubernetes_manifest" "tlsoptions" {
   manifest = {
-    apiVersion = "traefik.containo.us/v1alpha1"
+    apiVersion = "traefik.io/v1alpha1"
     kind = "TLSOption"
     metadata = {
       name = var.service_name

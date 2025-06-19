@@ -76,6 +76,9 @@ certificatesResolvers:
           - '208.67.220.220:53'
           - '76.76.2.0:53'  # Control D (https://controld.com/free-dns)
           - '76.76.10.0:53'
+# It makes the v2 format the default rule matchers syntax.
+core:
+  defaultRuleSyntax: ""
 # Configure the deployment
 deployment:
   # Enable deployment.
@@ -141,7 +144,11 @@ env: [
 hostNetwork: false
 image:
   name: traefik
-  tag: ""
+  # Traefik image host registry.
+  registry: docker.io
+  # Traefik image repository.
+  repository: traefik
+  # tag: ""
   pullPolicy: IfNotPresent
 # Use ingressClass. Ignored if Traefik version < 2.3 / kubernetes < 1.18.x
 # Set Traefik as the default Ingress Controller (as per Kubernetes 1.19+ changes).
@@ -237,13 +244,15 @@ ports:
     # $ kubectl port-forward -n finances $(kubectl get pods -n finances --selector "app.kubernetes.io/name=traefik" --output=name) 9000:9000
     # From a browser, use http://127.0.0.1:9000/dashboard/ to see the Traefik dashboard; the
     # trailing slash / in /dashboard/ is mandatory.
-    expose: false
+    expose:
+      default: false
     # The exposed port for this service.
     exposedPort: 9000
     protocol: TCP
   web:
     port: 8080  # Traefik port.
-    expose: true
+    expose:
+      default: true
     exposedPort: 80
     # (Optional) Permanent Redirect to HTTPS.
     redirectTo:
@@ -251,7 +260,8 @@ ports:
     protocol: TCP
   websecure:
     port: 8443
-    expose: true
+    expose:
+      default: true
     exposedPort: 443
     protocol: TCP
     tls:
@@ -260,7 +270,8 @@ ports:
       certResolver: le
   metrics:
     port: 9100
-    expose: false
+    expose:
+      default: false
     # The exposed port for this service.
     exposedPort: 9100
     protocol: TCP
@@ -321,6 +332,8 @@ securityContext:
 # Options for the main traefik service, where the entrypoints traffic comes from.
 service:
   enabled: true
+  # Create two 'Service'; one for TCP and one for UDP.
+  single: false
   type: LoadBalancer
   # Additional annotations applied to both TCP and UDP services (e.g. for cloud provider specific
   # config)
@@ -330,7 +343,9 @@ service:
   # Additional annotations for UDP service only
   annotationsUDP: {}
   # Additional service labels (e.g. for filtering Service by custom labels)
-  labels: {}
+  labels: {
+    app = "finances"
+  }
   # Additional entries here will be added to the service spec.
   # Cannot contain type, selector or ports entries.
   spec: {}

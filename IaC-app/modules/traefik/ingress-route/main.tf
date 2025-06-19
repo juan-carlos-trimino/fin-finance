@@ -72,7 +72,7 @@ variable service_name {
 
 resource "kubernetes_manifest" "ingress-route" {
   manifest = {
-    apiVersion = "traefik.containo.us/v1alpha1"
+    apiVersion = "traefik.io/v1alpha1"
     # This CRD is Traefik-specific.
     kind = "IngressRoute"
     metadata = {
@@ -185,6 +185,11 @@ resource "kubernetes_manifest" "ingress-route" {
               namespace = var.namespace
             }
           ]
+          observability = {
+            accesslogs = true
+            metrics = true
+            tracing = true
+          }
           services = [
             {
               kind = "Service"
