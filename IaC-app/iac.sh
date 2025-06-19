@@ -97,21 +97,21 @@ check_options() {
 }
 
 print_time_elapsed() {
-  echo -e "\n*************************************************"
+  printf "\n*************************************************\n"
   echo "Done..."
   local end_time=$(date)
   echo "$end_time"
   start_time_seconds=$(date -d "$1" +"%s")
   end_time_seconds=$(date -d "$end_time" +"%s")
   duration=$(( $end_time_seconds - $start_time_seconds ))
-  printf "Time Elapsed: %02d hours %02d minutes and %02d seconds.\n" "$(($duration / 3600))" \
+  printf "Time Elapsed: %02d hours %02d minutes and %02d seconds." "$(($duration / 3600))" \
          "$(($duration % 3600 / 60))" "$(($duration % 60))"
-  echo -e "*************************************************\n"
+  printf "\n*************************************************\n\n"
   return
 }
 
 # Main program
-echo -e "\n"
+echo
 check_options $@
 echo "****************************"
 echo "Starting deployment..."
@@ -125,7 +125,44 @@ then
   then
     display_help
   else
+    printf "******************************\n"
+    printf "Removing the infrastructure...\n"
+    printf "******************************"
     terraform destroy -auto-approve
+    # See https://cert-manager.io/docs/installation/helm/
+    printf "\n*****************************"
+    printf "\nDeleting cert-manager's CRDs."
+    printf "\n*****************************\n"
+    kubectl delete crd \
+      issuers.cert-manager.io \
+      clusterissuers.cert-manager.io \
+      certificates.cert-manager.io \
+      certificaterequests.cert-manager.io \
+      orders.acme.cert-manager.io \
+      challenges.acme.cert-manager.io
+    printf "\n*****************************"
+    printf "\nDeleting traefik's CRDs."
+    printf "\n*****************************\n"
+    kubectl delete crd \
+      ingressroutes.traefik.containo.us \
+      ingressroutes.traefik.io \
+      ingressroutetcps.traefik.containo.us \
+      ingressroutetcps.traefik.io \
+      ingressrouteudps.traefik.containo.us \
+      ingressrouteudps.traefik.io \
+      middlewares.traefik.containo.us \
+      middlewares.traefik.io \
+      middlewaretcps.traefik.containo.us \
+      middlewaretcps.traefik.io \
+      serverstransports.traefik.containo.us \
+      serverstransports.traefik.io \
+      serverstransporttcps.traefik.io \
+      tlsoptions.traefik.containo.us \
+      tlsoptions.traefik.io \
+      tlsstores.traefik.containo.us \
+      tlsstores.traefik.io \
+      traefikservices.traefik.containo.us \
+      traefikservices.traefik.io
     print_time_elapsed "$start_time"
   fi
 elif [ "$1" == "deploy" ]
@@ -180,24 +217,24 @@ then
   terraform init
   if [ "$REVERSE_PROXY" == "true" ]
   then
-    echo "*****************************************"
+    echo -e "\n*****************************************"
     echo "Creating CustomResourceDefinitions (CRDs)"
-    echo "*****************************************"
-    terraform apply -auto-approve \
-      -var "reverse_proxy=$REVERSE_PROXY" \
-      -var "k8s_crds=$K8S_CRDS"
+    printf "*****************************************"
+    echo -n "$(terraform apply -auto-approve \
+                 -var "reverse_proxy=$REVERSE_PROXY" \
+                 -var "k8s_crds=$K8S_CRDS")"
     export K8S_CRDS="false"
   fi
-  echo "*************************"
-  echo "Deploying the application"
-  echo "*************************"
+  printf "\n*************************"
+  printf "\nDeploying the application"
+  printf "\n*************************"
   terraform apply -auto-approve \
     -var "app_version=$APP_VERSION" \
     -var "reverse_proxy=$REVERSE_PROXY" \
     -var "k8s_crds=$K8S_CRDS" \
     -var "deployment_type=$DEPLOYMENT_TYPE" \
     -var "pprof=$PPROF"
-  echo -e "\n*********************"
+  printf "\n*********************\n"
   echo "Copying the lock file"
   echo "*********************"
   # Copy lock file so that it can be saved in the repo.
