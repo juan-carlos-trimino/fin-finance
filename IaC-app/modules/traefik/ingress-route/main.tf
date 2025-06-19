@@ -91,7 +91,7 @@ resource "kubernetes_manifest" "ingress-route" {
       routes = [
         {
           kind = "Rule"
-          match = "Host(`${var.host_name}`, `www.${var.host_name}`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
+          match = "(Host(`${var.host_name}`) || Host(`www.${var.host_name}`)) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
           priority = 40
           middlewares = [
             {
@@ -165,7 +165,7 @@ resource "kubernetes_manifest" "ingress-route" {
           kind = "Rule"
           # match = "Host(`169.46.98.220.nip.io`) && PathPrefix(`/`)"
           # match = "Host(`memories.mooo.com`) && (PathPrefix(`/`) || Path(`/upload`) || Path(`/api/upload`))"
-          match = "Host(`${var.host_name}`, `www.${var.host_name}`) && PathPrefix(`/`)"
+          match = "(Host(`${var.host_name}`) || Host(`www.${var.host_name}`)) && PathPrefix(`/`)"
           # See https://doc.traefik.io/traefik/v2.0/routing/routers/#priority
           priority = 20
           # The rule is evaluated 'before' any middleware has the opportunity to work, and 'before'

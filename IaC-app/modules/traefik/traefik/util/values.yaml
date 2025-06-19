@@ -77,8 +77,8 @@ certificatesResolvers:
           - '76.76.2.0:53'  # Control D (https://controld.com/free-dns)
           - '76.76.10.0:53'
 # It makes the v2 format the default rule matchers syntax.
-core:
-  defaultRuleSyntax: ""
+# core:
+#   defaultRuleSyntax: v2
 # Configure the deployment
 deployment:
   # Enable deployment.
@@ -357,3 +357,6 @@ serviceAccount:
   # If not set, a service account is created automatically using the fullname template.
   # name: ""
   name: "fin-traefik-service-account"
+  labels: {
+    app = "finances"
+  }
