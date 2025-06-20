@@ -138,31 +138,36 @@ then
       clusterissuers.cert-manager.io \
       certificates.cert-manager.io \
       certificaterequests.cert-manager.io \
-      orders.acme.cert-manager.io \
-      challenges.acme.cert-manager.io
+      orders.acme.cert-manager.io
     printf "\n*****************************"
     printf "\nDeleting traefik's CRDs."
     printf "\n*****************************\n"
     kubectl delete crd \
-      ingressroutes.traefik.containo.us \
       ingressroutes.traefik.io \
-      ingressroutetcps.traefik.containo.us \
       ingressroutetcps.traefik.io \
-      ingressrouteudps.traefik.containo.us \
       ingressrouteudps.traefik.io \
-      middlewares.traefik.containo.us \
       middlewares.traefik.io \
-      middlewaretcps.traefik.containo.us \
       middlewaretcps.traefik.io \
-      serverstransports.traefik.containo.us \
       serverstransports.traefik.io \
       serverstransporttcps.traefik.io \
-      tlsoptions.traefik.containo.us \
       tlsoptions.traefik.io \
-      tlsstores.traefik.containo.us \
       tlsstores.traefik.io \
-      traefikservices.traefik.containo.us \
-      traefikservices.traefik.io
+      traefikservices.traefik.io \
+      accesscontrolpolicies.hub.traefik.io \
+      aiservices.hub.traefik.io \
+      apibundles.hub.traefik.io \
+      apicatalogitems.hub.traefik.io \
+      apiplans.hub.traefik.io \
+      apiportals.hub.traefik.io \
+      apiratelimits.hub.traefik.io \
+      apis.hub.traefik.io \
+      apiversions.hub.traefik.io \
+      managedsubscriptions.hub.traefik.io \
+      gatewayclasses.gateway.networking.k8s.io \
+      gateways.gateway.networking.k8s.io \
+      grpcroutes.gateway.networking.k8s.io \
+      httproutes.gateway.networking.k8s.io \
+      referencegrants.gateway.networking.k8s.io
     print_time_elapsed "$start_time"
   fi
 elif [ "$1" == "deploy" ]
@@ -220,14 +225,14 @@ then
     echo -e "\n*****************************************"
     echo "Creating CustomResourceDefinitions (CRDs)"
     printf "*****************************************"
-    echo -n "$(terraform apply -auto-approve \
-                 -var "reverse_proxy=$REVERSE_PROXY" \
-                 -var "k8s_crds=$K8S_CRDS")"
+    terraform apply -auto-approve \
+      -var "reverse_proxy=$REVERSE_PROXY" \
+      -var "k8s_crds=$K8S_CRDS"
     export K8S_CRDS="false"
   fi
   printf "\n*************************"
   printf "\nDeploying the application"
-  printf "\n*************************"
+  printf "\n*************************\n"
   terraform apply -auto-approve \
     -var "app_version=$APP_VERSION" \
     -var "reverse_proxy=$REVERSE_PROXY" \
