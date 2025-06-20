@@ -48,7 +48,7 @@ module "traefik" {
   source = "./modules/traefik/traefik"
   app_name = var.app_name
   namespace = local.namespace
-  chart_version = "27.0.2"  # Traefik Proxy to v2.11.2; released 12 Apr, 2024.
+  chart_version = "v36.1.0"  # Released: 2025-06-11.
   api_auth_token = var.traefik_dns_api_token
   timeout = var.helm_traefik_timeout_seconds
   service_name = local.svc_traefik
@@ -155,7 +155,7 @@ module "cert-manager" {
   count = var.reverse_proxy ? 1 : 0
   source = "./modules/traefik/cert-manager/cert-manager"
   namespace = local.namespace
-  chart_version = "1.17.2"
+  chart_version = "1.18.0"
   service_name = "fin-cert-manager"
 }
 

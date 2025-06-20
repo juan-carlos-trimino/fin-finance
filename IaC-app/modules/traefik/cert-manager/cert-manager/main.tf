@@ -43,7 +43,7 @@ resource "helm_release" "cert_manager" {
   # To automatically install and manage the CRDs as part of your Helm release, you must add the
   # --set installCRDs=true flag to your Helm installation command.
   set {
-    name = "installCRDs"
+    name = "crds.enabled"
     value = true
   }
 }
