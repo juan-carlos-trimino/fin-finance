@@ -185,11 +185,6 @@ resource "kubernetes_manifest" "ingress-route" {
               namespace = var.namespace
             }
           ]
-          observability = {
-            accesslogs = true
-            metrics = true
-            tracing = true
-          }
           services = [
             {
               kind = "Service"
