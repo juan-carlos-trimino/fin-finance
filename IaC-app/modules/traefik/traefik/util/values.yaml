@@ -14,9 +14,6 @@
 #     retryAttempts: true
 #     # Keep access logs when requests take longer than the specified duration.
 #     minDuration: "10ms"
-# additionalArguments:
-  # Prometheus metrics exporter type.
-  # - "--metrics.prometheus=true"
 # Enable api.
 # For a list of API enpoints, go to https://doc.traefik.io/traefik/operations/api/#endpoints.
 api:
@@ -76,9 +73,6 @@ certificatesResolvers:
           - '208.67.220.220:53'
           - '76.76.2.0:53'  # Control D (https://controld.com/free-dns)
           - '76.76.10.0:53'
-# It makes the v2 format the default rule matchers syntax.
-# core:
-#   defaultRuleSyntax: v2
 # Configure the deployment
 deployment:
   # Enable deployment.
@@ -143,7 +137,6 @@ env: [
 # anti-affinity is recommended and will be set if the affinity is left as default.
 hostNetwork: false
 image:
-  name: traefik
   # Traefik image host registry.
   registry: docker.io
   # Traefik image repository.
@@ -166,10 +159,6 @@ ingressRoute:
     labels: {}
 # Liveness and readiness probes.
 livenessProbe:
-  httpGet:
-    path: /ping
-    port: 9000
-    scheme: HTTP
   # How long to wait after the container starts before beginning the probe.
   initialDelaySeconds: 5
   # The frequency of the checks.
@@ -192,11 +181,11 @@ logs:
     # If the given format is unsupported, the default (CLF) is used instead.
     format: json
     filters:
-      statusCode: "200,400-599"
+      statuscodes: "200,400-599"
       # Keep the access logs when at least one retry has happened.
-      retryAttempts: true
+      retryattempts: true
       # Keep access logs when requests take longer than the specified duration.
-      minDuration: "10ms"
+      minduration: "10ms"
   general:
     # By default, the logs use a text format (common), but you can also ask for the json format in
     # the format option
@@ -255,8 +244,14 @@ ports:
       default: true
     exposedPort: 80
     # (Optional) Permanent Redirect to HTTPS.
-    redirectTo:
-      port: websecure
+    redirections:
+      entryPoint: {
+        to: websecure,
+        scheme: https,
+        permanent: true,
+        # Priority of the generated router.
+        priority: 10
+      }
     protocol: TCP
   websecure:
     port: 8443
@@ -290,14 +285,15 @@ providers:
     ingressClass: traefik
 #
 readinessProbe:
-  httpGet:
-    path: /ping
-    port: 9000
-    scheme: HTTP
-  initialDelaySeconds: 5
+  # The number of seconds to wait before starting the first probe.
+  initialDelaySeconds: 3
+  # The number of seconds to wait between consecutive probes.
   periodSeconds: 10
+  # The number of seconds to wait for a probe response before considering it as failed.
   timeoutSeconds: 2
+  # The minimum consecutive successes required to consider the probe successful.
   successThreshold: 1
+  # The number of consecutive failures allowed before considering the probe as failed.
   failureThreshold: 1
 # Whether Role Based Access Control objects like roles and rolebindings should be created.
 rbac:
@@ -357,6 +353,3 @@ serviceAccount:
   # If not set, a service account is created automatically using the fullname template.
   # name: ""
   name: "fin-traefik-service-account"
-  labels: {
-    app = "finances"
-  }
