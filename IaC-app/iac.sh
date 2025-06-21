@@ -224,7 +224,7 @@ then
   then
     echo -e "\n*****************************************"
     echo "Creating CustomResourceDefinitions (CRDs)"
-    printf "*****************************************"
+    printf "*****************************************\n"
     terraform apply -auto-approve \
       -var "reverse_proxy=$REVERSE_PROXY" \
       -var "k8s_crds=$K8S_CRDS"
