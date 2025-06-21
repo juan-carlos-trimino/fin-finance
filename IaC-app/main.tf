@@ -144,7 +144,7 @@ module "ingress-route" {
   issuer_name = local.issuer_name
   # host_name = "169.46.98.220.nip.io"
   # host_name = "memories.mooo.com"
-  host_name = "trimino.xyz"
+  host_name = ["trimino.xyz", "www.trimino.xyz"]
   service_name = local.ingress_route
 }
 
