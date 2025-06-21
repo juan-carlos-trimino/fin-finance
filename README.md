@@ -457,46 +457,6 @@ $ printenv KUBECONFIG
 ## Kubenertes (K8s)
 `K8s` is an open source container orchestration platform.
 
-### Useful Commands
-#### version
-Display the `Kubernetes` version running on the client and server.
-```
-$ kubectl version
-```
-
-#### config
-Display the configuration of the cluster.
-```
-$ kubectl config view
-```
-
-Display all users.
-```
-$ kubectl config view -o jsonpath='{range .users[*]}{.name}{"\n"}{end}'
-```
-
-Retrieve one user details.
-```
-$ kubectl config view -o jsonpath='{.users[?(@.name == "<user-name>")].user}{"\n"}'
-```
-
-#### cluster
-Retrieve cluster details.
-```
-$ kubectl cluster-info
-```
-
-#### node
-Confirm what platform is running on the cluster.
-```
-$ kubectl describe node | grep "kubernetes.io/arch"
-```
-
-To retrieve nodes information.
-```
-$ kubectl get nodes
-```
-
 #### exec
 ---
 ***Note***
@@ -523,6 +483,115 @@ $ kubectl exec -it <pod-name> -c <container-name> -n <name-space> -- /bin/bash
 To execute a single command without entering an interactive shell, use.
 ```
 $ kubectl exec <pod-name> -n <name-space> -- env
+```
+
+#### cluster
+Retrieve cluster details.
+```
+$ kubectl cluster-info
+```
+
+#### config
+Display the configuration of the cluster.
+```
+$ kubectl config view
+```
+
+Display all users.
+```
+$ kubectl config view -o jsonpath='{range .users[*]}{.name}{"\n"}{end}'
+```
+
+Retrieve one user details.
+```
+$ kubectl config view -o jsonpath='{.users[?(@.name == "<user-name>")].user}{"\n"}'
+```
+
+#### logs
+Retrieve the logs for a pod under a specific namespace.
+```
+$ kubectl logs <pod-name> -n <name-space>
+```
+
+Retrieve the logs for a pod that was previously running under a specific namespace.
+```
+$ kubectl logs <pod-name> -n <name-space> --previous
+```
+
+Retrieve the logs for a specific container running in a pod under a specific namespace. If the pod has only one container, the container name is optional.
+```
+$ kubectl logs <pod-name> -c <container-name> -n <name-space>
+```
+
+#### namespace
+List all the namespaces within a cluster.
+```
+$ kubectl get namespaces --all-namespaces
+
+or
+
+$  kubectl get namespaces
+```
+
+---
+**Note**
+
+If the **STATUS** of a namespace is displaying **Terminating**, you will need to follow the steps below to delete the namespace.
+
+1. Get the name of the namespace that is stuck in the **Terminating** state.
+```
+$ kubectl get namespaces
+```
+
+2. Select the namespace that is stuck in the **Terminating** state and save the contents of the namespace in a JSON file.
+```
+$ kubectl get ns <terminating-namespace> -o json > ns.json
+```
+
+3. Edit the JSON file by removing the **kubernetes** value from the **finalizers** field. Save the file.
+```
+$ vi ns.json
+...
+"spec": {
+  "finalizers": [
+    "kubernetes"
+  ]
+},
+...
+```
+
+4. After removing the **kubernetes** value from the **finalizers** field, the contents of the JSON file should resemble the following listing.
+```
+$ cat ns.json
+...
+"spec": {
+  "finalizers": [
+  ]
+},
+...
+```
+
+5. To apply the change, run the command below.
+```
+$ kubectl replace --raw "/api/v1/namespaces/<terminating-namespace>/finalize" -f ./ns.json
+```
+
+6. Verify that the terminating namespace has been removed.
+```
+$ kubectl get namespaces
+```
+
+---
+
+#### node
+Confirm what platform is running on the cluster.
+```
+$ kubectl describe node | grep "kubernetes.io/arch"
+```
+
+To retrieve nodes information.
+```
+$ kubectl get nodes
 ```
 
 #### Pods
@@ -567,20 +636,27 @@ Delete all pods without specifying their names.
 $ kubectl delete pods --all -n <name-space>
 ```
 
-#### logs
-Retrieve the logs for a pod under a specific namespace.
+#### Resources
+Retrieve built-in resource types (pods, services, daemon sets, deployments, replica sets, jobs, cronjobs, and stateful sets) under a specific namespace.
 ```
-$ kubectl logs <pod-name> -n <name-space>
+$ kubectl get all -n <name-space>
 ```
+---
+**Note**
 
-Retrieve the logs for a pod that was previously running under a specific namespace.
-```
-$ kubectl logs <pod-name> -n <name-space> --previous
-```
+The `kubectl delete` command might not be successful initially if you use `finalizers` to prevent accidental deletion. Finalizers are keys on resources that signal pre-delete operations. Finalizers control the garbage collection on resources, and they're designed to alert controllers about what cleanup operations to do before they remove a resource.
 
-Retrieve the logs for a specific container running in a pod under a specific namespace. If the pod has only one container, the container name is optional.
+If you try to delete a resource that has a finalizer on it, the resource remains in finalization until the controller removes the finalizer keys, or the finalizers are removed by using `kubectl`. After the finalizer list is emptied, `Kubernetes` can reclaim the resource and put it into a queue to be deleted from the registry.
+
+See [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/) for more information.
+
+---
+Remove a resource in the `Terminating` state.<br>
+To remove a `finalizer` from a resource, you typically update the resource's metadata to remove the finalizer entry. This action signals `Kubernetes` that the cleanup tasks are complete, allowing the resource to be fully deleted.
+
+To ensure the resource has one or more finalizers attach, you can use `kubectl get` or `kubectl describe`. If finalizers are attached, you remove them by executing the command below.
 ```
-$ kubectl logs <pod-name> -c <container-name> -n <name-space>
+$ kubectl patch <resource> <resource-name> -p '{"metadata":{"finalizers":null}}'
 ```
 
 #### Volumes
@@ -617,27 +693,11 @@ Display more information about the given storage class.
 $ kubectl get sc <storage-class-name> -o yaml
 ```
 
-#### Resources
-Retrieve built-in resource types (pods, services, daemon sets, deployments, replica sets, jobs, cronjobs, and stateful sets) under a specific namespace.
+### Useful Commands
+#### version
+Display the `Kubernetes` version running on the client and server.
 ```
-$ kubectl get all -n <name-space>
-```
----
-**Note**
-
-The `kubectl delete` command might not be successful initially if you use `finalizers` to prevent accidental deletion. Finalizers are keys on resources that signal pre-delete operations. Finalizers control the garbage collection on resources, and they're designed to alert controllers about what cleanup operations to do before they remove a resource.
-
-If you try to delete a resource that has a finalizer on it, the resource remains in finalization until the controller removes the finalizer keys, or the finalizers are removed by using `kubectl`. After the finalizer list is emptied, `Kubernetes` can reclaim the resource and put it into a queue to be deleted from the registry.
-
-See [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/) for more information.
-
----
-Remove a resource in the `Terminating` state.<br>
-To remove a `finalizer` from a resource, you typically update the resource's metadata to remove the finalizer entry. This action signals `Kubernetes` that the cleanup tasks are complete, allowing the resource to be fully deleted.
-
-To ensure the resource has one or more finalizers attach, you can use `kubectl get` or `kubectl describe`. If finalizers are attached, you remove them by executing the command below.
-```
-$ kubectl patch <resource> <resource-name> -p '{"metadata":{"finalizers":null}}'
+$ kubectl version
 ```
 
 ## Docker
