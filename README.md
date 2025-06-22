@@ -457,9 +457,32 @@ $ printenv KUBECONFIG
 ## Kubenertes (K8s)
 `K8s` is an open source container orchestration platform.
 
+### Useful Commands
+#### cluster
+Retrieve cluster details.
+```
+$ kubectl cluster-info
+```
+
+#### config
+Display the configuration of the cluster.
+```
+$ kubectl config view
+```
+
+Display all users.
+```
+$ kubectl config view -o jsonpath='{range .users[*]}{.name}{"\n"}{end}'
+```
+
+Retrieve one user details.
+```
+$ kubectl config view -o jsonpath='{.users[?(@.name == "<user-name>")].user}{"\n"}'
+```
+
 #### exec
 ---
-***Note***
+**Note**
 
 The double dash (`--`) in the command signals the end of command options for `kubectl`. Everything after the double dash is the command that should be executed inside the pod; the double dash is required.
 
@@ -483,28 +506,6 @@ $ kubectl exec -it <pod-name> -c <container-name> -n <name-space> -- /bin/bash
 To execute a single command without entering an interactive shell, use.
 ```
 $ kubectl exec <pod-name> -n <name-space> -- env
-```
-
-#### cluster
-Retrieve cluster details.
-```
-$ kubectl cluster-info
-```
-
-#### config
-Display the configuration of the cluster.
-```
-$ kubectl config view
-```
-
-Display all users.
-```
-$ kubectl config view -o jsonpath='{range .users[*]}{.name}{"\n"}{end}'
-```
-
-Retrieve one user details.
-```
-$ kubectl config view -o jsonpath='{.users[?(@.name == "<user-name>")].user}{"\n"}'
 ```
 
 #### logs
@@ -594,7 +595,7 @@ To retrieve nodes information.
 $ kubectl get nodes
 ```
 
-#### Pods
+#### pods
 Display what node a pod is scheduled.
 ```
 $ kubectl get pods -o wide -n <name-space>
@@ -636,7 +637,7 @@ Delete all pods without specifying their names.
 $ kubectl delete pods --all -n <name-space>
 ```
 
-#### Resources
+#### resources
 Retrieve built-in resource types (pods, services, daemon sets, deployments, replica sets, jobs, cronjobs, and stateful sets) under a specific namespace.
 ```
 $ kubectl get all -n <name-space>
@@ -659,7 +660,13 @@ To ensure the resource has one or more finalizers attach, you can use `kubectl g
 $ kubectl patch <resource> <resource-name> -p '{"metadata":{"finalizers":null}}'
 ```
 
-#### Volumes
+#### version
+Display the `Kubernetes` version running on the client and server.
+```
+$ kubectl version
+```
+
+#### volumes
 ---
 **Note**
 
@@ -691,13 +698,6 @@ $ kubectl get sc
 Display more information about the given storage class.
 ```
 $ kubectl get sc <storage-class-name> -o yaml
-```
-
-### Useful Commands
-#### version
-Display the `Kubernetes` version running on the client and server.
-```
-$ kubectl version
 ```
 
 ## Docker
