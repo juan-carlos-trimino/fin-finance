@@ -517,6 +517,11 @@ resource "kubernetes_service_account" "service_account" {
   }
 }
 
+# Roles define WHAT can be done; role bindings define WHO can do it.
+# The distinction between a Role/RoleBinding and a ClusterRole/ClusterRoleBinding is that the Role/
+# RoleBinding is a namespaced resource; ClusterRole/ClusterRoleBinding is a cluster-level resource.
+# A Role resource defines what actions can be taken on which resources; i.e., which types of HTTP
+# requests can be performed on which RESTful resources.
 resource "kubernetes_role" "role" {
   count = var.role == null ? 0 : 1
   metadata {
@@ -537,6 +542,7 @@ resource "kubernetes_role" "role" {
   }
 }
 
+# Bind the role to the service account.
 resource "kubernetes_role_binding" "role_binding" {
   count = var.role_binding == null ? 0 : 1
   metadata {
@@ -545,12 +551,16 @@ resource "kubernetes_role_binding" "role_binding" {
     labels = var.role_binding.labels
     annotations = var.role_binding.annotations
   }
+  # A RoleBinding always references a single Role, but it can bind the Role to multiple subjects.
   role_ref {
     kind = var.role_binding.role_ref.kind
+    # This RoleBinding references the Role specified below...
     name = var.role_binding.role_ref.name
     api_group = var.role_binding.role_ref.api_group
   }
+  # ... and binds it to the specified ServiceAccount in the specified namespace.
   dynamic "subject" {
+    # The default permissions for a ServiceAccount don't allow it to list or modify any resources.
     for_each = var.role_binding.subjects
     iterator = it
     content {
