@@ -637,6 +637,57 @@ Delete all pods without specifying their names.
 $ kubectl delete pods --all -n <name-space>
 ```
 
+#### port-forward
+Forward a local port to a port on a K8s resource. This command establishes a *secure tunnel* between your local machine and the resource allowing you to access the resource as if it were running locally. This is particularly useful for troubleshooting and debugging resources that are not exposed externally.
+```
+$ kubectl port-forward -n <namespace> <resource-type>/<resource-name> <local-port>:<resource-port>
+```
+Where:<br>
+*resource-type* specifies the type of K8s resource. It defaults to pod, if omitted.<br>
+*resource-name* specifies the name of the K8s resource.<br>
+*local-port* is the port number on your local machine; i.e, this is the port that you'll use to access the resource from your local machine.<br>
+*resource-port* is the port number for the K8s resource; i.e., the traffic sent to the local port on your machine will be forwarded to this port of the resource.
+
+---
+**Note**
+
+`kubectl port-forward` does not return. To continue, you will need to open another terminal. The port-forwarding session ends when you manually close it by pressing ***Ctrl+C***, which sends an interrupt signal to the process, in the terminal where the command was initiated, when the resource being forwarded terminates, or when a timeout is reached due to inactivity.
+
+To run this command in the background, you can add the ***&*** operator at the end of the command.
+```
+$ kubectl port-forward -n <namespace> <resource-type>/<resource-name> <local-port>:<resource-port> &
+```
+
+To stop the background process, you will need to find its process ID by executing this command.
+```
+$ ps -aux | grep -i "kubectl port-forward"
+```
+Where:
+*ps aux* displays information about all active processes from all users.
+*grep -i "kubectl port-forward"* filters the results to only show lines containing the `kubectl port-forward` expression; the search is case-insensitive (-i).
+
+Locate the relevant line, then kill the process by running the command below.
+```
+$ kill <pid>
+```
+Where:
+*pid* is the process ID of the `kubectl port-forward` command.
+
+---
+
+If you don't need a specific local port, you can omit the local port; `kubectl` automatically choose and allocate a local port.
+```
+$ kubectl port-forward -n <namespace> <resource-type>/<resource-name> :<resource-port>
+```
+
+To get a list of all forwarded ports active, you can use the following command.
+```
+$ ps -ef | grep -i "port-forward"
+```
+Where:<br>
+*ps -ef* lists all processes running on the system with detailed information, including the process ID, command line arguments, and user.
+*grep -i "port-forward"* filters the results to only show lines containing the port-forward expression; the search is case-insensitive (-i).
+
 #### resources
 Retrieve built-in resource types (pods, services, daemon sets, deployments, replica sets, jobs, cronjobs, and stateful sets) under a specific namespace.
 ```
