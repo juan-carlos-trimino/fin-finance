@@ -167,7 +167,8 @@ then
       gateways.gateway.networking.k8s.io \
       grpcroutes.gateway.networking.k8s.io \
       httproutes.gateway.networking.k8s.io \
-      referencegrants.gateway.networking.k8s.io
+      referencegrants.gateway.networking.k8s.io \
+      challenges.acme.cert-manager.io
     print_time_elapsed "$start_time"
   fi
 elif [ "$1" == "deploy" ]
