@@ -293,6 +293,9 @@ IaC-app/modules/*
 !IaC-app/modules/deployment/
 IaC-app/modules/deployment/*
 !IaC-app/modules/deployment/main.tf
+!IaC-app/modules/statefulset/
+IaC-app/modules/statefulset/*
+!IaC-app/modules/statefulset/main.tf
 !IaC-app/modules/traefik/
 IaC-app/modules/traefik/*
 !IaC-app/modules/traefik/cert-manager/

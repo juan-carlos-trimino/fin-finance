@@ -47,6 +47,8 @@ fin-finance
  | ├ modules
  | | ├ deployment
  | | | └ main.tf
+ | | ├ statefulset
+ | | | └ main.tf
  | | ├ traefik
  | | | ├ cert-manager
  | | | | ├ acme-issuer
