@@ -394,7 +394,11 @@ variable persistent_volume_claims {
     # ReadOnlyMany (ROX) - Multiple NODES can mount the volume for reading.
     # ReadWriteMany (RWX) - Multiple NODES can mount the volume for both reading and writing.
     access_modes = list(string)
-    # Filesystem (default) or Block.
+    # A volumeMode of Filesystem presents a volume as a directory within the Pod's filesystem while
+    # a volumeMode of Block presents it as a raw block storage device. Filesystem is the default
+    # and usually preferred mode, enabling standard file system operations on the volume. Block
+    # mode is used for applications that need direct access to the block device, like databases
+    # requiring low-latency access.
     volume_mode = optional(string)
     storage_size = string
     # By specifying an empty string ("") as the storage class name, the PVC binds to a
@@ -592,6 +596,8 @@ resource "kubernetes_persistent_volume_claim" "pvc" {
         storage = var.persistent_volume_claims[count.index].storage_size
       }
     }
+    # If a value for storageClassName isn't explicitly specify, the cluster's default storage class
+    # is used.
     storage_class_name = var.persistent_volume_claims[count.index].storage_class_name
   }
 }
