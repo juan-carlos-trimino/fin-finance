@@ -358,11 +358,14 @@ module "fin-finances-persistent" {
     read_only = false
   }]
   volume_pv = [{
-    pv_name = "wsf"
+    name = "wsf"
     claim_name = "finances-pvc"
   }]
   persistent_volume_claims = [{
-    pvc_name = "finances-pvc"
+    name = "finances-pvc"
+    labels = {
+      "app" = var.app_name
+    }
     ################## A volume with volumeMode: Filesystem is mounted into Pods into a directory. (default)
     volume_mode = "Filesystem"
     # The volume can be mounted as read-write by many nodes.
