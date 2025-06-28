@@ -185,7 +185,10 @@ variable env_field {
 # Quality of Service (QoS) classes for pods:
 # (1) BestEffort (lowest priority) - It's assigned to pods that do not have any requests or limits
 #     set at all (in any of their containers).
-# (2)
+# (2) Burstable - Pods have some lower-bound resource guarantees based on the request, but do not
+#     require a specific limit. A Pod is given a QoS class of Burstable if:
+#     * The Pod does not meet the criteria for QoS class Guaranteed.
+#     * At least one Container in the Pod has a memory or CPU request or limit.
 # (3) Guaranteed (highest priority) - It's assigned to pods whose containers' requests are equal to
 #     the limits for all resources (for each container in the pod). For a pod's class to be
 #     Guaranteed, three things need to be true:
@@ -382,14 +385,15 @@ variable volume_config_map {
 variable volume_pv {  # PersistentVolumeClaim
   default = []
   type = list(object({
-    pv_name = string
+    name = string
     claim_name = string
   }))
 }
 variable persistent_volume_claims {
   default = []
   type = list(object({
-    pvc_name = string
+    name = string
+    labels = optional(map(string), {})
     # ReadWriteOnce (RWO) - Only a single NODE can mount the volume for reading and writing.
     # ReadOnlyMany (ROX) - Multiple NODES can mount the volume for reading.
     # ReadWriteMany (RWX) - Multiple NODES can mount the volume for both reading and writing.
@@ -581,11 +585,9 @@ resource "kubernetes_role_binding" "role_binding" {
 resource "kubernetes_persistent_volume_claim" "pvc" {
   count = length(var.persistent_volume_claims)
   metadata {
-    name = var.persistent_volume_claims[count.index].pvc_name
+    name = var.persistent_volume_claims[count.index].name
     namespace = var.namespace
-    labels = {
-      app = var.app_name
-    }
+    labels = var.persistent_volume_claims[count.index].labels
   }
   spec {
     # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
@@ -946,7 +948,7 @@ resource "kubernetes_deployment" "stateless" {
         dynamic "volume" {
           for_each = var.volume_pv
           content {
-            name = volume.value["pv_name"]
+            name = volume.value["name"]
             persistent_volume_claim {
               claim_name = volume.value["claim_name"]
             }
