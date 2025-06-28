@@ -47,10 +47,28 @@ variable env {
   default = {}
   type = map(any)
 }
+variable env_secret {
+  default = []
+  type = list(object({
+    env_name = string
+    secret_name = string
+    secret_key = string
+  }))
+}
+variable env_field {
+  default = []
+  type = list(object({
+    env_name = string
+    field_path = string
+  }))
+}
 # Quality of Service (QoS) classes for pods:
 # (1) BestEffort (lowest priority) - It's assigned to pods that do not have any requests or limits
 #     set at all (in any of their containers).
-# (2)
+# (2) Burstable - Pods have some lower-bound resource guarantees based on the request, but do not
+#     require a specific limit. A Pod is given a QoS class of Burstable if:
+#     * The Pod does not meet the criteria for QoS class Guaranteed.
+#     * At least one Container in the Pod has a memory or CPU request or limit.
 # (3) Guaranteed (highest priority) - It's assigned to pods whose containers' requests are equal to
 #     the limits for all resources (for each container in the pod). For a pod's class to be
 #     Guaranteed, three things need to be true:
@@ -85,7 +103,7 @@ variable service_name {
 # The ServiceType allows to specify what kind of Service to use: ClusterIP (default),
 # NodePort, LoadBalancer, and ExternalName.
 variable service_type {
-  default = "ClusterIP"
+  default = "None"  # Headless service.
   type = string
 }
 variable secrets {
@@ -195,9 +213,6 @@ variable ports {
     protocol = string
   }))
 }
-
-
-########################
 # To relax the StatefulSet ordering guarantee while preserving its uniqueness and identity
 # guarantee.
 variable pod_management_policy {
@@ -210,39 +225,115 @@ variable publish_not_ready_addresses {
   default = "false"
   type = bool
 }
-
-
-
-variable pvc_access_modes {
+variable config_map {
   default = []
-  type = list(any)
+  type = list(object({
+    name = string
+    labels = optional(map(string), {})
+    # Binary data need to be base64 encoded.
+    binary_data = optional(map(string), {})
+    data = optional(map(string), {})
+    immutable = optional(bool, false)
+  }))
 }
-variable pvc_storage_class_name {
-  default = ""
+variable persistent_volume_claims {
+  default = []
+  type = list(object({
+    name = string
+    labels = optional(map(string), {})
+    # ReadWriteOnce (RWO) - Only a single NODE can mount the volume for reading and writing.
+    # ReadOnlyMany (ROX) - Multiple NODES can mount the volume for reading.
+    # ReadWriteMany (RWX) - Multiple NODES can mount the volume for both reading and writing.
+    access_modes = list(string)
+    # A volumeMode of Filesystem presents a volume as a directory within the Pod's filesystem while
+    # a volumeMode of Block presents it as a raw block storage device. Filesystem is the default
+    # and usually preferred mode, enabling standard file system operations on the volume. Block
+    # mode is used for applications that need direct access to the block device, like databases
+    # requiring low-latency access.
+    volume_mode = optional(string)
+    storage_size = string
+    # By specifying an empty string ("") as the storage class name, the PVC binds to a
+    # pre-provisioned PV instead of dynamically provisioning a new one.
+    storage_class_name = optional(string)
+  }))
 }
-variable pvc_storage_size {
-  default = "20Gi"
+# In Linux when a filesystem is mounted into a non-empty directory, the directory will only contain
+# the files from the newly mounted filesystem. The files in the original directory are inaccessible
+# for as long as the filesystem is mounted. In cases when the original directory contains crucial
+# files, mounting a volume could break the container. To overcome this limitation, K8s provides an
+# additional subPath property on the volumeMount; this property mounts a single file or a single
+# directory from the volume instead of mounting the whole volume, and it does not hide the existing
+# files in the original directory.
+variable volume_mount {
+  default = []
+  type = list(object({
+    name = string
+    mount_path = string
+    sub_path = optional(string)
+    read_only = optional(bool)
+  }))
+}
+variable volume_empty_dir {
+  description = "(Optional) A temporary directory that shares a pod's lifetime."
+  default = []
+  type = list(object({
+    name = string
+    medium = optional(string)
+    size_limit = optional(string)
+  }))
+}
+variable volume_config_map {
+  default = []
+  type = list(object({
+    volume_name = string
+    # Name of the ConfigMap containing the files to add to the container.
+    config_map_name = string
+    # Although ConfigMaps should be used for non-sensitive configuration data, you may want to
+    # make the file readable and writeble only to the user and group that owned the file; e.g.,
+    # default_mode = "6600" (-rw-rw------)
+    # The default permission is "6440" (-rw-r--r----)
+    default_mode = optional(string)
+    # An array of keys from the ConfigMap to create as files.
+    items = optional(list(object({
+      # Include the entry under this key.
+      key = string
+      # The entry's value should be stored in this file.
+      path = string
+    })), [])
+  }))
+}
+variable volume_pv {  # PersistentVolumeClaim
+  default = []
+  type = list(object({
+    pv_name = string
+    claim_name = string
+  }))
 }
 
+
+
+variable volume_claim_template {
+  default = []
+  type = list(object({
+    name = string
+    labels = optional(map(string), {})
+    access_modes = list(string)
+
+    # volume_mode = optional(string)
+    # storage = string
+  }))
+
+
+}
+
+
+/***
+Define local variables.
+***/
 locals {
   svc_name = "${var.service_name}-headless"
   pod_selector_label = "ps-${var.service_name}"
   svc_selector_label = "svc-${local.svc_name}"
-  rmq_label = "mem-rmq-cluster"
-}
-
-resource "null_resource" "scc-rabbitmq" {
-  triggers = {
-    always_run = timestamp()
-  }
-  provisioner "local-exec" {
-    command = "oc apply -f ${var.path_rabbitmq_files}/mem-rabbitmq-scc.yaml"
-  }
-  #
-  provisioner "local-exec" {
-    when = destroy
-    command = "oc delete scc mem-rabbitmq-scc"
-  }
 }
 
 # The maximum size of a Secret is limited to 1MB.
@@ -351,40 +442,49 @@ resource "kubernetes_role_binding" "role_binding" {
   }
 }
 
-
-
-
-# The ConfigMap passes to the rabbitmq daemon a bootstrap configuration which mainly defines peer
-# discovery and connectivity settings.
-resource "kubernetes_config_map" "config" {
+# PersistentVolumeClaims can only be created in a specific namespace; they can then only be used by
+# pods in the same namespace.
+resource "kubernetes_persistent_volume_claim" "pvc" {
+  count = length(var.persistent_volume_claims)
   metadata {
-    name = "${var.service_name}-config"
+    name = var.persistent_volume_claims[count.index].name
     namespace = var.namespace
-    labels = {
-      app = var.app_name
-    }
+    labels = var.persistent_volume_claims[count.index].labels
   }
-  data = {
-    # The enabled_plugins file is usually located in the node data directory or under /etc,
-    # together with configuration files. The file contains a list of plugin names ending with
-    # a dot.
-    "enabled_plugins" = "[rabbitmq_federation, rabbitmq_management, rabbitmq_peer_discovery_k8s]."
-    "rabbitmq.conf" = "${file("${var.path_rabbitmq_files}/rabbitmq.conf")}"
+  spec {
+    # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+    access_modes = var.persistent_volume_claims[count.index].access_modes
+    volume_mode = var.persistent_volume_claims[count.index].volume_mode
+    resources {
+      requests = {
+        storage = var.persistent_volume_claims[count.index].storage_size
+      }
+    }
+    # If a value for storageClassName isn't explicitly specify, the cluster's default storage class
+    # is used.
+    storage_class_name = var.persistent_volume_claims[count.index].storage_class_name
   }
 }
 
-# RabbitMQ requires using a StatefulSet to deploy a RabbitMQ cluster to Kubernetes. The StatefulSet
-# ensures that the RabbitMQ nodes are deployed in order, one at a time. This avoids running into a
-# potential peer discovery race condition when deploying a multi-node RabbitMQ cluster.
-#
-# There are other, equally important reasons for using a StatefulSet instead of a Deployment:
-# sticky identity, simple network identifiers, stable persistent storage and the ability to perform
-# ordered rolling upgrades.
-#
-# $ kubectl get sts -n memories
-#
-# Storage for stateful pods needs to be persistent and decoupled from the pods.
-# A StatefulSet must guarantee at-most-one semantics for stateful pod instances.
+/***
+The contents of the ConfigMap are passed to containers as either environment variables or as files
+in a volume.
+***/
+resource "kubernetes_config_map" "config" {
+  count = length(var.config_map)
+  metadata {
+    name = var.config_map[count.index].name
+    namespace = var.namespace
+    labels = var.config_map[count.index].labels
+  }
+  data = var.config_map[count.index].data
+  binary_data = var.config_map[count.index].binary_data
+  immutable = var.config_map[count.index].immutable
+}
+
+
+
+
 resource "kubernetes_stateful_set" "stateful_set" {
   metadata {
     name = var.service_name
@@ -421,7 +521,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
           pod_selector_lbl = local.pod_selector_label
           # It must match the label selector of the Service.
           svc_selector_lbl = local.svc_selector_label
-          rmq_lbl = local.rmq_label
         }
       }
       #
@@ -434,12 +533,11 @@ resource "kubernetes_stateful_set" "stateful_set" {
                 match_expressions {
                   # Description of the pod label that determines when the anti-affinity rule
                   # applies. Specifies a key and value for the label.
-                  key = "rmq_lbl"
+                  # key = "rmq_lbl"
                   # The operator represents the relationship between the label on the existing
                   # pod and the set of values in the matchExpression parameters in the
                   # specification for the new pod. Can be In, NotIn, Exists, or DoesNotExist.
                   operator = "In"
-                  values = ["${local.rmq_label}"]
                 }
               }
               topology_key = "kubernetes.io/hostname"
@@ -475,98 +573,21 @@ resource "kubernetes_stateful_set" "stateful_set" {
               protocol = port.value.protocol
             }
           }
-          resources {
-            requests = {
-              # If a Container specifies its own memory limit, but does not specify a memory
-              # request, Kubernetes automatically assigns a memory request that matches the limit.
-              # Similarly, if a Container specifies its own CPU limit, but does not specify a CPU
-              # request, Kubernetes automatically assigns a CPU request that matches the limit.
-              cpu = var.qos_requests_cpu == "" ? var.qos_limits_cpu : var.qos_requests_cpu
-              memory = var.qos_requests_memory == "" ? var.qos_limits_memory : var.qos_requests_memory
-            }
-            limits = {
-              cpu = var.qos_limits_cpu
-              memory = var.qos_limits_memory
-            }
-          }
-          # Using the Pod field as a value for the environment variable; pass RABBIT_POD_NAME to
-          # build the FQDN.
-          env {
-            name = "RABBIT_POD_NAME"
-            value_from {
-              field_ref {
-                field_path = "metadata.name"
+          dynamic "resources" {
+            for_each = var.resources == {} ? [] : [1]
+            content {
+              requests = {
+                cpu = var.resources.requests_cpu
+                memory = var.resources.requests_memory
+              }
+              limits = {
+                cpu = var.resources.limits_cpu
+                memory = var.resources.limits_memory
               }
             }
           }
-          # Using the Pod field as a value for the environment variable; pass RABBIT_POD_NAMESPACE
-          # to build the FQDN.
-          env {
-            name = "RABBIT_POD_NAMESPACE"
-            value_from {
-              field_ref {
-                field_path = "metadata.namespace"
-              }
-            }
-          }
-          # The name of the headless service needs to be provided to the discovery plugin via this
-          # environment variable. It uses the name to query the K8s API for information on all pods
-          # selected by the service.
-          env {
-            name = "K8S_SERVICE_NAME"
-            value = local.svc_name
-          }
-          # When a node starts up, it checks whether it has been assigned a node name. If no value
-          # was explicitly configured, the node resolves its hostname and prepends rabbit to it to
-          # compute its node name.
-          # Build the rabbitmq host FQDN.
-          env {
-            name = "RABBITMQ_NODENAME"
-            value = "rabbit@$(RABBIT_POD_NAME).$(K8S_SERVICE_NAME).$(RABBIT_POD_NAMESPACE).svc.cluster.local"
-          }
-          # Build the cluster DNS domain name.
-          # Suffix to match FQDN of rabbitmq instances in the K8s namespace.
-          env {
-            name = "K8S_HOSTNAME_SUFFIX"
-            value = ".$(K8S_SERVICE_NAME).$(RABBIT_POD_NAMESPACE).svc.cluster.local"
-          }
-          # This environment variable is only mean to be used in development and CI environments.
-          # This has the same meaning as default_user in rabbitmq.conf but higher priority. This
-          # option may be more convenient in cases where providing a config file is impossible, and
-          # environment variables is the only way to seed a user.
-          env {
-            name = "RABBITMQ_DEFAULT_PASS"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.secret.metadata[0].name
-                key = "pass"
-              }
-            }
-          }
-          # This environment variable is only mean to be used in development and CI environments.
-          # This has the same meaning as default_pass in rabbitmq.conf but higher priority. This
-          # option may be more convenient in cases where providing a config file is impossible, and
-          # environment variables is the only way to seed a user.
-          env {
-            name = "RABBITMQ_DEFAULT_USER"
-            value_from {
-              secret_key_ref {
-                name = kubernetes_secret.secret.metadata[0].name
-                key = "user"
-              }
-            }
-          }
-          # dynamic "env" {
-          #   for_each = var.env_field_ref
-          #   content {
-          #     name = env.value["name"]
-          #     value_from {
-          #       field_ref {
-          #         field_path = env.value["field_path"]
-          #       }
-          #     }
-          #   }
-          # }
+          # To list all of the environment variables:
+          # Linux: $ printenv
           dynamic "env" {
             for_each = var.env
             content {
@@ -574,56 +595,37 @@ resource "kubernetes_stateful_set" "stateful_set" {
               value = env.value
             }
           }
-          # liveness_probe {
-          #   exec {
-          #     command = ["rabbitmq-diagnostics", "status", "--erlang-cookie", "$(RABBITMQ_ERLANG_COOKIE)"]
-          #   }
-          #   initial_delay_seconds = 60
-          #   # See https://www.rabbitmq.com/monitoring.html for monitoring frequency recommendations.
-          #   period_seconds = 60
-          #   timeout_seconds = 15
-          #   failure_threshold = 3
-          #   success_threshold = 1
-          # }
-          # readiness_probe {
-          #   exec {
-          #     command = ["rabbitmq-diagnostics", "status", "--erlang-cookie", "$(RABBITMQ_ERLANG_COOKIE)"]
-          #   }
-          #   initial_delay_seconds = 20
-          #   period_seconds = 60
-          #   timeout_seconds = 10
-          # }
-          volume_mount {
-            name = "rabbitmq-storage"
-            mount_path = "/var/lib/rabbitmq/mnesia"
-            read_only = false
+          dynamic "env" {
+            for_each = var.env_secret
+            content {
+              name = env.value["env_name"]
+              value_from {
+                secret_key_ref {
+                  name = env.value["secret_name"]
+                  key = env.value["secret_key"]
+                }
+              }
+            }
           }
-          volume_mount {
-            name = "rabbitmq-storage"
-            mount_path = "/var/lib/rabbitmq/mnesia/$(RABBITMQ_NODENAME).pid"
-            sub_path = "$(RABBITMQ_NODENAME).pid"
-            read_only = false
+          dynamic "env" {
+            for_each = var.env_field
+            content {
+              name = env.value["env_name"]
+              value_from {
+                field_ref {
+                  field_path = env.value["field_path"]
+                }
+              }
+            }
           }
-          # In Linux when a filesystem is mounted into a non-empty directory, the directory will
-          # only contain the files from the newly mounted filesystem. The files in the original
-          # directory are inaccessible for as long as the filesystem is mounted. In cases when the
-          # original directory contains crucial files, mounting a volume could break the container.
-          # To overcome this limitation, K8s provides an additional subPath property on the
-          # volumeMount; this property mounts a single file or a single directory from the volume
-          # instead of mounting the whole volume, and it does not hide the existing files in the
-          # original directory.
-          volume_mount {
-            name = "erlang-cookie"
-            # Mounting into a file, not a directory.
-            mount_path = "/var/lib/rabbitmq/mnesia/.erlang.cookie"
-            # Instead of mounting the whole volume, only mounting the given entry.
-            sub_path = ".erlang.cookie"
-            read_only = false
-          }
-          volume_mount {
-            name = "config"
-            mount_path = "/config/rabbitmq"
-            read_only = true
+          dynamic "volume_mount" {
+            for_each = var.volume_mount
+            content {
+              name = volume_mount.value["name"]
+              mount_path = volume_mount.value["mount_path"]
+              sub_path = volume_mount.value["sub_path"]
+              read_only = volume_mount.value["read_only"]
+            }
           }
         }
         volume {
@@ -640,20 +642,57 @@ resource "kubernetes_stateful_set" "stateful_set" {
             }
           }
         }
-        volume {
-          name = "config"
-          config_map {
-            name = kubernetes_config_map.config.metadata[0].name
-            # By default, the permissions on all files in a configMap volume are set to 644
-            # (rw-r--r--).
-            default_mode = "0600" # Octal
-            items {
-              key = "enabled_plugins"
-              path = "enabled_plugins" #File name.
+        # Set volumes at the Pod level, then mount them into containers inside that Pod.
+        #
+        # By default, K8s emptyDir volumes are created with root:root ownership and 750
+        # permissions. This means that the directory created by K8s for the emptyDir volume is
+        # owned by the root user and group, which translates to read-write-execute permissions for
+        # the owner (root), read-execute permissions for the group, and no permissions for others.
+        # (For directories, execute permission is required to access the contents of the
+        # directory.)
+        # In many cases, especially when running containers as non-root users, this default
+        # ownership can lead to permission issues when containers try to write to the emptyDir
+        # volume. To address this, you might need to adjust the ownership and permissions of the
+        # emptyDir volume or consider using other volume types or approaches.
+        dynamic "volume" {
+          for_each = var.volume_empty_dir
+          content {
+            name = volume.value["name"]
+            empty_dir {
+              medium = volume.value["medium"]
+              size_limit = volume.value["size_limit"]
             }
-            items {
-              key = "rabbitmq.conf"
-              path = "rabbitmq.conf" #File name.
+          }
+        }
+        dynamic "volume" {
+          for_each = var.volume_config_map
+          iterator = it
+          content {
+            name = it.value["volume_name"]
+            config_map {
+              name = it.value["config_map_name"]
+              default_mode = it.value["default_mode"]
+              dynamic "items" {
+                for_each = it.value["items"]
+                iterator = itn
+                content {
+                  key = itn.value["key"]
+                  path = itn.value["path"]
+                }
+              }
+            }
+          }
+        }
+        # Pods access storage by using the claim as a volume. Claims must exist in the same
+        # namespace as the Pod using the claim. The cluster finds the claim in the Pod's namespace
+        # and uses it to get the PersistentVolume backing the claim. The volume is then mounted to
+        # the host and into the Pod.
+        dynamic "volume" {
+          for_each = var.volume_pv
+          content {
+            name = volume.value["pv_name"]
+            persistent_volume_claim {
+              claim_name = volume.value["claim_name"]
             }
           }
         }
@@ -663,31 +702,32 @@ resource "kubernetes_stateful_set" "stateful_set" {
     # Since PersistentVolumes are cluster-level resources, they do not belong to any namespace, but
     # PersistentVolumeClaims can only be created in a specific namespace; they can only be used by
     # pods in the same namespace.
-    #
-    # In order for RabbitMQ nodes to retain data between Pod restarts, node's data directory must
-    # use durable storage. A Persistent Volume must be attached to each RabbitMQ Pod.
-    #
-    # If a transient volume is used to back a RabbitMQ node, the node will lose its identity and
-    # all of its local data in case of a restart. This includes both schema and durable queue data.
-    # Syncing all of this data on every node restart would be highly inefficient. In case of a loss
-    # of quorum during a rolling restart, this will also lead to data loss.
-    volume_claim_template {
-      metadata {
-        name = "rabbitmq-storage"
-        namespace = var.namespace
-        labels = {
-          app = var.app_name
+    dynamic "volume_claim_template" {
+      for_each = var.volume_claim_template
+      content {
+        metadata {
+          name = volume_claim_template.value["name"]
+          namespace = var.namespace
+          labels = volume_claim_template.value["lables"]
         }
-      }
-      spec {
-        access_modes = var.pvc_access_modes
-        storage_class_name = var.pvc_storage_class_name
-        resources {
-          requests = {
-            storage = var.pvc_storage_size
+        spec {
+          access_modes = volume_claim_template.value["access_modes"]
+          storage_class_name = volume_claim_templatevalue["pvc_storage_class_name"]
+          dynamic "resources" {
+            
           }
         }
       }
+      # spec {
+      #   access_modes = var.pvc_access_modes
+      #   storage_class_name = var.pvc_storage_class_name
+      #   resources {
+      #     requests = {
+      #       storage = var.pvc_storage_size
+      #     }
+      #   }
+      # }
+      # }
     }
   }
 }
