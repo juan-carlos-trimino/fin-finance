@@ -241,9 +241,6 @@ variable persistent_volume_claims {
   type = list(object({
     name = string
     labels = optional(map(string), {})
-    # ReadWriteOnce (RWO) - Only a single NODE can mount the volume for reading and writing.
-    # ReadOnlyMany (ROX) - Multiple NODES can mount the volume for reading.
-    # ReadWriteMany (RWX) - Multiple NODES can mount the volume for both reading and writing.
     access_modes = list(string)
     # A volumeMode of Filesystem presents a volume as a directory within the Pod's filesystem while
     # a volumeMode of Block presents it as a raw block storage device. Filesystem is the default
@@ -309,23 +306,16 @@ variable volume_pv {  # PersistentVolumeClaim
     claim_name = string
   }))
 }
-
-
-
 variable volume_claim_template {
   default = []
   type = list(object({
     name = string
     labels = optional(map(string), {})
     access_modes = list(string)
-
-    # volume_mode = optional(string)
-    # storage = string
+    storage_class_name = string
+    storage = string
   }))
-
-
 }
-
 
 /***
 Define local variables.
@@ -704,30 +694,23 @@ resource "kubernetes_stateful_set" "stateful_set" {
     # pods in the same namespace.
     dynamic "volume_claim_template" {
       for_each = var.volume_claim_template
+      iterator = it
       content {
         metadata {
-          name = volume_claim_template.value["name"]
+          name = it.value["name"]
           namespace = var.namespace
-          labels = volume_claim_template.value["lables"]
+          labels = it.value["lables"]
         }
         spec {
-          access_modes = volume_claim_template.value["access_modes"]
-          storage_class_name = volume_claim_templatevalue["pvc_storage_class_name"]
-          dynamic "resources" {
-            
+          access_modes = it.value["access_modes"]
+          storage_class_name = it.value["storage_class_name"]
+          resources {
+            requests = {
+              storage = it.value["storage"]
+            }
           }
         }
       }
-      # spec {
-      #   access_modes = var.pvc_access_modes
-      #   storage_class_name = var.pvc_storage_class_name
-      #   resources {
-      #     requests = {
-      #       storage = var.pvc_storage_size
-      #     }
-      #   }
-      # }
-      # }
     }
   }
 }
