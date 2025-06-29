@@ -21,22 +21,21 @@ variable namespace {
   default = "default"
   type = string
 }
-variable region {
-  type = string
-  sensitive = true
-}
 variable dockerfile_name {
   default = "Dockerfile-prod"
   type = string
 }
 variable cr_login_server {
+  default = ""
   type = string
 }
 variable cr_username {
+  default = ""
   type = string
   sensitive = true
 }
 variable cr_password {
+  default = ""
   type = string
   sensitive = true
 }
@@ -128,13 +127,15 @@ variable init_container {
     })), [])
   }))
 }
-# Be aware that the default imagePullPolicy depends on the image tag. If a container refers to the
-# latest tag (either explicitly or by not specifying the tag at all), imagePullPolicy defaults to
-# Always, but if the container refers to any other tag, the policy defaults to IfNotPresent.
-#
-# When using a tag other than latest, the imagePullPolicy property must be set if changes are made
-# to an image without changing the tag. Better yet, always push changes to an image under a new
-# tag.
+/***
+Be aware that the default imagePullPolicy depends on the image tag. If a container refers to the
+latest tag (either explicitly or by not specifying the tag at all), imagePullPolicy defaults to
+Always, but if the container refers to any other tag, the policy defaults to IfNotPresent.
+
+When using a tag other than latest, the imagePullPolicy property must be set if changes are made
+to an image without changing the tag. Better yet, always push changes to an image under a new
+tag.
+***/
 variable image_pull_policy {
   default = "Always"
   type = string
@@ -182,24 +183,26 @@ variable env_field {
     field_path = string
   }))
 }
-# Quality of Service (QoS) classes for pods:
-# (1) BestEffort (lowest priority) - It's assigned to pods that do not have any requests or limits
-#     set at all (in any of their containers).
-# (2) Burstable - Pods have some lower-bound resource guarantees based on the request, but do not
-#     require a specific limit. A Pod is given a QoS class of Burstable if:
-#     * The Pod does not meet the criteria for QoS class Guaranteed.
-#     * At least one Container in the Pod has a memory or CPU request or limit.
-# (3) Guaranteed (highest priority) - It's assigned to pods whose containers' requests are equal to
-#     the limits for all resources (for each container in the pod). For a pod's class to be
-#     Guaranteed, three things need to be true:
-#     * Requests and limits need to be set for both CPU and memory.
-#     * They need to be set for each container.
-#     * They need to be equal; the limit needs to match the request for each resource in each
-#       container.
-# If a Container specifies its own memory limit, but does not specify a memory request, Kubernetes
-# automatically assigns a memory request that matches the limit. Similarly, if a Container
-# specifies its own CPU limit, but does not specify a CPU request, Kubernetes automatically assigns
-# a CPU request that matches the limit.
+/***
+Quality of Service (QoS) classes for pods:
+(1) BestEffort (lowest priority) - It's assigned to pods that do not have any requests or limits
+    set at all (in any of their containers).
+(2) Burstable - Pods have some lower-bound resource guarantees based on the request, but do not
+    require a specific limit. A Pod is given a QoS class of Burstable if:
+    * The Pod does not meet the criteria for QoS class Guaranteed.
+    * At least one Container in the Pod has a memory or CPU request or limit.
+(3) Guaranteed (highest priority) - It's assigned to pods whose containers' requests are equal to
+    the limits for all resources (for each container in the pod). For a pod's class to be
+    Guaranteed, three things need to be true:
+    * Requests and limits need to be set for both CPU and memory.
+    * They need to be set for each container.
+    * They need to be equal; the limit needs to match the request for each resource in each
+      container.
+If a Container specifies its own memory limit, but does not specify a memory request, Kubernetes
+automatically assigns a memory request that matches the limit. Similarly, if a Container
+specifies its own CPU limit, but does not specify a CPU request, Kubernetes automatically assigns
+a CPU request that matches the limit.
+***/
 variable resources {
   default = {}
   type = object({
@@ -220,8 +223,10 @@ variable termination_grace_period_seconds {
 variable service_name {
   type = string
 }
-# The ServiceType allows to specify what kind of Service to use: ClusterIP (default),
-# NodePort, LoadBalancer, and ExternalName.
+/***
+The ServiceType allows to specify what kind of Service to use: ClusterIP (default),
+NodePort, LoadBalancer, and ExternalName.
+***/
 variable service_type {
   default = "ClusterIP"
   type = string
@@ -307,17 +312,19 @@ variable automount_service_account_token {
   default = false
   type = bool
 }
-# The service normally forwards each connection to a randomly selected backing pod. To ensure that
-# connections from a particular client are passed to the same Pod each time, set the service's
-# sessionAffinity property to ClientIP instead of None (default).
-# Session affinity and Web Browsers (for LoadBalancer Services)
-# Since the service is now exposed externally, accessing it with a web browser will hit the same
-# pod every time. If the sessionAffinity is set to None, then why? The browser is using keep-alive
-# connections and sends all its requests through a single connection. Services work at the
-# connection level, and when a connection to a service is initially open, a random pod is selected
-# and then all network packets belonging to that connection are sent to that single pod. Even with
-# the sessionAffinity set to None, the same pod will always get hit (until the connection is
-# closed).
+/***
+The service normally forwards each connection to a randomly selected backing pod. To ensure that
+connections from a particular client are passed to the same Pod each time, set the service's
+sessionAffinity property to ClientIP instead of None (default).
+Session affinity and Web Browsers (for LoadBalancer Services)
+Since the service is now exposed externally, accessing it with a web browser will hit the same
+pod every time. If the sessionAffinity is set to None, then why? The browser is using keep-alive
+connections and sends all its requests through a single connection. Services work at the
+connection level, and when a connection to a service is initially open, a random pod is selected
+and then all network packets belonging to that connection are sent to that single pod. Even with
+the sessionAffinity set to None, the same pod will always get hit (until the connection is
+closed).
+***/
 variable service_session_affinity {
   default = "None"
   type = string
@@ -337,13 +344,15 @@ variable ports {
     protocol = string
   }))
 }
-# In Linux when a filesystem is mounted into a non-empty directory, the directory will only contain
-# the files from the newly mounted filesystem. The files in the original directory are inaccessible
-# for as long as the filesystem is mounted. In cases when the original directory contains crucial
-# files, mounting a volume could break the container. To overcome this limitation, K8s provides an
-# additional subPath property on the volumeMount; this property mounts a single file or a single
-# directory from the volume instead of mounting the whole volume, and it does not hide the existing
-# files in the original directory.
+/***
+In Linux when a filesystem is mounted into a non-empty directory, the directory will only contain
+the files from the newly mounted filesystem. The files in the original directory are inaccessible
+for as long as the filesystem is mounted. In cases when the original directory contains crucial
+files, mounting a volume could break the container. To overcome this limitation, K8s provides an
+additional subPath property on the volumeMount; this property mounts a single file or a single
+directory from the volume instead of mounting the whole volume, and it does not hide the existing
+files in the original directory.
+***/
 variable volume_mount {
   default = []
   type = list(object({
@@ -365,7 +374,7 @@ variable volume_empty_dir {
 variable volume_config_map {
   default = []
   type = list(object({
-    volume_name = string
+    name = string
     # Name of the ConfigMap containing the files to add to the container.
     config_map_name = string
     # Although ConfigMaps should be used for non-sensitive configuration data, you may want to
@@ -382,7 +391,7 @@ variable volume_config_map {
     })), [])
   }))
 }
-variable volume_pv {  # PersistentVolumeClaim
+variable volume_pv {
   default = []
   type = list(object({
     name = string
@@ -431,6 +440,8 @@ Use local-exec to invoke commands on the local workstation.
 Use timestamp to force the Docker image to build.
 ***/
 resource "null_resource" "docker_build" {
+  # If an image tag is not provided, do build an image; otherwise, use provided image.
+  count = var.image_tag == "" ? 1 : 0
   triggers = {
     always_run = timestamp()
   }
@@ -446,6 +457,11 @@ resource "null_resource" "docker_build" {
 Login to the Container Registry.
 ***/
 resource "null_resource" "docker_login" {
+  # If image tag is not provided OR an image tag for our service is provided, do login to the repo.
+  # That is,
+  # * If an image tag is not provided, then an image was built and need to be pushed to the repo.
+  # * If an image tag for our service was provided, then get it from the repo.
+  count = var.image_tag == "" ? 1 : 0
   depends_on = [
     null_resource.docker_build
   ]
@@ -462,6 +478,8 @@ resource "null_resource" "docker_login" {
 Push the image to the Container Registry.
 ***/
 resource "null_resource" "docker_push" {
+  # If an image tag was not provided, then push it to the repo.
+  count = var.image_tag == "" ? 1 : 0
   depends_on = [
     null_resource.docker_login
   ]
@@ -926,7 +944,7 @@ resource "kubernetes_deployment" "stateless" {
           for_each = var.volume_config_map
           iterator = it
           content {
-            name = it.value["volume_name"]
+            name = it.value["name"]
             config_map {
               name = it.value["config_map_name"]
               default_mode = it.value["default_mode"]
