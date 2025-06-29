@@ -127,7 +127,7 @@ then
   else
     printf "******************************\n"
     printf "Removing the infrastructure...\n"
-    printf "******************************"
+    printf "******************************\n"
     terraform destroy -auto-approve
     # See https://cert-manager.io/docs/installation/helm/
     printf "\n*****************************"
@@ -138,7 +138,8 @@ then
       clusterissuers.cert-manager.io \
       certificates.cert-manager.io \
       certificaterequests.cert-manager.io \
-      orders.acme.cert-manager.io
+      orders.acme.cert-manager.io \
+      challenges.acme.cert-manager.io
     printf "\n*****************************"
     printf "\nDeleting traefik's CRDs."
     printf "\n*****************************\n"
@@ -162,13 +163,12 @@ then
       apiratelimits.hub.traefik.io \
       apis.hub.traefik.io \
       apiversions.hub.traefik.io \
-      managedsubscriptions.hub.traefik.io \
-      gatewayclasses.gateway.networking.k8s.io \
-      gateways.gateway.networking.k8s.io \
-      grpcroutes.gateway.networking.k8s.io \
-      httproutes.gateway.networking.k8s.io \
-      referencegrants.gateway.networking.k8s.io \
-      challenges.acme.cert-manager.io
+      managedsubscriptions.hub.traefik.io
+    #   gatewayclasses.gateway.networking.k8s.io \
+    #   gateways.gateway.networking.k8s.io \
+    #   grpcroutes.gateway.networking.k8s.io \
+    #   httproutes.gateway.networking.k8s.io \
+    #   referencegrants.gateway.networking.k8s.io
     print_time_elapsed "$start_time"
   fi
 elif [ "$1" == "deploy" ]
