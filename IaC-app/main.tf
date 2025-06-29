@@ -204,7 +204,6 @@ module "whoiam" {
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
-  region = var.region
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
@@ -225,7 +224,6 @@ module "fin-finances-persistent" {
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
-  region = var.region
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
@@ -449,7 +447,7 @@ module "fin-finances-empty" {  # Using emptyDir.
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
-  region = var.region
+  # image_tag = "${var.cr_username}/${local.svc_finances}:${var.app_version}"
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
@@ -647,7 +645,6 @@ module "fin-gateway" {
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
-  region = var.region
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
@@ -717,3 +714,28 @@ module "fin-gateway" {
   service_type = "LoadBalancer"
   service_name = local.svc_gateway
 }
+
+
+/*
+module "fin-MySQLRouter" {
+  count = var.k8s_crds ? 0 : 0
+  # Specify the location of the module, which contains the file main.tf.
+  source = "./modules/deployment"
+  app_name = var.app_name
+  app_version = var.app_version
+
+
+}
+*/
+/***
+module "fin-MySQLCluster" {
+  count = var.k8s_crds ? 0 : 0
+  # Specify the location of the module, which contains the file main.tf.
+  source = "./modules/statefulset"
+  app_name = var.app_name
+  app_version = var.app_version
+
+
+
+}
+***/
