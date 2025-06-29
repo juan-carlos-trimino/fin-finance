@@ -204,6 +204,8 @@ module "whoiam" {
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
+  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
+  build_image = var.build_image
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
@@ -224,6 +226,8 @@ module "fin-finances-persistent" {
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
+  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
+  build_image = var.build_image
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
@@ -447,7 +451,8 @@ module "fin-finances-empty" {  # Using emptyDir.
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
-  # image_tag = "${var.cr_username}/${local.svc_finances}:${var.app_version}"
+  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
+  build_image = var.build_image
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
@@ -645,6 +650,8 @@ module "fin-gateway" {
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
+  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
+  build_image = var.build_image
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password

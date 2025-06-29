@@ -16,14 +16,27 @@
 display_help() {
   # -e   Enable interpretation of backslash escapes.
   # -n   Do not output the trailing newline.
-  echo -e "Usage: $0 deploy/destroy [OPTIONS]\n"
-  echo -e "  -h, --help               Display help\n"
-  echo "  deploy                   Apply changes to the infrastructure."
-  echo "    -av, --app_version       Application version; e.g., 1.0.0 (default)"
-  echo "    -dt, --deployment_type   Deployment type: empty-dir (default) or persistent-disk"
-  echo "    -rp, --reverse_proxy     Use a reverse proxy; e.g., true or false (default)"
-  echo -e "    -p, --pprof              Enable/disable pprof; e.g., true or false (default)\n"
-  echo -e "  destroy                  Destroy the infrastructure.\n"
+  printf "Usage: $0 deploy/destroy [OPTIONS]\n"
+  printf "  -h, --help                Display help\n"
+  printf "  deploy                  Apply changes to the infrastructure.\n"
+  printf "    -b, --build             Build an image (true); use image in repo (false)\n"
+  printf "                            If false, the image has to exist in the repo\n"
+  printf "    -v, --version           Application version; e.g., 1.0.0\n"
+  printf "    -dt, --deployment_type  Deployment type: empty-dir (default) or persistent-disk\n"
+  printf "    -rp, --reverse_proxy    Use a reverse proxy; e.g., true or false (default)\n"
+  printf "    -p, --pprof             Enable/disable pprof; e.g., true or false (default)\n"
+  printf "  destroy                 Destroy the infrastructure.\n\n"
+  printf "Examples:\n"
+  printf "Deploy app using empty-dir as storage.\n"
+  printf "Build the image using v1.0.0.\n"
+  printf "$ ./iac.sh deploy -b true -v 1.0.0\n"
+  printf "$ ./iac.sh deploy -dt empty-dir -b true -v 1.0.0\n\n"
+  printf "Deploy app using persistent storage, enable the endpoints of pprof.\n"
+  printf "Use image in repo v1.0.1.\n"
+  printf "$ ./iac.sh deploy -b false -v 1.0.0 -dt persistent-disk -p true\n\n"
+  printf "Deploy app using persistent storage and the reverse proxy.\n"
+  printf "Use image in repo v1.0.0.\n"
+  printf "$ ./iac.sh deploy -b false -v 1.0.0 -dt persistent-disk -rp true\n\n"
   exit 0
 }
 
@@ -37,7 +50,8 @@ check_options() {
   # echo "Elements in arr: ${arr[@]}"
   local -i ndx=0
   local -i size="${#arr[@]}"
-  local app_version="1.0.0"
+  local app_version=""
+  local build_image="xtrue"
   local reverse_proxy="false"
   local k8s_crds=$reverse_proxy
   local pprof="false"
@@ -54,7 +68,10 @@ check_options() {
       "-h" | "--help")
         display_help
         ;;
-      "-av" | "--app_version")
+      "-b" | "--build")
+        build_image=$value
+        ;;
+      "-v" | "--version")
         app_version=$value
         ;;
       "-p" | "--pprof")
@@ -74,24 +91,42 @@ check_options() {
     esac
   done
   #
-  if [ "$reverse_proxy" != "true" ] && [ "$reverse_proxy" != "false" ]
+  if [ ${arr[0]} == "deploy" ]
   then
-    echo -e "Valid values for the flag -rp/--reverse_proxy: 'true' or 'false'.\n"
-    exit 1
-  elif [ "$pprof" != "true" ] && [ "$pprof" != "false" ]
-  then
-    echo -e "Valid values for the flag -p/--pprof: 'true' or 'false'.\n"
-    exit 1
-  elif [ "$deployment_type" != "empty-dir" ] && [ "$deployment_type" != "persistent-disk" ]
-  then
-    echo -e "Valid values for the flag -dt/--deployment_type: 'empty-dir' or 'persistent-disk'.\n"
-    exit 1
-  else
+    if [ "$build_image" != "true" ] && [ "$build_image" != "false" ]
+    then
+      echo -e "The option -b/--build is required.\n"
+      echo -e "Valid values for the option are: 'true' or 'false'.\n"
+      exit 1
+    elif [ "$app_version" == "" ]
+    then
+      echo -e "The option -v/--version is required.\n"
+      exit 1
+    elif [ "$deployment_type" != "empty-dir" ] && [ "$deployment_type" != "persistent-disk" ]
+    then
+      echo -e "Valid values for the option -dt/--deployment_type: 'empty-dir' or 'persistent-disk'.\n"
+      exit 1
+    elif [ "$reverse_proxy" != "true" ] && [ "$reverse_proxy" != "false" ]
+    then
+      echo -e "Valid values for the option -rp/--reverse_proxy: 'true' or 'false'.\n"
+      exit 1
+    elif [ "$pprof" != "true" ] && [ "$pprof" != "false" ]
+    then
+      echo -e "Valid values for the option -p/--pprof: 'true' or 'false'.\n"
+      exit 1
+    fi
     export APP_VERSION=$app_version
     export REVERSE_PROXY=$reverse_proxy
     export K8S_CRDS=$k8s_crds
     export DEPLOYMENT_TYPE=$deployment_type
     export PPROF=$pprof
+    export BUILD_IMAGE=$build_image
+  elif [ ${arr[0]} == "destroy" ]
+  then
+    echo ""  # Placeholder...
+  else
+    display_help
+    exit 1
   fi
   return
 }
@@ -133,13 +168,13 @@ then
     printf "\n*****************************"
     printf "\nDeleting cert-manager's CRDs."
     printf "\n*****************************\n"
-    kubectl delete crd \
-      issuers.cert-manager.io \
-      clusterissuers.cert-manager.io \
-      certificates.cert-manager.io \
-      certificaterequests.cert-manager.io \
-      orders.acme.cert-manager.io \
-      challenges.acme.cert-manager.io
+    # kubectl delete crd \
+    #   issuers.cert-manager.io \
+    #   clusterissuers.cert-manager.io \
+    #   certificates.cert-manager.io \
+    #   certificaterequests.cert-manager.io \
+    #   orders.acme.cert-manager.io \
+    #   challenges.acme.cert-manager.io
     printf "\n*****************************"
     printf "\nDeleting traefik's CRDs."
     printf "\n*****************************\n"
@@ -182,6 +217,7 @@ then
   : "REVERSE_PROXY"
   : "$DEPLOYMENT_TYPE"
   : "$PPROF"
+  : "$BUILD_IMAGE"
   echo "*********************"
   echo "Environment variables"
   echo "*********************"
@@ -189,7 +225,8 @@ then
   echo "REVERSE_PROXY = $(printenv REVERSE_PROXY)"
   echo "K8S_CRDS = $(printenv K8S_CRDS)"
   echo "DEPLOYMENT_TYPE = $(printenv DEPLOYMENT_TYPE)"
-  echo -e "PPROF = $(printenv PPROF)\n"
+  echo "PPROF = $(printenv PPROF)"
+  printf "BUILD_IMAGE = $(printenv BUILD_IMAGE)\n\n"
   echo "*****************"
   echo "Current directory"
   echo "*****************"
@@ -239,7 +276,8 @@ then
     -var "reverse_proxy=$REVERSE_PROXY" \
     -var "k8s_crds=$K8S_CRDS" \
     -var "deployment_type=$DEPLOYMENT_TYPE" \
-    -var "pprof=$PPROF"
+    -var "pprof=$PPROF" \
+    -var "build_image=$BUILD_IMAGE"
   printf "\n*********************\n"
   echo "Copying the lock file"
   echo "*********************"

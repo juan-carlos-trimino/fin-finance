@@ -25,6 +25,11 @@ variable pprof {
   default = false
 }
 
+variable build_image {
+  type = bool
+  default = true
+}
+
 # The limitations of the kubernetes_manifest resource
 # ---------------------------------------------------
 # If you want to create arbitrary Kubernetes resources in a cluster using Terraform, particularly

@@ -13,6 +13,9 @@ variable app_version {
 variable dir_path {
   type = string
 }
+variable build_image {
+  type = bool
+}
 variable image_tag {
   default = ""
   type = string
@@ -26,16 +29,13 @@ variable dockerfile_name {
   type = string
 }
 variable cr_login_server {
-  default = ""
   type = string
 }
 variable cr_username {
-  default = ""
   type = string
   sensitive = true
 }
 variable cr_password {
-  default = ""
   type = string
   sensitive = true
 }
@@ -427,7 +427,7 @@ locals {
   pod_selector_label = "rs-${var.service_name}"
   svc_selector_label = "svc-${var.service_name}"
   image_tag = (
-    var.image_tag == "" ?
+    var.build_image == true ?
     "${var.cr_login_server}/${var.cr_username}/${var.service_name}:${var.app_version}" :
     var.image_tag
   )
@@ -440,8 +440,7 @@ Use local-exec to invoke commands on the local workstation.
 Use timestamp to force the Docker image to build.
 ***/
 resource "null_resource" "docker_build" {
-  # If an image tag is not provided, do build an image; otherwise, use provided image.
-  count = var.image_tag == "" ? 1 : 0
+  count = var.build_image == true ? 1 : 0
   triggers = {
     always_run = timestamp()
   }
@@ -457,11 +456,7 @@ resource "null_resource" "docker_build" {
 Login to the Container Registry.
 ***/
 resource "null_resource" "docker_login" {
-  # If image tag is not provided OR an image tag for our service is provided, do login to the repo.
-  # That is,
-  # * If an image tag is not provided, then an image was built and need to be pushed to the repo.
-  # * If an image tag for our service was provided, then get it from the repo.
-  count = var.image_tag == "" ? 1 : 0
+  count = var.build_image == true ? 1 : 0
   depends_on = [
     null_resource.docker_build
   ]
@@ -478,8 +473,7 @@ resource "null_resource" "docker_login" {
 Push the image to the Container Registry.
 ***/
 resource "null_resource" "docker_push" {
-  # If an image tag was not provided, then push it to the repo.
-  count = var.image_tag == "" ? 1 : 0
+  count = var.build_image == true ? 1 : 0
   depends_on = [
     null_resource.docker_login
   ]
