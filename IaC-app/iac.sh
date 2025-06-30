@@ -19,12 +19,16 @@ display_help() {
   printf "Usage: $0 deploy/destroy [OPTIONS]\n"
   printf "  -h, --help                Display help\n"
   printf "  deploy                  Apply changes to the infrastructure.\n"
-  printf "    -b, --build             Build an image (true); use image in repo (false)\n"
-  printf "                            If false, the image has to exist in the repo\n"
+  printf "    -b, --build             Build the image\n"
+  printf "    -nb, --no-build         Use an image from the repo\n"
+  printf "                            (The image has to exist in the repo)\n"
   printf "    -v, --version           Application version; e.g., 1.0.0\n"
-  printf "    -dt, --deployment_type  Deployment type: empty-dir (default) or persistent-disk\n"
-  printf "    -rp, --reverse_proxy    Use a reverse proxy; e.g., true or false (default)\n"
-  printf "    -p, --pprof             Enable/disable pprof; e.g., true or false (default)\n"
+  printf "    -ed, --empty-dir        Use empty-dir\n"
+  printf "    -pd, --persistent-disk  Use persistent disk\n"
+  printf "    -gw, --gateway          If present, use a reverse proxy\n"
+  printf "                            (If not present, reverse proxy is not used)\n"
+  printf "    -p, --pprof             If present, pprof is enabled\n"
+  printf "                            (If not present, pprof is disabled)\n"
   printf "  destroy                 Destroy the infrastructure.\n\n"
   printf "Examples:\n"
   printf "Deploy app using empty-dir as storage.\n"
@@ -51,68 +55,68 @@ check_options() {
   local -i ndx=0
   local -i size="${#arr[@]}"
   local app_version=""
-  local build_image="xtrue"
+  local build_image=""
   local reverse_proxy="false"
   local k8s_crds=$reverse_proxy
   local pprof="false"
-  local deployment_type="empty-dir"
+  local deployment_type=""
   for (( ndx = 1; ndx < size; ))  # Move pass the first argument.
   do
     flag=${arr[ndx]}
     # echo "Element at index $ndx: $flag"
-    ndx=$(( ndx + 1 ))
-    value=${arr[ndx]}
-    # echo "Element at index $ndx: $value"
-    ndx=$(( ndx + 1 ))
     case "$flag" in
       "-h" | "--help")
         display_help
         ;;
       "-b" | "--build")
-        build_image=$value
+        build_image="true"
+        ;;
+      "-nb" | "--no-build")
+        build_image="false"
         ;;
       "-v" | "--version")
-        app_version=$value
+        ndx=$(( ndx + 1 ))
+        # echo "Element at index $ndx: ${arr[ndx]}"
+        app_version=${arr[ndx]}
         ;;
       "-p" | "--pprof")
-        pprof=$value
+        pprof="true"
         ;;
-      "-dt" | "--deployment_type")
-        deployment_type=$value
+      "-ed" | "--empty-dir")
+        deployment_type="empty-dir"
         ;;
-      "-rp" | "--reverse_proxy")
-        reverse_proxy=$value
+      "-pd" | "--persistent-disk")
+        deployment_type="persistent-disk"
+        ;;
+      "-gw" | "--gateway")
+        reverse_proxy="true"
         k8s_crds=$reverse_proxy
         ;;
       *)  #Default.
         echo -e "Unknown flag: $flag\n"
-        display_help
+        exit 1
         ;;
     esac
+    ndx=$(( ndx + 1 ))
   done
   #
   if [ ${arr[0]} == "deploy" ]
   then
-    if [ "$build_image" != "true" ] && [ "$build_image" != "false" ]
+    if [ "$build_image" == "" ]
     then
-      echo -e "The option -b/--build is required.\n"
-      echo -e "Valid values for the option are: 'true' or 'false'.\n"
+      printf "One of these two options is required:\n"
+      printf "  -b or --build.\n"
+      printf "  -nb or --no-build.\n\n"
       exit 1
     elif [ "$app_version" == "" ]
     then
       echo -e "The option -v/--version is required.\n"
       exit 1
-    elif [ "$deployment_type" != "empty-dir" ] && [ "$deployment_type" != "persistent-disk" ]
+    elif [ "$deployment_type" == "" ]
     then
-      echo -e "Valid values for the option -dt/--deployment_type: 'empty-dir' or 'persistent-disk'.\n"
-      exit 1
-    elif [ "$reverse_proxy" != "true" ] && [ "$reverse_proxy" != "false" ]
-    then
-      echo -e "Valid values for the option -rp/--reverse_proxy: 'true' or 'false'.\n"
-      exit 1
-    elif [ "$pprof" != "true" ] && [ "$pprof" != "false" ]
-    then
-      echo -e "Valid values for the option -p/--pprof: 'true' or 'false'.\n"
+      printf "One of these two options is required:\n"
+      printf "  -ed or --empty-dir.\n"
+      printf "  -pd or --persistent-disk.\n\n"
       exit 1
     fi
     export APP_VERSION=$app_version
