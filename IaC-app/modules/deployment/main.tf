@@ -493,12 +493,14 @@ resource "null_resource" "docker_push" {
   }
 }
 
-# The maximum size of a Secret is limited to 1MB.
-# K8s helps keep Secrets safe by making sure each Secret is only distributed to the nodes that run
-# the pods that need access to the Secret.
-# On the nodes, Secrets are always stored in memory and never written to physical storage. (The
-# secret volume uses an in-memory filesystem (tmpfs) for the Secret files.)
-# From K8s version 1.7, etcd stores Secrets in encrypted form.
+/***
+The maximum size of a Secret is limited to 1MB.
+K8s helps keep Secrets safe by making sure each Secret is only distributed to the nodes that run
+the pods that need access to the Secret.
+On the nodes, Secrets are always stored in memory and never written to physical storage. (The
+secret volume uses an in-memory filesystem (tmpfs) for the Secret files.)
+From K8s version 1.7, etcd stores Secrets in encrypted form.
+***/
 resource "kubernetes_secret" "secrets" {
   count = length(var.secrets)
   metadata {
@@ -517,10 +519,12 @@ resource "kubernetes_secret" "secrets" {
   type = var.secrets[count.index].type
 }
 
-# A ServiceAccount is used by an application running inside a pod to authenticate itself with the
-# API server. A default ServiceAccount is automatically created for each namespace; each pod is
-# associated with exactly one ServiceAccount, but multiple pods can use the same ServiceAccount. A
-# pod can only use a ServiceAccount from the same namespace.
+/***
+A ServiceAccount is used by an application running inside a pod to authenticate itself with the
+API server. A default ServiceAccount is automatically created for each namespace; each pod is
+associated with exactly one ServiceAccount, but multiple pods can use the same ServiceAccount. A
+pod can only use a ServiceAccount from the same namespace.
+***/
 resource "kubernetes_service_account" "service_account" {
   count = var.service_account == null ? 0 : 1
   metadata {
@@ -544,11 +548,13 @@ resource "kubernetes_service_account" "service_account" {
   }
 }
 
-# Roles define WHAT can be done; role bindings define WHO can do it.
-# The distinction between a Role/RoleBinding and a ClusterRole/ClusterRoleBinding is that the Role/
-# RoleBinding is a namespaced resource; ClusterRole/ClusterRoleBinding is a cluster-level resource.
-# A Role resource defines what actions can be taken on which resources; i.e., which types of HTTP
-# requests can be performed on which RESTful resources.
+/***
+Roles define WHAT can be done; role bindings define WHO can do it.
+The distinction between a Role/RoleBinding and a ClusterRole/ClusterRoleBinding is that the Role/
+RoleBinding is a namespaced resource; ClusterRole/ClusterRoleBinding is a cluster-level resource.
+A Role resource defines what actions can be taken on which resources; i.e., which types of HTTP
+requests can be performed on which RESTful resources.
+***/
 resource "kubernetes_role" "role" {
   count = var.role == null ? 0 : 1
   metadata {
@@ -599,8 +605,10 @@ resource "kubernetes_role_binding" "role_binding" {
   }
 }
 
-# PersistentVolumeClaims can only be created in a specific namespace; they can then only be used by
-# pods in the same namespace.
+/***
+PersistentVolumeClaims can only be created in a specific namespace; they can then only be used by
+pods in the same namespace.
+***/
 resource "kubernetes_persistent_volume_claim" "pvc" {
   count = length(var.persistent_volume_claims)
   metadata {
@@ -976,8 +984,10 @@ resource "kubernetes_deployment" "stateless" {
   }
 }
 
-# Declare a K8s service to create a DNS record to make the microservice accessible within the
-# cluster.
+/***
+Declare a K8s service to create a DNS record to make the microservice accessible within the
+cluster.
+***/
 resource "kubernetes_service" "service" {
   metadata {
     name = var.service_name
