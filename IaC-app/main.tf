@@ -30,6 +30,7 @@ locals {
   svc_gateway = "fin-gateway"
   svc_error_page = "fin-error-page"
   svc_traefik = "fin-traefik"
+  svc_my_sql = "fin-mysql"
   ############
   # Services #
   ############
@@ -231,6 +232,9 @@ module "fin-finances-persistent" {
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
+  labels = {
+    "app" = var.app_name
+  }
   replicas = 1
   # Limits and requests for CPU resources are measured in millicores. If the container needs one
   # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
@@ -368,7 +372,6 @@ module "fin-finances-persistent" {
     labels = {
       "app" = var.app_name
     }
-    ################## A volume with volumeMode: Filesystem is mounted into Pods into a directory. (default)
     volume_mode = "Filesystem"
     # The volume can be mounted as read-write by many nodes.
     access_modes = ["ReadWriteOnce"]
@@ -456,6 +459,9 @@ module "fin-finances-empty" {  # Using emptyDir.
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
+  labels = {
+    "app" = var.app_name
+  }
   replicas = 1
   # See empty_dir.
   init_container = [{
@@ -723,17 +729,48 @@ module "fin-gateway" {
 }
 
 
-/*
+# /*
 module "fin-MySQLRouter" {
   count = var.k8s_crds ? 0 : 0
+  # count = var.deployment_type == "persistent-disk" && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
-  app_name = var.app_name
+dir_path = ".."
+  app_name = "${var.app_name}-mysql-server"
   app_version = var.app_version
-
-
+  namespace = local.namespace
+  image_tag = var.mysql_image_tag
+  build_image = false
+  labels = {
+    "app" = var.app_name
+  }
+  resources = {  # QoS - Guaranteed
+    limits_cpu = "100m"
+    limits_memory = "128Mi"
+  }
+  persistent_volume_claims = [{
+    name = "${var.app_name}-mysql-serverl-pvc"
+    labels = {
+      "app" = var.app_name
+    }
+    volume_mode = "Filesystem"
+    # The volume can be mounted as read-write by many nodes.
+    access_modes = ["ReadWriteOnce"]
+    # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
+    # for less than 50GB, the request is rounded up to 50GB.
+    storage_size = "50Gi"
+    storage_class_name = "oci-bv"
+  }]
+  ports = [{
+    name = "ports"
+    service_port = 3306
+    target_port = 3306
+    protocol = "TCP"
+  }]
+  service_type = "ClusterIP"  # Internal.
+  service_name = local.svc_my_sql
 }
-*/
+# */
 /***
 module "fin-MySQLCluster" {
   count = var.k8s_crds ? 0 : 0
