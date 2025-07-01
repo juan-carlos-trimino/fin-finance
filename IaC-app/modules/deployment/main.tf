@@ -13,6 +13,10 @@ variable app_version {
 variable dir_path {
   type = string
 }
+variable labels {
+  default = {}
+  type = map(string)
+}
 variable build_image {
   type = bool
 }
@@ -29,13 +33,16 @@ variable dockerfile_name {
   type = string
 }
 variable cr_login_server {
+  default = ""
   type = string
 }
 variable cr_username {
+  default = ""
   type = string
   sensitive = true
 }
 variable cr_password {
+  default = ""
   type = string
   sensitive = true
 }
@@ -412,7 +419,7 @@ variable persistent_volume_claims {
     # and usually preferred mode, enabling standard file system operations on the volume. Block
     # mode is used for applications that need direct access to the block device, like databases
     # requiring low-latency access.
-    volume_mode = optional(string)
+    volume_mode = optional(string, "Filesystem")
     storage_size = string
     # By specifying an empty string ("") as the storage class name, the PVC binds to a
     # pre-provisioned PV instead of dynamically provisioning a new one.
@@ -625,9 +632,7 @@ resource "kubernetes_deployment" "stateless" {
     name = var.service_name
     namespace = var.namespace
     # Labels attach to the Deployment.
-    labels = {
-      app = var.app_name
-    }
+    labels = var.labels
   }
   # The Deployment's specification.
   spec {
