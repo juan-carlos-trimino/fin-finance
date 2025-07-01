@@ -160,3 +160,12 @@ variable traefik_le_email {
   default = "<required>"
   sensitive = true
 }
+
+#########
+# MySQL #
+#########
+variable mysql_image_tag {
+  description = "MySQL version (https://hub.docker.com/_/mysql)"
+  type = string
+  default = "mysql:9.3.0"
+}
