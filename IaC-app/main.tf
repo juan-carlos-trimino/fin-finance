@@ -37,7 +37,8 @@ locals {
   # DNS translates hostnames to IP addresses; the container name is the hostname. When using Docker
   # and Docker Compose, DNS works automatically.
   # In K8s, a service makes the deployment accessible by other containers via DNS.
-  svc_dns_error_page = "${local.svc_error_page}.${local.namespace}.svc.cluster.local"
+  # FQDN: service-name.namespace.svc.cluster.local
+  svc_dns_error_page = "${local.svc_error_page}.${local.namespace}${var.cluster_domain_suffix}"
   svc_dns_finances = "${local.svc_finances}.${local.namespace}.svc.cluster.local"
 }
 
