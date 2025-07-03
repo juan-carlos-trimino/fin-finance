@@ -136,21 +136,25 @@ variable "helm_traefik_timeout_seconds" {
 variable traefik_dashboard_username {
   default = "<required>"
   sensitive = true
+  type = string
 }
 
 variable traefik_dashboard_password {
   default = "<required>"
   sensitive = true
+  type = string
 }
 
 variable traefik_gateway_username {
   default = "<required>"
   sensitive = true
+  type = string
 }
 
 variable traefik_gateway_password {
   default = "<required>"
   sensitive = true
+  type = string
 }
 
 # Digital Ocean
@@ -162,11 +166,13 @@ variable traefik_gateway_password {
 variable traefik_dns_api_token {
   default = "<required>"
   sensitive = true
+  type = string
 }
 
 variable traefik_le_email {
   default = "<required>"
   sensitive = true
+  type = string
 }
 
 #########
@@ -176,4 +182,22 @@ variable mysql_image_tag {
   description = "MySQL version (https://hub.docker.com/_/mysql)"
   type = string
   default = "mysql/mysql-router:8.0"
+}
+
+variable mysql_user {
+  default = "<required>"
+  sensitive = true
+  type = string
+}
+
+variable mysql_password {
+  default = "<required>"
+  sensitive = true
+  type = string
+}
+
+variable mysql_root_password {
+  default = "<required>"
+  sensitive = true
+  type = string
 }
