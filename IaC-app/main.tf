@@ -39,7 +39,7 @@ locals {
   # In K8s, a service makes the deployment accessible by other containers via DNS.
   # FQDN: service-name.namespace.svc.cluster.local
   svc_dns_error_page = "${local.svc_error_page}.${local.namespace}${var.cluster_domain_suffix}"
-  svc_dns_finances = "${local.svc_finances}.${local.namespace}.svc.cluster.local"
+  svc_dns_finances = "${local.svc_finances}.${local.namespace}${var.cluster_domain_suffix}"
 }
 
 ###################################################################################################
@@ -249,6 +249,9 @@ module "fin-finances-persistent" {
   # spec.image_pull_secrets.
   secrets = [{
     name = "${local.svc_finances}-registry-credentials"
+    labels = {
+      "app" = var.app_name
+    }
     # Plain-text data.
     data = {
       ".dockerconfigjson" = jsonencode({
@@ -499,6 +502,9 @@ module "fin-finances-empty" {  # Using emptyDir.
   # spec.image_pull_secrets.
   secrets = [{
     name = "${local.svc_finances}-registry-credentials"
+    labels = {
+      "app" = var.app_name
+    }
     # Plain-text data.
     data = {
       ".dockerconfigjson" = jsonencode({
@@ -730,24 +736,52 @@ module "fin-gateway" {
 }
 
 
+
+
 # /*
 module "fin-MySQLRouter" {
-  count = var.k8s_crds ? 0 : 0
   # count = var.deployment_type == "persistent-disk" && !var.k8s_crds ? 1 : 0
+  count = var.k8s_crds ? 0 : 0
   # Specify the location of the module, which contains the file main.tf.
-  source = "./modules/deployment"
-dir_path = ".."
+  source = "./modules/statefulset"
+# dir_path = ".."
   app_name = "${var.app_name}-mysql-server"
   app_version = var.app_version
   namespace = local.namespace
   image_tag = var.mysql_image_tag
-  build_image = false
+  # build_image = false
   labels = {
     "app" = var.app_name
   }
+  config_map = [{
+    name = "${var.app_name}-mysql-config-map"
+    labels = {
+      "app" = var.app_name
+    }
+    data = {
+      "MYSQL_DATABASE" = "checkaccount",
+      "MYSQL_ALLOW_EMPTY_PASSWORD" = "no"
+    }
+  }]
+  # If the order of Secrets changes, the Deployment must be changed accordingly. See
+  # spec.image_pull_secrets.
+  secrets = [{
+    name = "${local.svc_my_sql}-mysql"
+    labels = {
+      "app" = var.app_name
+    }
+    # Plain-text data.
+    data = {
+      MYSQL_USER = var.mysql_user
+      MYSQL_PASSWORD = var.mysql_password
+      MYSQL_ROOT_PASWWORD = var.mysql_root_password
+    }
+    type = "Opaque"
+  }]
+  replicas = 1
   resources = {  # QoS - Guaranteed
-    limits_cpu = "100m"
-    limits_memory = "128Mi"
+    limits_cpu = "250m"
+    limits_memory = "512Mi"
   }
   persistent_volume_claims = [{
     name = "${var.app_name}-mysql-serverl-pvc"
@@ -762,13 +796,62 @@ dir_path = ".."
     storage_size = "50Gi"
     storage_class_name = "oci-bv"
   }]
+  # readiness_probe = [{
+  #   initial_delay_seconds = 5
+  #   period_seconds = 2
+  #   timeout_seconds = 1
+  #   # failure_threshold = 3
+  #   # success_threshold = 1
+  #   # http_get = [{
+  #   #   path = "/readiness"
+  #   #   port = 8080
+  #   #   scheme = "HTTP"
+  #   # }]
+  #   # tcp_socket = {
+  #   #   port = 8088
+  #   # }
+  #   exec = {
+  #     # command: ["mysql", "-h", "127.0.0.1", "-e", "SELECT 1"]
+  #     command = [
+  #       "mysqladmin",
+  #       "ping",
+  #       "-u", "root",
+  #       "-h", "127.0.0.1",
+  #       "-p${MYSQL_ROOT_PASSWORD}"
+  #   ]}
+  # }]
+  # liveness_probe = [{
+  #   initial_delay_seconds = 30
+  #   period_seconds = 10
+  #   timeout_seconds = 5
+  #   # failure_threshold = 3
+  #   # success_threshold = 1
+  #   # http_get = [{
+  #   #   path = "/readiness"
+  #   #   port = 8080
+  #   #   scheme = "HTTP"
+  #   # }]
+  #   # tcp_socket = {
+  #   #   port = 8088
+  #   # }
+  #   exec = {
+  #     # command: ["mysqladmin", "ping"]
+  #     command = [
+  #       "mysqladmin",
+  #       "ping",
+  #       "-u", "root",
+  #       "-h", "127.0.0.1",
+  #       "-p${MYSQL_ROOT_PASSWORD}"
+  #   ]}
+  # }]
   ports = [{
     name = "ports"
     service_port = 3306
     target_port = 3306
     protocol = "TCP"
   }]
-  service_type = "ClusterIP"  # Internal.
+  # service_type = "ClusterIP"  # Internal.
+  service_type = "None"  # Internal.
   service_name = local.svc_my_sql
 }
 # */
