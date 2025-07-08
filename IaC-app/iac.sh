@@ -56,9 +56,12 @@ check_options() {
   local app_version=""
   local build_image=""
   local reverse_proxy="false"
+  local db_mysql="false"
   local k8s_crds=$reverse_proxy
   local pprof="false"
   local deployment_type=""
+  local empty_dir="false"
+  local persistent_disk="false"
   for (( ndx = 1; ndx < size; ))  # Move pass the first argument.
   do
     flag=${arr[ndx]}
@@ -81,11 +84,14 @@ check_options() {
       "-p" | "--pprof")
         pprof="true"
         ;;
+      "--mysql")
+        db_mysql="true"
+        ;;
       "-ed" | "--empty-dir")
-        deployment_type="empty-dir"
+        empty_dir="true"
         ;;
       "-pd" | "--persistent-disk")
-        deployment_type="persistent-disk"
+        persistent_disk="true"
         ;;
       "-gw" | "--gateway")
         reverse_proxy="true"
@@ -111,9 +117,15 @@ check_options() {
     then
       echo -e "The option -v/--version is required.\n"
       exit 1
-    elif [ "$deployment_type" == "" ]
+    elif [ "$empty_dir" == "false" ] && [ "$persistent_disk" == "false" ]
     then
       printf "One of these two options is required:\n"
+      printf "  -ed or --empty-dir.\n"
+      printf "  -pd or --persistent-disk.\n\n"
+      exit 1
+    elif [ "$empty_dir" == "true" ] && [ "$persistent_disk" == "true" ]
+    then
+      printf "Only one of these two options is required:\n"
       printf "  -ed or --empty-dir.\n"
       printf "  -pd or --persistent-disk.\n\n"
       exit 1
@@ -121,9 +133,11 @@ check_options() {
     export APP_VERSION=$app_version
     export REVERSE_PROXY=$reverse_proxy
     export K8S_CRDS=$k8s_crds
-    export DEPLOYMENT_TYPE=$deployment_type
+    export PERSISTENT_DISK=$persistent_disk
+    export EMPTY_DIR=$empty_dir
     export PPROF=$pprof
     export BUILD_IMAGE=$build_image
+    export DB_MYSQL=$db_mysql
   elif [ ${arr[0]} == "destroy" ]
   then
     echo ""  # Placeholder...
@@ -218,16 +232,20 @@ then
   : "$APP_VERSION"
   : "$K8S_CRDS"
   : "REVERSE_PROXY"
-  : "$DEPLOYMENT_TYPE"
+  : "$PERSISTENT_DISK"
+  : "$EMPTY_DIR"
   : "$PPROF"
   : "$BUILD_IMAGE"
+  : "DB_MYSQL"
+  # : "
   echo "*********************"
   echo "Environment variables"
   echo "*********************"
   echo "APP_VERSION = $(printenv APP_VERSION)"
   echo "REVERSE_PROXY = $(printenv REVERSE_PROXY)"
   echo "K8S_CRDS = $(printenv K8S_CRDS)"
-  echo "DEPLOYMENT_TYPE = $(printenv DEPLOYMENT_TYPE)"
+  echo "PERSISTENT_DISK = $(printenv PERSISTENT_DISK)"
+  echo "EMPTY_DIR = $(printenv EMPTY_DIR)"
   echo "PPROF = $(printenv PPROF)"
   printf "BUILD_IMAGE = $(printenv BUILD_IMAGE)\n\n"
   echo "*****************"
@@ -278,9 +296,11 @@ then
     -var "app_version=$APP_VERSION" \
     -var "reverse_proxy=$REVERSE_PROXY" \
     -var "k8s_crds=$K8S_CRDS" \
-    -var "deployment_type=$DEPLOYMENT_TYPE" \
+    -var "persistent_disk=$PERSISTENT_DISK" \
+    -var "empty_dir=$EMPTY_DIR" \
     -var "pprof=$PPROF" \
-    -var "build_image=$BUILD_IMAGE"
+    -var "build_image=$BUILD_IMAGE" \
+    -var "db_mysql=$DB_MYSQL"
   printf "\n*********************\n"
   echo "Copying the lock file"
   echo "*********************"
