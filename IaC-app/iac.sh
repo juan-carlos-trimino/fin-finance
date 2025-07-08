@@ -33,14 +33,13 @@ display_help() {
   printf "Examples:\n"
   printf "Deploy app using empty-dir as storage.\n"
   printf "Build the image using v1.0.0.\n"
-  printf "$ ./iac.sh deploy -b true -v 1.0.0\n"
-  printf "$ ./iac.sh deploy -dt empty-dir -b true -v 1.0.0\n\n"
+  printf "$ ./iac.sh deploy -b -v 1.0.0 -ed\n\n"
   printf "Deploy app using persistent storage, enable the endpoints of pprof.\n"
   printf "Use image in repo v1.0.1.\n"
-  printf "$ ./iac.sh deploy -b false -v 1.0.0 -dt persistent-disk -p true\n\n"
+  printf "$ ./iac.sh deploy -nb -v 1.0.1 -pd -p\n\n"
   printf "Deploy app using persistent storage and the reverse proxy.\n"
   printf "Use image in repo v1.0.0.\n"
-  printf "$ ./iac.sh deploy -b false -v 1.0.0 -dt persistent-disk -rp true\n\n"
+  printf "$ ./iac.sh deploy -nb -v 1.0.0 -pd -gw\n\n"
   exit 0
 }
 
