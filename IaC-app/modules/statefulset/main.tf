@@ -315,23 +315,6 @@ locals {
   svc_selector_label = "svc-${local.svc_name}"
 }
 
-/***
-(1) The maximum size of a Secret is limited to 1MB.
-(2) K8s helps keep Secrets safe by making sure each Secret is only distributed to the nodes that
-    run the pods that need access to the Secret.
-(3) On the nodes, Secrets are always stored in memory and never written to physical storage. (The
-    secret volume uses an in-memory filesystem (tmpfs) for the Secret files.)
-(4) From K8s version 1.7, etcd stores Secrets in encrypted form.
-(5) A Secret's entries can contain binary values, not only plain-text. Base64 encoding allows you
-    to include the binary data in YAML or JSON, which are both plaint-text formats.
-(6) Even though Secrets can be exposed through environment variables, you may want to avoid doing
-    so because they may get exposed inadvertently. For example,
-    *	Apps usually dump environment variables in error reports or even write them to the app log at
-      startup.
-    *	Children processes inherit all the environment variables of the parent process thereby you
-      have no way of knowing what happens with your secret data.
-    To be safe, always use secret volumes for exposing Secrets.
-***/
 resource "kubernetes_secret" "secrets" {
   count = length(var.secrets)
   metadata {
@@ -350,12 +333,6 @@ resource "kubernetes_secret" "secrets" {
   type = var.secrets[count.index].type
 }
 
-/***
-A ServiceAccount is used by an application running inside a pod to authenticate itself with the
-API server. A default ServiceAccount is automatically created for each namespace; each pod is
-associated with exactly one ServiceAccount, but multiple pods can use the same ServiceAccount. A
-pod can only use a ServiceAccount from the same namespace.
-***/
 resource "kubernetes_service_account" "service_account" {
   count = var.service_account == null ? 0 : 1
   metadata {
@@ -381,13 +358,6 @@ resource "kubernetes_service_account" "service_account" {
   }
 }
 
-/***
-Roles define WHAT can be done; role bindings define WHO can do it.
-The distinction between a Role/RoleBinding and a ClusterRole/ClusterRoleBinding is that the Role/
-RoleBinding is a namespaced resource; ClusterRole/ClusterRoleBinding is a cluster-level resource.
-A Role resource defines what actions can be taken on which resources; i.e., which types of HTTP
-requests can be performed on which RESTful resources.
-***/
 resource "kubernetes_role" "role" {
   count = var.role == null ? 0 : 1
   metadata {
@@ -438,10 +408,6 @@ resource "kubernetes_role_binding" "role_binding" {
   }
 }
 
-/***
-PersistentVolumeClaims can only be created in a specific namespace; they can then only be used by
-pods in the same namespace.
-***/
 resource "kubernetes_persistent_volume_claim" "pvc" {
   count = length(var.persistent_volume_claims)
   metadata {
@@ -464,10 +430,6 @@ resource "kubernetes_persistent_volume_claim" "pvc" {
   }
 }
 
-/***
-The contents of the ConfigMap are passed to containers as either environment variables or as files
-in a volume.
-***/
 resource "kubernetes_config_map" "config" {
   count = length(var.config_map)
   metadata {
@@ -757,10 +719,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
   }
 }
 
-/***
-Before deploying a StatefulSet, you will need to create a headless Service, which will be used
-to provide the network identity for your stateful pods.
-***/
 resource "kubernetes_service" "headless_service" {
   metadata {
     name = local.svc_name
