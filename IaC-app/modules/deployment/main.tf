@@ -10,81 +10,106 @@ variable app_name {
 variable app_version {
   type = string
 }
-variable dir_path {
-  type = string
-}
-variable labels {
-  default = {}
-  type = map(string)
+variable automount_service_account_token {
+  default = false
+  type = bool
 }
 variable build_image {
   type = bool
 }
-variable image_tag {
-  default = ""
-  type = string
-}
-variable namespace {
-  default = "default"
-  type = string
-}
-variable dockerfile_name {
-  default = "Dockerfile-prod"
-  type = string
+variable config_map {
+  default = []
+  type = list(object({
+    name = string
+    labels = optional(map(string), {})
+    # Binary data need to be base64 encoded.
+    binary_data = optional(map(string), {})
+    data = optional(map(string), {})
+    immutable = optional(bool, false)
+  }))
 }
 variable cr_login_server {
   default = ""
   type = string
-}
-variable cr_username {
-  default = ""
-  type = string
-  sensitive = true
 }
 variable cr_password {
   default = ""
   type = string
   sensitive = true
 }
-variable readiness_probe {
+variable cr_username {
+  default = ""
+  type = string
+  sensitive = true
+}
+variable dir_path {
+  type = string
+}
+variable dockerfile_name {
+  default = "Dockerfile-prod"
+  type = string
+}
+variable env {
+  default = {}
+  type = map(any)
+}
+variable env_field {
   default = []
   type = list(object({
-    # Number of seconds after the container has started before liveness or readiness probes are
-    # initiated. Defaults to 0 seconds. Minimum value is 0.
-    initial_delay_seconds = optional(number)
-    # How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
-    period_seconds = optional(number)
-    # Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1.
-    timeout_seconds = optional(number)
-    # When a probe fails, Kubernetes will try failureThreshold times before giving up. Giving up in
-    # case of liveness probe means restarting the container. In case of readiness probe the Pod
-    # will be marked Unready. Defaults to 3. Minimum value is 1.
-    failure_threshold = optional(number)
-    # Minimum consecutive successes for the probe to be considered successful after having failed.
-    # Defaults to 1. Must be 1 for liveness and startup Probes. Minimum value is 1.
-    success_threshold = optional(number)
-    http_get = optional(list(object({
-      # Host name to connect to, defaults to the pod IP.
-      host = optional(string)
-      # Path to access on the HTTP server. Defaults to /.
-      path = optional(string)
-      # Name or number of the port to access on the container. Number must be in the range 1 to
-      # 65535.
-      port = number
-      # Scheme to use for connecting to the host (HTTP or HTTPS). Defaults to HTTP.
-      scheme = optional(string)
-      http_header = optional(list(object({
-        name = string
-        value = string
-      })), [])
-    })), [])
-    exec = optional(object({
-      command = list(string)
-    }), null)
-    tcp_socket = optional(object({
-      port = number
-    }), null)
+    env_name = string
+    field_path = string
   }))
+}
+variable env_secret {
+  default = []
+  type = list(object({
+    name = string
+    secret_name = string
+    secret_key = string
+  }))
+}
+/***
+Be aware that the default imagePullPolicy depends on the image tag. If a container refers to the
+latest tag (either explicitly or by not specifying the tag at all), imagePullPolicy defaults to
+Always, but if the container refers to any other tag, the policy defaults to IfNotPresent.
+
+When using a tag other than latest, the imagePullPolicy property must be set if changes are made
+to an image without changing the tag. Better yet, always push changes to an image under a new
+tag.
+***/
+variable image_pull_policy {
+  default = "Always"
+  type = string
+}
+variable image_tag {
+  default = ""
+  type = string
+}
+variable init_container {
+  default = []
+  type = list(object({
+    name = string
+    image = string
+    image_pull_policy = optional(string)
+    command = optional(list(string))
+    security_context = optional(list(object({
+      run_as_non_root = bool
+      run_as_user = number
+      run_as_group = number
+      read_only_root_filesystem = bool
+      privileged = bool
+    })), [])
+    volume_mounts = optional(list(object({
+      name = string
+      mount_path = string
+      sub_path = optional(string)
+      read_only = optional(bool)
+    })), [])
+  }))
+}
+variable labels {
+  default = {}
+  type = map(string)
 }
 variable liveness_probe {
   default = []
@@ -112,40 +137,36 @@ variable liveness_probe {
     }), null)
   }))
 }
-variable init_container {
+variable namespace {
+  default = "default"
+  type = string
+}
+variable persistent_volume_claims {
   default = []
   type = list(object({
     name = string
-    image = string
-    image_pull_policy = optional(string)
-    command = optional(list(string))
-    security_context = optional(list(object({
-      run_as_non_root = bool
-      run_as_user = number
-      run_as_group = number
-      read_only_root_filesystem = bool
-      privileged = bool
-    })), [])
-    volume_mounts = optional(list(object({
-      name = string
-      mount_path = string
-      sub_path = optional(string)
-      read_only = optional(bool)
-    })), [])
+    labels = optional(map(string), {})
+    /***
+    ReadWriteOnce (RWO) - Only a single NODE can mount the volume for reading and writing.
+    ReadOnlyMany (ROX) - Multiple NODES can mount the volume for reading.
+    ReadWriteMany (RWX) - Multiple NODES can mount the volume for both reading and writing.
+    ***/
+    access_modes = list(string)
+    /***
+    A volumeMode of Filesystem presents a volume as a directory within the Pod's filesystem while
+    a volumeMode of Block presents it as a raw block storage device. Filesystem is the default
+    and usually preferred mode, enabling standard file system operations on the volume. Block
+    mode is used for applications that need direct access to the block device, like databases
+    requiring low-latency access.
+    ***/
+    volume_mode = optional(string, "Filesystem")
+    storage_size = string
+    /***
+    By specifying an empty string ("") as the storage class name, the PVC binds to a
+    pre-provisioned PV instead of dynamically provisioning a new one.
+    ***/
+    storage_class_name = optional(string)
   }))
-}
-/***
-Be aware that the default imagePullPolicy depends on the image tag. If a container refers to the
-latest tag (either explicitly or by not specifying the tag at all), imagePullPolicy defaults to
-Always, but if the container refers to any other tag, the policy defaults to IfNotPresent.
-
-When using a tag other than latest, the imagePullPolicy property must be set if changes are made
-to an image without changing the tag. Better yet, always push changes to an image under a new
-tag.
-***/
-variable image_pull_policy {
-  default = "Always"
-  type = string
 }
 variable pod_security_context {
   default = []
@@ -157,38 +178,72 @@ variable pod_security_context {
     supplemental_groups = optional(set(number))
   }))
 }
-variable security_context {
+variable ports {
   default = [{
-    run_as_non_root = false
-    run_as_user = 0
-    run_as_group = 0
-    read_only_root_filesystem = false
+    name = "ports"
+    service_port = 80
+    target_port = 8080
+    protocol = "TCP"
   }]
   type = list(object({
-    run_as_non_root = bool
-    run_as_user = number
-    run_as_group = number
-    read_only_root_filesystem = bool
+    name = string
+    service_port = number
+    target_port = number
+    node_port = optional(number)
+    protocol = string
   }))
 }
-variable env {
-  default = {}
-  type = map(any)
-}
-variable env_secret {
+variable readiness_probe {
   default = []
   type = list(object({
-    env_name = string
-    secret_name = string
-    secret_key = string
+    /***
+    Number of seconds after the container has started before liveness or readiness probes are
+    initiated. Defaults to 0 seconds. Minimum value is 0.
+    ***/
+    initial_delay_seconds = optional(number)
+    # How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+    period_seconds = optional(number)
+    # Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1.
+    timeout_seconds = optional(number)
+    /***
+    When a probe fails, Kubernetes will try failureThreshold times before giving up. Giving up in
+    case of liveness probe means restarting the container. In case of readiness probe the Pod
+    will be marked Unready. Defaults to 3. Minimum value is 1.
+    ***/
+    failure_threshold = optional(number)
+    /***
+    Minimum consecutive successes for the probe to be considered successful after having failed.
+    Defaults to 1. Must be 1 for liveness and startup Probes. Minimum value is 1.
+    ***/
+    success_threshold = optional(number)
+    http_get = optional(list(object({
+      # Host name to connect to, defaults to the pod IP.
+      host = optional(string)
+      # Path to access on the HTTP server. Defaults to /.
+      path = optional(string)
+      /***
+      Name or number of the port to access on the container. Number must be in the range 1 to
+      65535.
+      ***/
+      port = number
+      # Scheme to use for connecting to the host (HTTP or HTTPS). Defaults to HTTP.
+      scheme = optional(string)
+      http_header = optional(list(object({
+        name = string
+        value = string
+      })), [])
+    })), [])
+    exec = optional(object({
+      command = list(string)
+    }), null)
+    tcp_socket = optional(object({
+      port = number
+    }), null)
   }))
 }
-variable env_field {
-  default = []
-  type = list(object({
-    env_name = string
-    field_path = string
-  }))
+variable replicas {
+  default = 1
+  type = number
 }
 /***
 Quality of Service (QoS) classes for pods:
@@ -219,54 +274,6 @@ variable resources {
     limits_memory = optional(string)
   })
 }
-variable replicas {
-  default = 1
-  type = number
-}
-variable termination_grace_period_seconds {
-  default = 30
-  type = number
-}
-variable service_name {
-  type = string
-}
-/***
-The ServiceType allows to specify what kind of Service to use: ClusterIP (default),
-NodePort, LoadBalancer, and ExternalName.
-***/
-variable service_type {
-  default = "ClusterIP"
-  type = string
-}
-variable secrets {
-  default = []
-  type = list(object({
-    name = string
-    labels = optional(map(string), {})
-    annotations = optional(map(string), {})
-    data = optional(map(string), {})
-    # base64 encoding.
-    binary_data = optional(map(string), {})
-    type = optional(string, "Opaque")
-  }))
-  sensitive = true
-}
-variable service_account {
-  default = null
-  type = object({
-    name = string
-    namespace = string
-    # Note: The keys and the values in the map must be strings. In other words, you cannot use
-    #       numeric, boolean, list or other types for either the keys or the values.
-    labels = optional(map(string), {})
-    # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-    annotations = optional(map(string), {})
-    automount_service_account_token = optional(bool, true)
-    secrets = optional(list(object({
-      name = string
-    })), [])
-  })
-}
 variable role {
   default = null
   type = object({
@@ -290,36 +297,90 @@ variable role_binding {
     namespace = string
     labels = optional(map(string), {})
     annotations = optional(map(string), {})
-    # A RoleBinding always references a single Role, but it can bind the Role to multiple subjects.
-    # The Role to bind Subjects to.
+    /***
+    A RoleBinding always references a single Role, but it can bind the Role to multiple subjects.
+    The Role to bind Subjects to.
+    ***/
     role_ref = object({
       kind = string
       # 'name' must match the name of the Role or ClusterRole you wish to bind to.
       name = string
-      # The API group to drive authorization decisions. This value must be and defaults to
-      # 'rbac.authorization.k8s.io'.
+      /***
+      The API group to drive authorization decisions. This value must be and defaults to
+      'rbac.authorization.k8s.io'.
+      ***/
       api_group = string
     })
-    # The Users, Groups, or ServiceAccounts to grand permissions to.
-    # More than one 'subject' is allowed.
+    /***
+    The Users, Groups, or ServiceAccounts to grand permissions to.
+    More than one 'subject' is allowed.
+    ***/
     subjects = list(object({
       # The type of binding to use. This value must be ServiceAccount, User or Group.
       kind = string
-      # The name of this Role to bind Subjects to.
-      # 'name' is case sensitive.
+      /***
+      The name of this Role to bind Subjects to.
+      The name field is case sensitive.
+      ***/
       name = string
-      # Namespace defines the namespace of the ServiceAccount to bind to. This value only applies
-      # to kind ServiceAccount.
+      /***
+      Namespace defines the namespace of the ServiceAccount to bind to. This value only applies
+      to kind ServiceAccount.
+      ***/
       namespace = optional(string)
-      # The API group to drive authorization decisions. This value only applies to kind User and
-      # Group. It must be 'rbac.authorization.k8s.io'.
+      /***
+      The API group to drive authorization decisions. This value only applies to kind User and
+      Group. It must be 'rbac.authorization.k8s.io'.
+      ***/
       api_group = optional(string)
     }))
   })
 }
-variable automount_service_account_token {
-  default = false
-  type = bool
+variable secrets {
+  default = []
+  type = list(object({
+    name = string
+    labels = optional(map(string), {})
+    annotations = optional(map(string), {})
+    data = optional(map(string), {})
+    # base64 encoding.
+    binary_data = optional(map(string), {})
+    type = optional(string, "Opaque")
+  }))
+  sensitive = true
+}
+variable security_context {
+  default = [{
+    run_as_non_root = false
+    run_as_user = 0
+    run_as_group = 0
+    read_only_root_filesystem = false
+  }]
+  type = list(object({
+    run_as_non_root = bool
+    run_as_user = number
+    run_as_group = number
+    read_only_root_filesystem = bool
+  }))
+}
+variable service_account {
+  default = null
+  type = object({
+    name = string
+    namespace = string
+    # Note: The keys and the values in the map must be strings. In other words, you cannot use
+    #       numeric, boolean, list or other types for either the keys or the values.
+    labels = optional(map(string), {})
+    # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+    annotations = optional(map(string), {})
+    automount_service_account_token = optional(bool, true)
+    secrets = optional(list(object({
+      name = string
+    })), [])
+  })
+}
+variable service_name {
+  type = string
 }
 /***
 The service normally forwards each connection to a randomly selected backing pod. To ensure that
@@ -338,58 +399,17 @@ variable service_session_affinity {
   default = "None"
   type = string
 }
-variable ports {
-  default = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8080
-    protocol = "TCP"
-  }]
-  type = list(object({
-    name = string
-    service_port = number
-    target_port = number
-    node_port = optional(number)
-    protocol = string
-  }))
-}
-variable config_map {
-  default = []
-  type = list(object({
-    name = string
-    labels = optional(map(string), {})
-    # Binary data need to be base64 encoded.
-    binary_data = optional(map(string), {})
-    data = optional(map(string), {})
-    immutable = optional(bool, false)
-  }))
-}
 /***
-In Linux when a filesystem is mounted into a non-empty directory, the directory will only contain
-the files from the newly mounted filesystem. The files in the original directory are inaccessible
-for as long as the filesystem is mounted. In cases when the original directory contains crucial
-files, mounting a volume could break the container. To overcome this limitation, K8s provides an
-additional subPath property on the volumeMount; this property mounts a single file or a single
-directory from the volume instead of mounting the whole volume, and it does not hide the existing
-files in the original directory.
+The ServiceType allows to specify what kind of Service to use: ClusterIP (default),
+NodePort, LoadBalancer, and ExternalName.
 ***/
-variable volume_mount {
-  default = []
-  type = list(object({
-    name = string
-    mount_path = string
-    sub_path = optional(string)
-    read_only = optional(bool)
-  }))
+variable service_type {
+  default = "ClusterIP"
+  type = string
 }
-variable volume_empty_dir {
-  description = "(Optional) A temporary directory that shares a pod's lifetime."
-  default = []
-  type = list(object({
-    name = string
-    medium = optional(string)
-    size_limit = optional(string)
-  }))
+variable termination_grace_period_seconds {
+  default = 30
+  type = number
 }
 variable volume_config_map {
   default = []
@@ -413,38 +433,38 @@ variable volume_config_map {
     })), [])
   }))
 }
+variable volume_empty_dir {
+  description = "(Optional) A temporary directory that shares a pod's lifetime."
+  default = []
+  type = list(object({
+    name = string
+    medium = optional(string)
+    size_limit = optional(string)
+  }))
+}
+/***
+In Linux when a filesystem is mounted into a non-empty directory, the directory will only contain
+the files from the newly mounted filesystem. The files in the original directory are inaccessible
+for as long as the filesystem is mounted. In cases when the original directory contains crucial
+files, mounting a volume could break the container. To overcome this limitation, K8s provides an
+additional subPath property on the volumeMount; this property mounts a single file or a single
+directory from the volume instead of mounting the whole volume, and it does not hide the existing
+files in the original directory.
+***/
+variable volume_mount {
+  default = []
+  type = list(object({
+    name = string
+    mount_path = string
+    sub_path = optional(string)
+    read_only = optional(bool)
+  }))
+}
 variable volume_pv {
   default = []
   type = list(object({
     name = string
     claim_name = string
-  }))
-}
-variable persistent_volume_claims {
-  default = []
-  type = list(object({
-    name = string
-    labels = optional(map(string), {})
-    /***
-    ReadWriteOnce (RWO) - Only a single NODE can mount the volume for reading and writing.
-    ReadOnlyMany (ROX) - Multiple NODES can mount the volume for reading.
-    ReadWriteMany (RWX) - Multiple NODES can mount the volume for both reading and writing.
-    ***/
-    access_modes = list(string)
-    /***
-    A volumeMode of Filesystem presents a volume as a directory within the Pod's filesystem while
-    a volumeMode of Block presents it as a raw block storage device. Filesystem is the default
-    and usually preferred mode, enabling standard file system operations on the volume. Block
-    mode is used for applications that need direct access to the block device, like databases
-    requiring low-latency access.
-    ***/
-    volume_mode = optional(string, "Filesystem")
-    storage_size = string
-    /***
-    By specifying an empty string ("") as the storage class name, the PVC binds to a
-    pre-provisioned PV instead of dynamically provisioning a new one.
-    ***/
-    storage_class_name = optional(string)
   }))
 }
 
@@ -515,12 +535,21 @@ resource "null_resource" "docker_push" {
 }
 
 /***
-The maximum size of a Secret is limited to 1MB.
-K8s helps keep Secrets safe by making sure each Secret is only distributed to the nodes that run
-the pods that need access to the Secret.
-On the nodes, Secrets are always stored in memory and never written to physical storage. (The
-secret volume uses an in-memory filesystem (tmpfs) for the Secret files.)
-From K8s version 1.7, etcd stores Secrets in encrypted form.
+(1) The maximum size of a Secret is limited to 1MB.
+(2) K8s helps keep Secrets safe by making sure each Secret is only distributed to the nodes that
+    run the pods that need access to the Secret.
+(3) On the nodes, Secrets are always stored in memory and never written to physical storage. (The
+    secret volume uses an in-memory filesystem (tmpfs) for the Secret files.)
+(4) From K8s version 1.7, etcd stores Secrets in encrypted form.
+(5) A Secret's entries can contain binary values, not only plain-text. Base64 encoding allows you
+    to include the binary data in YAML or JSON, which are both plaint-text formats.
+(6) Even though Secrets can be exposed through environment variables, you may want to avoid doing
+    so because they may get exposed inadvertently. For example,
+    *	Apps usually dump environment variables in error reports or even write them to the app log at
+      startup.
+    *	Children processes inherit all the environment variables of the parent process thereby you
+      have no way of knowing what happens with your secret data.
+    To be safe, always use secret volumes for exposing Secrets.
 ***/
 resource "kubernetes_secret" "secrets" {
   count = length(var.secrets)
@@ -958,7 +987,7 @@ resource "kubernetes_deployment" "stateless" {
           dynamic "env" {
             for_each = var.env_secret
             content {
-              name = env.value["env_name"]
+              name = env.value["name"]
               value_from {
                 secret_key_ref {
                   name = env.value["secret_name"]

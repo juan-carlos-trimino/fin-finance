@@ -10,56 +10,24 @@ variable app_name {
 variable app_version {
   type = string
 }
-variable labels {
-  default = {}
-  type = map(string)
+variable automount_service_account_token {
+  default = false
+  type = bool
 }
-variable image_tag {
-  default = ""
-  type = string
-}
-variable namespace {
-  default = "default"
-  type = string
-}
-/***
-Be aware that the default imagePullPolicy depends on the image tag. If a container refers to the
-latest tag (either explicitly or by not specifying the tag at all), imagePullPolicy defaults to
-Always, but if the container refers to any other tag, the policy defaults to IfNotPresent.
-
-When using a tag other that latest, the imagePullPolicy property must be set if changes are made
-to an image without changing the tag. Better yet, always push changes to an image under a new
-tag.
-***/
-variable image_pull_policy {
-  default = "Always"
-  type = string
-}
-variable security_context {
-  default = [{
-    run_as_non_root = false
-    run_as_user = 0
-    run_as_group = 0
-    read_only_root_filesystem = false
-  }]
+variable config_map {
+  default = []
   type = list(object({
-    run_as_non_root = bool
-    run_as_user = number
-    run_as_group = number
-    read_only_root_filesystem = bool
+    name = string
+    labels = optional(map(string), {})
+    # Binary data need to be base64 encoded.
+    binary_data = optional(map(string), {})
+    data = optional(map(string), {})
+    immutable = optional(bool, false)
   }))
 }
 variable env {
   default = {}
   type = map(any)
-}
-variable env_secret {
-  default = []
-  type = list(object({
-    env_name = string
-    secret_name = string
-    secret_key = string
-  }))
 }
 variable env_field {
   default = []
@@ -68,26 +36,83 @@ variable env_field {
     field_path = string
   }))
 }
+variable env_secret {
+  default = []
+  type = list(object({
+    name = string
+    secret_name = string
+    secret_key = string
+  }))
+}
+variable image_pull_policy {
+  default = "Always"
+  type = string
+}
+variable image_tag {
+  default = ""
+  type = string
+}
+variable labels {
+  default = {}
+  type = map(string)
+}
+variable namespace {
+  default = "default"
+  type = string
+}
+variable persistent_volume_claims {
+  default = []
+  type = list(object({
+    name = string
+    labels = optional(map(string), {})
+    access_modes = list(string)
+    # A volumeMode of Filesystem presents a volume as a directory within the Pod's filesystem while
+    # a volumeMode of Block presents it as a raw block storage device. Filesystem is the default
+    # and usually preferred mode, enabling standard file system operations on the volume. Block
+    # mode is used for applications that need direct access to the block device, like databases
+    # requiring low-latency access.
+    volume_mode = optional(string)
+    storage_size = string
+    # By specifying an empty string ("") as the storage class name, the PVC binds to a
+    # pre-provisioned PV instead of dynamically provisioning a new one.
+    storage_class_name = optional(string)
+  }))
+}
 /***
-Quality of Service (QoS) classes for pods:
-(1) BestEffort (lowest priority) - It's assigned to pods that do not have any requests or limits
-    set at all (in any of their containers).
-(2) Burstable - Pods have some lower-bound resource guarantees based on the request, but do not
-    require a specific limit. A Pod is given a QoS class of Burstable if:
-    * The Pod does not meet the criteria for QoS class Guaranteed.
-    * At least one Container in the Pod has a memory or CPU request or limit.
-(3) Guaranteed (highest priority) - It's assigned to pods whose containers' requests are equal to
-    the limits for all resources (for each container in the pod). For a pod's class to be
-    Guaranteed, three things need to be true:
-    * Requests and limits need to be set for both CPU and memory.
-    * They need to be set for each container.
-    * They need to be equal; the limit needs to match the request for each resource in each
-      container.
-If a Container specifies its own memory limit, but does not specify a memory request, Kubernetes
-automatically assigns a memory request that matches the limit. Similarly, if a Container
-specifies its own CPU limit, but does not specify a CPU request, Kubernetes automatically assigns
-a CPU request that matches the limit.
+To relax the StatefulSet ordering guarantee while preserving its uniqueness and identity
+guarantee.
 ***/
+variable pod_management_policy {
+  default = "OrderedReady"
+}
+variable ports {
+  default = [{
+    name = "ports"
+    service_port = 80
+    target_port = 8080
+    protocol = "TCP"
+  }]
+  type = list(object({
+    name = string
+    service_port = number
+    target_port = number
+    node_port = optional(number)
+    protocol = string
+  }))
+}
+/***
+The primary use case for setting this field is to use a StatefulSet's Headless Service to
+propagate SRV records for its Pods without respect to their readiness for purpose of peer
+discovery.
+***/
+variable publish_not_ready_addresses {
+  default = "false"
+  type = bool
+}
+variable replicas {
+  default = 1
+  type = number
+}
 variable resources {
   default = {}
   type = object({
@@ -95,54 +120,6 @@ variable resources {
     requests_memory = optional(string)
     limits_cpu = optional(string)
     limits_memory = optional(string)
-  })
-}
-variable replicas {
-  default = 1
-  type = number
-}
-variable termination_grace_period_seconds {
-  default = 30
-  type = number
-}
-variable service_name {
-  type = string
-}
-/***
-The ServiceType allows to specify what kind of Service to use: ClusterIP (default),
-NodePort, LoadBalancer, and ExternalName.
-***/
-variable service_type {
-  default = "None"  # Headless service.
-  type = string
-}
-variable secrets {
-  default = []
-  type = list(object({
-    name = string
-    labels = optional(map(string), {})
-    annotations = optional(map(string), {})
-    data = optional(map(string), {})
-    # base64 encoding.
-    binary_data = optional(map(string), {})
-    type = optional(string, "Opaque")
-  }))
-  sensitive = true
-}
-variable service_account {
-  default = null
-  type = object({
-    name = string
-    namespace = string
-    # Note: The keys and the values in the map must be strings. In other words, you cannot use
-    #       numeric, boolean, list or other types for either the keys or the values.
-    labels = optional(map(string), {})
-    # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-    annotations = optional(map(string), {})
-    automount_service_account_token = optional(bool, true)
-    secrets = optional(list(object({
-      name = string
-    })), [])
   })
 }
 variable role {
@@ -195,114 +172,78 @@ variable role_binding {
     }))
   })
 }
-/***
-The service normally forwards each connection to a randomly selected backing pod. To ensure that
-connections from a particular client are passed to the same Pod each time, set the service's
-sessionAffinity property to ClientIP instead of None (default).
-Session affinity and Web Browsers (for LoadBalancer Services)
-Since the service is now exposed externally, accessing it with a web browser will hit the same
-pod every time. If the sessionAffinity is set to None, then why? The browser is using keep-alive
-connections and sends all its requests through a single connection. Services work at the
-connection level, and when a connection to a service is initially open, a random pod is selected
-and then all network packets belonging to that connection are sent to that single pod. Even with
-the sessionAffinity set to None, the same pod will always get hit (until the connection is
-closed).
-***/
-variable service_session_affinity {
-  default = "None"
-  type = string
-}
-variable ports {
-  default = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8080
-    protocol = "TCP"
-  }]
-  type = list(object({
-    name = string
-    service_port = number
-    target_port = number
-    node_port = optional(number)
-    protocol = string
-  }))
-}
-/***
-To relax the StatefulSet ordering guarantee while preserving its uniqueness and identity
-guarantee.
-***/
-variable pod_management_policy {
-  default = "OrderedReady"
-}
-/***
-The primary use case for setting this field is to use a StatefulSet's Headless Service to
-propagate SRV records for its Pods without respect to their readiness for purpose of peer
-discovery.
-***/
-variable publish_not_ready_addresses {
-  default = "false"
-  type = bool
-}
-variable config_map {
+variable secrets {
   default = []
   type = list(object({
     name = string
     labels = optional(map(string), {})
-    # Binary data need to be base64 encoded.
-    binary_data = optional(map(string), {})
+    annotations = optional(map(string), {})
     data = optional(map(string), {})
-    immutable = optional(bool, false)
+    # base64 encoding.
+    binary_data = optional(map(string), {})
+    type = optional(string, "Opaque")
+  }))
+  sensitive = true
+}
+variable security_context {
+  default = [{
+    run_as_non_root = false
+    run_as_user = 0
+    run_as_group = 0
+    read_only_root_filesystem = false
+  }]
+  type = list(object({
+    run_as_non_root = bool
+    run_as_user = number
+    run_as_group = number
+    read_only_root_filesystem = bool
   }))
 }
-variable persistent_volume_claims {
+variable service_account {
+  default = null
+  type = object({
+    name = string
+    namespace = string
+    # Note: The keys and the values in the map must be strings. In other words, you cannot use
+    #       numeric, boolean, list or other types for either the keys or the values.
+    labels = optional(map(string), {})
+    # https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+    annotations = optional(map(string), {})
+    automount_service_account_token = optional(bool, true)
+    secrets = optional(list(object({
+      name = string
+    })), [])
+  })
+}
+variable service_name {
+  type = string
+}
+variable service_session_affinity {
+  default = "None"
+  type = string
+}
+variable service_type {
+  default = "None"  # Headless service.
+  type = string
+}
+variable termination_grace_period_seconds {
+  default = 30
+  type = number
+}
+variable volume_claim_template {
   default = []
   type = list(object({
     name = string
     labels = optional(map(string), {})
     access_modes = list(string)
-    # A volumeMode of Filesystem presents a volume as a directory within the Pod's filesystem while
-    # a volumeMode of Block presents it as a raw block storage device. Filesystem is the default
-    # and usually preferred mode, enabling standard file system operations on the volume. Block
-    # mode is used for applications that need direct access to the block device, like databases
-    # requiring low-latency access.
-    volume_mode = optional(string)
-    storage_size = string
-    # By specifying an empty string ("") as the storage class name, the PVC binds to a
-    # pre-provisioned PV instead of dynamically provisioning a new one.
-    storage_class_name = optional(string)
-  }))
-}
-/***
-In Linux when a filesystem is mounted into a non-empty directory, the directory will only contain
-the files from the newly mounted filesystem. The files in the original directory are inaccessible
-for as long as the filesystem is mounted. In cases when the original directory contains crucial
-files, mounting a volume could break the container. To overcome this limitation, K8s provides an
-additional subPath property on the volumeMount; this property mounts a single file or a single
-directory from the volume instead of mounting the whole volume, and it does not hide the existing
-files in the original directory.
-***/
-variable volume_mount {
-  default = []
-  type = list(object({
-    name = string
-    mount_path = string
-    sub_path = optional(string)
-    read_only = optional(bool)
-  }))
-}
-variable volume_empty_dir {
-  description = "(Optional) A temporary directory that shares a pod's lifetime."
-  default = []
-  type = list(object({
-    name = string
-    medium = optional(string)
-    size_limit = optional(string)
+    storage_class_name = string
+    storage = string
   }))
 }
 variable volume_config_map {
   default = []
   type = list(object({
-    volume_name = string
+    name = string
     # Name of the ConfigMap containing the files to add to the container.
     config_map_name = string
     # Although ConfigMaps should be used for non-sensitive configuration data, you may want to
@@ -319,6 +260,24 @@ variable volume_config_map {
     })), [])
   }))
 }
+variable volume_empty_dir {
+  description = "(Optional) A temporary directory that shares a pod's lifetime."
+  default = []
+  type = list(object({
+    name = string
+    medium = optional(string)
+    size_limit = optional(string)
+  }))
+}
+variable volume_mount {
+  default = []
+  type = list(object({
+    name = string
+    mount_path = string
+    sub_path = optional(string)
+    read_only = optional(bool)
+  }))
+}
 variable volume_pv {  # PersistentVolumeClaim
   default = []
   type = list(object({
@@ -326,14 +285,24 @@ variable volume_pv {  # PersistentVolumeClaim
     claim_name = string
   }))
 }
-variable volume_claim_template {
+variable volume_secrets {
   default = []
   type = list(object({
     name = string
-    labels = optional(map(string), {})
-    access_modes = list(string)
-    storage_class_name = string
-    storage = string
+    # Name of the ConfigMap containing the files to add to the container.
+    secret_name = string
+    # Although ConfigMaps should be used for non-sensitive configuration data, you may want to
+    # make the file readable and writeble only to the user and group that owned the file; e.g.,
+    # default_mode = "6600" (-rw-rw------)
+    # The default permission is "6440" (-rw-r--r----)
+    default_mode = optional(string)
+    # An array of keys from the ConfigMap to create as files.
+    items = optional(list(object({
+      # Include the entry under this key.
+      key = string
+      # The entry's value should be stored in this file.
+      path = string
+    })), [])
   }))
 }
 
@@ -347,12 +316,21 @@ locals {
 }
 
 /***
-The maximum size of a Secret is limited to 1MB.
-K8s helps keep Secrets safe by making sure each Secret is only distributed to the nodes that run
-the pods that need access to the Secret.
-On the nodes, Secrets are always stored in memory and never written to physical storage. (The
-secret volume uses an in-memory filesystem (tmpfs) for the Secret files.)
-From K8s version 1.7, etcd stores Secrets in encrypted form.
+(1) The maximum size of a Secret is limited to 1MB.
+(2) K8s helps keep Secrets safe by making sure each Secret is only distributed to the nodes that
+    run the pods that need access to the Secret.
+(3) On the nodes, Secrets are always stored in memory and never written to physical storage. (The
+    secret volume uses an in-memory filesystem (tmpfs) for the Secret files.)
+(4) From K8s version 1.7, etcd stores Secrets in encrypted form.
+(5) A Secret's entries can contain binary values, not only plain-text. Base64 encoding allows you
+    to include the binary data in YAML or JSON, which are both plaint-text formats.
+(6) Even though Secrets can be exposed through environment variables, you may want to avoid doing
+    so because they may get exposed inadvertently. For example,
+    *	Apps usually dump environment variables in error reports or even write them to the app log at
+      startup.
+    *	Children processes inherit all the environment variables of the parent process thereby you
+      have no way of knowing what happens with your secret data.
+    To be safe, always use secret volumes for exposing Secrets.
 ***/
 resource "kubernetes_secret" "secrets" {
   count = length(var.secrets)
@@ -364,6 +342,8 @@ resource "kubernetes_secret" "secrets" {
   }
   # Plain-text data.
   data = var.secrets[count.index].data
+  /***
+  ***/
   binary_data = var.secrets[count.index].binary_data
   # https://kubernetes.io/docs/concepts/configuration/secret/#secret-types
   # https://kubernetes.io/docs/concepts/configuration/secret/#serviceaccount-token-secrets
@@ -543,6 +523,11 @@ resource "kubernetes_stateful_set" "stateful_set" {
       }
       #
       spec {
+        /***By default, the default-token Secret is mounted into every container, but you can
+        disable that in each pod by setting the automountServiceAccountToken field in the pod spec
+        to false or by setting it to false on the service account the pod is using.
+        ***/
+        automount_service_account_token = var.automount_service_account_token
         service_account_name = kubernetes_service_account.service_account[0].metadata[0].name
         affinity {
           pod_anti_affinity {
@@ -622,7 +607,7 @@ resource "kubernetes_stateful_set" "stateful_set" {
           dynamic "env" {
             for_each = var.env_secret
             content {
-              name = env.value["env_name"]
+              name = env.value["name"]
               value_from {
                 secret_key_ref {
                   name = env.value["secret_name"]
@@ -652,20 +637,20 @@ resource "kubernetes_stateful_set" "stateful_set" {
             }
           }
         }
-        volume {
-          name = "erlang-cookie"
-          secret {
-            secret_name = kubernetes_secret.secret.metadata[0].name
-            default_mode = "0600" # Octal
-            # Selecting which entries to include in the volume by listing them.
-            items {
-              # Include the entry under this key.
-              key = "cookie"
-              # The entry's value will be stored in this file.
-              path = ".erlang.cookie"
-            }
-          }
-        }
+        # volume {
+        #   name = "erlang-cookie"
+        #   secret {
+        #     secret_name = kubernetes_secret.secret.metadata[0].name
+        #     default_mode = "0600" # Octal
+        #     # Selecting which entries to include in the volume by listing them.
+        #     items {
+        #       # Include the entry under this key.
+        #       key = "cookie"
+        #       # The entry's value will be stored in this file.
+        #       path = ".erlang.cookie"
+        #     }
+        #   }
+        # }
         /***
         Set volumes at the Pod level, then mount them into containers inside that Pod.
 
@@ -694,9 +679,28 @@ resource "kubernetes_stateful_set" "stateful_set" {
           for_each = var.volume_config_map
           iterator = it
           content {
-            name = it.value["volume_name"]
+            name = it.value["name"]
             config_map {
               name = it.value["config_map_name"]
+              default_mode = it.value["default_mode"]
+              dynamic "items" {
+                for_each = it.value["items"]
+                iterator = itn
+                content {
+                  key = itn.value["key"]
+                  path = itn.value["path"]
+                }
+              }
+            }
+          }
+        }
+        dynamic "volume" {
+          for_each = var.volume_secrets
+          iterator = it
+          content {
+            name = it.value["name"]
+            secret {
+              secret_name = it.value["secret_name"]
               default_mode = it.value["default_mode"]
               dynamic "items" {
                 for_each = it.value["items"]
