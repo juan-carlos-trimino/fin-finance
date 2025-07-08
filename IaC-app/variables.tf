@@ -13,10 +13,16 @@ variable app_version {
   default = "1.0.0"
 }
 
-variable deployment_type {
-  type = string
-  description = "Deployment type: empty-dir (default) or persistent-disk."
-  default = "empty-dir"
+variable empty_dir {
+  type = bool
+  description = "Deployment type: empty-dir."
+  default = false
+}
+
+variable persistent_disk {
+  type = bool
+  description = "Deployment type: persistent disk."
+  default = false
 }
 
 variable pprof {
@@ -64,6 +70,11 @@ variable k8s_crds {  # CustomResourceDefinitions
 # reverse_proxy = true
 # k8s_crds = false
 variable reverse_proxy {
+  type = bool
+  default = false
+}
+
+variable db_mysql {
   type = bool
   default = false
 }
