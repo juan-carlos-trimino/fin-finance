@@ -200,7 +200,7 @@ module "certificate" {
 # Web service app for testing Traefik                                                             #
 ###################################################################################################
 module "whoiam" {
-  count = var.deployment_type == "whoami" && !var.k8s_crds ? 1 : 0
+  count = var.k8s_crds ? 1 : 0
   source = "./modules/deployment"
   dir_path = ".."
   app_name = var.app_name
@@ -221,14 +221,14 @@ module "whoiam" {
 # Application                                                                                     #
 ###################################################################################################
 module "fin-finances-persistent" {
-  count = var.deployment_type == "persistent-disk" && !var.k8s_crds ? 1 : 0
+  count = var.persistent_disk && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ".."
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
-  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
+  image_tag = var.build_image ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
   build_image = var.build_image
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
@@ -249,6 +249,7 @@ module "fin-finances-persistent" {
   # spec.image_pull_secrets.
   secrets = [{
     name = "${local.svc_finances}-registry-credentials"
+    namespace = local.namespace
     labels = {
       "app" = var.app_name
     }
@@ -369,10 +370,11 @@ module "fin-finances-persistent" {
   }]
   volume_pv = [{
     name = "wsf"
-    claim_name = "finances-pvc"
+    claim_name = "${var.app_name}-pvc"
   }]
   persistent_volume_claims = [{
-    name = "finances-pvc"
+    name = "${var.app_name}-pvc"
+    namespace = local.namespace
     labels = {
       "app" = var.app_name
     }
@@ -451,7 +453,7 @@ module "fin-finances-persistent" {
 }
 
 module "fin-finances-empty" {  # Using emptyDir.
-  count = var.deployment_type == "empty-dir" && !var.k8s_crds ? 1 : 0
+  count = var.empty_dir && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ".."
@@ -502,6 +504,7 @@ module "fin-finances-empty" {  # Using emptyDir.
   # spec.image_pull_secrets.
   secrets = [{
     name = "${local.svc_finances}-registry-credentials"
+    namespace = local.namespace
     labels = {
       "app" = var.app_name
     }
@@ -740,8 +743,8 @@ module "fin-gateway" {
 
 # /*
 module "fin-MySQLRouter" {
-  # count = var.deployment_type == "persistent-disk" && !var.k8s_crds ? 1 : 0
-  count = var.k8s_crds ? 0 : 0
+  count = var.db_mysql && !var.k8s_crds ? 1 : 0
+  # count = var.k8s_crds ? 0 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/statefulset"
 # dir_path = ".."
@@ -749,32 +752,59 @@ module "fin-MySQLRouter" {
   app_version = var.app_version
   namespace = local.namespace
   image_tag = var.mysql_image_tag
+  publish_not_ready_addresses = true
   # build_image = false
   labels = {
     "app" = var.app_name
   }
-  config_map = [{
-    name = "${var.app_name}-mysql-config-map"
-    labels = {
-      "app" = var.app_name
-    }
-    data = {
-      "MYSQL_DATABASE" = "checkaccount",
-      "MYSQL_ALLOW_EMPTY_PASSWORD" = "no"
-    }
+  # config_map = [{
+  #   name = "${var.app_name}-mysql-config-map"
+  #   namespace = local.namespace
+  #   labels = {
+  #     "app" = var.app_name
+  #   }
+  #   data = {
+  #     "MYSQL_DATABASE" = "checkaccount",
+  #     "MYSQL_ALLOW_EMPTY_PASSWORD" = "no"
+  #   }
+  # }]
+  # Configure environment variables specific to the app.
+  env = {
+    MYSQL_DATABASE = var.mysql_database
+    MYSQL_USER = var.mysql_user
+    MYSQL_PASSWORD = var.mysql_password
+    MYSQL_ROOT_PASSWORD = var.mysql_root_password
+  }
+  /***
+  env_secret = [{
+    name = "MYSQL_ROOT_PASSWORD"
+    secret_name = "${local.svc_my_sql}-mysql"
+    secret_key = "MYSQL_ROOT_PASSWORD"
+  },
+  {
+    name = "MYSQL_USER"
+    secret_name = "${local.svc_my_sql}-mysql"
+    secret_key = "MYSQL_USER"
+  },
+  {
+    name = "MYSQL_PASSWORD"
+    secret_name = "${local.svc_my_sql}-mysql"
+    secret_key = "MYSQL_PASSWORD"
   }]
+  ***/
   # If the order of Secrets changes, the Deployment must be changed accordingly. See
   # spec.image_pull_secrets.
   secrets = [{
     name = "${local.svc_my_sql}-mysql"
+    namespace = local.namespace
     labels = {
       "app" = var.app_name
     }
     # Plain-text data.
     data = {
-      MYSQL_USER = var.mysql_user
-      MYSQL_PASSWORD = var.mysql_password
-      MYSQL_ROOT_PASWWORD = var.mysql_root_password
+      MYSQL_USER = base64encode(var.mysql_user)
+      MYSQL_PASSWORD = base64encode(var.mysql_password)
+      MYSQL_ROOT_PASSWORD = base64encode(var.mysql_root_password)
     }
     type = "Opaque"
   }]
@@ -783,8 +813,14 @@ module "fin-MySQLRouter" {
     limits_cpu = "250m"
     limits_memory = "512Mi"
   }
-  persistent_volume_claims = [{
-    name = "${var.app_name}-mysql-serverl-pvc"
+  volume_mount = [{
+    name = "wsf"
+    mount_path = "/wsf_data_dir/mysql"
+    read_only = false
+  }]
+  volume_claim_templates = [{
+    name = "wsf"
+    namespace = local.namespace
     labels = {
       "app" = var.app_name
     }
@@ -793,7 +829,7 @@ module "fin-MySQLRouter" {
     access_modes = ["ReadWriteOnce"]
     # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
     # for less than 50GB, the request is rounded up to 50GB.
-    storage_size = "50Gi"
+    storage = "50Gi"
     storage_class_name = "oci-bv"
   }]
   # readiness_probe = [{
@@ -844,14 +880,23 @@ module "fin-MySQLRouter" {
   #       "-p${MYSQL_ROOT_PASSWORD}"
   #   ]}
   # }]
+  # pod_security_context = [{
+  #   fs_group = 2200
+  # }]
+  security_context = [{
+    run_as_non_root = true
+    run_as_user = 1100
+    run_as_group = 1100
+    read_only_root_filesystem = false
+  }]
   ports = [{
-    name = "ports"
-    service_port = 3306
-    target_port = 3306
+    name = "mysql"
+    # service_port = 3306
+    # target_port = 3306
+    service_port = 80
+    target_port = 80
     protocol = "TCP"
   }]
-  # service_type = "ClusterIP"  # Internal.
-  service_type = "None"  # Internal.
   service_name = local.svc_my_sql
 }
 # */
