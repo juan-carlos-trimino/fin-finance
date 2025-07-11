@@ -21,6 +21,7 @@ variable config_map {
   default = []
   type = list(object({
     name = string
+    namespace = string
     labels = optional(map(string), {})
     # Binary data need to be base64 encoded.
     binary_data = optional(map(string), {})
@@ -53,6 +54,10 @@ variable env {
   default = {}
   type = map(any)
 }
+/***
+A Pod can use environment variables to expose information about itself to containers running in the
+Pod.
+***/
 variable env_field {
   default = []
   type = list(object({
@@ -63,9 +68,9 @@ variable env_field {
 variable env_secret {
   default = []
   type = list(object({
-    name = string
-    secret_name = string
-    secret_key = string
+    name = string  # Environment variable.
+    secret_name = string  # The name of the Secret holding the key.
+    secret_key = string  # The key of the Secret to expose.
   }))
 }
 /***
@@ -145,6 +150,7 @@ variable persistent_volume_claims {
   default = []
   type = list(object({
     name = string
+    namespace = string
     labels = optional(map(string), {})
     /***
     ReadWriteOnce (RWO) - Only a single NODE can mount the volume for reading and writing.
@@ -340,6 +346,7 @@ variable secrets {
   default = []
   type = list(object({
     name = string
+    namespace = string
     labels = optional(map(string), {})
     annotations = optional(map(string), {})
     data = optional(map(string), {})
@@ -555,7 +562,7 @@ resource "kubernetes_secret" "secrets" {
   count = length(var.secrets)
   metadata {
     name = var.secrets[count.index].name
-    namespace = var.namespace
+    namespace = var.secrets[count.index].namespace
     labels = var.secrets[count.index].labels
     annotations = var.secrets[count.index].annotations
   }
@@ -663,7 +670,7 @@ resource "kubernetes_persistent_volume_claim" "pvc" {
   count = length(var.persistent_volume_claims)
   metadata {
     name = var.persistent_volume_claims[count.index].name
-    namespace = var.namespace
+    namespace = var.persistent_volume_claims[count.index].namespace
     labels = var.persistent_volume_claims[count.index].labels
   }
   spec {
@@ -675,8 +682,10 @@ resource "kubernetes_persistent_volume_claim" "pvc" {
         storage = var.persistent_volume_claims[count.index].storage_size
       }
     }
-    # If a value for storageClassName isn't explicitly specify, the cluster's default storage class
-    # is used.
+    /***
+    If a value for storageClassName isn't explicitly specify, the cluster's default storage class
+    is used.
+    ***/
     storage_class_name = var.persistent_volume_claims[count.index].storage_class_name
   }
 }
@@ -689,7 +698,7 @@ resource "kubernetes_config_map" "config" {
   count = length(var.config_map)
   metadata {
     name = var.config_map[count.index].name
-    namespace = var.namespace
+    namespace = var.config_map[count.index].namespace
     labels = var.config_map[count.index].labels
   }
   data = var.config_map[count.index].data
@@ -716,7 +725,7 @@ resource "kubernetes_deployment" "stateless" {
     # The label selector determines the pods the ReplicaSet manages.
     selector {
       match_labels = {
-        # It must match the labels in the Pod template.
+        # It must match the labels in the Pod template (spec.template.metadata.labels).
         pod_selector_lbl = local.pod_selector_label
       }
     }
@@ -730,7 +739,7 @@ resource "kubernetes_deployment" "stateless" {
         ***/
         labels = {
           app = var.app_name
-          # It must match the label selector of the ReplicaSet.
+          # It must match the label selector of spec.selector.match_labels.
           pod_selector_lbl = local.pod_selector_label
           # It must match the label selector of the Service.
           svc_selector_lbl = local.svc_selector_label
@@ -762,17 +771,21 @@ resource "kubernetes_deployment" "stateless" {
           content {
             run_as_user = it.value["run_as_user"]
             run_as_group = it.value["run_as_group"]
-            # Set the group that owns the pod volumes. This group will be used by K8s to change the
-            # permissions of all files/directories in the volumes, when the volumes are mounted by
-            # a pod.
+            /***
+            Set the group that owns the pod volumes. This group will be used by K8s to change the
+            permissions of all files/directories in the volumes, when the volumes are mounted by
+            a pod.
+            ***/
             fs_group = it.value["fs_group"]
             supplemental_groups = it.value["supplemental_groups"]
-            # By default, Kubernetes recursively changes ownership and permissions for the contents
-            # of each volume to match the fsGroup specified in a Pod's securityContext when that
-            # volume is mounted. For large volumes, checking and changing ownership and permissions
-            # can take a lot of time, slowing Pod startup. You can use the fsGroupChangePolicy
-            # field inside a securityContext to control the way that Kubernetes checks and manages
-            # ownership and permissions for a volume.
+            /***
+            By default, Kubernetes recursively changes ownership and permissions for the contents
+            of each volume to match the fsGroup specified in a Pod's securityContext when that
+            volume is mounted. For large volumes, checking and changing ownership and permissions
+            can take a lot of time, slowing Pod startup. You can use the fsGroupChangePolicy
+            field inside a securityContext to control the way that Kubernetes checks and manages
+            ownership and permissions for a volume.
+            ***/
             fs_group_change_policy = it.value["fs_group_change_policy"]
           }
         }
