@@ -192,7 +192,8 @@ variable traefik_le_email {
 variable mysql_image_tag {
   description = "MySQL version (https://hub.docker.com/_/mysql)"
   type = string
-  default = "mysql/mysql-router:8.0"
+  default = "mysql:9"
+  # default = "registry.k8s.io/nginx-slim:0.21"
 }
 
 variable mysql_user {
@@ -210,5 +211,10 @@ variable mysql_password {
 variable mysql_root_password {
   default = "<required>"
   sensitive = true
+  type = string
+}
+
+variable mysql_database {
+  default = "mydb"
   type = string
 }
