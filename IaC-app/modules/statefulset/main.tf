@@ -18,6 +18,7 @@ variable config_map {
   default = []
   type = list(object({
     name = string
+    namespace = string
     labels = optional(map(string), {})
     # Binary data need to be base64 encoded.
     binary_data = optional(map(string), {})
@@ -32,16 +33,16 @@ variable env {
 variable env_field {
   default = []
   type = list(object({
-    env_name = string
+    name = string
     field_path = string
   }))
 }
 variable env_secret {
   default = []
   type = list(object({
-    name = string
-    secret_name = string
-    secret_key = string
+    name = string  # Environment variable.
+    secret_name = string  # The name of the Secret holding the key.
+    secret_key = string  # The key of the Secret to expose.
   }))
 }
 variable image_pull_policy {
@@ -59,24 +60,6 @@ variable labels {
 variable namespace {
   default = "default"
   type = string
-}
-variable persistent_volume_claims {
-  default = []
-  type = list(object({
-    name = string
-    labels = optional(map(string), {})
-    access_modes = list(string)
-    # A volumeMode of Filesystem presents a volume as a directory within the Pod's filesystem while
-    # a volumeMode of Block presents it as a raw block storage device. Filesystem is the default
-    # and usually preferred mode, enabling standard file system operations on the volume. Block
-    # mode is used for applications that need direct access to the block device, like databases
-    # requiring low-latency access.
-    volume_mode = optional(string)
-    storage_size = string
-    # By specifying an empty string ("") as the storage class name, the PVC binds to a
-    # pre-provisioned PV instead of dynamically provisioning a new one.
-    storage_class_name = optional(string)
-  }))
 }
 /***
 To relax the StatefulSet ordering guarantee while preserving its uniqueness and identity
@@ -176,6 +159,7 @@ variable secrets {
   default = []
   type = list(object({
     name = string
+    namespace = string
     labels = optional(map(string), {})
     annotations = optional(map(string), {})
     data = optional(map(string), {})
@@ -222,22 +206,34 @@ variable service_session_affinity {
   default = "None"
   type = string
 }
+/***
+The ServiceType allows to specify what kind of Service to use: ClusterIP (default), NodePort,
+LoadBalancer, and ExternalName.
+***/
 variable service_type {
-  default = "None"  # Headless service.
-  type = string
+  default = "ClusterIP"
 }
 variable termination_grace_period_seconds {
   default = 30
   type = number
 }
-variable volume_claim_template {
+variable volume_claim_templates {
   default = []
   type = list(object({
     name = string
+    namespace = string
     labels = optional(map(string), {})
     access_modes = list(string)
-    storage_class_name = string
+    # A volumeMode of Filesystem presents a volume as a directory within the Pod's filesystem while
+    # a volumeMode of Block presents it as a raw block storage device. Filesystem is the default
+    # and usually preferred mode, enabling standard file system operations on the volume. Block
+    # mode is used for applications that need direct access to the block device, like databases
+    # requiring low-latency access.
+    volume_mode = optional(string, "Filesystem")
     storage = string
+    # By specifying an empty string ("") as the storage class name, the PVC binds to a
+    # pre-provisioned PV instead of dynamically provisioning a new one.
+    storage_class_name = optional(string)
   }))
 }
 variable volume_config_map {
@@ -278,13 +274,6 @@ variable volume_mount {
     read_only = optional(bool)
   }))
 }
-variable volume_pv {  # PersistentVolumeClaim
-  default = []
-  type = list(object({
-    pv_name = string
-    claim_name = string
-  }))
-}
 variable volume_secrets {
   default = []
   type = list(object({
@@ -319,7 +308,7 @@ resource "kubernetes_secret" "secrets" {
   count = length(var.secrets)
   metadata {
     name = var.secrets[count.index].name
-    namespace = var.namespace
+    namespace = var.secrets[count.index].namespace
     labels = var.secrets[count.index].labels
     annotations = var.secrets[count.index].annotations
   }
@@ -408,28 +397,6 @@ resource "kubernetes_role_binding" "role_binding" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "pvc" {
-  count = length(var.persistent_volume_claims)
-  metadata {
-    name = var.persistent_volume_claims[count.index].name
-    namespace = var.namespace
-    labels = var.persistent_volume_claims[count.index].labels
-  }
-  spec {
-    # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
-    access_modes = var.persistent_volume_claims[count.index].access_modes
-    volume_mode = var.persistent_volume_claims[count.index].volume_mode
-    resources {
-      requests = {
-        storage = var.persistent_volume_claims[count.index].storage_size
-      }
-    }
-    # If a value for storageClassName isn't explicitly specify, the cluster's default storage class
-    # is used.
-    storage_class_name = var.persistent_volume_claims[count.index].storage_class_name
-  }
-}
-
 resource "kubernetes_config_map" "config" {
   count = length(var.config_map)
   metadata {
@@ -451,7 +418,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
   }
   #
   spec {
-    replicas = var.replicas
     /***
     The name of the service that governs this StatefulSet.
     This service must exist before the StatefulSet and is responsible for the network identity of
@@ -459,6 +425,7 @@ resource "kubernetes_stateful_set" "stateful_set" {
       pod-name.service-name.namespace.svc.cluster.local.
     ***/
     service_name = local.svc_name
+    replicas = var.replicas
     pod_management_policy = var.pod_management_policy
     /***
     Pod Selector - You must set the .spec.selector field of a StatefulSet to match the labels of
@@ -467,7 +434,7 @@ resource "kubernetes_stateful_set" "stateful_set" {
     ***/
     selector {
       match_labels = {
-        # It must match the labels in the Pod template (.spec.template.metadata.labels).
+        # It must match the labels in the Pod template (spec.template.metadata.labels).
         pod_selector_lbl = local.pod_selector_label
       }
     }
@@ -477,7 +444,7 @@ resource "kubernetes_stateful_set" "stateful_set" {
         # Labels attach to the Pod.
         labels = {
           app = var.app_name
-          # It must match the label for the pod selector (.spec.selector.matchLabels).
+          # It must match the label selector of spec.selector.match_labels.
           pod_selector_lbl = local.pod_selector_label
           # It must match the label selector of the Service.
           svc_selector_lbl = local.svc_selector_label
@@ -485,32 +452,33 @@ resource "kubernetes_stateful_set" "stateful_set" {
       }
       #
       spec {
-        /***By default, the default-token Secret is mounted into every container, but you can
+        /***
+        By default, the default-token Secret is mounted into every container, but you can
         disable that in each pod by setting the automountServiceAccountToken field in the pod spec
         to false or by setting it to false on the service account the pod is using.
         ***/
         automount_service_account_token = var.automount_service_account_token
-        service_account_name = kubernetes_service_account.service_account[0].metadata[0].name
-        affinity {
-          pod_anti_affinity {
-            required_during_scheduling_ignored_during_execution {
-              label_selector {
-                match_expressions {
-                  /***
-                  Description of the pod label that determines when the anti-affinity rule
-                  applies. Specifies a key and value for the label.
-                  key = "rmq_lbl"
-                  The operator represents the relationship between the label on the existing
-                  pod and the set of values in the matchExpression parameters in the
-                  specification for the new pod. Can be In, NotIn, Exists, or DoesNotExist.
-                  ***/
-                  operator = "In"
-                }
-              }
-              topology_key = "kubernetes.io/hostname"
-            }
-          }
-        }
+        service_account_name = var.service_account == null ? "default" : var.service_account.name
+        # affinity {
+        #   pod_anti_affinity {
+        #     required_during_scheduling_ignored_during_execution {
+        #       label_selector {
+        #         match_expressions {
+        #           /***
+        #           Description of the pod label that determines when the anti-affinity rule
+        #           applies. Specifies a key and value for the label.
+        #           key = "rmq_lbl"
+        #           The operator represents the relationship between the label on the existing
+        #           pod and the set of values in the matchExpression parameters in the
+        #           specification for the new pod. Can be In, NotIn, Exists, or DoesNotExist.
+        #           ***/
+        #           operator = "In"
+        #         }
+        #       }
+        #       topology_key = "kubernetes.io/hostname"
+        #     }
+        #   }
+        # }
         termination_grace_period_seconds = var.termination_grace_period_seconds
         container {
           name = var.service_name
@@ -581,7 +549,7 @@ resource "kubernetes_stateful_set" "stateful_set" {
           dynamic "env" {
             for_each = var.env_field
             content {
-              name = env.value["env_name"]
+              name = env.value["name"]
               value_from {
                 field_ref {
                   field_path = env.value["field_path"]
@@ -599,20 +567,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
             }
           }
         }
-        # volume {
-        #   name = "erlang-cookie"
-        #   secret {
-        #     secret_name = kubernetes_secret.secret.metadata[0].name
-        #     default_mode = "0600" # Octal
-        #     # Selecting which entries to include in the volume by listing them.
-        #     items {
-        #       # Include the entry under this key.
-        #       key = "cookie"
-        #       # The entry's value will be stored in this file.
-        #       path = ".erlang.cookie"
-        #     }
-        #   }
-        # }
         /***
         Set volumes at the Pod level, then mount them into containers inside that Pod.
 
@@ -675,19 +629,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
             }
           }
         }
-        # Pods access storage by using the claim as a volume. Claims must exist in the same
-        # namespace as the Pod using the claim. The cluster finds the claim in the Pod's namespace
-        # and uses it to get the PersistentVolume backing the claim. The volume is then mounted to
-        # the host and into the Pod.
-        # dynamic "volume" {
-        #   for_each = var.volume_pv
-        #   content {
-        #     name = volume.value["pv_name"]
-        #     persistent_volume_claim {
-        #       claim_name = volume.value["claim_name"]
-        #     }
-        #   }
-        # }
       }
     }
     /***
@@ -697,16 +638,18 @@ resource "kubernetes_stateful_set" "stateful_set" {
     pods in the same namespace.
     ***/
     dynamic "volume_claim_template" {
-      for_each = var.volume_claim_template
+      # for_each = var.volume_claim_template
+      for_each = var.volume_claim_templates
       iterator = it
       content {
         metadata {
           name = it.value["name"]
-          namespace = var.namespace
-          labels = it.value["lables"]
+          namespace = it.value["namespace"]
+          labels = it.value["labels"]
         }
         spec {
           access_modes = it.value["access_modes"]
+          volume_mode = it.value["volume_mode"]
           storage_class_name = it.value["storage_class_name"]
           resources {
             requests = {
@@ -743,7 +686,7 @@ resource "kubernetes_service" "headless_service" {
         protocol = port.value.protocol
       }
     }
-    type = var.service_type
+    # type = var.service_type
     cluster_ip = "None" # Headless Service.
     publish_not_ready_addresses = var.publish_not_ready_addresses
   }
