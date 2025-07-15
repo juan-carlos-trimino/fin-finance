@@ -206,13 +206,6 @@ variable service_session_affinity {
   default = "None"
   type = string
 }
-/***
-The ServiceType allows to specify what kind of Service to use: ClusterIP (default), NodePort,
-LoadBalancer, and ExternalName.
-***/
-variable service_type {
-  default = "ClusterIP"
-}
 variable termination_grace_period_seconds {
   default = 30
   type = number
@@ -557,6 +550,14 @@ resource "kubernetes_stateful_set" "stateful_set" {
               }
             }
           }
+          dynamic "env_from" {
+            for_each = var.config_map
+            content {
+              config_map_ref {
+                name = env_from.value["name"]
+              }
+            }
+          }
           dynamic "volume_mount" {
             for_each = var.volume_mount
             content {
@@ -686,7 +687,7 @@ resource "kubernetes_service" "headless_service" {
         protocol = port.value.protocol
       }
     }
-    # type = var.service_type
+    type = "ClusterIP"  # Default.
     cluster_ip = "None" # Headless Service.
     publish_not_ready_addresses = var.publish_not_ready_addresses
   }
