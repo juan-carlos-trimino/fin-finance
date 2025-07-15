@@ -17,6 +17,15 @@ variable automount_service_account_token {
 variable build_image {
   type = bool
 }
+# When defined, it overrides the image's default command.
+variable command {
+  default = []
+  type = list(string)
+}
+variable args {
+  default = []
+  type = list(string)
+}
 variable config_map {
   default = []
   type = list(object({
@@ -825,6 +834,8 @@ resource "kubernetes_deployment" "stateless" {
           name = var.service_name
           image_pull_policy = var.image_pull_policy
           image = local.image_tag
+          command = var.command
+          args = var.args
           /***
           Security settings that you specify for a container apply only to the individual
           container, and they override settings made at the Pod level when there is overlap.
