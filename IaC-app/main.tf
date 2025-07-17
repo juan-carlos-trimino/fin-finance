@@ -31,6 +31,7 @@ locals {
   svc_error_page = "fin-error-page"
   svc_traefik = "fin-traefik"
   svc_my_sql = "fin-mysql"
+  svc_my_sql_router = "fin-my-sql-router"
   ############
   # Services #
   ############
@@ -191,31 +192,6 @@ module "certificate" {
   dns_names = ["trimino.xyz", "www.trimino.xyz"]
   secret_name = local.traefik_secret_cert_name
 }
-
-
-
-
-###################################################################################################
-# whoami                                                                                          #
-# Web service app for testing Traefik                                                             #
-###################################################################################################
-module "whoiam" {
-  count = var.k8s_crds ? 1 : 0
-  source = "./modules/deployment"
-  dir_path = ".."
-  app_name = var.app_name
-  app_version = var.app_version
-  namespace = local.namespace
-  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
-  build_image = var.build_image
-  cr_login_server = local.cr_login_server
-  cr_username = var.cr_username
-  cr_password = var.cr_password
-  service_name = "fin-whoami"
-}
-
-
-
 
 ###################################################################################################
 # Application                                                                                     #
@@ -442,13 +418,23 @@ module "fin-finances-persistent" {
     #     "ls -al /wsf_data_dir"
     # ]}
   }]
-  ports = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8080
-    protocol = "TCP"
-  }]
-  service_type = "ClusterIP"
+  service = {
+    name = local.svc_finances
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    ports = [{
+      name = "ports"
+      service_port = 80
+      target_port = 8080
+      protocol = "TCP"
+    }]
+    selector = {
+      "svc_selector_label" = "svc-${local.svc_finances}"
+    }
+    type = "ClusterIP"
+  }
   service_name = local.svc_finances
 }
 
@@ -648,112 +634,39 @@ module "fin-finances-empty" {  # Using emptyDir.
     #     "ls -al /wsf_data_dir"
     # ]}
   }]
-  ports = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8080
-    protocol = "TCP"
-  }]
-  service_type = "ClusterIP"  # Internal.
+  service = {
+    name = local.svc_finances
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    ports = [{
+      name = "ports"
+      service_port = 80
+      target_port = 8080
+      protocol = "TCP"
+    }]
+    selector = {
+      "svc_selector_label" = "svc-${local.svc_finances}"
+    }
+    type = "ClusterIP"
+  }
   service_name = local.svc_finances
-}
-
-module "fin-gateway" {
-  count = var.k8s_crds ? 0 : 0
-  # Specify the location of the module, which contains the file main.tf.
-  source = "./modules/deployment"
-  dir_path = ".."
-  app_name = var.app_name
-  app_version = var.app_version
-  namespace = local.namespace
-  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
-  build_image = var.build_image
-  cr_login_server = local.cr_login_server
-  cr_username = var.cr_username
-  cr_password = var.cr_password
-  replicas = 1
-  resources = {
-    limits_cpu = "400m"
-    limits_memory = "400Mi"
-  }
-  # Configure environment variables specific to the gateway.
-  env = {
-    HTTP_PORT: "8081"
-    # SVC_NAME: local.svc_gateway
-    # SVC_DNS_METADATA: local.svc_dns_metadata
-    # SVC_DNS_HISTORY: local.svc_dns_history
-    # SVC_DNS_VIDEO_UPLOAD: local.svc_dns_video_upload
-    # SVC_DNS_VIDEO_STREAMING: local.svc_dns_video_streaming
-    # SVC_DNS_KIBANA: local.svc_dns_kibana
-    APP_NAME_VER = "${var.app_name} ${var.app_version}"
-    MAX_RETRIES = 3
-  }
-  security_context = [{
-    run_as_non_root = true
-    run_as_user = 2100
-    run_as_group = 2100
-    read_only_root_filesystem = true
-  }]
-  readiness_probe = [{
-    initial_delay_seconds = 3
-    period_seconds = 20
-    timeout_seconds = 1
-    failure_threshold = 3
-    success_threshold = 1
-    http_get = [{
-      path = "/readiness"
-      port = 8081  # Same as target port.
-      scheme = "HTTP"
-    }]
-  }]
-  liveness_probe = [{
-    initial_delay_seconds = 5
-    period_seconds = 20
-    timeout_seconds = 1
-    # Don't bother implementing retry loops; K8s will retry the probe.
-    failure_threshold = 1
-    success_threshold = 1
-    http_get = [{
-      path = "/liveness"
-      port = 8081
-      scheme = "HTTP"
-    }]
-    # tcp_socket = {
-    #   port = 8081
-    # }
-    # exec = {
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "ls -al /wsf_data_dir"
-    # ]}
-  }]
-  ports = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8081
-    protocol = "TCP"
-  }]
-  service_type = "LoadBalancer"
-  service_name = local.svc_gateway
 }
 
 
 
 
 # /*
-module "fin-MySQLRouter" {
+module "fin-MySql" {
   count = var.db_mysql && !var.k8s_crds ? 1 : 0
-  # count = var.k8s_crds ? 0 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/statefulset"
-# dir_path = ".."
-  app_name = "${var.app_name}-mysql-server"
+  app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
   image_tag = var.mysql_image_tag
   publish_not_ready_addresses = true
-  # build_image = false
   labels = {
     "app" = var.app_name
   }
@@ -764,54 +677,58 @@ module "fin-MySQLRouter" {
   #     "app" = var.app_name
   #   }
   #   data = {
-  #     "MYSQL_DATABASE" = "checkaccount",
-  #     "MYSQL_ALLOW_EMPTY_PASSWORD" = "no"
+  #     "MYSQL_DATABASE" = var.mysql_database
+  #     "MYSQL_USER" = var.mysql_user
+  #     "MYSQL_PASSWORD" = var.mysql_password
+  #     "MYSQL_ROOT_PASSWORD" = var.mysql_root_password
   #   }
   # }]
   # Configure environment variables specific to the app.
   env = {
     MYSQL_DATABASE = var.mysql_database
-    MYSQL_USER = var.mysql_user
-    MYSQL_PASSWORD = var.mysql_password
-    MYSQL_ROOT_PASSWORD = var.mysql_root_password
+    # MYSQL_USER = var.mysql_user
+    # MYSQL_PASSWORD = var.mysql_password
+    # MYSQL_ROOT_PASSWORD = var.mysql_root_password
   }
-  /***
   env_secret = [{
     name = "MYSQL_ROOT_PASSWORD"
-    secret_name = "${local.svc_my_sql}-mysql"
-    secret_key = "MYSQL_ROOT_PASSWORD"
+    secret_name = "${local.svc_my_sql}-secret"
+    secret_key = "mysql_root_password"
   },
   {
     name = "MYSQL_USER"
-    secret_name = "${local.svc_my_sql}-mysql"
-    secret_key = "MYSQL_USER"
+    secret_name = "${local.svc_my_sql}-secret"
+    secret_key = "mysql_user"
   },
   {
     name = "MYSQL_PASSWORD"
-    secret_name = "${local.svc_my_sql}-mysql"
-    secret_key = "MYSQL_PASSWORD"
+    secret_name = "${local.svc_my_sql}-secret"
+    secret_key = "mysql_password"
   }]
-  ***/
   # If the order of Secrets changes, the Deployment must be changed accordingly. See
   # spec.image_pull_secrets.
   secrets = [{
-    name = "${local.svc_my_sql}-mysql"
+    name = "${local.svc_my_sql}-secret"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
     }
     # Plain-text data.
     data = {
-      MYSQL_USER = base64encode(var.mysql_user)
-      MYSQL_PASSWORD = base64encode(var.mysql_password)
-      MYSQL_ROOT_PASSWORD = base64encode(var.mysql_root_password)
+      # mysql_user = base64encode(var.mysql_user)
+      # mysql_password = base64encode(var.mysql_password)
+      # mysql_root_password = base64encode(var.mysql_root_password)
+      mysql_user = var.mysql_user
+      mysql_password = var.mysql_password
+      mysql_root_password = var.mysql_root_password
     }
     type = "Opaque"
+    # immutable = true
   }]
   replicas = 1
   resources = {  # QoS - Guaranteed
-    limits_cpu = "250m"
-    limits_memory = "512Mi"
+    limits_cpu = "500m"
+    limits_memory = "1Gi"
   }
   volume_mount = [{
     name = "wsf"
@@ -891,24 +808,79 @@ module "fin-MySQLRouter" {
   }]
   ports = [{
     name = "mysql"
-    # service_port = 3306
-    # target_port = 3306
-    service_port = 80
-    target_port = 80
+    service_port = 3306
+    target_port = 3306
     protocol = "TCP"
   }]
   service_name = local.svc_my_sql
 }
-# */
-/***
-module "fin-MySQLCluster" {
+
+
+module "fin-MySqlRouter" {
   count = var.k8s_crds ? 0 : 0
   # Specify the location of the module, which contains the file main.tf.
-  source = "./modules/statefulset"
+  source = "./modules/deployment"
+dir_path = "rrrr"
   app_name = var.app_name
   app_version = var.app_version
+  namespace = local.namespace
+  image_tag = var.mysql_router_image_tag
+  build_image = false
+  labels = {
+    "app" = var.app_name
+  }
+  env = {
+    # MYSQL_HOST = var.mysql_databasexxxxxxxxxx
+    MYSQL_PORT = "3306"
+  }
+  secrets = [{
+    name = "${local.svc_my_sql_router}-secret"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    # Plain-text data.
+    data = {
+      MYSQL_USER = base64encode(var.mysql_user)
+      MYSQL_PASSWORD = base64encode(var.mysql_password)
+    }
+    type = "Opaque"
+  }]
 
 
 
+  replicas = 3
+  resources = {
+    limits_cpu = "500m"
+    limits_memory = "0.5Gi"
+  }
+  # command = ["/bin/sh"]
+  # args = ["-c",  # https://www.man7.org/linux/man-pages/man1/bash.1.html
+  #   "while true; do sleep 3600; done"]
+  service = {
+    name = local.svc_my_sql_router
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    ports = [{  # https://hub.docker.com/r/mysql/mysql-router#exposed-ports
+      name = "read-write"  # Primary.
+      service_port = 6446
+      target_port = 6446
+      protocol = "TCP"
+    },
+    {
+      name = "read-only"  # Secondary.
+      service_port = 6447
+      target_port = 6447
+      protocol = "TCP"
+    }]
+    selector = {
+      "svc_selector_label" = "svc-${local.svc_finances}"
+    }
+    type = "ClusterIP"
+  }
+
+
+  service_name = local.svc_my_sql_router
 }
-***/
