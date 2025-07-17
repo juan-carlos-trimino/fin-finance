@@ -193,7 +193,12 @@ variable mysql_image_tag {
   description = "MySQL version (https://hub.docker.com/_/mysql)"
   type = string
   default = "mysql:9"
-  # default = "registry.k8s.io/nginx-slim:0.21"
+}
+
+variable mysql_router_image_tag {
+  description = "MySQL Router version (https://hub.docker.com/r/mysql/mysql-router)"
+  type = string
+  default = "mysql:9"
 }
 
 variable mysql_user {
