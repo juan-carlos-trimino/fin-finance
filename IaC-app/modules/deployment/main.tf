@@ -74,14 +74,6 @@ variable env_field {
     field_path = string
   }))
 }
-variable env_secret {
-  default = []
-  type = list(object({
-    name = string  # Environment variable.
-    secret_name = string  # The name of the Secret holding the key.
-    secret_key = string  # The key of the Secret to expose.
-  }))
-}
 /***
 Be aware that the default imagePullPolicy depends on the image tag. If a container refers to the
 latest tag (either explicitly or by not specifying the tag at all), imagePullPolicy defaults to
@@ -1028,18 +1020,6 @@ resource "kubernetes_deployment" "stateless" {
             }
           }
           dynamic "env" {
-            for_each = var.env_secret
-            content {
-              name = env.value["name"]
-              value_from {
-                secret_key_ref {
-                  name = env.value["secret_name"]
-                  key = env.value["secret_key"]
-                }
-              }
-            }
-          }
-          dynamic "env" {
             for_each = var.env_field
             content {
               name = env.value["env_name"]
@@ -1047,6 +1027,22 @@ resource "kubernetes_deployment" "stateless" {
                 field_ref {
                   field_path = env.value["field_path"]
                 }
+              }
+            }
+          }
+          dynamic "env_from" {
+            for_each = var.config_map
+            content {
+              config_map_ref {
+                name = env_from.value["name"]
+              }
+            }
+          }
+          dynamic "env_from" {
+            for_each = var.secrets
+            content {
+              secret_ref {
+                name = env_from.value["name"]
               }
             }
           }
