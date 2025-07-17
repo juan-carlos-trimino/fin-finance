@@ -163,6 +163,10 @@ print_time_elapsed() {
 }
 
 # Main program
+# The '-e' option tells the shell to exit immediately if any invoked command exits with a non-zero
+# status, which is the convention for indicating errors in Unix-like operating systems. It's a
+# handy option for scripting, as it helps to catch errors and bugs early.
+set -e
 echo
 check_options $@
 echo "****************************"
