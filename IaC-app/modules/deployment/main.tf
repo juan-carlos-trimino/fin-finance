@@ -362,6 +362,7 @@ variable secrets {
     # base64 encoding.
     binary_data = optional(map(string), {})
     type = optional(string, "Opaque")
+    immutable = optional(bool, false)
   }))
   sensitive = true
 }
@@ -378,6 +379,48 @@ variable security_context {
     run_as_group = number
     read_only_root_filesystem = bool
   }))
+}
+variable service {
+  # default = null
+  type = object({
+    name = string
+    namespace = string
+    labels = optional(map(string), {})
+    annotations = optional(map(string), {})
+    # Only applies to types ClusterIP, NodePort, and LoadBalancer.
+    selector = map(string)
+    /***
+    The service normally forwards each connection to a randomly selected backing pod. To ensure
+    that connections from a particular client are passed to the same Pod each time, set the
+    service's sessionAffinity property to ClientIP instead of None (default).
+    Session affinity and Web Browsers (for LoadBalancer Services)
+    Since the service is now exposed externally, accessing it with a web browser will hit the same
+    pod every time. If the sessionAffinity is set to None, then why? The browser is using
+    keep-alive connections and sends all its requests through a single connection. Services work at
+    the connection level, and when a connection to a service is initially open, a random pod is
+    selected and then all network packets belonging to that connection are sent to that single pod.
+    Even with the sessionAffinity set to None, the same pod will always get hit (until the
+    connection is closed).
+    ***/
+    session_affinity = optional(string, "None")
+    /***
+    The ServiceType allows to specify what kind of Service to use: ClusterIP (default), NodePort,
+    LoadBalancer, and ExternalName.
+    ***/
+    type = optional(string, "ClusterIP")
+    ports = optional(list(object({
+      name = string
+      service_port = number
+      target_port = number
+      node_port = optional(number)
+      protocol = string
+    })), [{
+      name = "ports"
+      service_port = 80
+      target_port = 8080
+      protocol = "TCP"
+    }])
+  })
 }
 variable service_account {
   default = null
@@ -396,31 +439,6 @@ variable service_account {
   })
 }
 variable service_name {
-  type = string
-}
-/***
-The service normally forwards each connection to a randomly selected backing pod. To ensure that
-connections from a particular client are passed to the same Pod each time, set the service's
-sessionAffinity property to ClientIP instead of None (default).
-Session affinity and Web Browsers (for LoadBalancer Services)
-Since the service is now exposed externally, accessing it with a web browser will hit the same
-pod every time. If the sessionAffinity is set to None, then why? The browser is using keep-alive
-connections and sends all its requests through a single connection. Services work at the
-connection level, and when a connection to a service is initially open, a random pod is selected
-and then all network packets belonging to that connection are sent to that single pod. Even with
-the sessionAffinity set to None, the same pod will always get hit (until the connection is
-closed).
-***/
-variable service_session_affinity {
-  default = "None"
-  type = string
-}
-/***
-The ServiceType allows to specify what kind of Service to use: ClusterIP (default),
-NodePort, LoadBalancer, and ExternalName.
-***/
-variable service_type {
-  default = "ClusterIP"
   type = string
 }
 variable termination_grace_period_seconds {
@@ -735,7 +753,7 @@ resource "kubernetes_deployment" "stateless" {
     selector {
       match_labels = {
         # It must match the labels in the Pod template (spec.template.metadata.labels).
-        pod_selector_lbl = local.pod_selector_label
+        pod_selector_label = local.pod_selector_label
       }
     }
     # The Pod template.
@@ -749,9 +767,10 @@ resource "kubernetes_deployment" "stateless" {
         labels = {
           app = var.app_name
           # It must match the label selector of spec.selector.match_labels.
-          pod_selector_lbl = local.pod_selector_label
+          pod_selector_label = local.pod_selector_label
           # It must match the label selector of the Service.
-          svc_selector_lbl = local.svc_selector_label
+          # svc_selector_label = var.service == null ? "" : var.service.selector    # local.svc_selector_label
+          svc_selector_label = var.service.selector["svc_selector_label"]
         }
       }
       # The Pod template's specification.
@@ -859,7 +878,7 @@ resource "kubernetes_deployment" "stateless" {
           everyone using the cluster can quickly see what ports each pod exposes.
           ***/
           dynamic "port" {
-            for_each = var.ports
+            for_each = var.service.ports
             content {
               name = port.value["name"]
               container_port = port.value["target_port"]  # The port the app is listening.
@@ -1109,21 +1128,20 @@ cluster.
 ***/
 resource "kubernetes_service" "service" {
   metadata {
-    name = var.service_name
-    namespace = var.namespace
-    labels = {
-      app = var.app_name
-    }
+    name = var.service.name
+    namespace = var.service.namespace
+    labels = var.service.labels
   }
   #
   spec {
     # The label selector determines which pods belong to the service.
-    selector = {
-      svc_selector_lbl = local.svc_selector_label
-    }
-    session_affinity = var.service_session_affinity
+    selector = var.service.selector
+    #  {
+    #   svc_selector_lbl = local.svc_selector_label
+    # }
+    session_affinity = var.service.session_affinity
     dynamic "port" {
-      for_each = var.ports
+      for_each = var.service.ports
       iterator = it
       content {
         name = it.value["name"]
@@ -1133,6 +1151,6 @@ resource "kubernetes_service" "service" {
         protocol = it.value["protocol"]
       }
     }
-    type = var.service_type
+    type = var.service.type
   }
 }
