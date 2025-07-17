@@ -37,14 +37,6 @@ variable env_field {
     field_path = string
   }))
 }
-variable env_secret {
-  default = []
-  type = list(object({
-    name = string  # Environment variable.
-    secret_name = string  # The name of the Secret holding the key.
-    secret_key = string  # The key of the Secret to expose.
-  }))
-}
 variable image_pull_policy {
   default = "Always"
   type = string
@@ -163,8 +155,7 @@ variable secrets {
     labels = optional(map(string), {})
     annotations = optional(map(string), {})
     data = optional(map(string), {})
-    # base64 encoding.
-    binary_data = optional(map(string), {})
+    binary_data = optional(map(string), {})  # base64 encoding.
     type = optional(string, "Opaque")
   }))
   sensitive = true
@@ -535,18 +526,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
             }
           }
           dynamic "env" {
-            for_each = var.env_secret
-            content {
-              name = env.value["name"]
-              value_from {
-                secret_key_ref {
-                  name = env.value["secret_name"]
-                  key = env.value["secret_key"]
-                }
-              }
-            }
-          }
-          dynamic "env" {
             for_each = var.env_field
             content {
               name = env.value["name"]
@@ -561,6 +540,14 @@ resource "kubernetes_stateful_set" "stateful_set" {
             for_each = var.config_map
             content {
               config_map_ref {
+                name = env_from.value["name"]
+              }
+            }
+          }
+          dynamic "env_from" {
+            for_each = var.secrets
+            content {
+              secret_ref {
                 name = env_from.value["name"]
               }
             }

@@ -686,25 +686,7 @@ module "fin-MySql" {
   # Configure environment variables specific to the app.
   env = {
     MYSQL_DATABASE = var.mysql_database
-    # MYSQL_USER = var.mysql_user
-    # MYSQL_PASSWORD = var.mysql_password
-    # MYSQL_ROOT_PASSWORD = var.mysql_root_password
   }
-  env_secret = [{
-    name = "MYSQL_ROOT_PASSWORD"
-    secret_name = "${local.svc_my_sql}-secret"
-    secret_key = "mysql_root_password"
-  },
-  {
-    name = "MYSQL_USER"
-    secret_name = "${local.svc_my_sql}-secret"
-    secret_key = "mysql_user"
-  },
-  {
-    name = "MYSQL_PASSWORD"
-    secret_name = "${local.svc_my_sql}-secret"
-    secret_key = "mysql_password"
-  }]
   # If the order of Secrets changes, the Deployment must be changed accordingly. See
   # spec.image_pull_secrets.
   secrets = [{
@@ -715,15 +697,12 @@ module "fin-MySql" {
     }
     # Plain-text data.
     data = {
-      # mysql_user = base64encode(var.mysql_user)
-      # mysql_password = base64encode(var.mysql_password)
-      # mysql_root_password = base64encode(var.mysql_root_password)
-      mysql_user = var.mysql_user
-      mysql_password = var.mysql_password
-      mysql_root_password = var.mysql_root_password
+      MYSQL_USER = var.mysql_user
+      MYSQL_PASSWORD = var.mysql_password
+      MYSQL_ROOT_PASSWORD = var.mysql_root_password
     }
     type = "Opaque"
-    # immutable = true
+    immutable = true
   }]
   replicas = 1
   resources = {  # QoS - Guaranteed
