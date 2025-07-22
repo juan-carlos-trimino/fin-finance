@@ -454,7 +454,22 @@ module "fin-finances-empty" {  # Using emptyDir.
   labels = {
     "app" = var.app_name
   }
-  replicas = 1
+  affinity = [{
+    pod_anti_affinity = [{
+      required_during_scheduling_ignored_during_execution = [{
+        topology_key = "kubernetes.io/hostname"
+        # match_labels = {
+        #   "finances" = "running"
+        # }
+        match_expressions = [{
+          "key" = "finances"
+          "operator" = "In"
+          "values" = ["running"]
+        }]
+      }]
+    }]
+  }]
+  replicas = 3
   # See empty_dir.
   init_container = [{
     name = "file-permission"
@@ -658,7 +673,7 @@ module "fin-finances-empty" {  # Using emptyDir.
 
 
 # /*
-module "fin-MySql" {
+module "fin-MySqlServer" {
   count = var.db_mysql && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/statefulset"
@@ -704,7 +719,8 @@ module "fin-MySql" {
     type = "Opaque"
     immutable = true
   }]
-  replicas = 1
+  # Always use 3 or more nodes for fault tolerance.
+  replicas = 3
   resources = {  # QoS - Guaranteed
     limits_cpu = "500m"
     limits_memory = "1Gi"
@@ -787,19 +803,54 @@ module "fin-MySql" {
   }]
   ports = [{
     name = "mysql"
+    # Standard MySQL port – used by clients and MySQL Router to connect to MySQL server.
     service_port = 3306
     target_port = 3306
+    protocol = "TCP"
+  },
+  {
+    name = "x"
+    # X Protocol – used by MySQL Shell, MySQL Router, and Group Replication for
+    # administrative/configuration tasks
+    service_port = 33060
+    target_port = 33060
+    protocol = "TCP"
+  },
+  {
+    name = "group"
+    # Group Replication port – used by MySQL nodes for internal communication and replication
+    # coordination.
+    service_port = 33061
+    target_port = 33061
+    protocol = "TCP"
+  },
+  {
+    name = "split"
+    # MySQL Router read/write split ports (configurable).
+    service_port = 6606
+    target_port = 6606
     protocol = "TCP"
   }]
   service_name = local.svc_my_sql
 }
 
-
+/***
+https://dev.mysql.com/doc/mysql-router/8.0/en/
+Notes:
+(1) When used with a MySQL InnoDB Cluster, MySQL Router acts as a proxy to hide the multiple MySQL
+    instances on your network and map the data requests to one of the cluster instances.
+(2) The recommended deployment model for MySQL Router is with InnoDB Cluster, with Router sitting
+    on the same host as the application.
+(3) Running in a container requires a working InnoDB cluster. If supplied, the run script waits for
+    the given mysql host to start, the InnoDB cluster to have the
+    MYSQL_INNODB_CLUSTER_MEMBERS-defined number of members, and then uses the supplied host for
+    bootstrapping.
+***/
 module "fin-MySqlRouter" {
   count = var.k8s_crds ? 0 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
-dir_path = "rrrr"
+  dir_path = "rrrr"
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
@@ -809,8 +860,10 @@ dir_path = "rrrr"
     "app" = var.app_name
   }
   env = {
-    # MYSQL_HOST = var.mysql_databasexxxxxxxxxx
-    MYSQL_PORT = "3306"
+    MYSQL_HOST = var.mysql_router_host
+    MYSQL_PORT = var.mysql_router_port
+    MYSQL_INNODB_CLUSTER_MEMBERS = var.mysql_router_cluster_members
+    MYSQL_ROUTER_BOOTSTRAP_EXTRA_OPTIONS = var.mysql_router_bootstrap
   }
   secrets = [{
     name = "${local.svc_my_sql_router}-secret"
@@ -820,8 +873,8 @@ dir_path = "rrrr"
     }
     # Plain-text data.
     data = {
-      MYSQL_USER = base64encode(var.mysql_user)
-      MYSQL_PASSWORD = base64encode(var.mysql_password)
+      MYSQL_USER = var.mysql_router_user
+      MYSQL_PASSWORD = var.mysql_router_password
     }
     type = "Opaque"
   }]
