@@ -4,6 +4,28 @@ A Terraform reusable module for deploying microservices
 -------------------------------------------------------
 Define input variables to the module.
 ***/
+variable affinity {
+  default = []
+  type = list(object({
+    pod_anti_affinity = optional(object({
+      required_during_scheduling_ignored_during_execution = optional(list(object({
+        topology_key = string
+        namespaces = optional(set(string), [])
+        match_labels = optional(map(string), {})
+        match_expressions = optional(list(object({
+        label_selector = object({
+          key = string
+          # Valid operators are In, NotIn, Exists, and DoesNotExist.
+          operator = string
+          # If the operator is In or NotIn, the values array must be non-empty. If the operator is
+          # Exists or DoesNotExist, the values array must be empty.
+          values = set(string)
+        })
+        })), [])
+      })), [])
+    }), {})
+  }))
+}
 variable app_name {
   type = string
 }
@@ -450,26 +472,33 @@ resource "kubernetes_stateful_set" "stateful_set" {
         ***/
         automount_service_account_token = var.automount_service_account_token
         service_account_name = var.service_account == null ? "default" : var.service_account.name
-        # affinity {
-        #   pod_anti_affinity {
-        #     required_during_scheduling_ignored_during_execution {
-        #       label_selector {
-        #         match_expressions {
-        #           /***
-        #           Description of the pod label that determines when the anti-affinity rule
-        #           applies. Specifies a key and value for the label.
-        #           key = "rmq_lbl"
-        #           The operator represents the relationship between the label on the existing
-        #           pod and the set of values in the matchExpression parameters in the
-        #           specification for the new pod. Can be In, NotIn, Exists, or DoesNotExist.
-        #           ***/
-        #           operator = "In"
-        #         }
-        #       }
-        #       topology_key = "kubernetes.io/hostname"
-        #     }
-        #   }
-        # }
+        dynamic "affinity" {
+          for_each = var.affinity
+          iterator = it1
+          content {
+            pod_anti_affinity {
+              dynamic "required_during_scheduling_ignored_during_execution" {
+                for_each = it1.value["required_during_scheduling_ignored_during_execution"]
+                iterator = it2
+                content {
+                  label_selector {
+                    match_labels = it2.match_labels
+                    dynamic "match_expressions" {
+                      for_each = it2.value["match_expressions"]
+                      iterator = it3
+                      content {
+                        key = it3.key
+                        operator = it3.operation
+                        values = it3.values
+                      }
+                    }
+                  }
+                  topology_key = "kubernetes.io/hostname"
+                }
+              }
+            }
+          }
+        }
         termination_grace_period_seconds = var.termination_grace_period_seconds
         container {
           name = var.service_name
