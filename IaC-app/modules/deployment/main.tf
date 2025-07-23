@@ -11,17 +11,17 @@ variable affinity {
       required_during_scheduling_ignored_during_execution = optional(list(object({
         topology_key = string
         namespaces = optional(set(string), [])
-        match_labels = optional(map(string), {})
-        match_expressions = optional(list(object({
-        label_selector = object({
-          key = string
-          # Valid operators are In, NotIn, Exists, and DoesNotExist.
-          operator = string
-          # If the operator is In or NotIn, the values array must be non-empty. If the operator is
-          # Exists or DoesNotExist, the values array must be empty.
-          values = set(string)
-        })
-        })), [])
+        label_selector = list(object({
+          match_labels = optional(map(string), {})
+          match_expressions = optional(list(object({
+            key = string
+            # Valid operators are In, NotIn, Exists, and DoesNotExist.
+            operator = string
+            # If the operator is In or NotIn, the values array must be non-empty. If the operator is
+            # Exists or DoesNotExist, the values array must be empty.
+            values = set(string)
+          })), [])
+        }))
       })), [])
     }), {})
   }))
@@ -795,18 +795,22 @@ resource "kubernetes_deployment" "stateless" {
           content {
             pod_anti_affinity {
               dynamic "required_during_scheduling_ignored_during_execution" {
-                for_each = it1.value["required_during_scheduling_ignored_during_execution"]
+                for_each = it1.value["pod_anti_affinity"].required_during_scheduling_ignored_during_execution
                 iterator = it2
                 content {
-                  label_selector {
-                    match_labels = it2.match_labels
-                    dynamic "match_expressions" {
-                      for_each = it2.value["match_expressions"]
-                      iterator = it3
-                      content {
-                        key = it3.key
-                        operator = it3.operation
-                        values = it3.values
+                  dynamic "label_selector" {
+                    for_each = it2.value["label_selector"]
+                    iterator = it3
+                    content {
+                      match_labels = it3.value["match_labels"]
+                      dynamic "match_expressions" {
+                        for_each = it3.value["match_expressions"]
+                        iterator = it4
+                        content {
+                          key = it4.value["key"]
+                          operator = it4.value["operator"]
+                          values = it4.value["values"]
+                        }
                       }
                     }
                   }
