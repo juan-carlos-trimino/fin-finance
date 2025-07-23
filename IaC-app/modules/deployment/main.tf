@@ -11,7 +11,7 @@ variable affinity {
       required_during_scheduling_ignored_during_execution = optional(list(object({
         topology_key = string
         namespaces = optional(set(string), [])
-        label_selector = list(object({
+        label_selector = optional(object({
           match_labels = optional(map(string), {})
           match_expressions = optional(list(object({
             key = string
@@ -21,7 +21,7 @@ variable affinity {
             # Exists or DoesNotExist, the values array must be empty.
             values = set(string)
           })), [])
-        }))
+        }), {})
       })), [])
     }), {})
   }))
@@ -798,19 +798,15 @@ resource "kubernetes_deployment" "stateless" {
                 for_each = it1.value["pod_anti_affinity"].required_during_scheduling_ignored_during_execution
                 iterator = it2
                 content {
-                  dynamic "label_selector" {
-                    for_each = it2.value["label_selector"]
-                    iterator = it3
-                    content {
-                      match_labels = it3.value["match_labels"]
-                      dynamic "match_expressions" {
-                        for_each = it3.value["match_expressions"]
-                        iterator = it4
-                        content {
-                          key = it4.value["key"]
-                          operator = it4.value["operator"]
-                          values = it4.value["values"]
-                        }
+                  label_selector {
+                    match_labels = it2.value["label_selector"].match_labels
+                    dynamic "match_expressions" {
+                      for_each = it2.value["label_selector"].match_expressions
+                      iterator = it3
+                      content {
+                        key = it3.value["key"]
+                        operator = it3.value["operator"]
+                        values = it3.value["values"]
                       }
                     }
                   }
