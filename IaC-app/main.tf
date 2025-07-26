@@ -201,17 +201,119 @@ module "fin-finances-persistent" {
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ".."
+  #
   app_name = var.app_name
   app_version = var.app_version
-  namespace = local.namespace
-  image_tag = var.build_image ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
   build_image = var.build_image
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
+  # Configure environment variables specific to the app.
+  env = {
+    PPROF = var.pprof
+    K8S = true
+    HTTP_PORT = "8080"
+    SVC_NAME = local.svc_finances
+    APP_NAME_VER = "${var.app_name} ${var.app_version}"
+    MAX_RETRIES = 3
+  }
+  # *** env_field ***
+  # env_field = [{
+  #   env_name = "POD_ID"
+  #   field_path = "status.podIP"
+  # }]
+  # *** env_field ***
+  # *** s3 storage ***
+  # env_secret = [{
+  #   env_name = "AWS_SECRET_ACCESS_KEY"
+  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_key = "aws_secret_access_key"
+  # },
+  # {
+  #   env_name = "OBJ_STORAGE_NS"
+  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_key = "obj_storage_ns"
+  # },
+  # {
+  #   env_name = "AWS_REGION"
+  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_key = "region"
+  # },
+  # {
+  #   env_name = "AWS_ACCESS_KEY_ID"
+  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_key = "aws_access_key_id"
+  # }]
+  # *** s3 storage ***
+  image_tag = var.build_image ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
   labels = {
     "app" = var.app_name
   }
+  # You should always define a liveness probe. Keep probes light.
+  liveness_probe = [{
+    initial_delay_seconds = 5
+    period_seconds = 20
+    timeout_seconds = 1
+    # Don't bother implementing retry loops; K8s will retry the probe.
+    failure_threshold = 1
+    success_threshold = 1
+    http_get = [{
+      path = "/liveness"
+      port = 8080
+      scheme = "HTTP"
+    }]
+    # tcp_socket = {
+    #   port = 8080
+    # }
+    # exec = {
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "ls -al /wsf_data_dir"
+    # ]}
+  }]
+  namespace = local.namespace
+  persistent_volume_claims = [{
+    name = "${var.app_name}-pvc"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    volume_mode = "Filesystem"
+    # The volume can be mounted as read-write by many nodes.
+    access_modes = ["ReadWriteOnce"]
+    # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
+    # for less than 50GB, the request is rounded up to 50GB.
+    storage_size = "50Gi"
+    storage_class_name = "oci-bv"
+  }]
+  pod_security_context = [{
+    fs_group = 2200
+  }]
+  # You should always define a readiness probe, even if it's as simple as sending an HTTP request
+  # to the base URL.
+  readiness_probe = [{
+    # Always remember to set an initial delay to account for your app's startup time.
+    initial_delay_seconds = 2
+    period_seconds = 25
+    timeout_seconds = 1
+    failure_threshold = 3
+    success_threshold = 1
+    http_get = [{
+      path = "/readiness"
+      port = 8080
+      scheme = "HTTP"
+    }]
+    # tcp_socket = {
+    #   port = 8088
+    # }
+    # exec = {
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "ls -al /wsf_data_dir"
+    # ]}
+  }]
   replicas = 1
   # Limits and requests for CPU resources are measured in millicores. If the container needs one
   # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
@@ -219,6 +321,38 @@ module "fin-finances-persistent" {
   resources = {  # QoS - Guaranteed
     limits_cpu = "300m"
     limits_memory = "300Mi"
+  }
+  role = {
+    name = "${local.svc_finances}-role"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    annotations = {}
+    rules = [{
+      # It provides read-only access to information without allowing modification.
+      api_groups = [""]
+      resources = ["pods", "configmaps"]
+      verbs = ["get", "watch", "list"]
+    }]
+  }
+  role_binding = {
+    name = "${local.svc_finances}-role-binding"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    annotations = {}
+    role_ref = {
+      kind = "Role"
+      name = "${local.svc_finances}-role"
+      api_group = "rbac.authorization.k8s.io"
+    }
+    subjects = [{
+      kind = "ServiceAccount"
+      name = "${local.svc_finances}-service-account"
+      namespace = local.namespace
+    }]
   }
   # https://kubernetes.io/docs/concepts/configuration/secret/
   # If the order of Secrets changes, the Deployment must be changed accordingly. See
@@ -254,169 +388,11 @@ module "fin-finances-persistent" {
   # }
   # *** s3 storage ***
   ]
-  service_account = {
-    name = "${local.svc_finances}-service-account"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    annotations = {}
-    automount_service_account_token = false
-    secrets = [{
-      name = "${local.svc_finances}-registry-credentials"
-    },
-    # {
-    #   name = "${local.svc_finances}-s3-storage"
-    # }
-    ]
-  }
-  role = {
-    name = "${local.svc_finances}-role"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    annotations = {}
-    rules = [{
-      # It provides read-only access to information without allowing modification.
-      api_groups = [""]
-      resources = ["pods", "configmaps"]
-      verbs = ["get", "watch", "list"]
-    }]
-  }
-  role_binding = {
-    name = "${local.svc_finances}-role-binding"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    annotations = {}
-    role_ref = {
-      kind = "Role"
-      name = "${local.svc_finances}-role"
-      api_group = "rbac.authorization.k8s.io"
-    }
-    subjects = [{
-      kind = "ServiceAccount"
-      name = "${local.svc_finances}-service-account"
-      namespace = local.namespace
-    }]
-  }
-  # Configure environment variables specific to the app.
-  env = {
-    PPROF = var.pprof
-    K8S = true
-    HTTP_PORT = "8080"
-    SVC_NAME = local.svc_finances
-    APP_NAME_VER = "${var.app_name} ${var.app_version}"
-    MAX_RETRIES = 3
-  }
-  # *** s3 storage ***
-  # env_secret = [{
-  #   env_name = "AWS_SECRET_ACCESS_KEY"
-  #   secret_name = "${local.svc_finances}-s3-storage"
-  #   secret_key = "aws_secret_access_key"
-  # },
-  # {
-  #   env_name = "OBJ_STORAGE_NS"
-  #   secret_name = "${local.svc_finances}-s3-storage"
-  #   secret_key = "obj_storage_ns"
-  # },
-  # {
-  #   env_name = "AWS_REGION"
-  #   secret_name = "${local.svc_finances}-s3-storage"
-  #   secret_key = "region"
-  # },
-  # {
-  #   env_name = "AWS_ACCESS_KEY_ID"
-  #   secret_name = "${local.svc_finances}-s3-storage"
-  #   secret_key = "aws_access_key_id"
-  # }]
-  # *** s3 storage ***
-  # *** env_field ***
-  # env_field = [{
-  #   env_name = "POD_ID"
-  #   field_path = "status.podIP"
-  # }]
-  # *** env_field ***
-  volume_mount = [{
-    name = "wsf"
-    mount_path = "/wsf_data_dir"
-    read_only = false
-  }]
-  volume_pv = [{
-    name = "wsf"
-    claim_name = "${var.app_name}-pvc"
-  }]
-  persistent_volume_claims = [{
-    name = "${var.app_name}-pvc"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    volume_mode = "Filesystem"
-    # The volume can be mounted as read-write by many nodes.
-    access_modes = ["ReadWriteOnce"]
-    # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
-    # for less than 50GB, the request is rounded up to 50GB.
-    storage_size = "50Gi"
-    storage_class_name = "oci-bv"
-  }]
-  pod_security_context = [{
-    fs_group = 2200
-  }]
   security_context = [{
     run_as_non_root = true
     run_as_user = 1100
     run_as_group = 1100
     read_only_root_filesystem = true
-  }]
-  # You should always define a readiness probe, even if it's as simple as sending an HTTP request
-  # to the base URL.
-  readiness_probe = [{
-    # Always remember to set an initial delay to account for your app's startup time.
-    initial_delay_seconds = 2
-    period_seconds = 25
-    timeout_seconds = 1
-    failure_threshold = 3
-    success_threshold = 1
-    http_get = [{
-      path = "/readiness"
-      port = 8080
-      scheme = "HTTP"
-    }]
-    # tcp_socket = {
-    #   port = 8088
-    # }
-    # exec = {
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "ls -al /wsf_data_dir"
-    # ]}
-  }]
-  # You should always define a liveness probe. Keep probes light.
-  liveness_probe = [{
-    initial_delay_seconds = 5
-    period_seconds = 20
-    timeout_seconds = 1
-    # Don't bother implementing retry loops; K8s will retry the probe.
-    failure_threshold = 1
-    success_threshold = 1
-    http_get = [{
-      path = "/liveness"
-      port = 8080
-      scheme = "HTTP"
-    }]
-    # tcp_socket = {
-    #   port = 8080
-    # }
-    # exec = {
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "ls -al /wsf_data_dir"
-    # ]}
   }]
   service = {
     name = local.svc_finances
@@ -435,7 +411,32 @@ module "fin-finances-persistent" {
     }
     type = "ClusterIP"
   }
+  service_account = {
+    name = "${local.svc_finances}-service-account"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    annotations = {}
+    automount_service_account_token = false
+    secrets = [{
+      name = "${local.svc_finances}-registry-credentials"
+    },
+    # {
+    #   name = "${local.svc_finances}-s3-storage"
+    # }
+    ]
+  }
   service_name = local.svc_finances
+  volume_mount = [{
+    name = "wsf"
+    mount_path = "/wsf_data_dir"
+    read_only = false
+  }]
+  volume_pv = [{
+    name = "wsf"
+    claim_name = "${var.app_name}-pvc"
+  }]
 }
 
 module "fin-finances-empty" {  # Using emptyDir.
@@ -443,26 +444,16 @@ module "fin-finances-empty" {  # Using emptyDir.
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ".."
-  app_name = var.app_name
-  app_version = var.app_version
-  namespace = local.namespace
-  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
-  build_image = var.build_image
-  cr_login_server = local.cr_login_server
-  cr_username = var.cr_username
-  cr_password = var.cr_password
-  labels = {
-    "app" = var.app_name
-  }
+  #
   affinity = [{
     pod_anti_affinity = {
       required_during_scheduling_ignored_during_execution = [{
         topology_key = "kubernetes.io/hostname"
         label_selector = {
           # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
-          # the label "finances: running".
+          # the label "aff-finances: running".
           match_expressions = [{
-            "key" = "finances"
+            "key" = "aff-finances"
             "operator" = "In"
             "values" = ["running"]
           }]
@@ -470,7 +461,28 @@ module "fin-finances-empty" {  # Using emptyDir.
       }]
     }
   }]
-  replicas = 3
+  app_name = var.app_name
+  app_version = var.app_version
+  build_image = var.build_image
+  cr_login_server = local.cr_login_server
+  cr_password = var.cr_password
+  cr_username = var.cr_username
+  # Configure environment variables specific to the app.
+  env = {
+    PPROF = var.pprof
+    K8S = true
+    HTTP_PORT = "8080"
+    SVC_NAME = local.svc_finances
+    APP_NAME_VER = "${var.app_name} ${var.app_version}"
+    MAX_RETRIES = 3
+  }
+  # *** env_field ***
+  # env_field = [{
+  #  env_name = "POD_ID"
+  #  field_path = "status.podIP"
+  # }]
+  # *** env_field ***
+  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
   # See empty_dir.
   init_container = [{
     name = "file-permission"
@@ -494,49 +506,68 @@ module "fin-finances-empty" {  # Using emptyDir.
       privileged = true
     }]
   }]
+  labels = {
+    "aff-finances" = "running"
+    "app" = var.app_name
+  }
+  # You should always define a liveness probe. Keep probes light.
+  liveness_probe = [{
+    initial_delay_seconds = 5
+    period_seconds = 20
+    timeout_seconds = 1
+    # Don't bother implementing retry loops; K8s will retry the probe.
+    failure_threshold = 1
+    success_threshold = 1
+    http_get = [{
+      path = "/liveness"
+      port = 8080
+      scheme = "HTTP"
+    }]
+    # tcp_socket = {
+    #   port = 8080
+    # }
+    # exec = {
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "ls -al /wsf_data_dir"
+    # ]}
+  }]
+  namespace = local.namespace
+  pod_security_context = [{
+    fs_group = 2200
+  }]
+  # You should always define a readiness probe, even if it's as simple as sending an HTTP request
+  # to the base URL.
+  readiness_probe = [{
+    # Always remember to set an initial delay to account for your app's startup time.
+    initial_delay_seconds = 2
+    period_seconds = 25
+    timeout_seconds = 1
+    failure_threshold = 3
+    success_threshold = 1
+    http_get = [{
+      path = "/readiness"
+      port = 8080
+      scheme = "HTTP"
+    }]
+    # tcp_socket = {
+    #   port = 8088
+    # }
+    # exec = {
+    #   command = [
+    #     "/bin/sh",
+    #     "-c",
+    #     "ls -al /wsf_data_dir"
+    # ]}
+  }]
+  replicas = 3
   # Limits and requests for CPU resources are measured in millicores. If the container needs one
   # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
   # value of '250m.'
   resources = {  # QoS - Guaranteed
     limits_cpu = "300m"
     limits_memory = "300Mi"
-  }
-  # https://kubernetes.io/docs/concepts/configuration/secret/
-  # If the order of Secrets changes, the Deployment must be changed accordingly. See
-  # spec.image_pull_secrets.
-  secrets = [{
-    name = "${local.svc_finances}-registry-credentials"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    # Plain-text data.
-    data = {
-      ".dockerconfigjson" = jsonencode({
-        auths = {
-          "${local.cr_login_server}" = {
-            auth = base64encode("${var.cr_username}:${var.cr_password}")
-          }
-        }
-      })
-    }
-    type = "kubernetes.io/dockerconfigjson"
-  }]
-  service_account = {
-    name = "${local.svc_finances}-service-account"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    annotations = {}
-    automount_service_account_token = false
-    secrets = [{
-      name = "${local.svc_finances}-registry-credentials"
-    },
-    # {
-    #   name = "${local.svc_finances}-s3-storage"
-    # }
-    ]
   }
   role = {
     name = "${local.svc_finances}-role"
@@ -570,85 +601,32 @@ module "fin-finances-empty" {  # Using emptyDir.
       namespace = local.namespace
     }]
   }
-  # Configure environment variables specific to the app.
-  env = {
-    PPROF = var.pprof
-    K8S = true
-    HTTP_PORT = "8080"
-    SVC_NAME = local.svc_finances
-    APP_NAME_VER = "${var.app_name} ${var.app_version}"
-    MAX_RETRIES = 3
-  }
-  # *** env_field ***
-  # env_field = [{
-  #  env_name = "POD_ID"
-  #  field_path = "status.podIP"
-  # }]
-  # *** env_field ***
-  # When using the emptyDir{}, the init_container is required.
-  volume_empty_dir = [{
-    name = "wsf"
-  }]
-  volume_mount = [{
-    name = "wsf"
-    mount_path = "/wsf_data_dir"
-    read_only = false
-  }]
-  pod_security_context = [{
-    fs_group = 2200
+  # https://kubernetes.io/docs/concepts/configuration/secret/
+  # If the order of Secrets changes, the Deployment must be changed accordingly. See
+  # spec.image_pull_secrets.
+  secrets = [{
+    name = "${local.svc_finances}-registry-credentials"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    # Plain-text data.
+    data = {
+      ".dockerconfigjson" = jsonencode({
+        auths = {
+          "${local.cr_login_server}" = {
+            auth = base64encode("${var.cr_username}:${var.cr_password}")
+          }
+        }
+      })
+    }
+    type = "kubernetes.io/dockerconfigjson"
   }]
   security_context = [{
     run_as_non_root = true
     run_as_user = 1100
     run_as_group = 1100
     read_only_root_filesystem = true
-  }]
-  # You should always define a readiness probe, even if it's as simple as sending an HTTP request
-  # to the base URL.
-  readiness_probe = [{
-    # Always remember to set an initial delay to account for your app's startup time.
-    initial_delay_seconds = 2
-    period_seconds = 25
-    timeout_seconds = 1
-    failure_threshold = 3
-    success_threshold = 1
-    http_get = [{
-      path = "/readiness"
-      port = 8080
-      scheme = "HTTP"
-    }]
-    # tcp_socket = {
-    #   port = 8088
-    # }
-    # exec = {
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "ls -al /wsf_data_dir"
-    # ]}
-  }]
-  # You should always define a liveness probe. Keep probes light.
-  liveness_probe = [{
-    initial_delay_seconds = 5
-    period_seconds = 20
-    timeout_seconds = 1
-    # Don't bother implementing retry loops; K8s will retry the probe.
-    failure_threshold = 1
-    success_threshold = 1
-    http_get = [{
-      path = "/liveness"
-      port = 8080
-      scheme = "HTTP"
-    }]
-    # tcp_socket = {
-    #   port = 8080
-    # }
-    # exec = {
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "ls -al /wsf_data_dir"
-    # ]}
   }]
   service = {
     name = local.svc_finances
@@ -667,7 +645,32 @@ module "fin-finances-empty" {  # Using emptyDir.
     }
     type = "ClusterIP"
   }
+  service_account = {
+    name = "${local.svc_finances}-service-account"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    annotations = {}
+    automount_service_account_token = false
+    secrets = [{
+      name = "${local.svc_finances}-registry-credentials"
+    },
+    # {
+    #   name = "${local.svc_finances}-s3-storage"
+    # }
+    ]
+  }
   service_name = local.svc_finances
+  # When using the emptyDir{}, the init_container is required.
+  volume_empty_dir = [{
+    name = "wsf"
+  }]
+  volume_mount = [{
+    name = "wsf"
+    mount_path = "/wsf_data_dir"
+    read_only = false
+  }]
 }
 
 
@@ -678,13 +681,23 @@ module "fin-MySqlServer" {
   count = var.db_mysql && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/statefulset"
+  #
+  affinity = [{
+    pod_anti_affinity = {
+      required_during_scheduling_ignored_during_execution = [{
+        topology_key = "kubernetes.io/hostname"
+        label_selector = {
+          match_expressions = [{
+            "key" = "aff-mysqlserver"
+            "operator" = "In"
+            "values" = ["running"]
+          }]
+        }
+      }]
+    }
+  }]
   app_name = var.app_name
   app_version = var.app_version
-  namespace = local.namespace
-  image_tag = var.mysql_image_tag
-  labels = {
-    "app" = var.app_name
-  }
   # config_map = [{
   #   name = "${var.app_name}-mysql-config-map"
   #   namespace = local.namespace
@@ -701,6 +714,19 @@ module "fin-MySqlServer" {
   # Configure environment variables specific to the app.
   env = {
     MYSQL_DATABASE = var.mysql_database
+  }
+  image_tag = var.mysql_image_tag
+  labels = {
+    "aff-mysqlserver" = "running"
+    "app" = var.app_name
+
+  }
+  namespace = local.namespace
+  replicas = 3
+  # Always use 3 or more nodes for fault tolerance.
+  resources = {  # QoS - Guaranteed
+    limits_cpu = "500m"
+    limits_memory = "1Gi"
   }
   # If the order of Secrets changes, the Deployment must be changed accordingly. See
   # spec.image_pull_secrets.
@@ -719,31 +745,55 @@ module "fin-MySqlServer" {
     type = "Opaque"
     immutable = true
   }]
-  affinity = [{
-    pod_anti_affinity = {
-      required_during_scheduling_ignored_during_execution = [{
-        topology_key = "kubernetes.io/hostname"
-        label_selector = {
-          match_expressions = [{
-            "key" = "mysqlserver"
-            "operator" = "In"
-            "values" = ["running"]
-          }]
-        }
-      }]
+  security_context = [{
+    run_as_non_root = true
+    run_as_user = 1100
+    run_as_group = 1100
+    read_only_root_filesystem = false
+  }]
+  service = {
+    name = "${local.svc_mysql}-headless"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
     }
-  }]
-  # Always use 3 or more nodes for fault tolerance.
-  replicas = 3
-  resources = {  # QoS - Guaranteed
-    limits_cpu = "500m"
-    limits_memory = "1Gi"
+    ports = [{
+      name = "mysql"
+      # Standard MySQL port – used by clients and MySQL Router to connect to MySQL server.
+      service_port = 3306
+      target_port = 3306
+      protocol = "TCP"
+    },
+    {
+      name = "x"
+      # X Protocol – used by MySQL Shell, MySQL Router, and Group Replication for
+      # administrative/configuration tasks
+      service_port = 33060
+      target_port = 33060
+      protocol = "TCP"
+    },
+    {
+      name = "group"
+      # Group Replication port – used by MySQL nodes for internal communication and replication
+      # coordination.
+      service_port = 33061
+      target_port = 33061
+      protocol = "TCP"
+    },
+    {
+      name = "split"
+      # MySQL Router read/write split ports (configurable).
+      service_port = 6606
+      target_port = 6606
+      protocol = "TCP"
+    }]
+    selector = {
+      "svc_selector_label" = "svc-${local.svc_mysql}-headless"
+    }
+    publish_not_ready_addresses = true
+    type = "ClusterIP"
   }
-  volume_mount = [{
-    name = "wsf"
-    mount_path = "/wsf_data_dir/mysql"
-    read_only = false
-  }]
+  service_name = local.svc_mysql
   volume_claim_templates = [{
     name = "wsf"
     namespace = local.namespace
@@ -758,6 +808,12 @@ module "fin-MySqlServer" {
     storage = "50Gi"
     storage_class_name = "oci-bv"
   }]
+  volume_mount = [{
+    name = "wsf"
+    mount_path = "/wsf_data_dir/mysql"
+    read_only = false
+  }]
+
   # readiness_probe = [{
   #   initial_delay_seconds = 5
   #   period_seconds = 2
@@ -809,55 +865,6 @@ module "fin-MySqlServer" {
   # pod_security_context = [{
   #   fs_group = 2200
   # }]
-  security_context = [{
-    run_as_non_root = true
-    run_as_user = 1100
-    run_as_group = 1100
-    read_only_root_filesystem = false
-  }]
-  service = {
-    name = "${local.svc_mysql}-headless"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    ports = [{
-      name = "mysql"
-      # Standard MySQL port – used by clients and MySQL Router to connect to MySQL server.
-      service_port = 3306
-      target_port = 3306
-      protocol = "TCP"
-    },
-    {
-      name = "x"
-      # X Protocol – used by MySQL Shell, MySQL Router, and Group Replication for
-      # administrative/configuration tasks
-      service_port = 33060
-      target_port = 33060
-      protocol = "TCP"
-    },
-    {
-      name = "group"
-      # Group Replication port – used by MySQL nodes for internal communication and replication
-      # coordination.
-      service_port = 33061
-      target_port = 33061
-      protocol = "TCP"
-    },
-    {
-      name = "split"
-      # MySQL Router read/write split ports (configurable).
-      service_port = 6606
-      target_port = 6606
-      protocol = "TCP"
-    }]
-    selector = {
-      "svc_selector_label" = "svc-${local.svc_mysql}-headless"
-    }
-    publish_not_ready_addresses = true
-    type = "ClusterIP"
-  }
-  service_name = local.svc_mysql
 }
 
 /***
@@ -877,19 +884,25 @@ module "fin-MySqlRouter" {
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ""
+  #
   app_name = var.app_name
   app_version = var.app_version
-  namespace = local.namespace
-  image_tag = var.mysql_router_image_tag
   build_image = false
-  labels = {
-    "app" = var.app_name
-  }
   env = {
     MYSQL_HOST = var.mysql_router_host
     MYSQL_PORT = var.mysql_router_port
     MYSQL_INNODB_CLUSTER_MEMBERS = var.mysql_router_cluster_members
     MYSQL_ROUTER_BOOTSTRAP_EXTRA_OPTIONS = var.mysql_router_bootstrap
+  }
+  image_tag = var.mysql_router_image_tag
+  labels = {
+    "app" = var.app_name
+  }
+  namespace = local.namespace
+  replicas = 3
+  resources = {
+    limits_cpu = "500m"
+    limits_memory = "0.5Gi"
   }
   secrets = [{
     name = "${local.svc_mysql_router}-secret"
@@ -904,14 +917,6 @@ module "fin-MySqlRouter" {
     }
     type = "Opaque"
   }]
-  replicas = 3
-  resources = {
-    limits_cpu = "500m"
-    limits_memory = "0.5Gi"
-  }
-  # command = ["/bin/sh"]
-  # args = ["-c",  # https://www.man7.org/linux/man-pages/man1/bash.1.html
-  #   "while true; do sleep 3600; done"]
   service = {
     name = "${local.svc_mysql_router}"
     namespace = local.namespace
@@ -928,6 +933,18 @@ module "fin-MySqlRouter" {
       name = "read-only"  # Secondary.
       service_port = 6447
       target_port = 6447
+      protocol = "TCP"
+    },
+    {
+      name = "x-read-write"  # X Protocol.
+      service_port = 6448
+      target_port = 6448
+      protocol = "TCP"
+    },
+    {
+      name = "x-read-only"  # X Protocol.
+      service_port = 6449
+      target_port = 6449
       protocol = "TCP"
     }]
     selector = {
