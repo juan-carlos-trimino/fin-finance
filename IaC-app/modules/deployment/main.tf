@@ -207,21 +207,6 @@ variable pod_security_context {
     supplemental_groups = optional(set(number))
   }))
 }
-variable ports {
-  default = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8080
-    protocol = "TCP"
-  }]
-  type = list(object({
-    name = string
-    service_port = number
-    target_port = number
-    node_port = optional(number)
-    protocol = string
-  }))
-}
 variable readiness_probe {
   default = []
   type = list(object({
@@ -521,7 +506,6 @@ Define local variables.
 ***/
 locals {
   pod_selector_label = "rs-${var.service_name}"
-  svc_selector_label = "svc-${var.service_name}"
   image_tag = (
     var.build_image == true ?
     "${var.cr_login_server}/${var.cr_username}/${var.service_name}:${var.app_version}" :
@@ -783,7 +767,6 @@ resource "kubernetes_deployment" "stateless" {
           # It must match the label selector of spec.selector.match_labels.
           pod_selector_label = local.pod_selector_label
           # It must match the label selector of the Service.
-          # svc_selector_label = var.service == null ? "" : var.service.selector    # local.svc_selector_label
           svc_selector_label = var.service.selector["svc_selector_label"]
         }
       }
@@ -1181,9 +1164,6 @@ resource "kubernetes_service" "service" {
   spec {
     # The label selector determines which pods belong to the service.
     selector = var.service.selector
-    #  {
-    #   svc_selector_lbl = local.svc_selector_label
-    # }
     session_affinity = var.service.session_affinity
     dynamic "port" {
       for_each = var.service.ports
