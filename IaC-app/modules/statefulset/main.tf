@@ -11,17 +11,17 @@ variable affinity {
       required_during_scheduling_ignored_during_execution = optional(list(object({
         topology_key = string
         namespaces = optional(set(string), [])
-        match_labels = optional(map(string), {})
-        match_expressions = optional(list(object({
-        label_selector = object({
-          key = string
-          # Valid operators are In, NotIn, Exists, and DoesNotExist.
-          operator = string
-          # If the operator is In or NotIn, the values array must be non-empty. If the operator is
-          # Exists or DoesNotExist, the values array must be empty.
-          values = set(string)
-        })
-        })), [])
+        label_selector = optional(object({
+          match_labels = optional(map(string), {})
+          match_expressions = optional(list(object({
+            key = string
+            # Valid operators are In, NotIn, Exists, and DoesNotExist.
+            operator = string
+            # If the operator is In or NotIn, the values array must be non-empty. If the operator is
+            # Exists or DoesNotExist, the values array must be empty.
+            values = set(string)
+          })), [])
+        }), {})
       })), [])
     }), {})
   }))
@@ -81,30 +81,6 @@ guarantee.
 ***/
 variable pod_management_policy {
   default = "OrderedReady"
-}
-variable ports {
-  default = [{
-    name = "ports"
-    service_port = 80
-    target_port = 8080
-    protocol = "TCP"
-  }]
-  type = list(object({
-    name = string
-    service_port = number
-    target_port = number
-    node_port = optional(number)
-    protocol = string
-  }))
-}
-/***
-The primary use case for setting this field is to use a StatefulSet's Headless Service to
-propagate SRV records for its Pods without respect to their readiness for purpose of peer
-discovery.
-***/
-variable publish_not_ready_addresses {
-  default = "false"
-  type = bool
 }
 variable replicas {
   default = 1
@@ -195,6 +171,54 @@ variable security_context {
     run_as_group = number
     read_only_root_filesystem = bool
   }))
+}
+variable service {
+  # default = null
+  type = object({
+    name = string
+    namespace = string
+    labels = optional(map(string), {})
+    annotations = optional(map(string), {})
+    # Only applies to types ClusterIP, NodePort, and LoadBalancer.
+    selector = map(string)
+    /***
+    The service normally forwards each connection to a randomly selected backing pod. To ensure
+    that connections from a particular client are passed to the same Pod each time, set the
+    service's sessionAffinity property to ClientIP instead of None (default).
+    Session affinity and Web Browsers (for LoadBalancer Services)
+    Since the service is now exposed externally, accessing it with a web browser will hit the same
+    pod every time. If the sessionAffinity is set to None, then why? The browser is using
+    keep-alive connections and sends all its requests through a single connection. Services work at
+    the connection level, and when a connection to a service is initially open, a random pod is
+    selected and then all network packets belonging to that connection are sent to that single pod.
+    Even with the sessionAffinity set to None, the same pod will always get hit (until the
+    connection is closed).
+    ***/
+    session_affinity = optional(string, "None")
+    /***
+    The primary use case for setting this field is to use a StatefulSet's Headless Service to
+    propagate SRV records for its Pods without respect to their readiness for purpose of peer
+    discovery.
+    ***/
+    publish_not_ready_addresses = optional(bool, "false")
+    /***
+    The ServiceType allows to specify what kind of Service to use: ClusterIP (default), NodePort,
+    LoadBalancer, and ExternalName.
+    ***/
+    type = optional(string, "ClusterIP")
+    ports = optional(list(object({
+      name = string
+      service_port = number
+      target_port = number
+      node_port = optional(number)
+      protocol = string
+    })), [{
+      name = "ports"
+      service_port = 80
+      target_port = 8080
+      protocol = "TCP"
+    }])
+  })
 }
 variable service_account {
   default = null
@@ -312,9 +336,7 @@ variable volume_secrets {
 Define local variables.
 ***/
 locals {
-  svc_name = "${var.service_name}-headless"
   pod_selector_label = "ps-${var.service_name}"
-  svc_selector_label = "svc-${local.svc_name}"
 }
 
 resource "kubernetes_secret" "secrets" {
@@ -437,7 +459,7 @@ resource "kubernetes_stateful_set" "stateful_set" {
     the set. Pods get DNS/hostnames that follow the pattern:
       pod-name.service-name.namespace.svc.cluster.local.
     ***/
-    service_name = local.svc_name
+    service_name = var.service.name
     replicas = var.replicas
     pod_management_policy = var.pod_management_policy
     /***
@@ -460,7 +482,7 @@ resource "kubernetes_stateful_set" "stateful_set" {
           # It must match the label selector of spec.selector.match_labels.
           pod_selector_lbl = local.pod_selector_label
           # It must match the label selector of the Service.
-          svc_selector_lbl = local.svc_selector_label
+          svc_selector_label = var.service.selector["svc_selector_label"]
         }
       }
       #
@@ -478,18 +500,18 @@ resource "kubernetes_stateful_set" "stateful_set" {
           content {
             pod_anti_affinity {
               dynamic "required_during_scheduling_ignored_during_execution" {
-                for_each = it1.value["required_during_scheduling_ignored_during_execution"]
+                for_each = it1.value["pod_anti_affinity"].required_during_scheduling_ignored_during_execution
                 iterator = it2
                 content {
                   label_selector {
-                    match_labels = it2.match_labels
+                    match_labels = it2.value["label_selector"].match_labels
                     dynamic "match_expressions" {
-                      for_each = it2.value["match_expressions"]
+                      for_each = it2.value["label_selector"].match_expressions
                       iterator = it3
                       content {
-                        key = it3.key
-                        operator = it3.operation
-                        values = it3.values
+                        key = it3.value["key"]
+                        operator = it3.value["operator"]
+                        values = it3.value["values"]
                       }
                     }
                   }
@@ -523,7 +545,7 @@ resource "kubernetes_stateful_set" "stateful_set" {
           everyone using the cluster can quickly see what ports each pod exposes.
           ***/
           dynamic "port" {
-            for_each = var.ports
+            for_each = var.service.ports
             content {
               name = port.value.name
               container_port = port.value.target_port  # The port the app is listening.
@@ -662,7 +684,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
     pods in the same namespace.
     ***/
     dynamic "volume_claim_template" {
-      # for_each = var.volume_claim_template
       for_each = var.volume_claim_templates
       iterator = it
       content {
@@ -688,30 +709,28 @@ resource "kubernetes_stateful_set" "stateful_set" {
 
 resource "kubernetes_service" "headless_service" {
   metadata {
-    name = local.svc_name
-    namespace = var.namespace
-    labels = {
-      app = var.app_name
-    }
+    name = var.service.name
+    namespace = var.service.namespace
+    labels = var.service.labels
   }
   #
   spec {
-    selector = {
-      # All pods with the svc_selector_lbl=local.svc_selector_label label belong to this service.
-      svc_selector_lbl = local.svc_selector_label
-    }
-    session_affinity = var.service_session_affinity
+    # All pods with the svc_selector_lbl=local.svc_selector_label label belong to this service.
+    selector = var.service.selector
+    session_affinity = var.service.session_affinity
     dynamic "port" {
-      for_each = var.ports
+      for_each = var.service.ports
+      iterator = it
       content {
-        name = port.value.name
-        port = port.value.service_port
-        target_port = port.value.target_port
-        protocol = port.value.protocol
+        name = it.value["name"]
+        port = it.value["service_port"]
+        target_port = it.value["target_port"]
+        node_port = it.value["node_port"]
+        protocol = it.value["protocol"]
       }
     }
-    type = "ClusterIP"  # Default.
+    type = var.service.type
     cluster_ip = "None"  # Headless Service.
-    publish_not_ready_addresses = var.publish_not_ready_addresses
+    publish_not_ready_addresses = var.service.publish_not_ready_addresses
   }
 }
