@@ -30,8 +30,8 @@ locals {
   svc_gateway = "fin-gateway"
   svc_error_page = "fin-error-page"
   svc_traefik = "fin-traefik"
-  svc_my_sql = "fin-mysql"
-  svc_my_sql_router = "fin-my-sql-router"
+  svc_mysql = "fin-mysql"
+  svc_mysql_router = "fin-mysql-router"
   ############
   # Services #
   ############
@@ -455,19 +455,20 @@ module "fin-finances-empty" {  # Using emptyDir.
     "app" = var.app_name
   }
   affinity = [{
-    pod_anti_affinity = [{
+    pod_anti_affinity = {
       required_during_scheduling_ignored_during_execution = [{
         topology_key = "kubernetes.io/hostname"
-        # match_labels = {
-        #   "finances" = "running"
-        # }
-        match_expressions = [{
-          "key" = "finances"
-          "operator" = "In"
-          "values" = ["running"]
-        }]
+        label_selector = {
+          # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
+          # the label "finances: running".
+          match_expressions = [{
+            "key" = "finances"
+            "operator" = "In"
+            "values" = ["running"]
+          }]
+        }
       }]
-    }]
+    }
   }]
   replicas = 3
   # See empty_dir.
@@ -672,7 +673,7 @@ module "fin-finances-empty" {  # Using emptyDir.
 
 
 
-# /*
+
 module "fin-MySqlServer" {
   count = var.db_mysql && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
@@ -681,7 +682,6 @@ module "fin-MySqlServer" {
   app_version = var.app_version
   namespace = local.namespace
   image_tag = var.mysql_image_tag
-  publish_not_ready_addresses = true
   labels = {
     "app" = var.app_name
   }
@@ -705,7 +705,7 @@ module "fin-MySqlServer" {
   # If the order of Secrets changes, the Deployment must be changed accordingly. See
   # spec.image_pull_secrets.
   secrets = [{
-    name = "${local.svc_my_sql}-secret"
+    name = "${local.svc_mysql}-secret"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -718,6 +718,20 @@ module "fin-MySqlServer" {
     }
     type = "Opaque"
     immutable = true
+  }]
+  affinity = [{
+    pod_anti_affinity = {
+      required_during_scheduling_ignored_during_execution = [{
+        topology_key = "kubernetes.io/hostname"
+        label_selector = {
+          match_expressions = [{
+            "key" = "mysqlserver"
+            "operator" = "In"
+            "values" = ["running"]
+          }]
+        }
+      }]
+    }
   }]
   # Always use 3 or more nodes for fault tolerance.
   replicas = 3
@@ -801,37 +815,49 @@ module "fin-MySqlServer" {
     run_as_group = 1100
     read_only_root_filesystem = false
   }]
-  ports = [{
-    name = "mysql"
-    # Standard MySQL port – used by clients and MySQL Router to connect to MySQL server.
-    service_port = 3306
-    target_port = 3306
-    protocol = "TCP"
-  },
-  {
-    name = "x"
-    # X Protocol – used by MySQL Shell, MySQL Router, and Group Replication for
-    # administrative/configuration tasks
-    service_port = 33060
-    target_port = 33060
-    protocol = "TCP"
-  },
-  {
-    name = "group"
-    # Group Replication port – used by MySQL nodes for internal communication and replication
-    # coordination.
-    service_port = 33061
-    target_port = 33061
-    protocol = "TCP"
-  },
-  {
-    name = "split"
-    # MySQL Router read/write split ports (configurable).
-    service_port = 6606
-    target_port = 6606
-    protocol = "TCP"
-  }]
-  service_name = local.svc_my_sql
+  service = {
+    name = "${local.svc_mysql}-headless"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    ports = [{
+      name = "mysql"
+      # Standard MySQL port – used by clients and MySQL Router to connect to MySQL server.
+      service_port = 3306
+      target_port = 3306
+      protocol = "TCP"
+    },
+    {
+      name = "x"
+      # X Protocol – used by MySQL Shell, MySQL Router, and Group Replication for
+      # administrative/configuration tasks
+      service_port = 33060
+      target_port = 33060
+      protocol = "TCP"
+    },
+    {
+      name = "group"
+      # Group Replication port – used by MySQL nodes for internal communication and replication
+      # coordination.
+      service_port = 33061
+      target_port = 33061
+      protocol = "TCP"
+    },
+    {
+      name = "split"
+      # MySQL Router read/write split ports (configurable).
+      service_port = 6606
+      target_port = 6606
+      protocol = "TCP"
+    }]
+    selector = {
+      "svc_selector_label" = "svc-${local.svc_mysql}-headless"
+    }
+    publish_not_ready_addresses = true
+    type = "ClusterIP"
+  }
+  service_name = local.svc_mysql
 }
 
 /***
@@ -850,7 +876,7 @@ module "fin-MySqlRouter" {
   count = var.k8s_crds ? 0 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
-  dir_path = "rrrr"
+  dir_path = ""
   app_name = var.app_name
   app_version = var.app_version
   namespace = local.namespace
@@ -866,7 +892,7 @@ module "fin-MySqlRouter" {
     MYSQL_ROUTER_BOOTSTRAP_EXTRA_OPTIONS = var.mysql_router_bootstrap
   }
   secrets = [{
-    name = "${local.svc_my_sql_router}-secret"
+    name = "${local.svc_mysql_router}-secret"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -878,9 +904,6 @@ module "fin-MySqlRouter" {
     }
     type = "Opaque"
   }]
-
-
-
   replicas = 3
   resources = {
     limits_cpu = "500m"
@@ -890,7 +913,7 @@ module "fin-MySqlRouter" {
   # args = ["-c",  # https://www.man7.org/linux/man-pages/man1/bash.1.html
   #   "while true; do sleep 3600; done"]
   service = {
-    name = local.svc_my_sql_router
+    name = "${local.svc_mysql_router}"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -908,11 +931,9 @@ module "fin-MySqlRouter" {
       protocol = "TCP"
     }]
     selector = {
-      "svc_selector_label" = "svc-${local.svc_finances}"
+      "svc_selector_label" = "svc-${local.svc_mysql_router}"
     }
     type = "ClusterIP"
   }
-
-
-  service_name = local.svc_my_sql_router
+  service_name = local.svc_mysql_router
 }
