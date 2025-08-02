@@ -32,6 +32,7 @@ locals {
   svc_traefik = "fin-traefik"
   svc_mysql = "fin-mysql"
   svc_mysql_router = "fin-mysql-router"
+  svc_postgres = "fin-postgres"
   ############
   # Services #
   ############
@@ -41,6 +42,7 @@ locals {
   # FQDN: service-name.namespace.svc.cluster.local
   svc_dns_error_page = "${local.svc_error_page}.${local.namespace}${var.cluster_domain_suffix}"
   svc_dns_finances = "${local.svc_finances}.${local.namespace}${var.cluster_domain_suffix}"
+  svc_dns_mysql_server = "${local.svc_mysql}-headless.${local.namespace}${var.cluster_domain_suffix}"
 }
 
 ###################################################################################################
@@ -445,7 +447,7 @@ module "fin-finances-empty" {  # Using emptyDir.
   source = "./modules/deployment"
   dir_path = ".."
   #
-  affinity = [{
+  affinity = {
     pod_anti_affinity = {
       required_during_scheduling_ignored_during_execution = [{
         topology_key = "kubernetes.io/hostname"
@@ -460,7 +462,7 @@ module "fin-finances-empty" {  # Using emptyDir.
         }
       }]
     }
-  }]
+  }
   app_name = var.app_name
   app_version = var.app_version
   build_image = var.build_image
@@ -677,25 +679,102 @@ module "fin-finances-empty" {  # Using emptyDir.
 
 
 
-module "fin-MySqlServer" {
+module "fin-PostgreSql" {
   count = var.db_mysql && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/statefulset"
   #
-  affinity = [{
+  app_name = var.app_name
+  app_version = var.app_version
+  image_tag = var.postgres_image_tag
+  labels = {
+    # "aff-mysql-server" = "running"
+    "app" = var.app_name
+  }
+  namespace = local.namespace
+  # If the order of Secrets changes, the Deployment must be changed accordingly. See
+  # spec.image_pull_secrets.
+  secrets = [{
+    name = "${local.svc_postgres}-secret"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    # Plain-text data.
+    data = {
+      POSTGRES_DB = var.postgres_db
+      POSTGRES_USER = var.postgres_user
+      POSTGRES_PASSWORD = var.postgres_password
+      REPLICATION_USER = var.replication_user
+      REPLICATION_PASSWORD = var.replication_password
+    }
+    type = "Opaque"
+    immutable = true
+  }]
+  # Always use 3 or more nodes for fault tolerance.
+  replicas = 1
+  service = {
+    name = "${local.svc_postgres}-headless"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    ports = [{
+      name = "postgres"
+      service_port = 5432
+      target_port = 5432
+      protocol = "TCP"
+    }]
+    selector = {
+      "svc_selector_label" = "svc-${local.svc_postgres}-headless"
+    }
+    publish_not_ready_addresses = true
+    type = "ClusterIP"
+  }
+  service_name = local.svc_mysql
+  volume_claim_templates = [{
+    name = "wsf"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    volume_mode = "Filesystem"
+    # The volume can be mounted as read-write by many nodes.
+    access_modes = ["ReadWriteOnce"]
+    # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
+    # for less than 50GB, the request is rounded up to 50GB.
+    storage = "50Gi"
+    storage_class_name = "oci-bv"
+  }]
+  volume_mount = [{
+    name = "wsf"
+    mount_path = "/wsf_data_dir/data"
+    read_only = false
+  }]
+}
+
+
+
+
+module "fin-MySqlServer" {
+  count = var.db_mysql && !var.k8s_crds ? /*1*/0 : 0
+  # Specify the location of the module, which contains the file main.tf.
+  source = "./modules/statefulset"
+  #
+  affinity = {
     pod_anti_affinity = {
       required_during_scheduling_ignored_during_execution = [{
         topology_key = "kubernetes.io/hostname"
         label_selector = {
           match_expressions = [{
-            "key" = "aff-mysqlserver"
+            "key" = "aff-mysql-server"
             "operator" = "In"
             "values" = ["running"]
           }]
         }
       }]
     }
-  }]
+  }
   app_name = var.app_name
   app_version = var.app_version
   # config_map = [{
@@ -711,19 +790,117 @@ module "fin-MySqlServer" {
   #     "MYSQL_ROOT_PASSWORD" = var.mysql_root_password
   #   }
   # }]
+  /***
+  "-c": This is the first argument. It's typically used in conjunction with a shell command (like
+  /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
+  string to be executed by the shell. The -c flag tells the shell to read commands from the string
+  argument that follows.
+  ***/
+  args = ["-c",
+    /***
+    --server-id: https://dev.mysql.com/doc/refman/8.0/en/replication-options.html#sysvar_server_id
+    --log-bin: https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html#sysvar_log_bin
+    --binlog-checksum: https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html#option_mysqld_binlog-checksum
+    --max-relay-log-size: https://dev.mysql.com/doc/refman/8.0/en/replication-options-replica.html#option_mysqld_max-relay-log-size
+    --max-binlog-size: https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html#sysvar_max_binlog_size
+    --gtid-mode: https://dev.mysql.com/doc/refman/8.0/en/replication-options-gtids.html#sysvar_gtid_mode
+    --enforce-gtid-consistency: https://dev.mysql.com/doc/refman/8.0/en/replication-options-gtids.html#sysvar_enforce_gtid_consistency
+    --datadir: https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_datadir
+    --verbose: https://dev.mysql.com/doc/refman/8.0/en/server-options.html#option_mysqld_verbose
+    --default-authentication-plugin: https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_authentication_plugin
+    --report-host: https://dev.mysql.com/doc/refman/8.0/en/replication-options-replica.html#sysvar_report_host
+    ***/
+    /***
+    In Terraform, both << and <<- are used to define heredoc strings, which are multi-line string
+    literals. The key difference lies in how they handle indentation:
+    <<DELIMITER (Standard Heredoc): This marker defines a standard heredoc. The content within the
+    heredoc, including any leading whitespace or indentation, is preserved exactly as written. This
+    means if you indent the content within your heredoc for readability in your HCL code, that
+    indentation will be part of the resulting string value.
+    <<-DELIMITER (Indented Heredoc): This marker defines an indented heredoc. Terraform
+    automatically removes the common leading whitespace from all lines within the heredoc. This is
+    particularly useful when you want to indent your heredoc content to align with the surrounding
+    HCL code for readability, but you do not want that indentation to be part of the actual string
+    value. Terraform calculates the smallest amount of leading whitespace present on any line
+    within the heredoc and removes that amount from all lines.
+    Terraform's heredoc syntax can be combined with YAML to define multi-line YAML content directly
+    within a Terraform configuration. The >- syntax in YAML indicates a "folded block" scalar,
+    which removes newlines within the content, while preserving a single space between lines, and
+    also trims a single trailing newline if present.
+    >-: This is a YAML multiline string indicator. The ">" indicates a folded style, where newlines
+    are folded into spaces, and the "-" removes a trailing newline. This syntax is used to define a
+    multi-line string that will be passed as a single argument to the command. This is commonly
+    used when you want to execute a complex script or multiple commands within a single argument to
+    the shell. See https://yaml.org/spec/1.2.2/#8112-block-chomping-indicator.
+    ***/
+    # >-
+    <<-EOT
+    /usr/local/bin/docker-entrypoint.sh mysqld
+    --server-id=$((40 +  $(echo $HOSTNAME | grep -o '[^-]*$') + 1))
+    --log-bin=OFF
+    --binlog-checksum=NONE
+    --max-relay-log-size=0
+    --max-binlog-size=524288
+    --enforce-gtid-consistency=ON
+    --gtid-mode=ON
+    --datadir=$HOMEwsf_data_dir/mysql
+    --verbose
+    --default-authentication-plugin=caching_sha2_password
+    --report-host=$HOSTNAME.${local.svc_dns_mysql_server}
+    EOT
+  ]
+  command = ["/bin/bash"]
   # Configure environment variables specific to the app.
   env = {
     MYSQL_DATABASE = var.mysql_database
+    MYSQL_ROOT_HOST = var.mysql_root_host
   }
   image_tag = var.mysql_image_tag
   labels = {
-    "aff-mysqlserver" = "running"
+    "aff-mysql-server" = "running"
     "app" = var.app_name
-
   }
+  /*
+  liveness_probe = [{
+    initial_delay_seconds = 150
+    period_seconds = 30
+    timeout_seconds = 30
+    # failure_threshold = 60
+    exec = {
+      command = [
+        "bash",
+        "-c",
+        <<-EOT
+        |
+        mysqladmin -uroot -p$MYSQL_ROOT_PASSWORD ping
+        EOT
+    ]}
+  }]
+  */
   namespace = local.namespace
-  replicas = 3
+  pod_security_context = [{
+    fs_group = 2200
+  }]
+  /*
+  readiness_probe = [{
+    initial_delay_seconds = 150
+    period_seconds = 30
+    timeout_seconds = 30
+    # failure_threshold = 60
+    # success_threshold = 1
+    exec = {
+      command = [
+        "bash",
+        "-c",
+        <<-EOT
+        |
+        mysql -h127.0.0.1 -uroot -p$MYSQL_ROOT_PASSWORD -e'SELECT 1'
+        EOT
+    ]}
+  }]
+  */
   # Always use 3 or more nodes for fault tolerance.
+  replicas = 3
   resources = {  # QoS - Guaranteed
     limits_cpu = "500m"
     limits_memory = "1Gi"
@@ -812,59 +989,12 @@ module "fin-MySqlServer" {
     name = "wsf"
     mount_path = "/wsf_data_dir/mysql"
     read_only = false
+  }, {
+    name = "mysql"
+    mount_path = "/var/lib/mysql"
+    sub_path = "mysql"
+    read_only = false
   }]
-
-  # readiness_probe = [{
-  #   initial_delay_seconds = 5
-  #   period_seconds = 2
-  #   timeout_seconds = 1
-  #   # failure_threshold = 3
-  #   # success_threshold = 1
-  #   # http_get = [{
-  #   #   path = "/readiness"
-  #   #   port = 8080
-  #   #   scheme = "HTTP"
-  #   # }]
-  #   # tcp_socket = {
-  #   #   port = 8088
-  #   # }
-  #   exec = {
-  #     # command: ["mysql", "-h", "127.0.0.1", "-e", "SELECT 1"]
-  #     command = [
-  #       "mysqladmin",
-  #       "ping",
-  #       "-u", "root",
-  #       "-h", "127.0.0.1",
-  #       "-p${MYSQL_ROOT_PASSWORD}"
-  #   ]}
-  # }]
-  # liveness_probe = [{
-  #   initial_delay_seconds = 30
-  #   period_seconds = 10
-  #   timeout_seconds = 5
-  #   # failure_threshold = 3
-  #   # success_threshold = 1
-  #   # http_get = [{
-  #   #   path = "/readiness"
-  #   #   port = 8080
-  #   #   scheme = "HTTP"
-  #   # }]
-  #   # tcp_socket = {
-  #   #   port = 8088
-  #   # }
-  #   exec = {
-  #     # command: ["mysqladmin", "ping"]
-  #     command = [
-  #       "mysqladmin",
-  #       "ping",
-  #       "-u", "root",
-  #       "-h", "127.0.0.1",
-  #       "-p${MYSQL_ROOT_PASSWORD}"
-  #   ]}
-  # }]
-  # pod_security_context = [{
-  #   fs_group = 2200
-  # }]
 }
 
 /***
@@ -881,24 +1011,71 @@ Notes:
 ***/
 module "fin-MySqlRouter" {
   count = var.k8s_crds ? 0 : 0
+  # count = var.db_mysql && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ""
   #
+  affinity = {
+    pod_affinity = {
+      required_during_scheduling_ignored_during_execution = [{
+        topology_key = "kubernetes.io/hostname"
+        label_selector = {
+          match_expressions = [{
+            "key" = "aff-finances"
+            "operator" = "In"
+            "values" = ["running"]
+          }]
+        }
+      }]
+    }
+    pod_anti_affinity = {
+      required_during_scheduling_ignored_during_execution = [{
+        topology_key = "kubernetes.io/hostname"
+        label_selector = {
+          match_expressions = [{
+            "key" = "aff-mysql-router"
+            "operator" = "In"
+            "values" = ["running"]
+          }]
+        }
+      }]
+    }
+  }
   app_name = var.app_name
   app_version = var.app_version
   build_image = false
   env = {
-    MYSQL_HOST = var.mysql_router_host
+    MYSQL_HOST = local.svc_dns_mysql_server
     MYSQL_PORT = var.mysql_router_port
     MYSQL_INNODB_CLUSTER_MEMBERS = var.mysql_router_cluster_members
     MYSQL_ROUTER_BOOTSTRAP_EXTRA_OPTIONS = var.mysql_router_bootstrap
   }
   image_tag = var.mysql_router_image_tag
   labels = {
+    "aff-mysql-router" = "running"
     "app" = var.app_name
   }
+  liveness_probe = [{
+    initial_delay_seconds = 150
+    period_seconds = 30
+    timeout_seconds = 30
+    failure_threshold = 60
+    tcp_socket = {
+      port = 6446
+    }
+  }]
   namespace = local.namespace
+  readiness_probe = [{
+    initial_delay_seconds = 150
+    period_seconds = 30
+    timeout_seconds = 30
+    failure_threshold = 60
+    # success_threshold = 1
+    tcp_socket = {
+      port = 6446
+    }
+  }]
   replicas = 3
   resources = {
     limits_cpu = "500m"
@@ -916,6 +1093,12 @@ module "fin-MySqlRouter" {
       MYSQL_PASSWORD = var.mysql_router_password
     }
     type = "Opaque"
+  }]
+  security_context = [{
+    run_as_non_root = true
+    run_as_user = 1100
+    run_as_group = 1100
+    read_only_root_filesystem = false
   }]
   service = {
     name = "${local.svc_mysql_router}"
