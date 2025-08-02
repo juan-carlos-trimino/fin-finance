@@ -5,8 +5,9 @@ A Terraform reusable module for deploying microservices
 Define input variables to the module.
 ***/
 variable affinity {
-  default = []
-  type = list(object({
+  default = {}
+  type = object({
+    # affinity_type = string
     pod_anti_affinity = optional(object({
       required_during_scheduling_ignored_during_execution = optional(list(object({
         topology_key = string
@@ -24,13 +25,35 @@ variable affinity {
         }), {})
       })), [])
     }), {})
-  }))
+    #
+    pod_affinity = optional(object({
+      required_during_scheduling_ignored_during_execution = optional(list(object({
+        topology_key = string
+        namespaces = optional(set(string), [])
+        label_selector = optional(object({
+          match_labels = optional(map(string), {})
+          match_expressions = optional(list(object({
+            key = string
+            # Valid operators are In, NotIn, Exists, and DoesNotExist.
+            operator = string
+            # If the operator is In or NotIn, the values array must be non-empty. If the operator is
+            # Exists or DoesNotExist, the values array must be empty.
+            values = set(string)
+          })), [])
+        }), {})
+      })), [])
+    }), {})
+  })
 }
 variable app_name {
   type = string
 }
 variable app_version {
   type = string
+}
+variable args {
+  default = []
+  type = list(string)
 }
 variable automount_service_account_token {
   default = false
@@ -41,10 +64,6 @@ variable build_image {
 }
 # When defined, it overrides the image's default command.
 variable command {
-  default = []
-  type = list(string)
-}
-variable args {
   default = []
   type = list(string)
 }
@@ -773,27 +792,53 @@ resource "kubernetes_deployment" "stateless" {
       # The Pod template's specification.
       spec {
         dynamic "affinity" {
-          for_each = var.affinity
-          iterator = it1
+          for_each = var.affinity == {} ? [] : [1]
           content {
-            pod_anti_affinity {
-              dynamic "required_during_scheduling_ignored_during_execution" {
-                for_each = it1.value["pod_anti_affinity"].required_during_scheduling_ignored_during_execution
-                iterator = it2
-                content {
-                  label_selector {
-                    match_labels = it2.value["label_selector"].match_labels
-                    dynamic "match_expressions" {
-                      for_each = it2.value["label_selector"].match_expressions
-                      iterator = it3
-                      content {
-                        key = it3.value["key"]
-                        operator = it3.value["operator"]
-                        values = it3.value["values"]
+            dynamic "pod_anti_affinity" {
+              for_each = var.affinity.pod_anti_affinity == {} ? [] : [1]
+              content {
+                dynamic "required_during_scheduling_ignored_during_execution" {
+                  for_each = var.affinity.pod_anti_affinity.required_during_scheduling_ignored_during_execution
+                  iterator = it1
+                  content {
+                    label_selector {
+                      match_labels = it1.value["label_selector"].match_labels
+                      dynamic "match_expressions" {
+                        for_each = it1.value["label_selector"].match_expressions
+                        iterator = it2
+                        content {
+                          key = it2.value["key"]
+                          operator = it2.value["operator"]
+                          values = it2.value["values"]
+                        }
                       }
                     }
+                    topology_key = "kubernetes.io/hostname"
                   }
-                  topology_key = "kubernetes.io/hostname"
+                }
+              }
+            }
+            dynamic "pod_affinity" {
+              for_each = var.affinity.pod_affinity == {} ? [] : [1]
+              content {
+                dynamic "required_during_scheduling_ignored_during_execution" {
+                  for_each = var.affinity.pod_affinity.required_during_scheduling_ignored_during_execution
+                  iterator = it1
+                  content {
+                    label_selector {
+                      match_labels = it1.value["label_selector"].match_labels
+                      dynamic "match_expressions" {
+                        for_each = it1.value["label_selector"].match_expressions
+                        iterator = it2
+                        content {
+                          key = it2.value["key"]
+                          operator = it2.value["operator"]
+                          values = it2.value["values"]
+                        }
+                      }
+                    }
+                    topology_key = "kubernetes.io/hostname"
+                  }
                 }
               }
             }
