@@ -186,13 +186,61 @@ variable traefik_le_email {
   type = string
 }
 
+##############
+# PostgreSQL #
+##############
+variable postgres_image_tag {  # https://www.postgresql.org/docs/release/
+  description = "PostgreSQL Docker images (https://hub.docker.com/_/postgres)."
+  type = string
+  default = "postgres:17.5-alpine3.22"
+}
+
+variable postgres_db {
+  description = "POSTGRES_DB: xxxxxxxxxxxxxxxxxxxxxxxxxSecret for PostgreSQL Authentication."
+  default = "<required>"
+  sensitive = true
+  type = string
+}
+
+variable postgres_user {
+  description = "POSTGRES_USER: xxxxxxxxxxxxxxxxxxxxxxxxxSecret for PostgreSQL Authentication."
+  default = "<required>"
+  sensitive = true
+  type = string
+}
+
+variable postgres_password {
+  description = "POSTGRES_PASSWORD: Secret for PostgreSQL Authentication."
+  default = "<required>"
+  sensitive = true
+  type = string
+}
+
+variable replication_user {
+  description = "REPLICATION_USER: xxxxxxxxxxxxxxxxxxxxxxxxxSecret for PostgreSQL Authentication."
+  default = "<required>"
+  sensitive = true
+  type = string
+}
+
+variable replication_password {
+  description = "REPLICATION_PASSWORD: Secret for PostgreSQL Authentication."
+  default = "<required>"
+  sensitive = true
+  type = string
+}
+
+
+
+
+
 ################
 # MySQL Server #
 ################
 variable mysql_image_tag {
   description = "MySQL version (https://hub.docker.com/_/mysql)"
   type = string
-  default = "mysql:9"
+  default = "mysql:9.4.0"
 }
 
 /***
@@ -203,7 +251,7 @@ database is created by a CREATE DATABASE IF NOT EXIST statement, so that the var
 if the database already exists.
 ***/
 variable mysql_database {
-  default = "mydb"
+  default = "mydb-check"
   type = string
 }
 
@@ -257,7 +305,7 @@ variable mysql_router_image_tag {
 variable mysql_router_host {
   description = "Required. MySQL host to connect to."
   type = string
-  default = "%"  #???????
+  default = "%"
 }
 
 variable mysql_router_port {
@@ -269,13 +317,13 @@ variable mysql_router_port {
 variable mysql_router_user {
   description = "Required. MySQL user to connect with."
   type = string
-  default = "ruser"
+  default = "<required>"
 }
 
 variable mysql_router_password {
   description = "Required. MySQL user's password."
   type = string
-  default = "ruser"
+  default = "<required>"
 }
 
 variable mysql_router_cluster_members {
