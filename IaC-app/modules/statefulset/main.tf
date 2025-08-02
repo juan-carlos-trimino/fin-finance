@@ -5,8 +5,9 @@ A Terraform reusable module for deploying microservices
 Define input variables to the module.
 ***/
 variable affinity {
-  default = []
-  type = list(object({
+  default = {}
+  type = object({
+    # affinity_type = string
     pod_anti_affinity = optional(object({
       required_during_scheduling_ignored_during_execution = optional(list(object({
         topology_key = string
@@ -24,7 +25,25 @@ variable affinity {
         }), {})
       })), [])
     }), {})
-  }))
+    #
+    pod_affinity = optional(object({
+      required_during_scheduling_ignored_during_execution = optional(list(object({
+        topology_key = string
+        namespaces = optional(set(string), [])
+        label_selector = optional(object({
+          match_labels = optional(map(string), {})
+          match_expressions = optional(list(object({
+            key = string
+            # Valid operators are In, NotIn, Exists, and DoesNotExist.
+            operator = string
+            # If the operator is In or NotIn, the values array must be non-empty. If the operator is
+            # Exists or DoesNotExist, the values array must be empty.
+            values = set(string)
+          })), [])
+        }), {})
+      })), [])
+    }), {})
+  })
 }
 variable app_name {
   type = string
@@ -32,9 +51,18 @@ variable app_name {
 variable app_version {
   type = string
 }
+variable args {
+  default = []
+  type = list(string)
+}
 variable automount_service_account_token {
   default = false
   type = bool
+}
+# When defined, it overrides the image's default command.
+variable command {
+  default = []
+  type = list(string)
 }
 variable config_map {
   default = []
@@ -71,6 +99,32 @@ variable labels {
   default = {}
   type = map(string)
 }
+variable liveness_probe {
+  default = []
+  type = list(object({
+    initial_delay_seconds = optional(number)
+    period_seconds = optional(number)
+    timeout_seconds = optional(number)
+    failure_threshold = optional(number)
+    success_threshold = optional(number)
+    http_get = optional(list(object({
+      host = optional(string)
+      path = optional(string)
+      port = number
+      scheme = optional(string)
+      http_header = optional(list(object({
+        name = string
+        value = string
+      })), [])
+    })), [])
+    exec = optional(object({
+      command = list(string)
+    }), null)
+    tcp_socket = optional(object({
+      port = number
+    }), null)
+  }))
+}
 variable namespace {
   default = "default"
   type = string
@@ -81,6 +135,65 @@ guarantee.
 ***/
 variable pod_management_policy {
   default = "OrderedReady"
+  type = string
+}
+variable pod_security_context {
+  default = []
+  type = list(object({
+    run_as_user = optional(string)
+    run_as_group = optional(string)
+    fs_group = optional(string)
+    fs_group_change_policy = optional(string)
+    supplemental_groups = optional(set(number))
+  }))
+}
+variable readiness_probe {
+  default = []
+  type = list(object({
+    /***
+    Number of seconds after the container has started before liveness or readiness probes are
+    initiated. Defaults to 0 seconds. Minimum value is 0.
+    ***/
+    initial_delay_seconds = optional(number)
+    # How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1.
+    period_seconds = optional(number)
+    # Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1.
+    timeout_seconds = optional(number)
+    /***
+    When a probe fails, Kubernetes will try failureThreshold times before giving up. Giving up in
+    case of liveness probe means restarting the container. In case of readiness probe the Pod
+    will be marked Unready. Defaults to 3. Minimum value is 1.
+    ***/
+    failure_threshold = optional(number)
+    /***
+    Minimum consecutive successes for the probe to be considered successful after having failed.
+    Defaults to 1. Must be 1 for liveness and startup Probes. Minimum value is 1.
+    ***/
+    success_threshold = optional(number)
+    http_get = optional(list(object({
+      # Host name to connect to, defaults to the pod IP.
+      host = optional(string)
+      # Path to access on the HTTP server. Defaults to /.
+      path = optional(string)
+      /***
+      Name or number of the port to access on the container. Number must be in the range 1 to
+      65535.
+      ***/
+      port = number
+      # Scheme to use for connecting to the host (HTTP or HTTPS). Defaults to HTTP.
+      scheme = optional(string)
+      http_header = optional(list(object({
+        name = string
+        value = string
+      })), [])
+    })), [])
+    exec = optional(object({
+      command = list(string)
+    }), null)
+    tcp_socket = optional(object({
+      port = number
+    }), null)
+  }))
 }
 variable replicas {
   default = 1
@@ -94,6 +207,10 @@ variable resources {
     limits_cpu = optional(string)
     limits_memory = optional(string)
   })
+}
+variable restart_policy {
+  default = "Always"
+  type = string
 }
 variable role {
   default = null
@@ -495,37 +612,94 @@ resource "kubernetes_stateful_set" "stateful_set" {
         automount_service_account_token = var.automount_service_account_token
         service_account_name = var.service_account == null ? "default" : var.service_account.name
         dynamic "affinity" {
-          for_each = var.affinity
-          iterator = it1
+          for_each = var.affinity == {} ? [] : [1]
           content {
-            pod_anti_affinity {
-              dynamic "required_during_scheduling_ignored_during_execution" {
-                for_each = it1.value["pod_anti_affinity"].required_during_scheduling_ignored_during_execution
-                iterator = it2
-                content {
-                  label_selector {
-                    match_labels = it2.value["label_selector"].match_labels
-                    dynamic "match_expressions" {
-                      for_each = it2.value["label_selector"].match_expressions
-                      iterator = it3
-                      content {
-                        key = it3.value["key"]
-                        operator = it3.value["operator"]
-                        values = it3.value["values"]
+            dynamic "pod_anti_affinity" {
+              for_each = var.affinity.pod_anti_affinity == {} ? [] : [1]
+              content {
+                dynamic "required_during_scheduling_ignored_during_execution" {
+                  for_each = var.affinity.pod_anti_affinity.required_during_scheduling_ignored_during_execution
+                  iterator = it1
+                  content {
+                    label_selector {
+                      match_labels = it1.value["label_selector"].match_labels
+                      dynamic "match_expressions" {
+                        for_each = it1.value["label_selector"].match_expressions
+                        iterator = it2
+                        content {
+                          key = it2.value["key"]
+                          operator = it2.value["operator"]
+                          values = it2.value["values"]
+                        }
                       }
                     }
+                    topology_key = "kubernetes.io/hostname"
                   }
-                  topology_key = "kubernetes.io/hostname"
+                }
+              }
+            }
+            dynamic "pod_affinity" {
+              for_each = var.affinity.pod_affinity == {} ? [] : [1]
+              content {
+                dynamic "required_during_scheduling_ignored_during_execution" {
+                  for_each = var.affinity.pod_affinity.required_during_scheduling_ignored_during_execution
+                  iterator = it1
+                  content {
+                    label_selector {
+                      match_labels = it1.value["label_selector"].match_labels
+                      dynamic "match_expressions" {
+                        for_each = it1.value["label_selector"].match_expressions
+                        iterator = it2
+                        content {
+                          key = it2.value["key"]
+                          operator = it2.value["operator"]
+                          values = it2.value["values"]
+                        }
+                      }
+                    }
+                    topology_key = "kubernetes.io/hostname"
+                  }
                 }
               }
             }
           }
         }
         termination_grace_period_seconds = var.termination_grace_period_seconds
+        restart_policy = var.restart_policy
+        /***
+        Security context options at the pod level serve as a default for all the pod's containers
+        but can be overridden at the container level.
+        ***/
+        dynamic "security_context" {
+          for_each = var.pod_security_context
+          iterator = it
+          content {
+            run_as_user = it.value["run_as_user"]
+            run_as_group = it.value["run_as_group"]
+            /***
+            Set the group that owns the pod volumes. This group will be used by K8s to change the
+            permissions of all files/directories in the volumes, when the volumes are mounted by
+            a pod.
+            ***/
+            fs_group = it.value["fs_group"]
+            supplemental_groups = it.value["supplemental_groups"]
+            /***
+            By default, Kubernetes recursively changes ownership and permissions for the contents
+            of each volume to match the fsGroup specified in a Pod's securityContext when that
+            volume is mounted. For large volumes, checking and changing ownership and permissions
+            can take a lot of time, slowing Pod startup. You can use the fsGroupChangePolicy
+            field inside a securityContext to control the way that Kubernetes checks and manages
+            ownership and permissions for a volume.
+            ***/
+            fs_group_change_policy = it.value["fs_group_change_policy"]
+          }
+        }
         container {
           name = var.service_name
           image = var.image_tag
           image_pull_policy = var.image_pull_policy
+          command = var.command
+          args = var.args
           dynamic "security_context" {
             for_each = var.security_context
             iterator = item
@@ -550,6 +724,124 @@ resource "kubernetes_stateful_set" "stateful_set" {
               name = port.value.name
               container_port = port.value.target_port  # The port the app is listening.
               protocol = port.value.protocol
+            }
+          }
+          dynamic "liveness_probe" {
+            for_each = var.liveness_probe
+            iterator = it
+            content {
+              initial_delay_seconds = it.value["initial_delay_seconds"]
+              period_seconds = it.value["period_seconds"]
+              timeout_seconds = it.value["timeout_seconds"]
+              failure_threshold = it.value["failure_threshold"]
+              success_threshold = it.value["success_threshold"]
+              /***
+              K8s can probe a container using one of the three probes:
+              The HTTP GET probe performs an HTTP GET request on the container. If the probe
+              receives a response that doesn't represent an error (HTTP response code is 2xx or
+              3xx), the probe is considered successful. If the server returns an error response
+              code or it doesn't respond at all, the probe is considered a failure and the
+              container will be restarted as a result.
+              ***/
+              dynamic "http_get" {
+                for_each = it.value.http_get
+                iterator = it1
+                content {
+                  host = it1.value["host"]
+                  path = it1.value["path"]
+                  port = it1.value["port"]
+                  scheme = it1.value["scheme"]
+                  dynamic "http_header" {
+                    for_each = it1.value.http_header
+                    iterator = it2
+                    content {
+                      name = it2.value["name"]
+                      value = it2.value["value"]
+                    }
+                  }
+                }
+              }
+              /***
+              The Exec probe executes an arbitrary command inside the container and checks the
+              command's exit status code. If the status code is 0, the probe is successful. All
+              other codes are considered failures.
+              ***/
+              dynamic "exec" {
+                for_each = it.value["exec"] != null ? [it.value["exec"]] : []
+                content {
+                  command = exec.value.command
+                }
+              }
+              /***
+              The TCP Socket probe tries to open a TCP connection to the specified port of the
+              container. If the connection is established successfully, the probe is successful.
+              Otherwise, the container is restarted.
+              ***/
+              dynamic "tcp_socket" {
+                for_each = it.value["tcp_socket"] != null ? [it.value["tcp_socket"]] : []
+                content {
+                  port = tcp_socket.value.port
+                }
+              }
+            }
+          }
+          /***
+          Liveness probes keep pods healthy by killing unhealthy containers and replacing them
+          with new healthy containers; readiness probes ensure that only pods with containers
+          that are ready to serve requests receive them. Unlike liveness probes, if a container
+          fails the readiness check, it won't be killed or restarted.
+          ***/
+          dynamic "readiness_probe" {
+            for_each = var.readiness_probe
+            content {
+              initial_delay_seconds = readiness_probe.value["initial_delay_seconds"]
+              period_seconds = readiness_probe.value["period_seconds"]
+              timeout_seconds = readiness_probe.value["timeout_seconds"]
+              failure_threshold = readiness_probe.value["failure_threshold"]
+              success_threshold = readiness_probe.value["success_threshold"]
+              /***
+              K8s can probe a container using one of the three probes:
+              The HTTP GET probe sends an HTTP GET request to the container, and the HTTP status
+              code of the response determines whether the container is ready or not.
+              ***/
+              dynamic "http_get" {
+                for_each = readiness_probe.value.http_get
+                content {
+                  host = http_get.value["host"]
+                  path = http_get.value["path"]
+                  port = http_get.value["port"]
+                  scheme = http_get.value["scheme"]
+                  dynamic "http_header" {
+                    for_each = http_get.value.http_header
+                    content {
+                      name = http_headers.value["name"]
+                      value = http_headers.value["value"]
+                    }
+                  }
+                }
+              }
+              /***
+              The Exec probe executes a process. The container's status is determined by the
+              process' exit status code.
+              ***/
+              dynamic "exec" {
+                # for_each = it.value["exec"] != null ? [it.value["exec"]] : []
+                for_each = readiness_probe.value["exec"] != null ? [readiness_probe.value["exec"]] : []
+                content {
+                  command = exec.value.command
+                }
+              }
+              /***
+              The TCP Socket probe opens a TCP connection to a specified port of the container.
+              If the connection is established, the container is considered ready.
+              ***/
+              dynamic "tcp_socket" {
+                # for_each = it.value["tcp_socket"] != null ? [it.value["tcp_socket"]] : []
+                for_each = readiness_probe.value["tcp_socket"] != null ? [readiness_probe.value["tcp_socket"]] : []
+                content {
+                  port = tcp_socket.value.port
+                }
+              }
             }
           }
           dynamic "resources" {
