@@ -1156,6 +1156,14 @@ resource "kubernetes_deployment" "stateless" {
             }
           }
         }
+        /***
+        Volumes are defined as a part of a pod and share the same lifecycle as the pod. That is, a
+        volume is created when the pod is started and is destroyed when the pod is deleted; a
+        volume's contents will persist across container restarts. After a container is restarted,
+        the new container can use all the files that were written to the volume by previous
+        containers. Furthermore, if a pod contains multiple containers, the volume can be used by
+        all of them at once.
+        ***/
         dynamic "volume" {
           for_each = var.volume_config_map
           iterator = it
