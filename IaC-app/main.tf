@@ -488,24 +488,24 @@ module "fin-finances-empty" {  # Using emptyDir.
   # See empty_dir.
   init_container = [{
     name = "file-permission"
-    image = "busybox:1.34.1"
-    image_pull_policy = "IfNotPresent"
-    command = [
-      "/bin/sh",
+    #
+    command = ["/bin/sh",
       "-c",
       "chown -v -R 1100:1100 /wsf_data_dir && chmod -R 750 /wsf_data_dir"
     ]
-    volume_mounts = [{
-      name = "wsf"
-      mount_path = "/wsf_data_dir"
-      read_only = false
-    }]
+    image = "busybox:1.34.1"
+    image_pull_policy = "IfNotPresent"
     security_context = [{
       run_as_non_root = false
       run_as_user = 0
       run_as_group = 0
       read_only_root_filesystem = true
       privileged = true
+    }]
+    volume_mounts = [{
+      name = "wsf"
+      mount_path = "/wsf_data_dir"
+      read_only = false
     }]
   }]
   labels = {
@@ -686,12 +686,67 @@ module "fin-PostgreSql" {
   #
   app_name = var.app_name
   app_version = var.app_version
+  /***
+  "-c": This is the first argument. It's typically used in conjunction with a shell command (like
+  /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
+  string to be executed by the shell. The -c flag tells the shell to read commands from the string
+  argument that follows.
+  ***/
+  args = ["-c",
+    <<-EOT
+    /usr/local/bin/docker-entrypoint.sh postgres
+    config_file=/wsf_data_dir/config/postgres/postgresql.conf
+    EOT
+  ]
+  command = ["/bin/bash"]
+  env = {
+    PGDATA = var.pgdata
+  }
+  config_map = [{
+    # Same as volume_config_map.config_map_name.
+    name = "${var.app_name}-postgres-conf-files"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    data = {
+      "pg_hba.conf" = "${file("${var.path_postgres_confs}/pg_hba.conf")}"
+      "pg_ident.conf" = "${file("${var.path_postgres_confs}/pg_ident.conf")}"
+      "postgresql.conf" = "${file("${var.path_postgres_confs}/postgresql.conf")}"
+    }
+  }]
+  image_pull_policy = "IfNotPresent"
   image_tag = var.postgres_image_tag
+  init_container = [{
+    name = "file-permission"
+    #
+    command = ["/bin/sh",
+      "-c",
+      "mkdir -p /wsf_data_dir/data/archive && chown -R 999:999 /wsf_data_dir/data/archive"
+    ]
+    image = "busybox:1.34.1"
+    image_pull_policy = "IfNotPresent"
+    security_context = [{
+      run_as_non_root = false
+      run_as_user = 0
+      run_as_group = 0
+      read_only_root_filesystem = true
+      privileged = true
+    }]
+    volume_mounts = [{
+      name = "wsf-data"
+      mount_path = "/wsf_data_dir/data/archive"
+      read_only = false
+    }]
+  }]
   labels = {
     # "aff-mysql-server" = "running"
     "app" = var.app_name
   }
   namespace = local.namespace
+  pod_security_context = [{
+    fs_group = 2200
+  }]
   # If the order of Secrets changes, the Deployment must be changed accordingly. See
   # spec.image_pull_secrets.
   secrets = [{
@@ -731,7 +786,13 @@ module "fin-PostgreSql" {
     publish_not_ready_addresses = true
     type = "ClusterIP"
   }
-  service_name = local.svc_mysql
+  security_context = [{
+    run_as_non_root = true
+    run_as_user = 1100
+    run_as_group = 1100
+    read_only_root_filesystem = true
+  }]
+  service_name = local.svc_postgres
   volume_claim_templates = [{
     name = "wsf"
     namespace = local.namespace
@@ -746,9 +807,28 @@ module "fin-PostgreSql" {
     storage = "50Gi"
     storage_class_name = "oci-bv"
   }]
+  volume_config_map = [{
+    name = "config"
+    config_map_name = "${var.app_name}-postgres-conf-files"
+    default_mode = "0660"
+    items = [{
+      key = "pg_hba.conf"
+      path = "pg_hba.conf"
+    }, {
+      key = "pg_ident.conf"
+      path = "pg_ident.conf"
+    }, {
+      key = "postgresql.conf"
+      path = "postgresql.conf"
+    }]
+  }]
   volume_mount = [{
     name = "wsf"
-    mount_path = "/wsf_data_dir/data"
+    mount_path = "/wsf_data_dir"
+    read_only = false
+  }, {
+    name = "config"
+    mount_path = "/wsf_data_dir/config/postgres"
     read_only = false
   }]
 }
