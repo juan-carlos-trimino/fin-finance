@@ -95,6 +95,28 @@ variable image_tag {
   default = ""
   type = string
 }
+variable init_container {
+  default = []
+  type = list(object({
+    name = string
+    image = string
+    image_pull_policy = optional(string)
+    command = optional(list(string))
+    security_context = optional(list(object({
+      run_as_non_root = bool
+      run_as_user = number
+      run_as_group = number
+      read_only_root_filesystem = bool
+      privileged = bool
+    })), [])
+    volume_mounts = optional(list(object({
+      name = string
+      mount_path = string
+      sub_path = optional(string)
+      read_only = optional(bool)
+    })), [])
+  }))
+}
 variable labels {
   default = {}
   type = map(string)
@@ -398,12 +420,12 @@ variable volume_config_map {
     config_map_name = string
     # Although ConfigMaps should be used for non-sensitive configuration data, you may want to
     # make the file readable and writeble only to the user and group that owned the file; e.g.,
-    # default_mode = "6600" (-rw-rw------)
-    # The default permission is "6440" (-rw-r--r----)
+    # default_mode = "0660" (-rw-rw----)
+    # The default permission is "0644" (-rw-r--r--)
     default_mode = optional(string)
     # An array of keys from the ConfigMap to create as files.
     items = optional(list(object({
-      # Include the entry under this key.
+      # The configMap entry.
       key = string
       # The entry's value should be stored in this file.
       path = string
@@ -694,6 +716,38 @@ resource "kubernetes_stateful_set" "stateful_set" {
             fs_group_change_policy = it.value["fs_group_change_policy"]
           }
         }
+        # These containers are run during pod initialization.
+        dynamic "init_container" {
+          for_each = var.init_container
+          iterator = it
+          content {
+            name = it.value["name"]
+            image = it.value["image"]
+            image_pull_policy = it.value["image_pull_policy"]
+            command = it.value["command"]
+            dynamic "security_context" {
+              for_each = it.value["security_context"]
+              iterator = it1
+              content {
+                run_as_non_root = it1.value["run_as_non_root"]
+                run_as_user = it1.value["run_as_user"]
+                run_as_group = it1.value["run_as_group"]
+                read_only_root_filesystem = it1.value["read_only_root_filesystem"]
+                privileged = it1.value["privileged"]
+              }
+            }
+            dynamic "volume_mount" {
+              for_each = it.value["volume_mounts"]
+              iterator = it2
+              content {
+                name = it2.value["name"]
+                mount_path = it2.value["mount_path"]
+                sub_path = it2.value["sub_path"]
+                read_only = it2.value["read_only"]
+              }
+            }
+          }
+        }
         container {
           name = var.service_name
           image = var.image_tag
@@ -929,6 +983,17 @@ resource "kubernetes_stateful_set" "stateful_set" {
             }
           }
         }
+        /***
+        Volumes are defined as a part of a pod and share the same lifecycle as the pod. That is, a
+        volume is created when the pod is started and is destroyed when the pod is deleted; a
+        volume's contents will persist across container restarts. After a container is restarted,
+        the new container can use all the files that were written to the volume by previous
+        containers. Furthermore, if a pod contains multiple containers, the volume can be used by
+        all of them at once.
+
+        A configMap volume will expose each entry of the ConfigMap as a file. The process running
+        in the container can obtain the entry's value by reading the contents of the file.
+        ***/
         dynamic "volume" {
           for_each = var.volume_config_map
           iterator = it
