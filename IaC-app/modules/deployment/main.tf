@@ -184,6 +184,21 @@ variable liveness_probe {
     }), null)
   }))
 }
+/***
+https://registry.terraform.io/providers/hashicorp/kubernetes/2.25.2/docs/resources/deployment#min_ready_seconds-1
+Until the pod is available, the rollout process will not continue. A pod is ready when readiness
+probes of all its containers return a success. If a new pod isn't functioning properly and its
+readiness probe starts failing before minReadySeconds have passed, the rollout of the new version
+will effectively be blocked. Set minReadySeconds to some high value thereby ensuring pods keep
+reporting they're ready after they've already started receiving actual traffic.
+
+If there is no explicit readiness probe defined, the container and the pod are always considered
+ready, even if the app is not truly ready or is returning errors.
+***/
+variable min_ready_seconds {
+  default = 0
+  type = number
+}
 variable namespace {
   default = "default"
   type = string
@@ -225,6 +240,11 @@ variable pod_security_context {
     fs_group_change_policy = optional(string)
     supplemental_groups = optional(set(number))
   }))
+}
+# https://registry.terraform.io/providers/hashicorp/kubernetes/2.25.2/docs/resources/deployment#progress_deadline_seconds-1
+variable progress_deadline_seconds {
+  default = 600
+  type = number
 }
 variable readiness_probe {
   default = []
@@ -458,6 +478,15 @@ variable service_account {
 }
 variable service_name {
   type = string
+}
+# https://registry.terraform.io/providers/hashicorp/kubernetes/2.25.2/docs/resources/deployment#strategy-1
+variable strategy {
+  default = null
+  type = object({
+    type = string
+    max_surge = number
+    max_unavailable = number
+  })
 }
 variable termination_grace_period_seconds {
   default = 30
@@ -763,6 +792,18 @@ resource "kubernetes_deployment" "stateless" {
   }
   # The Deployment's specification.
   spec {
+    min_ready_seconds = var.min_ready_seconds
+    progress_deadline_seconds = var.progress_deadline_seconds
+    dynamic "strategy" {
+      for_each = var.strategy == null ? [] : [1]
+      content {
+        type = var.strategy.type
+        rolling_update {
+          max_surge = var.strategy.max_surge
+          max_unavailable = var.strategy.max_unavailable
+        }
+      }
+    }
     # The desired number of pods that should be running.
     replicas = var.replicas
     # revision_history_limit = var.revision_history_limit

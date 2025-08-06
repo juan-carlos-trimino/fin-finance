@@ -393,6 +393,14 @@ variable termination_grace_period_seconds {
   default = 30
   type = number
 }
+# https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/stateful_set#nestedblock--spec--update_strategy
+variable update_strategy {
+  default = null
+  type = object({
+    type = string
+    partition = optional(number)
+  })
+}
 variable volume_claim_templates {
   default = []
   type = list(object({
@@ -600,6 +608,15 @@ resource "kubernetes_stateful_set" "stateful_set" {
     ***/
     service_name = var.service.name
     replicas = var.replicas
+    dynamic "update_strategy" {
+      for_each = var.update_strategy == null ? [] : [1]
+      content {
+        type = var.update_strategy.type
+        rolling_update {
+          partition = var.update_strategy.partition
+        }
+      }
+    }
     pod_management_policy = var.pod_management_policy
     /***
     Pod Selector - You must set the .spec.selector field of a StatefulSet to match the labels of
