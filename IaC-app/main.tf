@@ -664,6 +664,11 @@ module "fin-finances-empty" {  # Using emptyDir.
     ]
   }
   service_name = local.svc_finances
+  strategy = {
+    type = "RollingUpdate"
+    max_surge = 1
+    max_unavailable = 0
+  }
   # When using the emptyDir{}, the init_container is required.
   volume_empty_dir = [{
     name = "wsf"
@@ -692,6 +697,7 @@ module "fin-PostgreSql" {
   string to be executed by the shell. The -c flag tells the shell to read commands from the string
   argument that follows.
   ***/
+    # data_directory=/wsf_data_dir/data/pgdata
   args = ["-c",
     <<-EOT
     /usr/local/bin/docker-entrypoint.sh postgres
@@ -710,7 +716,9 @@ module "fin-PostgreSql" {
       "app" = var.app_name
     }
     data = {
+      # https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
       "pg_hba.conf" = "${file("${var.path_postgres_confs}/pg_hba.conf")}"
+      # https://www.postgresql.org/docs/current/auth-username-maps.html
       "pg_ident.conf" = "${file("${var.path_postgres_confs}/pg_ident.conf")}"
       "postgresql.conf" = "${file("${var.path_postgres_confs}/postgresql.conf")}"
     }
@@ -722,30 +730,31 @@ module "fin-PostgreSql" {
     #
     command = ["/bin/sh",
       "-c",
-      "mkdir -p /wsf_data_dir/data/archive && chown -R 999:999 /wsf_data_dir/data/archive"
+      "mkdir -p /wsf_data_dir/data/archive && chown -R 1999:1999 /wsf_data_dir/data/archive"
     ]
     image = "busybox:1.34.1"
     image_pull_policy = "IfNotPresent"
     security_context = [{
-      run_as_non_root = false
-      run_as_user = 0
-      run_as_group = 0
-      read_only_root_filesystem = true
+      run_as_non_root = true
+      run_as_user = 1999
+      run_as_group = 1999
+      read_only_root_filesystem = false
       privileged = true
     }]
     volume_mounts = [{
-      name = "wsf-data"
-      mount_path = "/wsf_data_dir/data/archive"
+      name = "wsf"
+      mount_path = "/wsf_data_dir"
       read_only = false
     }]
   }]
   labels = {
     # "aff-mysql-server" = "running"
     "app" = var.app_name
+    "db" = "postgres"
   }
   namespace = local.namespace
   pod_security_context = [{
-    fs_group = 2200
+    fs_group = 1999
   }]
   # If the order of Secrets changes, the Deployment must be changed accordingly. See
   # spec.image_pull_secrets.
@@ -788,11 +797,14 @@ module "fin-PostgreSql" {
   }
   security_context = [{
     run_as_non_root = true
-    run_as_user = 1100
-    run_as_group = 1100
-    read_only_root_filesystem = true
+    run_as_user = 1999
+    run_as_group = 1999
+    read_only_root_filesystem = false
   }]
   service_name = local.svc_postgres
+  update_strategy = {
+    type = "RollingUpdate"
+  }
   volume_claim_templates = [{
     name = "wsf"
     namespace = local.namespace
