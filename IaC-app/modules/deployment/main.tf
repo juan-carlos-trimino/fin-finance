@@ -1169,6 +1169,17 @@ resource "kubernetes_deployment" "stateless" {
             content {
               name = volume_mount.value["name"]
               mount_path = volume_mount.value["mount_path"]
+              /***
+              When you mount a volume as a directory, you are hiding any files that are stored in
+              the directory located inside the container image. In general, this is what happens in
+              Linux when you mount a filesystem into a non-empty directory. The directory will only
+              contain the files from the mounted filesystem, and the original files in that
+              directory are inaccessible for as long as the filesystem is mounted. To add
+              individual files into an existing directory without hiding existing files stored in
+              it, you use the subPath property on the volumeMount as doing so allows you to mount a
+              single file or a single directory from the volume instead of mounting the whole
+              volume.
+              ***/
               sub_path = volume_mount.value["sub_path"]
               read_only = volume_mount.value["read_only"]
             }
