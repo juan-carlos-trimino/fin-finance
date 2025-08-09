@@ -358,6 +358,26 @@ IaC-app/modules/traefik/traefik/util/*
 !IaC-app/modules/traefik/traefik/util/values.yaml
 !IaC-app/modules/traefik/traefik/main.tf
 !IaC-app/modules/.gitkeep
+#
+!IaC-app/utilities/
+IaC-app/utilities/*
+!IaC-app/utilities/general/
+IaC-app/utilities/general/*
+!IaC-app/utilities/general/scripts/
+IaC-app/utilities/general/scripts/*
+!IaC-app/utilities/general/scripts/inspect-pod-node.sh
+!IaC-app/utilities/postgres/
+IaC-app/utilities/postgres/*
+!IaC-app/utilities/postgres/configs/
+IaC-app/utilities/postgres/configs/*
+!IaC-app/utilities/postgres/configs/pg_hba.conf
+!IaC-app/utilities/postgres/configs/pg_ident.conf
+!IaC-app/utilities/postgres/configs/postgresql.conf
+!IaC-app/utilities/postgres/scripts/
+IaC-app/utilities/postgres/scripts/*
+!IaC-app/utilities/postgres/scripts/create-replication-user.sh
+!IaC-app/utilities/postgres/.gitkeep
+!IaC-app/utilities/.gitkeep
 ###########
 # Storage #
 ###########
