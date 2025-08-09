@@ -90,6 +90,20 @@ fin-finance
  | | |   | └ values.yaml
  | | |   └ main.tf
  | | └ .gitkeep
+ | ├ utilities
+ | | ├ general
+ | | | ├ scripts
+ | | | | └ inspect-pod-node.sh
+ | | | └ .gitkeep
+ | | ├ postgres
+ | | | ├ configs
+ | | | | ├ pg_hba.conf
+ | | | | ├ pg_ident.conf
+ | | | | └ postgresql.conf
+ | | | ├ scripts
+ | | | | └ create-replication-user.sh
+ | | | └ .gitkeep
+ | | └ .gitkeep
  | ├ .terraform.lock.hcl
  | ├ backend.tf
  | ├ iac.sh
