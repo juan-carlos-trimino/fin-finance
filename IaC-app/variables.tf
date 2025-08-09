@@ -240,8 +240,13 @@ variable pgdata {
   type = string
 }
 
-variable path_postgres_confs {
-  default = "./config/postgres"
+variable path_postgres_configs {
+  default = "./utilities/postgres/configs"
+  type = string
+}
+
+variable path_postgres_scripts {
+  default = "./utilities/postgres/scripts"
   type = string
 }
 
