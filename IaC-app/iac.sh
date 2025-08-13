@@ -29,6 +29,7 @@ display_help() {
   printf "                            (If not present, reverse proxy is not used)\n"
   printf "    -p, --pprof             If present, pprof is enabled\n"
   printf "                            (If not present, pprof is disabled)\n"
+  printf "    --postgres              Use the postgres database\n"
   printf "  destroy                 Destroy the infrastructure.\n\n"
   printf "Examples:\n"
   printf "Deploy app using empty-dir as storage.\n"
@@ -56,7 +57,7 @@ check_options() {
   local app_version=""
   local build_image=""
   local reverse_proxy="false"
-  local db_mysql="false"
+  local db_postgres="false"
   local k8s_crds=$reverse_proxy
   local pprof="false"
   local deployment_type=""
@@ -84,8 +85,8 @@ check_options() {
       "-p" | "--pprof")
         pprof="true"
         ;;
-      "--mysql")
-        db_mysql="true"
+      "--postgress")
+        db_postgres="true"
         ;;
       "-ed" | "--empty-dir")
         empty_dir="true"
@@ -137,7 +138,7 @@ check_options() {
     export EMPTY_DIR=$empty_dir
     export PPROF=$pprof
     export BUILD_IMAGE=$build_image
-    export DB_MYSQL=$db_mysql
+    export DB_POSTGRES=$db_postgres
   elif [ ${arr[0]} == "destroy" ]
   then
     echo ""  # Placeholder...
@@ -240,7 +241,7 @@ then
   : "$EMPTY_DIR"
   : "$PPROF"
   : "$BUILD_IMAGE"
-  : "DB_MYSQL"
+  : "DB_POSTGRES"
   # : "
   echo "*********************"
   echo "Environment variables"
@@ -304,7 +305,7 @@ then
     -var "empty_dir=$EMPTY_DIR" \
     -var "pprof=$PPROF" \
     -var "build_image=$BUILD_IMAGE" \
-    -var "db_mysql=$DB_MYSQL"
+    -var "db_postgres=$DB_POSTGRES"
   printf "\n*********************\n"
   echo "Copying the lock file"
   echo "*********************"
