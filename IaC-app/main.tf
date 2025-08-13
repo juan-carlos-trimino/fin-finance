@@ -32,7 +32,8 @@ locals {
   svc_traefik = "fin-traefik"
   svc_mysql = "fin-mysql"
   svc_mysql_router = "fin-mysql-router"
-  svc_postgres = "fin-postgres"
+  svc_postgres_master = "fin-postgres-master"
+  svc_postgres_replica = "fin-postgres-replica"
   ############
   # Services #
   ############
@@ -478,12 +479,6 @@ module "fin-finances-empty" {  # Using emptyDir.
     APP_NAME_VER = "${var.app_name} ${var.app_version}"
     MAX_RETRIES = 3
   }
-  # *** env_field ***
-  # env_field = [{
-  #  env_name = "POD_ID"
-  #  field_path = "status.podIP"
-  # }]
-  # *** env_field ***
   image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
   # See empty_dir.
   init_container = [{
@@ -680,12 +675,8 @@ module "fin-finances-empty" {  # Using emptyDir.
   }]
 }
 
-
-
-
-
-module "fin-PostgreSql" {
-  count = var.db_mysql && !var.k8s_crds ? 1 : 0
+module "fin-PostgresMaster" {
+  count = var.db_postgres && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/statefulset"
   #
@@ -697,17 +688,25 @@ module "fin-PostgreSql" {
   string to be executed by the shell. The -c flag tells the shell to read commands from the string
   argument that follows.
   ***/
-    # data_directory=/wsf_data_dir/data/pgdata
+    # chown -R $(POSTGRES_USER):$(POSTGRES_USER) /var/lib/postgresql/data &&
+    # chown -R 1999:1999 /wsf_data_dir/config &&
+    # chown -R 1999:1999 /wsf_data_dir
+    # chown -R 1999:1999 /var/lib/postgresql/data
   args = ["-c",
     <<-EOT
     /usr/local/bin/docker-entrypoint.sh postgres
     config_file=/wsf_data_dir/config/postgres/postgresql.conf
+    hba_file=/wsf_data_dir/config/postgres/pg_hba.conf
     EOT
   ]
   command = ["/bin/bash"]
   env = {
     PGDATA = var.pgdata
   }
+  env_field = [{
+    name = "POP_IP"
+    field_path = "status.podIP"
+  }]
   config_map = [{
     # Same as volume_config_map.config_map_name.
     name = "${var.app_name}-postgres-conf-files"
@@ -717,10 +716,25 @@ module "fin-PostgreSql" {
     }
     data = {
       # https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
-      "pg_hba.conf" = "${file("${var.path_postgres_confs}/pg_hba.conf")}"
+      "pg_hba.conf" = "${file("${var.path_postgres_configs}/pg_hba.conf")}"
       # https://www.postgresql.org/docs/current/auth-username-maps.html
-      "pg_ident.conf" = "${file("${var.path_postgres_confs}/pg_ident.conf")}"
-      "postgresql.conf" = "${file("${var.path_postgres_confs}/postgresql.conf")}"
+      "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
+      # Share by master and slave.
+      "postgresql.conf" = "${file("${var.path_postgres_configs}/postgresql.conf")}"
+      # Only for master.
+      "master.conf" = "${file("${var.path_postgres_configs}/master.conf")}"
+      # Only for replica.
+      "replica.conf" = "${file("${var.path_postgres_configs}/replica.conf")}"
+    }
+  }, {
+    # Same as volume_config_map.config_map_name.
+    name = "${var.app_name}-postgres-script-files"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    data = {
+      "create-replication-user.sh" = "${file("${var.path_postgres_scripts}/create-replication-user.sh")}"
     }
   }]
   image_pull_policy = "IfNotPresent"
@@ -730,7 +744,9 @@ module "fin-PostgreSql" {
     #
     command = ["/bin/sh",
       "-c",
-      "mkdir -p /wsf_data_dir/data/archive && chown -R 1999:1999 /wsf_data_dir/data/archive"
+      "mkdir -p /wsf_data_dir/data/archive"
+      # && chown -R 1999:1999 /wsf_data_dir/data/archive"
+      # "mkdir -p /wsf_data_dir/data/archive && chown -R 1999:1999 /wsf_data_dir/data/archive && chown 1999:1999 /var/run/postgresql"
     ]
     image = "busybox:1.34.1"
     image_pull_policy = "IfNotPresent"
@@ -752,14 +768,51 @@ module "fin-PostgreSql" {
     "app" = var.app_name
     "db" = "postgres"
   }
+  liveness_probe = [{
+    initial_delay_seconds = 60  # Delay before the first probe.
+    period_seconds = 10  # How often to perform the probe.
+    timeout_seconds = 3  # Timeout for the probe command.
+    failure_threshold = 3  # Number of consecutive failures before marking unready.
+    success_threshold = 1
+    exec = {
+      command = ["pg_isready",
+        # "--host", "$POD_IP",
+        # "--port", "5432",
+        "--username", "${var.postgres_user}",
+        "--dbname", "${var.postgres_db}"
+      ]
+    }
+  }]
   namespace = local.namespace
+  # Ensure that the non-root user running the container has the necessary group permissions to
+  # access files in mounted volumes.
   pod_security_context = [{
     fs_group = 1999
   }]
+  readiness_probe = [{
+    initial_delay_seconds = 30
+    period_seconds = 5
+    timeout_seconds = 3
+    failure_threshold = 3
+    # success_threshold = 1
+    exec = {
+      # https://www.postgresql.org/docs/current/app-pg-isready.html
+      command = ["pg_isready",
+        "-U", "${var.postgres_user}",
+        "-d", "${var.postgres_db}"
+      ]
+    }
+  }]
+  # Always use 3 or more nodes for fault tolerance.
+  replicas = 1
+  resources = {  # QoS - Guaranteed
+    limits_cpu = "250m"
+    limits_memory = "1Gi"
+  }
   # If the order of Secrets changes, the Deployment must be changed accordingly. See
   # spec.image_pull_secrets.
   secrets = [{
-    name = "${local.svc_postgres}-secret"
+    name = "${local.svc_postgres_master}-secret"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -775,10 +828,8 @@ module "fin-PostgreSql" {
     type = "Opaque"
     immutable = true
   }]
-  # Always use 3 or more nodes for fault tolerance.
-  replicas = 1
   service = {
-    name = "${local.svc_postgres}-headless"
+    name = "${local.svc_postgres_master}-headless"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -790,7 +841,7 @@ module "fin-PostgreSql" {
       protocol = "TCP"
     }]
     selector = {
-      "svc_selector_label" = "svc-${local.svc_postgres}-headless"
+      "svc_selector_label" = "svc-${local.svc_postgres_master}-headless"
     }
     publish_not_ready_addresses = true
     type = "ClusterIP"
@@ -801,7 +852,248 @@ module "fin-PostgreSql" {
     run_as_group = 1999
     read_only_root_filesystem = false
   }]
-  service_name = local.svc_postgres
+  service_name = local.svc_postgres_master
+  update_strategy = {
+    type = "RollingUpdate"
+  }
+  volume_claim_templates = [{
+    name = "wsf"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    volume_mode = "Filesystem"
+    # The volume can be mounted as read-write by many nodes.
+    access_modes = ["ReadWriteOnce"]
+    # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
+    # for less than 50GB, the request is rounded up to 50GB.
+    storage = "50Gi"
+    storage_class_name = "oci-bv"
+  }]
+  volume_config_map = [{
+    name = "config"
+    config_map_name = "${var.app_name}-postgres-conf-files"
+    default_mode = "0660"
+    items = [{
+      key = "pg_hba.conf"
+      path = "pg_hba.conf"
+    }, {
+      key = "pg_ident.conf"
+      path = "pg_ident.conf"
+    }, {
+      key = "postgresql.conf"
+      path = "postgresql.conf"
+    }, {
+      key = "master.conf"
+      path = "master.conf"
+    }, {
+      key = "replica.conf"
+      path = "replica.conf"
+    }]
+  }]
+  volume_mount = [{
+    name = "wsf"
+    mount_path = "/wsf_data_dir"
+    read_only = false
+  }, {
+    name = "config"
+    mount_path = "/wsf_data_dir/config"
+    read_only = false
+  }, {
+    name = "init-scripts"
+    # https://hub.docker.com/_/postgres#initialization-scripts
+    mount_path = "/docker-entrypoint-initdb.d/create-replication-user.sh"
+    sub_path = "create-replication-user.sh"
+    read_only = false
+  }]
+}
+
+module "fin-PostgresReplica" {
+  count = var.db_postgres && !var.k8s_crds ? 1 : 0
+  depends_on = [
+    module.fin-PostgresMaster
+  ]
+  # Specify the location of the module, which contains the file main.tf.
+  source = "./modules/statefulset"
+  #
+  app_name = var.app_name
+  app_version = var.app_version
+  /***
+  "-c": This is the first argument. It's typically used in conjunction with a shell command (like
+  /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
+  string to be executed by the shell. The -c flag tells the shell to read commands from the string
+  argument that follows.
+  ***/
+    # chown -R $(POSTGRES_USER):$(POSTGRES_USER) /var/lib/postgresql/data &&
+    # chown -R 1999:1999 /wsf_data_dir/config &&
+    # chown -R 1999:1999 /wsf_data_dir
+    # chown -R 1999:1999 /var/lib/postgresql/data
+  args = ["-c",
+    <<-EOT
+    /usr/local/bin/docker-entrypoint.sh postgres
+    config_file=/wsf_data_dir/config/postgres/postgresql.conf
+    EOT
+  ]
+  command = ["/bin/bash"]
+  env = {
+    PGDATA = var.pgdata
+  }
+  env_field = [{
+    name = "POP_IP"
+    field_path = "status.podIP"
+  }]
+  config_map = [{
+    # Same as volume_config_map.config_map_name.
+    name = "${var.app_name}-postgres-conf-files"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    data = {
+      # https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
+      "pg_hba.conf" = "${file("${var.path_postgres_configs}/pg_hba.conf")}"
+      # https://www.postgresql.org/docs/current/auth-username-maps.html
+      "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
+      # Share by master and slave.
+      "postgresql.conf" = "${file("${var.path_postgres_configs}/postgresql.conf")}"
+      # Only for master.
+      "master.conf" = "${file("${var.path_postgres_configs}/master.conf")}"
+    }
+  }, {
+    # Same as volume_config_map.config_map_name.
+    name = "${var.app_name}-postgres-script-files"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    data = {
+      "create-replication-user.sh" = "${file("${var.path_postgres_scripts}/create-replication-user.sh")}"
+    }
+  }]
+  image_pull_policy = "IfNotPresent"
+  image_tag = var.postgres_image_tag
+  init_container = [{
+    name = "setup-replica-data-directory"
+    #
+    command = ["/bin/sh",
+      "-c",
+      # https://www.postgresql.org/docs/current/app-pgbasebackup.html
+      <<-EOT
+      if [ -z "$(ls -A /wsf_data_dir/data/pgdata)" ];
+      then
+        echo "Running pg_basebackup to catch up replication server...";
+        pg_basebackup -R -D /wsf_data_dir/data/pgdata -P -U ${var.replication_user};
+        chown -R 1999:1999 $PGDATA;
+      else
+        echo "Skipping pg_basebackup because directory is not empty";
+      fi
+      EOT
+    ]
+    image = var.postgres_image_tag
+    image_pull_policy = "IfNotPresent"
+    security_context = [{
+      run_as_non_root = true
+      run_as_user = 1999
+      run_as_group = 1999
+      read_only_root_filesystem = false
+      privileged = true
+    }]
+    volume_mounts = [{
+      name = "wsf"
+      mount_path = "/wsf_data_dir"
+      read_only = false
+    }]
+  }]
+  labels = {
+    # "aff-mysql-server" = "running"
+    "app" = var.app_name
+    "db" = "postgres"
+  }
+  liveness_probe = [{
+    initial_delay_seconds = 60  # Delay before the first probe.
+    period_seconds = 10  # How often to perform the probe.
+    timeout_seconds = 3  # Timeout for the probe command.
+    failure_threshold = 3  # Number of consecutive failures before marking unready.
+    success_threshold = 1
+    exec = {
+      command = ["pg_isready",
+        # "--host", "$POD_IP",
+        # "--port", "5432",
+        "--username", "${var.postgres_user}",
+        "--dbname", "${var.postgres_db}"
+      ]
+    }
+  }]
+  namespace = local.namespace
+  # Ensure that the non-root user running the container has the necessary group permissions to
+  # access files in mounted volumes.
+  pod_security_context = [{
+    fs_group = 1999
+  }]
+  readiness_probe = [{
+    initial_delay_seconds = 30
+    period_seconds = 5
+    timeout_seconds = 3
+    failure_threshold = 3
+    # success_threshold = 1
+    exec = {
+      # https://www.postgresql.org/docs/current/app-pg-isready.html
+      command = ["pg_isready",
+        "-U", "${var.postgres_user}",
+        "-d", "${var.postgres_db}"
+      ]
+    }
+  }]
+  # Always use 3 or more nodes for fault tolerance.
+  replicas = 1
+  resources = {  # QoS - Guaranteed
+    limits_cpu = "100m"
+    limits_memory = "256Mi"
+  }
+  # If the order of Secrets changes, the Deployment must be changed accordingly. See
+  # spec.image_pull_secrets.
+  secrets = [{
+    name = "${local.svc_postgres_replica}-secret"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    # Plain-text data.
+    data = {
+      POSTGRES_DB = var.postgres_db
+      POSTGRES_USER = var.postgres_user
+      POSTGRES_PASSWORD = var.postgres_password
+      REPLICATION_USER = var.replication_user
+      REPLICATION_PASSWORD = var.replication_password
+    }
+    type = "Opaque"
+    immutable = true
+  }]
+  service = {
+    name = "${local.svc_postgres_replica}-headless"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    ports = [{
+      name = "postgres"
+      service_port = 5432
+      target_port = 5432
+      protocol = "TCP"
+    }]
+    selector = {
+      "svc_selector_label" = "svc-${local.svc_postgres_replica}-headless"
+    }
+    publish_not_ready_addresses = true
+    type = "ClusterIP"
+  }
+  security_context = [{
+    run_as_non_root = true
+    run_as_user = 1999
+    run_as_group = 1999
+    read_only_root_filesystem = false
+  }]
+  service_name = local.svc_postgres_replica
   update_strategy = {
     type = "RollingUpdate"
   }
@@ -840,16 +1132,21 @@ module "fin-PostgreSql" {
     read_only = false
   }, {
     name = "config"
-    mount_path = "/wsf_data_dir/config/postgres"
+    mount_path = "/wsf_data_dir/config"
+    read_only = false
+  }, {
+    name = "init-scripts"
+    # https://hub.docker.com/_/postgres#initialization-scripts
+    mount_path = "/docker-entrypoint-initdb.d/create-replication-user.sh"
+    sub_path = "create-replication-user.sh"
     read_only = false
   }]
 }
 
 
 
-
 module "fin-MySqlServer" {
-  count = var.db_mysql && !var.k8s_crds ? /*1*/0 : 0
+  count = var.db_postgres && !var.k8s_crds ? /*1*/0 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/statefulset"
   #
