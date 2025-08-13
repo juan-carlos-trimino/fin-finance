@@ -74,7 +74,7 @@ variable reverse_proxy {
   default = false
 }
 
-variable db_mysql {
+variable db_postgres {
   type = bool
   default = false
 }
