@@ -102,6 +102,15 @@ variable init_container {
     image = string
     image_pull_policy = optional(string)
     command = optional(list(string))
+    env = optional(map(any), {})
+    env_from_secrets = optional(list(object({
+      name = string
+      labels = optional(map(string), {})
+      annotations = optional(map(string), {})
+      data = optional(map(string), {})
+      binary_data = optional(map(string), {})  # base64 encoding.
+      type = optional(string, "Opaque")
+    })), [])
     security_context = optional(list(object({
       run_as_non_root = bool
       run_as_user = number
@@ -294,6 +303,7 @@ variable secrets {
     data = optional(map(string), {})
     binary_data = optional(map(string), {})  # base64 encoding.
     type = optional(string, "Opaque")
+    immutable = optional(bool, true)
   }))
   sensitive = true
 }
@@ -375,9 +385,6 @@ variable service_account {
     })), [])
   })
 }
-variable service_name {
-  type = string
-}
 variable service_session_affinity {
   default = "None"
   type = string
@@ -388,6 +395,9 @@ LoadBalancer, and ExternalName.
 ***/
 variable service_type {
   default = "ClusterIP"
+}
+variable statefulset_name {
+  type = string
 }
 variable termination_grace_period_seconds {
   default = 30
@@ -483,7 +493,7 @@ variable volume_secrets {
 Define local variables.
 ***/
 locals {
-  pod_selector_label = "ps-${var.service_name}"
+  pod_selector_label = "ps-${var.statefulset_name}"
 }
 
 resource "kubernetes_secret" "secrets" {
@@ -502,6 +512,7 @@ resource "kubernetes_secret" "secrets" {
   # https://kubernetes.io/docs/concepts/configuration/secret/#secret-types
   # https://kubernetes.io/docs/concepts/configuration/secret/#serviceaccount-token-secrets
   type = var.secrets[count.index].type
+  immutable = var.secrets[count.index].immutable
 }
 
 resource "kubernetes_service_account" "service_account" {
@@ -593,7 +604,7 @@ resource "kubernetes_config_map" "config" {
 
 resource "kubernetes_stateful_set" "stateful_set" {
   metadata {
-    name = var.service_name
+    name = var.statefulset_name
     namespace = var.namespace
     # Labels attach to the Deployment.
     labels = var.labels
@@ -734,6 +745,8 @@ resource "kubernetes_stateful_set" "stateful_set" {
           }
         }
         # These containers are run during pod initialization.
+        # An Init Container in K8s exists within the same Pod and therefore operates within the
+        # same namespace as the Pod it belongs to.
         dynamic "init_container" {
           for_each = var.init_container
           iterator = it
@@ -741,6 +754,23 @@ resource "kubernetes_stateful_set" "stateful_set" {
             name = it.value["name"]
             image = it.value["image"]
             image_pull_policy = it.value["image_pull_policy"]
+            dynamic "env" {
+              for_each = it.value["env"]
+              //iterator = it1
+              content {
+                name = env.key
+                value = env.value
+              }
+            }
+            dynamic "env_from" {
+              for_each = it.value["env_from_secrets"]
+              iterator = it1
+              content {
+                secret_ref {
+                  name = it1.value["name"]
+                }
+              }
+            }
             command = it.value["command"]
             dynamic "security_context" {
               for_each = it.value["security_context"]
@@ -755,18 +785,18 @@ resource "kubernetes_stateful_set" "stateful_set" {
             }
             dynamic "volume_mount" {
               for_each = it.value["volume_mounts"]
-              iterator = it2
+              iterator = it1
               content {
-                name = it2.value["name"]
-                mount_path = it2.value["mount_path"]
-                sub_path = it2.value["sub_path"]
-                read_only = it2.value["read_only"]
+                name = it1.value["name"]
+                mount_path = it1.value["mount_path"]
+                sub_path = it1.value["sub_path"]
+                read_only = it1.value["read_only"]
               }
             }
           }
         }
         container {
-          name = var.service_name
+          name = var.statefulset_name
           image = var.image_tag
           image_pull_policy = var.image_pull_policy
           command = var.command
@@ -958,6 +988,12 @@ resource "kubernetes_stateful_set" "stateful_set" {
               }
             }
           }
+          /***
+          In K8s, envFrom with secretRef is a method used to inject all key-value pairs from a
+          specified Kubernetes Secret as environment variables into a container within a Pod.
+          This differs from secretKeyRef which allows for the selection of specific keys from a
+          Secret to be injected as environment variables.
+          ***/
           dynamic "env_from" {
             for_each = var.secrets
             content {
