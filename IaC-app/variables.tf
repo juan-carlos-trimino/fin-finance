@@ -195,6 +195,11 @@ variable postgres_image_tag {  # https://www.postgresql.org/docs/release/
   default = "postgres:17.5-alpine3.22"
 }
 
+variable postgres_db_label {
+  type = string
+  default = "postgres"
+}
+
 # https://hub.docker.com/_/postgres#postgres_db
 variable postgres_db {
   description = "POSTGRES_DB: The default database."
@@ -214,13 +219,6 @@ variable postgres_user {
 # https://hub.docker.com/_/postgres#postgres_password
 variable postgres_password {
   description = "POSTGRES_PASSWORD: It sets the superuser password for PostgreSQL."
-  default = "<required>"
-  sensitive = true
-  type = string
-}
-
-variable replication_user {
-  description = "REPLICATION_USER: xxxxxxxxxxxxxxxxxxxxxxxxxSecret for PostgreSQL Authentication."
   default = "<required>"
   sensitive = true
   type = string
