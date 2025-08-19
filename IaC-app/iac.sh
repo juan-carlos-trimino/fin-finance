@@ -85,7 +85,7 @@ check_options() {
       "-p" | "--pprof")
         pprof="true"
         ;;
-      "--postgress")
+      "--postgres")
         db_postgres="true"
         ;;
       "-ed" | "--empty-dir")
