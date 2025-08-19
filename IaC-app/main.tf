@@ -32,8 +32,10 @@ locals {
   svc_traefik = "fin-traefik"
   svc_mysql = "fin-mysql"
   svc_mysql_router = "fin-mysql-router"
-  svc_postgres_master = "fin-postgres-master"
-  svc_postgres_replica = "fin-postgres-replica"
+  statefulset_postgres_master = "fin-postgres-master"
+  service_name_postgres_master = "fin-postgres-master-headless"
+  statefulset_postgres_replica = "fin-postgres-replica"
+  service_name_postgres_replica = "fin-postgres-replica-headless"
   ############
   # Services #
   ############
@@ -696,7 +698,6 @@ module "fin-PostgresMaster" {
     <<-EOT
     /usr/local/bin/docker-entrypoint.sh postgres
     config_file=/wsf_data_dir/config/postgres/postgresql.conf
-    hba_file=/wsf_data_dir/config/postgres/pg_hba.conf
     EOT
   ]
   command = ["/bin/bash"]
@@ -709,29 +710,29 @@ module "fin-PostgresMaster" {
   }]
   config_map = [{
     # Same as volume_config_map.config_map_name.
-    name = "${var.app_name}-postgres-conf-files"
+    name = "${local.statefulset_postgres_master}-postgres-conf-files"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
+      "db" = var.postgres_db_label
     }
     data = {
       # https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
       "pg_hba.conf" = "${file("${var.path_postgres_configs}/pg_hba.conf")}"
       # https://www.postgresql.org/docs/current/auth-username-maps.html
-      "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
-      # Share by master and slave.
+      # "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
+      # Share by master and replica.
       "postgresql.conf" = "${file("${var.path_postgres_configs}/postgresql.conf")}"
       # Only for master.
       "master.conf" = "${file("${var.path_postgres_configs}/master.conf")}"
-      # Only for replica.
-      "replica.conf" = "${file("${var.path_postgres_configs}/replica.conf")}"
     }
   }, {
-    # Same as volume_config_map.config_map_name.
-    name = "${var.app_name}-postgres-script-files"
+    # Same as volume.volume_config_map.config_map_name.name.
+    name = "${local.statefulset_postgres_master}-postgres-script-files"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
+      "db" = var.postgres_db_label
     }
     data = {
       "create-replication-user.sh" = "${file("${var.path_postgres_scripts}/create-replication-user.sh")}"
@@ -741,7 +742,6 @@ module "fin-PostgresMaster" {
   image_tag = var.postgres_image_tag
   init_container = [{
     name = "file-permission"
-    #
     command = ["/bin/sh",
       "-c",
       "mkdir -p /wsf_data_dir/data/archive"
@@ -754,7 +754,7 @@ module "fin-PostgresMaster" {
       run_as_non_root = true
       run_as_user = 1999
       run_as_group = 1999
-      read_only_root_filesystem = false
+      read_only_root_filesystem = true
       privileged = true
     }]
     volume_mounts = [{
@@ -766,7 +766,7 @@ module "fin-PostgresMaster" {
   labels = {
     # "aff-mysql-server" = "running"
     "app" = var.app_name
-    "db" = "postgres"
+    "db" = var.postgres_db_label
   }
   liveness_probe = [{
     initial_delay_seconds = 60  # Delay before the first probe.
@@ -809,30 +809,29 @@ module "fin-PostgresMaster" {
     limits_cpu = "250m"
     limits_memory = "1Gi"
   }
-  # If the order of Secrets changes, the Deployment must be changed accordingly. See
-  # spec.image_pull_secrets.
   secrets = [{
-    name = "${local.svc_postgres_master}-secret"
+    name = "${local.statefulset_postgres_master}-secret"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
+      "db" = var.postgres_db_label
     }
     # Plain-text data.
     data = {
       POSTGRES_DB = var.postgres_db
       POSTGRES_USER = var.postgres_user
       POSTGRES_PASSWORD = var.postgres_password
-      REPLICATION_USER = var.replication_user
       REPLICATION_PASSWORD = var.replication_password
     }
     type = "Opaque"
     immutable = true
   }]
   service = {
-    name = "${local.svc_postgres_master}-headless"
+    name = local.service_name_postgres_master
     namespace = local.namespace
     labels = {
       "app" = var.app_name
+      "db" = var.postgres_db_label
     }
     ports = [{
       name = "postgres"
@@ -841,7 +840,7 @@ module "fin-PostgresMaster" {
       protocol = "TCP"
     }]
     selector = {
-      "svc_selector_label" = "svc-${local.svc_postgres_master}-headless"
+      "svc_selector_label" = "svc-${local.service_name_postgres_master}"
     }
     publish_not_ready_addresses = true
     type = "ClusterIP"
@@ -852,7 +851,7 @@ module "fin-PostgresMaster" {
     run_as_group = 1999
     read_only_root_filesystem = false
   }]
-  service_name = local.svc_postgres_master
+  statefulset_name = local.statefulset_postgres_master
   update_strategy = {
     type = "RollingUpdate"
   }
@@ -861,6 +860,7 @@ module "fin-PostgresMaster" {
     namespace = local.namespace
     labels = {
       "app" = var.app_name
+      "db" = var.postgres_db_label
     }
     volume_mode = "Filesystem"
     # The volume can be mounted as read-write by many nodes.
@@ -872,24 +872,25 @@ module "fin-PostgresMaster" {
   }]
   volume_config_map = [{
     name = "config"
-    config_map_name = "${var.app_name}-postgres-conf-files"
+    config_map_name = "${local.statefulset_postgres_master}-postgres-conf-files"
     default_mode = "0660"
     items = [{
       key = "pg_hba.conf"
       path = "pg_hba.conf"
-    }, {
+    }, /*{
       key = "pg_ident.conf"
       path = "pg_ident.conf"
-    }, {
+    },*/ {
       key = "postgresql.conf"
       path = "postgresql.conf"
     }, {
       key = "master.conf"
       path = "master.conf"
-    }, {
-      key = "replica.conf"
-      path = "replica.conf"
     }]
+  }, {
+    name = "script"
+    config_map_name = "${local.statefulset_postgres_master}-postgres-script-files"
+    default_mode = "0760"
   }]
   volume_mount = [{
     name = "wsf"
@@ -900,11 +901,15 @@ module "fin-PostgresMaster" {
     mount_path = "/wsf_data_dir/config"
     read_only = false
   }, {
-    name = "init-scripts"
+    name = "script"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
     # https://hub.docker.com/_/postgres#initialization-scripts
     mount_path = "/docker-entrypoint-initdb.d/create-replication-user.sh"
     sub_path = "create-replication-user.sh"
-    read_only = false
   }]
 }
 
@@ -944,22 +949,22 @@ module "fin-PostgresReplica" {
   }]
   config_map = [{
     # Same as volume_config_map.config_map_name.
-    name = "${var.app_name}-postgres-conf-files"
+    name = "${local.statefulset_postgres_replica}-postgres-conf-files"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
     }
     data = {
       # https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
-      "pg_hba.conf" = "${file("${var.path_postgres_configs}/pg_hba.conf")}"
+      # "pg_hba.conf" = "${file("${var.path_postgres_configs}/pg_hba.conf")}"
       # https://www.postgresql.org/docs/current/auth-username-maps.html
-      "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
+      # "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
       # Share by master and slave.
       "postgresql.conf" = "${file("${var.path_postgres_configs}/postgresql.conf")}"
       # Only for master.
-      "master.conf" = "${file("${var.path_postgres_configs}/master.conf")}"
+      "replica.conf" = "${file("${var.path_postgres_configs}/replica.conf")}"
     }
-  }, {
+  }/*, {
     # Same as volume_config_map.config_map_name.
     name = "${var.app_name}-postgres-script-files"
     namespace = local.namespace
@@ -969,21 +974,51 @@ module "fin-PostgresReplica" {
     data = {
       "create-replication-user.sh" = "${file("${var.path_postgres_scripts}/create-replication-user.sh")}"
     }
-  }]
+  }*/]
   image_pull_policy = "IfNotPresent"
   image_tag = var.postgres_image_tag
   init_container = [{
     name = "setup-replica-data-directory"
-    #
+    env = {
+      PGDATA = var.pgdata
+      PGHOST = local.service_name_postgres_master
+    }
+
+
+    # env_from_secrets = [{
+    #   name = "replica-data-directory-secret"
+    #   # namespace = local.namespace
+    #   labels = {
+    #     "app" = var.app_name
+    #   }
+    #   # Plain-text data.
+    #   data = {
+ /***
+        The PGPASSWORD environment variable in PostgreSQL allows the specification of a password for database connections without requiring interactive input. This variable can be set in the shell before executing PostgreSQL client applications like psql or pg_dump.
+
+For improved security, consider using the following alternatives:
+.pgpass file:
+.
+A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on Windows) can store connection details, including passwords, in a more secure manner. The file permissions must be set correctly (e.g., chmod 600 ~/.pgpass) to prevent unauthorized access.
+
+        ***/
+    #     PGPASSWORD = var.replication_password
+    #   }
+    #   type = "Opaque"
+    #   immutable = true
+    # }]
+
+
     command = ["/bin/sh",
       "-c",
       # https://www.postgresql.org/docs/current/app-pgbasebackup.html
       <<-EOT
-      if [ -z "$(ls -A /wsf_data_dir/data/pgdata)" ];
+      mkdir -p $(PGDATA)
+      if [ -z "$(ls -A $(PGDATA))" ];
       then
         echo "Running pg_basebackup to catch up replication server...";
-        pg_basebackup -R -D /wsf_data_dir/data/pgdata -P -U ${var.replication_user};
-        chown -R 1999:1999 $PGDATA;
+        pg_basebackup -h $(PGHOST) -R -D $(PGDATA) -P -U replication;
+        chown -R 1999:1999 $(PGDATA);
       else
         echo "Skipping pg_basebackup because directory is not empty";
       fi
@@ -1007,7 +1042,7 @@ module "fin-PostgresReplica" {
   labels = {
     # "aff-mysql-server" = "running"
     "app" = var.app_name
-    "db" = "postgres"
+    "db" = var.postgres_db_label
   }
   liveness_probe = [{
     initial_delay_seconds = 60  # Delay before the first probe.
@@ -1050,10 +1085,8 @@ module "fin-PostgresReplica" {
     limits_cpu = "100m"
     limits_memory = "256Mi"
   }
-  # If the order of Secrets changes, the Deployment must be changed accordingly. See
-  # spec.image_pull_secrets.
   secrets = [{
-    name = "${local.svc_postgres_replica}-secret"
+    name = "${local.statefulset_postgres_replica}-secret"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -1063,14 +1096,13 @@ module "fin-PostgresReplica" {
       POSTGRES_DB = var.postgres_db
       POSTGRES_USER = var.postgres_user
       POSTGRES_PASSWORD = var.postgres_password
-      REPLICATION_USER = var.replication_user
       REPLICATION_PASSWORD = var.replication_password
     }
     type = "Opaque"
     immutable = true
   }]
   service = {
-    name = "${local.svc_postgres_replica}-headless"
+    name = local.service_name_postgres_replica
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -1082,7 +1114,7 @@ module "fin-PostgresReplica" {
       protocol = "TCP"
     }]
     selector = {
-      "svc_selector_label" = "svc-${local.svc_postgres_replica}-headless"
+      "svc_selector_label" = "svc-${local.service_name_postgres_replica}"
     }
     publish_not_ready_addresses = true
     type = "ClusterIP"
@@ -1093,7 +1125,7 @@ module "fin-PostgresReplica" {
     run_as_group = 1999
     read_only_root_filesystem = false
   }]
-  service_name = local.svc_postgres_replica
+  statefulset_name = local.statefulset_postgres_replica
   update_strategy = {
     type = "RollingUpdate"
   }
@@ -1113,17 +1145,20 @@ module "fin-PostgresReplica" {
   }]
   volume_config_map = [{
     name = "config"
-    config_map_name = "${var.app_name}-postgres-conf-files"
+    config_map_name = "${local.statefulset_postgres_replica}-postgres-conf-files"
     default_mode = "0660"
-    items = [{
+    items = [/*{
       key = "pg_hba.conf"
       path = "pg_hba.conf"
     }, {
       key = "pg_ident.conf"
       path = "pg_ident.conf"
-    }, {
+    },*/ {
       key = "postgresql.conf"
       path = "postgresql.conf"
+    }, {
+      key = "replica.conf"
+      path = "replica.conf"
     }]
   }]
   volume_mount = [{
@@ -1134,13 +1169,13 @@ module "fin-PostgresReplica" {
     name = "config"
     mount_path = "/wsf_data_dir/config"
     read_only = false
-  }, {
+  }/*, {
     name = "init-scripts"
     # https://hub.docker.com/_/postgres#initialization-scripts
     mount_path = "/docker-entrypoint-initdb.d/create-replication-user.sh"
     sub_path = "create-replication-user.sh"
     read_only = false
-  }]
+  }*/]
 }
 
 
@@ -1359,7 +1394,7 @@ module "fin-MySqlServer" {
     publish_not_ready_addresses = true
     type = "ClusterIP"
   }
-  service_name = local.svc_mysql
+  statefulset_name = local.svc_mysql
   volume_claim_templates = [{
     name = "wsf"
     namespace = local.namespace
@@ -1385,6 +1420,7 @@ module "fin-MySqlServer" {
     read_only = false
   }]
 }
+
 
 /***
 https://dev.mysql.com/doc/mysql-router/8.0/en/
