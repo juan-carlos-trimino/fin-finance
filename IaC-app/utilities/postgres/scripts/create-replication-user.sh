@@ -9,6 +9,8 @@ set -e
 # you to format your code nicely without affecting the actual input data.
 # https://www.postgresql.org/docs/current/warm-standby.html#STREAMING-REPLICATION
 # https://www.postgresql.org/docs/current/app-psql.html
-psql -v ON_ERROR_STOP=1 --username "$REPLICATION_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-  CREATE ROLE '$REPLICATION_USER' WITH REPLICATION PASSWORD '$REPLICATION_PASSWORD' LOGIN;
+  # CREATE ROLE '$REPLICATION_USER' WITH REPLICATION PASSWORD '$REPLICATION_PASSWORD' LOGIN;
+# psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+  CREATE ROLE replication WITH REPLICATION PASSWORD '$REPLICATION_PASSWORD' LOGIN;
 EOSQL
