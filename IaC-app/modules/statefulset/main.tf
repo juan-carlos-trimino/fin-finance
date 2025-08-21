@@ -749,8 +749,7 @@ resource "kubernetes_stateful_set" "stateful_set" {
               iterator = it1
               content {
                 secret_ref {
-                  # name = it1.value["name"]
-                  name = it1.value
+                  name = it1.value["name"]
                 }
               }
             }
