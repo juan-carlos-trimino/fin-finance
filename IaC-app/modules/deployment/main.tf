@@ -93,6 +93,9 @@ variable cr_username {
   type = string
   sensitive = true
 }
+variable deployment_name {
+  type = string
+}
 variable dir_path {
   type = string
 }
@@ -139,6 +142,8 @@ variable init_container {
     image = string
     image_pull_policy = optional(string)
     command = optional(list(string))
+    env = optional(map(any), {})
+    env_from_secrets = optional(list(string), [])
     security_context = optional(list(object({
       run_as_non_root = bool
       run_as_user = number
@@ -397,10 +402,9 @@ variable secrets {
     labels = optional(map(string), {})
     annotations = optional(map(string), {})
     data = optional(map(string), {})
-    # base64 encoding.
-    binary_data = optional(map(string), {})
+    binary_data = optional(map(string), {})  # base64 encoding.
     type = optional(string, "Opaque")
-    immutable = optional(bool, false)
+    immutable = optional(bool, true)
   }))
   sensitive = true
 }
@@ -476,9 +480,6 @@ variable service_account {
     })), [])
   })
 }
-variable service_name {
-  type = string
-}
 # https://registry.terraform.io/providers/hashicorp/kubernetes/2.25.2/docs/resources/deployment#strategy-1
 variable strategy {
   default = null
@@ -548,15 +549,35 @@ variable volume_pv {
     claim_name = string
   }))
 }
+variable volume_secrets {
+  default = []
+  type = list(object({
+    name = string
+    # Name of the ConfigMap containing the files to add to the container.
+    secret_name = string
+    # Although ConfigMaps should be used for non-sensitive configuration data, you may want to
+    # make the file readable and writeble only to the user and group that owned the file; e.g.,
+    # default_mode = "6600" (-rw-rw------)
+    # The default permission is "6440" (-rw-r--r----)
+    default_mode = optional(string)
+    # An array of keys from the ConfigMap to create as files.
+    items = optional(list(object({
+      # Include the entry under this key.
+      key = string
+      # The entry's value should be stored in this file.
+      path = string
+    })), [])
+  }))
+}
 
 /***
 Define local variables.
 ***/
 locals {
-  pod_selector_label = "rs-${var.service_name}"
+  pod_selector_label = "rs-${var.deployment_name}"
   image_tag = (
     var.build_image == true ?
-    "${var.cr_login_server}/${var.cr_username}/${var.service_name}:${var.app_version}" :
+    "${var.cr_login_server}/${var.cr_username}/${var.deployment_name}:${var.app_version}" :
     var.image_tag
   )
 }
@@ -785,7 +806,7 @@ resource "kubernetes_deployment" "stateless" {
     null_resource.docker_push
   ]
   metadata {
-    name = var.service_name
+    name = var.deployment_name
     namespace = var.namespace
     # Labels attach to the Deployment.
     labels = var.labels
@@ -935,6 +956,22 @@ resource "kubernetes_deployment" "stateless" {
             name = it.value["name"]
             image = it.value["image"]
             image_pull_policy = it.value["image_pull_policy"]
+            dynamic "env" {
+              for_each = it.value["env"]
+              content {
+                name = env.key
+                value = env.value
+              }
+            }
+            dynamic "env_from" {
+              for_each = it.value["env_from_secrets"]
+              iterator = it1
+              content {
+                secret_ref {
+                  name = it1.value["name"]
+                }
+              }
+            }
             command = it.value["command"]
             dynamic "security_context" {
               for_each = it.value["security_context"]
@@ -949,18 +986,18 @@ resource "kubernetes_deployment" "stateless" {
             }
             dynamic "volume_mount" {
               for_each = it.value["volume_mounts"]
-              iterator = it2
+              iterator = it1
               content {
-                name = it2.value["name"]
-                mount_path = it2.value["mount_path"]
-                sub_path = it2.value["sub_path"]
-                read_only = it2.value["read_only"]
+                name = it1.value["name"]
+                mount_path = it1.value["mount_path"]
+                sub_path = it1.value["sub_path"]
+                read_only = it1.value["read_only"]
               }
             }
           }
         }
         container {
-          name = var.service_name
+          name = var.deployment_name
           image_pull_policy = var.image_pull_policy
           image = local.image_tag
           command = var.command
@@ -993,65 +1030,6 @@ resource "kubernetes_deployment" "stateless" {
               name = port.value["name"]
               container_port = port.value["target_port"]  # The port the app is listening.
               protocol = port.value["protocol"]
-            }
-          }
-          /***
-          Liveness probes keep pods healthy by killing unhealthy containers and replacing them
-          with new healthy containers; readiness probes ensure that only pods with containers
-          that are ready to serve requests receive them. Unlike liveness probes, if a container
-          fails the readiness check, it won't be killed or restarted.
-          ***/
-          dynamic "readiness_probe" {
-            for_each = var.readiness_probe
-            content {
-              initial_delay_seconds = readiness_probe.value["initial_delay_seconds"]
-              period_seconds = readiness_probe.value["period_seconds"]
-              timeout_seconds = readiness_probe.value["timeout_seconds"]
-              failure_threshold = readiness_probe.value["failure_threshold"]
-              success_threshold = readiness_probe.value["success_threshold"]
-              /***
-              K8s can probe a container using one of the three probes:
-              The HTTP GET probe sends an HTTP GET request to the container, and the HTTP status
-              code of the response determines whether the container is ready or not.
-              ***/
-              dynamic "http_get" {
-                for_each = readiness_probe.value.http_get
-                content {
-                  host = http_get.value["host"]
-                  path = http_get.value["path"]
-                  port = http_get.value["port"]
-                  scheme = http_get.value["scheme"]
-                  dynamic "http_header" {
-                    for_each = http_get.value.http_header
-                    content {
-                      name = http_headers.value["name"]
-                      value = http_headers.value["value"]
-                    }
-                  }
-                }
-              }
-              /***
-              The Exec probe executes a process. The container's status is determined by the
-              process' exit status code.
-              ***/
-              dynamic "exec" {
-                # for_each = it.value["exec"] != null ? [it.value["exec"]] : []
-                for_each = readiness_probe.value["exec"] != null ? [readiness_probe.value["exec"]] : []
-                content {
-                  command = exec.value.command
-                }
-              }
-              /***
-              The TCP Socket probe opens a TCP connection to a specified port of the container.
-              If the connection is established, the container is considered ready.
-              ***/
-              dynamic "tcp_socket" {
-                # for_each = it.value["tcp_socket"] != null ? [it.value["tcp_socket"]] : []
-                for_each = readiness_probe.value["tcp_socket"] != null ? [readiness_probe.value["tcp_socket"]] : []
-                content {
-                  port = tcp_socket.value.port
-                }
-              }
             }
           }
           dynamic "liveness_probe" {
@@ -1107,6 +1085,65 @@ resource "kubernetes_deployment" "stateless" {
               ***/
               dynamic "tcp_socket" {
                 for_each = it.value["tcp_socket"] != null ? [it.value["tcp_socket"]] : []
+                content {
+                  port = tcp_socket.value.port
+                }
+              }
+            }
+          }
+          /***
+          Liveness probes keep pods healthy by killing unhealthy containers and replacing them
+          with new healthy containers; readiness probes ensure that only pods with containers
+          that are ready to serve requests receive them. Unlike liveness probes, if a container
+          fails the readiness check, it won't be killed or restarted.
+          ***/
+          dynamic "readiness_probe" {
+            for_each = var.readiness_probe
+            content {
+              initial_delay_seconds = readiness_probe.value["initial_delay_seconds"]
+              period_seconds = readiness_probe.value["period_seconds"]
+              timeout_seconds = readiness_probe.value["timeout_seconds"]
+              failure_threshold = readiness_probe.value["failure_threshold"]
+              success_threshold = readiness_probe.value["success_threshold"]
+              /***
+              K8s can probe a container using one of the three probes:
+              The HTTP GET probe sends an HTTP GET request to the container, and the HTTP status
+              code of the response determines whether the container is ready or not.
+              ***/
+              dynamic "http_get" {
+                for_each = readiness_probe.value.http_get
+                content {
+                  host = http_get.value["host"]
+                  path = http_get.value["path"]
+                  port = http_get.value["port"]
+                  scheme = http_get.value["scheme"]
+                  dynamic "http_header" {
+                    for_each = http_get.value.http_header
+                    content {
+                      name = http_headers.value["name"]
+                      value = http_headers.value["value"]
+                    }
+                  }
+                }
+              }
+              /***
+              The Exec probe executes a process. The container's status is determined by the
+              process' exit status code.
+              ***/
+              dynamic "exec" {
+                # for_each = it.value["exec"] != null ? [it.value["exec"]] : []
+                for_each = readiness_probe.value["exec"] != null ? [readiness_probe.value["exec"]] : []
+                content {
+                  command = exec.value.command
+                }
+              }
+              /***
+              The TCP Socket probe opens a TCP connection to a specified port of the container.
+              If the connection is established, the container is considered ready.
+              ***/
+              dynamic "tcp_socket" {
+                # for_each = it.value["tcp_socket"] != null ? [it.value["tcp_socket"]] : []
+                for_each = readiness_probe.value["tcp_socket"] != null ? [readiness_probe.value["tcp_socket"]] : []
                 content {
                   port = tcp_socket.value.port
                 }
@@ -1223,6 +1260,25 @@ resource "kubernetes_deployment" "stateless" {
             name = it.value["name"]
             config_map {
               name = it.value["config_map_name"]
+              default_mode = it.value["default_mode"]
+              dynamic "items" {
+                for_each = it.value["items"]
+                iterator = itn
+                content {
+                  key = itn.value["key"]
+                  path = itn.value["path"]
+                }
+              }
+            }
+          }
+        }
+        dynamic "volume" {
+          for_each = var.volume_secrets
+          iterator = it
+          content {
+            name = it.value["name"]
+            secret {
+              secret_name = it.value["secret_name"]
               default_mode = it.value["default_mode"]
               dynamic "items" {
                 for_each = it.value["items"]
