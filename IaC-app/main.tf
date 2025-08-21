@@ -26,7 +26,8 @@ locals {
   ####################
   # Name of Services #
   ####################
-  svc_finances = "fin-finances"
+  deployment_finances = "fin-finances"
+  service_name_finances = "fin-finances"
   svc_gateway = "fin-gateway"
   svc_error_page = "fin-error-page"
   svc_traefik = "fin-traefik"
@@ -44,7 +45,7 @@ locals {
   # In K8s, a service makes the deployment accessible by other containers via DNS.
   # FQDN: service-name.namespace.svc.cluster.local
   svc_dns_error_page = "${local.svc_error_page}.${local.namespace}${var.cluster_domain_suffix}"
-  svc_dns_finances = "${local.svc_finances}.${local.namespace}${var.cluster_domain_suffix}"
+  svc_dns_finances = "${local.deployment_finances}.${local.namespace}${var.cluster_domain_suffix}"
   svc_dns_mysql_server = "${local.svc_mysql}-headless.${local.namespace}${var.cluster_domain_suffix}"
 }
 
@@ -147,7 +148,7 @@ module "ingress-route" {
   middleware_gateway_basic_auth = local.middleware_gateway_basic_auth
   middleware_dashboard_basic_auth = local.middleware_dashboard_basic_auth
   middleware_security_headers = local.middleware_security_headers
-  svc_finances = local.svc_finances
+  svc_finances = local.deployment_finances
   secret_name = local.traefik_secret_cert_name
   issuer_name = local.issuer_name
   # host_name = "169.46.98.220.nip.io"
@@ -218,7 +219,7 @@ module "fin-finances-persistent" {
     PPROF = var.pprof
     K8S = true
     HTTP_PORT = "8080"
-    SVC_NAME = local.svc_finances
+    SVC_NAME = local.service_name_finances
     APP_NAME_VER = "${var.app_name} ${var.app_version}"
     MAX_RETRIES = 3
   }
@@ -231,26 +232,26 @@ module "fin-finances-persistent" {
   # *** s3 storage ***
   # env_secret = [{
   #   env_name = "AWS_SECRET_ACCESS_KEY"
-  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_name = "${local.deployment_finances}-s3-storage"
   #   secret_key = "aws_secret_access_key"
   # },
   # {
   #   env_name = "OBJ_STORAGE_NS"
-  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_name = "${local.deployment_finances}-s3-storage"
   #   secret_key = "obj_storage_ns"
   # },
   # {
   #   env_name = "AWS_REGION"
-  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_name = "${local.deployment_finances}-s3-storage"
   #   secret_key = "region"
   # },
   # {
   #   env_name = "AWS_ACCESS_KEY_ID"
-  #   secret_name = "${local.svc_finances}-s3-storage"
+  #   secret_name = "${local.deployment_finances}-s3-storage"
   #   secret_key = "aws_access_key_id"
   # }]
   # *** s3 storage ***
-  image_tag = var.build_image ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
+  image_tag = var.build_image ? "" : "${var.cr_username}/${local.deployment_finances}:${var.app_version}"
   labels = {
     "app" = var.app_name
   }
@@ -328,7 +329,7 @@ module "fin-finances-persistent" {
     limits_memory = "300Mi"
   }
   role = {
-    name = "${local.svc_finances}-role"
+    name = "${local.deployment_finances}-role"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -342,7 +343,7 @@ module "fin-finances-persistent" {
     }]
   }
   role_binding = {
-    name = "${local.svc_finances}-role-binding"
+    name = "${local.deployment_finances}-role-binding"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -350,12 +351,12 @@ module "fin-finances-persistent" {
     annotations = {}
     role_ref = {
       kind = "Role"
-      name = "${local.svc_finances}-role"
+      name = "${local.deployment_finances}-role"
       api_group = "rbac.authorization.k8s.io"
     }
     subjects = [{
       kind = "ServiceAccount"
-      name = "${local.svc_finances}-service-account"
+      name = "${local.deployment_finances}-service-account"
       namespace = local.namespace
     }]
   }
@@ -363,7 +364,7 @@ module "fin-finances-persistent" {
   # If the order of Secrets changes, the Deployment must be changed accordingly. See
   # spec.image_pull_secrets.
   secrets = [{
-    name = "${local.svc_finances}-registry-credentials"
+    name = "${local.deployment_finances}-registry-credentials"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -382,7 +383,7 @@ module "fin-finances-persistent" {
   },
   # *** s3 storage ***
   # {
-  #   name = "${local.svc_finances}-s3-storage"
+  #   name = "${local.deployment_finances}-s3-storage"
   #   data = {
   #     obj_storage_ns = var.obj_storage_ns
   #     region = var.region
@@ -400,7 +401,7 @@ module "fin-finances-persistent" {
     read_only_root_filesystem = true
   }]
   service = {
-    name = local.svc_finances
+    name = local.service_name_finances
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -412,12 +413,12 @@ module "fin-finances-persistent" {
       protocol = "TCP"
     }]
     selector = {
-      "svc_selector_label" = "svc-${local.svc_finances}"
+      "svc_selector_label" = "svc-${local.service_name_finances}"
     }
     type = "ClusterIP"
   }
   service_account = {
-    name = "${local.svc_finances}-service-account"
+    name = "${local.deployment_finances}-service-account"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -425,14 +426,14 @@ module "fin-finances-persistent" {
     annotations = {}
     automount_service_account_token = false
     secrets = [{
-      name = "${local.svc_finances}-registry-credentials"
+      name = "${local.deployment_finances}-registry-credentials"
     },
     # {
-    #   name = "${local.svc_finances}-s3-storage"
+    #   name = "${local.deployment_finances}-s3-storage"
     # }
     ]
   }
-  service_name = local.svc_finances
+  deployment_name = local.deployment_finances
   volume_mount = [{
     name = "wsf"
     mount_path = "/wsf_data_dir"
@@ -477,11 +478,11 @@ module "fin-finances-empty" {  # Using emptyDir.
     PPROF = var.pprof
     K8S = true
     HTTP_PORT = "8080"
-    SVC_NAME = local.svc_finances
+    SVC_NAME = local.service_name_finances
     APP_NAME_VER = "${var.app_name} ${var.app_version}"
     MAX_RETRIES = 3
   }
-  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.svc_finances}:${var.app_version}"
+  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.deployment_finances}:${var.app_version}"
   # See empty_dir.
   init_container = [{
     name = "file-permission"
@@ -569,7 +570,7 @@ module "fin-finances-empty" {  # Using emptyDir.
     limits_memory = "300Mi"
   }
   role = {
-    name = "${local.svc_finances}-role"
+    name = "${local.deployment_finances}-role"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -583,7 +584,7 @@ module "fin-finances-empty" {  # Using emptyDir.
     }]
   }
   role_binding = {
-    name = "${local.svc_finances}-role-binding"
+    name = "${local.deployment_finances}-role-binding"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -591,12 +592,12 @@ module "fin-finances-empty" {  # Using emptyDir.
     annotations = {}
     role_ref = {
       kind = "Role"
-      name = "${local.svc_finances}-role"
+      name = "${local.deployment_finances}-role"
       api_group = "rbac.authorization.k8s.io"
     }
     subjects = [{
       kind = "ServiceAccount"
-      name = "${local.svc_finances}-service-account"
+      name = "${local.deployment_finances}-service-account"
       namespace = local.namespace
     }]
   }
@@ -604,7 +605,7 @@ module "fin-finances-empty" {  # Using emptyDir.
   # If the order of Secrets changes, the Deployment must be changed accordingly. See
   # spec.image_pull_secrets.
   secrets = [{
-    name = "${local.svc_finances}-registry-credentials"
+    name = "${local.deployment_finances}-registry-credentials"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -628,7 +629,7 @@ module "fin-finances-empty" {  # Using emptyDir.
     read_only_root_filesystem = true
   }]
   service = {
-    name = local.svc_finances
+    name = local.service_name_finances
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -640,12 +641,12 @@ module "fin-finances-empty" {  # Using emptyDir.
       protocol = "TCP"
     }]
     selector = {
-      "svc_selector_label" = "svc-${local.svc_finances}"
+      "svc_selector_label" = "svc-${local.service_name_finances}"
     }
     type = "ClusterIP"
   }
   service_account = {
-    name = "${local.svc_finances}-service-account"
+    name = "${local.deployment_finances}-service-account"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -653,14 +654,14 @@ module "fin-finances-empty" {  # Using emptyDir.
     annotations = {}
     automount_service_account_token = false
     secrets = [{
-      name = "${local.svc_finances}-registry-credentials"
+      name = "${local.deployment_finances}-registry-credentials"
     },
     # {
-    #   name = "${local.svc_finances}-s3-storage"
+    #   name = "${local.deployment_finances}-s3-storage"
     # }
     ]
   }
-  service_name = local.svc_finances
+  deployment_name = local.deployment_finances
   strategy = {
     type = "RollingUpdate"
     max_surge = 1
@@ -684,23 +685,6 @@ module "fin-PostgresMaster" {
   #
   app_name = var.app_name
   app_version = var.app_version
-  /***
-  "-c": This is the first argument. It's typically used in conjunction with a shell command (like
-  /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
-  string to be executed by the shell. The -c flag tells the shell to read commands from the string
-  argument that follows.
-  ***/
-    # chown -R $(POSTGRES_USER):$(POSTGRES_USER) /var/lib/postgresql/data &&
-    # chown -R 1999:1999 /wsf_data_dir/config &&
-    # chown -R 1999:1999 /wsf_data_dir
-    # chown -R 1999:1999 /var/lib/postgresql/data
-  args = ["-c",
-    <<-EOT
-    /usr/local/bin/docker-entrypoint.sh postgres
-    config_file=/wsf_data_dir/config/postgres/postgresql.conf
-    EOT
-  ]
-  command = ["/bin/bash"]
   env = {
     PGDATA = var.pgdata
   }
@@ -738,6 +722,23 @@ module "fin-PostgresMaster" {
       "create-replication-user.sh" = "${file("${var.path_postgres_scripts}/create-replication-user.sh")}"
     }
   }]
+  /***
+  "-c": This is the first argument. It's typically used in conjunction with a shell command (like
+  /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
+  string to be executed by the shell. The -c flag tells the shell to read commands from the string
+  argument that follows.
+  ***/
+    # chown -R $(POSTGRES_USER):$(POSTGRES_USER) /var/lib/postgresql/data &&
+    # chown -R 1999:1999 /wsf_data_dir/config &&
+    # chown -R 1999:1999 /wsf_data_dir
+    # chown -R 1999:1999 /var/lib/postgresql/data
+  args = ["-c",
+    <<-EOT
+    /usr/local/bin/docker-entrypoint.sh postgres
+    config_file=/wsf_data_dir/config/postgres/postgresql.conf
+    EOT
+  ]
+  command = ["/bin/bash"]
   image_pull_policy = "IfNotPresent"
   image_tag = var.postgres_image_tag
   init_container = [{
@@ -863,7 +864,7 @@ module "fin-PostgresMaster" {
       "db" = var.postgres_db_label
     }
     volume_mode = "Filesystem"
-    # The volume can be mounted as read-write by many nodes.
+    # https://kubernetes.io/docs/concepts/storage/persistent-volumes/?ref=kodekloud.com#access-modes
     access_modes = ["ReadWriteOnce"]
     # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
     # for less than 50GB, the request is rounded up to 50GB.
@@ -923,23 +924,6 @@ module "fin-PostgresReplica" {
   #
   app_name = var.app_name
   app_version = var.app_version
-  /***
-  "-c": This is the first argument. It's typically used in conjunction with a shell command (like
-  /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
-  string to be executed by the shell. The -c flag tells the shell to read commands from the string
-  argument that follows.
-  ***/
-    # chown -R $(POSTGRES_USER):$(POSTGRES_USER) /var/lib/postgresql/data &&
-    # chown -R 1999:1999 /wsf_data_dir/config &&
-    # chown -R 1999:1999 /wsf_data_dir
-    # chown -R 1999:1999 /var/lib/postgresql/data
-  args = ["-c",
-    <<-EOT
-    /usr/local/bin/docker-entrypoint.sh postgres
-    config_file=/wsf_data_dir/config/postgres/postgresql.conf
-    EOT
-  ]
-  command = ["/bin/bash"]
   env = {
     PGDATA = var.pgdata
   }
@@ -975,6 +959,23 @@ module "fin-PostgresReplica" {
       "create-replication-user.sh" = "${file("${var.path_postgres_scripts}/create-replication-user.sh")}"
     }
   }*/]
+  /***
+  "-c": This is the first argument. It's typically used in conjunction with a shell command (like
+  /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
+  string to be executed by the shell. The -c flag tells the shell to read commands from the string
+  argument that follows.
+  ***/
+    # chown -R $(POSTGRES_USER):$(POSTGRES_USER) /var/lib/postgresql/data &&
+    # chown -R 1999:1999 /wsf_data_dir/config &&
+    # chown -R 1999:1999 /wsf_data_dir
+    # chown -R 1999:1999 /var/lib/postgresql/data
+  args = ["-c",
+    <<-EOT
+    /usr/local/bin/docker-entrypoint.sh postgres
+    config_file=/wsf_data_dir/config/postgres/postgresql.conf
+    EOT
+  ]
+  command = ["/bin/bash"]
   image_pull_policy = "IfNotPresent"
   image_tag = var.postgres_image_tag
   init_container = [{
@@ -982,17 +983,10 @@ module "fin-PostgresReplica" {
     env = {
       PGDATA = var.pgdata
       PGHOST = local.service_name_postgres_master
+      PGPASSWORD = "rpassword"
     }
 
 
-    # env_from_secrets = [{
-    #   name = "replica-data-directory-secret"
-    #   # namespace = local.namespace
-    #   labels = {
-    #     "app" = var.app_name
-    #   }
-    #   # Plain-text data.
-    #   data = {
  /***
         The PGPASSWORD environment variable in PostgreSQL allows the specification of a password for database connections without requiring interactive input. This variable can be set in the shell before executing PostgreSQL client applications like psql or pg_dump.
 
@@ -1002,23 +996,21 @@ For improved security, consider using the following alternatives:
 A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on Windows) can store connection details, including passwords, in a more secure manner. The file permissions must be set correctly (e.g., chmod 600 ~/.pgpass) to prevent unauthorized access.
 
         ***/
-    #     PGPASSWORD = var.replication_password
-    #   }
-    #   type = "Opaque"
-    #   immutable = true
-    # }]
+    env_from_secrets = [
+      "replica-data-directory-secret"
+    ]
 
 
-    command = ["/bin/sh",
+    command = ["/bin/bash",
       "-c",
       # https://www.postgresql.org/docs/current/app-pgbasebackup.html
       <<-EOT
-      mkdir -p $(PGDATA)
-      if [ -z "$(ls -A $(PGDATA))" ];
+      mkdir -p $PGDATA
+      if [ -z "$(ls -A $PGDATA)" ];
       then
         echo "Running pg_basebackup to catch up replication server...";
-        pg_basebackup -h $(PGHOST) -R -D $(PGDATA) -P -U replication;
-        chown -R 1999:1999 $(PGDATA);
+        pg_basebackup -h $PGHOST -R -D $PGDATA -P -U replication;
+        chown -R 1999:1999 $PGDATA;
       else
         echo "Skipping pg_basebackup because directory is not empty";
       fi
@@ -1052,8 +1044,8 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     success_threshold = 1
     exec = {
       command = ["pg_isready",
-        # "--host", "$POD_IP",
-        # "--port", "5432",
+        "--host", "$POD_IP",
+        "--port", "5432",
         "--username", "${var.postgres_user}",
         "--dbname", "${var.postgres_db}"
       ]
@@ -1074,6 +1066,8 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     exec = {
       # https://www.postgresql.org/docs/current/app-pg-isready.html
       command = ["pg_isready",
+        "--host", "$POD_IP",
+        "--port", "5432",
         "-U", "${var.postgres_user}",
         "-d", "${var.postgres_db}"
       ]
@@ -1097,6 +1091,18 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
       POSTGRES_USER = var.postgres_user
       POSTGRES_PASSWORD = var.postgres_password
       REPLICATION_PASSWORD = var.replication_password
+    }
+    type = "Opaque"
+    immutable = true
+  }, {
+    name = "replica-data-directory-secret"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    # Plain-text data.
+    data = {
+      PGPASSWORD = var.replication_password
     }
     type = "Opaque"
     immutable = true
@@ -1136,7 +1142,7 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
       "app" = var.app_name
     }
     volume_mode = "Filesystem"
-    # The volume can be mounted as read-write by many nodes.
+    # https://kubernetes.io/docs/concepts/storage/persistent-volumes/?ref=kodekloud.com#access-modes
     access_modes = ["ReadWriteOnce"]
     # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
     # for less than 50GB, the request is rounded up to 50GB.
@@ -1560,5 +1566,5 @@ module "fin-MySqlRouter" {
     }
     type = "ClusterIP"
   }
-  service_name = local.svc_mysql_router
+  deployment_name = local.svc_mysql_router
 }
