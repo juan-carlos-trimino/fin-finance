@@ -103,14 +103,7 @@ variable init_container {
     image_pull_policy = optional(string)
     command = optional(list(string))
     env = optional(map(any), {})
-    env_from_secrets = optional(list(object({
-      name = string
-      labels = optional(map(string), {})
-      annotations = optional(map(string), {})
-      data = optional(map(string), {})
-      binary_data = optional(map(string), {})  # base64 encoding.
-      type = optional(string, "Opaque")
-    })), [])
+    env_from_secrets = optional(list(string), [])
     security_context = optional(list(object({
       run_as_non_root = bool
       run_as_user = number
@@ -385,17 +378,6 @@ variable service_account {
     })), [])
   })
 }
-variable service_session_affinity {
-  default = "None"
-  type = string
-}
-/***
-The ServiceType allows to specify what kind of Service to use: ClusterIP (default), NodePort,
-LoadBalancer, and ExternalName.
-***/
-variable service_type {
-  default = "ClusterIP"
-}
 variable statefulset_name {
   type = string
 }
@@ -618,7 +600,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
       pod-name.service-name.namespace.svc.cluster.local.
     ***/
     service_name = var.service.name
-    replicas = var.replicas
     dynamic "update_strategy" {
       for_each = var.update_strategy == null ? [] : [1]
       content {
@@ -629,6 +610,8 @@ resource "kubernetes_stateful_set" "stateful_set" {
       }
     }
     pod_management_policy = var.pod_management_policy
+    # The desired number of pods that should be running.
+    replicas = var.replicas
     /***
     Pod Selector - You must set the .spec.selector field of a StatefulSet to match the labels of
     its .spec.template.metadata.labels. Failing to specify a matching Pod Selector will result in
@@ -654,13 +637,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
       }
       #
       spec {
-        /***
-        By default, the default-token Secret is mounted into every container, but you can
-        disable that in each pod by setting the automountServiceAccountToken field in the pod spec
-        to false or by setting it to false on the service account the pod is using.
-        ***/
-        automount_service_account_token = var.automount_service_account_token
-        service_account_name = var.service_account == null ? "default" : var.service_account.name
         dynamic "affinity" {
           for_each = var.affinity == {} ? [] : [1]
           content {
@@ -715,6 +691,13 @@ resource "kubernetes_stateful_set" "stateful_set" {
           }
         }
         termination_grace_period_seconds = var.termination_grace_period_seconds
+        service_account_name = var.service_account == null ? "default" : var.service_account.name
+        /***
+        By default, the default-token Secret is mounted into every container, but you can
+        disable that in each pod by setting the automountServiceAccountToken field in the pod spec
+        to false or by setting it to false on the service account the pod is using.
+        ***/
+        automount_service_account_token = var.automount_service_account_token
         restart_policy = var.restart_policy
         /***
         Security context options at the pod level serve as a default for all the pod's containers
@@ -756,7 +739,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
             image_pull_policy = it.value["image_pull_policy"]
             dynamic "env" {
               for_each = it.value["env"]
-              //iterator = it1
               content {
                 name = env.key
                 value = env.value
@@ -767,7 +749,8 @@ resource "kubernetes_stateful_set" "stateful_set" {
               iterator = it1
               content {
                 secret_ref {
-                  name = it1.value["name"]
+                  # name = it1.value["name"]
+                  name = it1.value
                 }
               }
             }
@@ -799,6 +782,50 @@ resource "kubernetes_stateful_set" "stateful_set" {
           name = var.statefulset_name
           image = var.image_tag
           image_pull_policy = var.image_pull_policy
+          /***
+          To list all of the environment variables:
+          Linux: $ printenv
+          ***/
+          dynamic "env" {
+            for_each = var.env
+            content {
+              name = env.key
+              value = env.value
+            }
+          }
+          dynamic "env" {
+            for_each = var.env_field
+            content {
+              name = env.value["name"]
+              value_from {
+                field_ref {
+                  field_path = env.value["field_path"]
+                }
+              }
+            }
+          }
+          dynamic "env_from" {
+            for_each = var.config_map
+            content {
+              config_map_ref {
+                name = env_from.value["name"]
+              }
+            }
+          }
+          /***
+          In K8s, envFrom with secretRef is a method used to inject all key-value pairs from a
+          specified Kubernetes Secret as environment variables into a container within a Pod.
+          This differs from secretKeyRef which allows for the selection of specific keys from a
+          Secret to be injected as environment variables.
+          ***/
+          dynamic "env_from" {
+            for_each = var.secrets
+            content {
+              secret_ref {
+                name = env_from.value["name"]
+              }
+            }
+          }
           command = var.command
           args = var.args
           dynamic "security_context" {
@@ -958,50 +985,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
               }
             }
           }
-          /***
-          To list all of the environment variables:
-          Linux: $ printenv
-          ***/
-          dynamic "env" {
-            for_each = var.env
-            content {
-              name = env.key
-              value = env.value
-            }
-          }
-          dynamic "env" {
-            for_each = var.env_field
-            content {
-              name = env.value["name"]
-              value_from {
-                field_ref {
-                  field_path = env.value["field_path"]
-                }
-              }
-            }
-          }
-          dynamic "env_from" {
-            for_each = var.config_map
-            content {
-              config_map_ref {
-                name = env_from.value["name"]
-              }
-            }
-          }
-          /***
-          In K8s, envFrom with secretRef is a method used to inject all key-value pairs from a
-          specified Kubernetes Secret as environment variables into a container within a Pod.
-          This differs from secretKeyRef which allows for the selection of specific keys from a
-          Secret to be injected as environment variables.
-          ***/
-          dynamic "env_from" {
-            for_each = var.secrets
-            content {
-              secret_ref {
-                name = env_from.value["name"]
-              }
-            }
-          }
           dynamic "volume_mount" {
             for_each = var.volume_mount
             content {
@@ -1128,6 +1111,10 @@ resource "kubernetes_stateful_set" "stateful_set" {
   }
 }
 
+/***
+A headless service is a K8s service that does not have a cluster IP address. Instead, it provides
+DNS records for the pods in the stateful set.
+***/
 resource "kubernetes_service" "headless_service" {
   metadata {
     name = var.service.name
