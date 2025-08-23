@@ -208,9 +208,31 @@ module "fin-finances-persistent" {
   source = "./modules/deployment"
   dir_path = ".."
   #
+  affinity = {
+    pod_anti_affinity = {
+      required_during_scheduling_ignored_during_execution = [{
+        topology_key = "kubernetes.io/hostname"
+        label_selector = {
+          # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
+          # the label "aff-finances: running".
+          match_expressions = [{
+            "key" = "aff-finances"
+            "operator" = "In"
+            "values" = ["running"]
+          }]
+        }
+      }]
+    }
+  }
   app_name = var.app_name
   app_version = var.app_version
   build_image = var.build_image
+  containers_security_context = {
+    allow_privilege_escalation = false
+    privileged = false
+    read_only_root_filesystem = true
+    run_as_non_root = true
+  }
   cr_login_server = local.cr_login_server
   cr_username = var.cr_username
   cr_password = var.cr_password
@@ -253,6 +275,7 @@ module "fin-finances-persistent" {
   # *** s3 storage ***
   image_tag = var.build_image ? "" : "${var.cr_username}/${local.deployment_finances}:${var.app_version}"
   labels = {
+    "aff-finances" = "running"
     "app" = var.app_name
   }
   # You should always define a liveness probe. Keep probes light.
@@ -293,9 +316,14 @@ module "fin-finances-persistent" {
     storage_size = "50Gi"
     storage_class_name = "oci-bv"
   }]
-  pod_security_context = [{
-    fs_group = 2200
-  }]
+  # Ensure that the non-root user running the container has the necessary group permissions to
+  # access files in mounted volumes.
+  pod_security_context = {
+    fs_group = 1100
+    run_as_non_root = true
+    run_as_user = 1100
+    run_as_group = 1100
+  }
   # You should always define a readiness probe, even if it's as simple as sending an HTTP request
   # to the base URL.
   readiness_probe = [{
@@ -320,7 +348,7 @@ module "fin-finances-persistent" {
     #     "ls -al /wsf_data_dir"
     # ]}
   }]
-  replicas = 1
+  replicas = 3
   # Limits and requests for CPU resources are measured in millicores. If the container needs one
   # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
   # value of '250m.'
@@ -394,12 +422,6 @@ module "fin-finances-persistent" {
   # }
   # *** s3 storage ***
   ]
-  security_context = [{
-    run_as_non_root = true
-    run_as_user = 1100
-    run_as_group = 1100
-    read_only_root_filesystem = true
-  }]
   service = {
     name = local.service_name_finances
     namespace = local.namespace
@@ -434,6 +456,11 @@ module "fin-finances-persistent" {
     ]
   }
   deployment_name = local.deployment_finances
+  strategy = {
+    type = "RollingUpdate"
+    max_surge = 1
+    max_unavailable = 0
+  }
   volume_mount = [{
     name = "wsf"
     mount_path = "/wsf_data_dir"
@@ -470,6 +497,11 @@ module "fin-finances-empty" {  # Using emptyDir.
   app_name = var.app_name
   app_version = var.app_version
   build_image = var.build_image
+  containers_security_context = {
+    allow_privilege_escalation = false
+    privileged = false
+    read_only_root_filesystem = true
+  }
   cr_login_server = local.cr_login_server
   cr_password = var.cr_password
   cr_username = var.cr_username
@@ -493,13 +525,13 @@ module "fin-finances-empty" {  # Using emptyDir.
     ]
     image = "busybox:1.34.1"
     image_pull_policy = "IfNotPresent"
-    security_context = [{
+    security_context = {
       run_as_non_root = false
       run_as_user = 0
       run_as_group = 0
       read_only_root_filesystem = true
       privileged = true
-    }]
+    }
     volume_mounts = [{
       name = "wsf"
       mount_path = "/wsf_data_dir"
@@ -534,9 +566,14 @@ module "fin-finances-empty" {  # Using emptyDir.
     # ]}
   }]
   namespace = local.namespace
-  pod_security_context = [{
-    fs_group = 2200
-  }]
+  # Ensure that the non-root user running the container has the necessary group permissions to
+  # access files in mounted volumes.
+  pod_security_context = {
+    fs_group = 1100
+    run_as_non_root = true
+    run_as_user = 1100
+    run_as_group = 1100
+  }
   # You should always define a readiness probe, even if it's as simple as sending an HTTP request
   # to the base URL.
   readiness_probe = [{
@@ -622,12 +659,6 @@ module "fin-finances-empty" {  # Using emptyDir.
     }
     type = "kubernetes.io/dockerconfigjson"
   }]
-  security_context = [{
-    run_as_non_root = true
-    run_as_user = 1100
-    run_as_group = 1100
-    read_only_root_filesystem = true
-  }]
   service = {
     name = local.service_name_finances
     namespace = local.namespace
@@ -655,11 +686,7 @@ module "fin-finances-empty" {  # Using emptyDir.
     automount_service_account_token = false
     secrets = [{
       name = "${local.deployment_finances}-registry-credentials"
-    },
-    # {
-    #   name = "${local.deployment_finances}-s3-storage"
-    # }
-    ]
+    }]
   }
   deployment_name = local.deployment_finances
   strategy = {
@@ -739,7 +766,7 @@ module "fin-PostgresMaster" {
   args = ["-c",
     <<-EOT
     /usr/local/bin/docker-entrypoint.sh postgres
-    config_file=/wsf_data_dir/config/postgres/postgresql.conf && id && chown -R 1999:1999 /wsf_data_dir
+    config_file=/wsf_data_dir/config/postgres/postgresql.conf
     EOT
   ]
   command = ["/bin/bash"]
@@ -749,21 +776,57 @@ module "fin-PostgresMaster" {
     name = "init-master"
     command = ["/bin/sh",
       "-c",
-      "mkdir -p /wsf_data_dir/data/archive && id"
-      # "chown -R 1999:1999 /wsf_data_dir && mkdir -p /wsf_data_dir/data/archive && chown -R 1999:1999 /docker-entrypoint-initdb.d"
+      "mkdir -p /wsf_data_dir/data/archive && chown -v -R 1999:1999 /wsf_data_dir && chmod -v -R 750 /wsf_data_dir && id"
+      # mkdir -p /wsf_data_dir/data/archive &&
+      # && chown -R 1999:1999 /docker-entrypoint-initdb.d"
     ]
     image = "busybox:1.34.1"
     image_pull_policy = "IfNotPresent"
-    # security_context = {
-    #   run_as_non_root = true
-    #   read_only_root_filesystem = false
-    #   privileged = false
-    # }
+    security_context = {
+      run_as_user = 0
+      run_as_group = 0
+      run_as_non_root = false
+      read_only_root_filesystem = true
+      privileged = true
+    }
     volume_mounts = [{
       name = "wsf"
       mount_path = "/wsf_data_dir"
       read_only = false
-    }]
+    }
+
+# {
+#     name = "data"
+#     mount_path = "/wsf_data_dir/data"
+#     read_only = false
+#   },
+
+
+# {
+#     name = "archive"
+#     mount_path = "/wsf_data_dir/data/archive"
+#     read_only = false
+#   },
+
+
+# {
+#     name = "config"
+#     mount_path = "/wsf_data_dir/config"
+#     read_only = false
+#   },
+  #    {
+  #   name = "script"
+  #   namespace = local.namespace
+  #   labels = {
+  #     "app" = var.app_name
+  #     "db" = var.postgres_db_label
+  #   }
+  #   # https://hub.docker.com/_/postgres#initialization-scripts
+  #   mount_path = "/docker-entrypoint-initdb.d/create-replication-user.sh"
+  #   sub_path = "create-replication-user.sh"
+  #   read_only = false
+  # }
+  ]
   }]
   labels = {
     # "aff-mysql-server" = "running"
@@ -899,7 +962,11 @@ module "fin-PostgresMaster" {
     name = "config"
     mount_path = "/wsf_data_dir/config"
     read_only = false
-  }, {
+  },
+
+
+
+   {
     name = "script"
     namespace = local.namespace
     labels = {
