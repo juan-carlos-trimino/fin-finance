@@ -1000,6 +1000,45 @@ resource "kubernetes_deployment" "stateless" {
           name = var.deployment_name
           image_pull_policy = var.image_pull_policy
           image = local.image_tag
+          /***
+          Environment variables must be defined before they are used!!!
+          To list all of the environment variables:
+          Linux: $ printenv
+          ***/
+          dynamic "env" {
+            for_each = var.env
+            content {
+              name = env.key
+              value = env.value
+            }
+          }
+          dynamic "env" {
+            for_each = var.env_field
+            content {
+              name = env.value["env_name"]
+              value_from {
+                field_ref {
+                  field_path = env.value["field_path"]
+                }
+              }
+            }
+          }
+          dynamic "env_from" {
+            for_each = var.config_map
+            content {
+              config_map_ref {
+                name = env_from.value["name"]
+              }
+            }
+          }
+          dynamic "env_from" {
+            for_each = var.secrets
+            content {
+              secret_ref {
+                name = env_from.value["name"]
+              }
+            }
+          }
           command = var.command
           args = var.args
           /***
@@ -1160,44 +1199,6 @@ resource "kubernetes_deployment" "stateless" {
               limits = {
                 cpu = var.resources.limits_cpu
                 memory = var.resources.limits_memory
-              }
-            }
-          }
-          /***
-          To list all of the environment variables:
-          Linux: $ printenv
-          ***/
-          dynamic "env" {
-            for_each = var.env
-            content {
-              name = env.key
-              value = env.value
-            }
-          }
-          dynamic "env" {
-            for_each = var.env_field
-            content {
-              name = env.value["env_name"]
-              value_from {
-                field_ref {
-                  field_path = env.value["field_path"]
-                }
-              }
-            }
-          }
-          dynamic "env_from" {
-            for_each = var.config_map
-            content {
-              config_map_ref {
-                name = env_from.value["name"]
-              }
-            }
-          }
-          dynamic "env_from" {
-            for_each = var.secrets
-            content {
-              secret_ref {
-                name = env_from.value["name"]
               }
             }
           }
