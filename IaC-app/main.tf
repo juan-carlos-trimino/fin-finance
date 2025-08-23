@@ -722,42 +722,43 @@ module "fin-PostgresMaster" {
       "create-replication-user.sh" = "${file("${var.path_postgres_scripts}/create-replication-user.sh")}"
     }
   }]
+  containers_security_context = {
+    allow_privilege_escalation = false
+    privileged = false
+    read_only_root_filesystem = false
+  }
   /***
   "-c": This is the first argument. It's typically used in conjunction with a shell command (like
   /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
   string to be executed by the shell. The -c flag tells the shell to read commands from the string
   argument that follows.
   ***/
-    # chown -R $(POSTGRES_USER):$(POSTGRES_USER) /var/lib/postgresql/data &&
     # chown -R 1999:1999 /wsf_data_dir/config &&
     # chown -R 1999:1999 /wsf_data_dir
     # chown -R 1999:1999 /var/lib/postgresql/data
   args = ["-c",
     <<-EOT
     /usr/local/bin/docker-entrypoint.sh postgres
-    config_file=/wsf_data_dir/config/postgres/postgresql.conf
+    config_file=/wsf_data_dir/config/postgres/postgresql.conf && id && chown -R 1999:1999 /wsf_data_dir
     EOT
   ]
   command = ["/bin/bash"]
   image_pull_policy = "IfNotPresent"
   image_tag = var.postgres_image_tag
   init_container = [{
-    name = "file-permission"
+    name = "init-master"
     command = ["/bin/sh",
       "-c",
-      "mkdir -p /wsf_data_dir/data/archive"
-      # && chown -R 1999:1999 /wsf_data_dir/data/archive"
-      # "mkdir -p /wsf_data_dir/data/archive && chown -R 1999:1999 /wsf_data_dir/data/archive && chown 1999:1999 /var/run/postgresql"
+      "mkdir -p /wsf_data_dir/data/archive && id"
+      # "chown -R 1999:1999 /wsf_data_dir && mkdir -p /wsf_data_dir/data/archive && chown -R 1999:1999 /docker-entrypoint-initdb.d"
     ]
     image = "busybox:1.34.1"
     image_pull_policy = "IfNotPresent"
-    security_context = [{
-      run_as_non_root = true
-      run_as_user = 1999
-      run_as_group = 1999
-      read_only_root_filesystem = true
-      privileged = true
-    }]
+    # security_context = {
+    #   run_as_non_root = true
+    #   read_only_root_filesystem = false
+    #   privileged = false
+    # }
     volume_mounts = [{
       name = "wsf"
       mount_path = "/wsf_data_dir"
@@ -787,9 +788,12 @@ module "fin-PostgresMaster" {
   namespace = local.namespace
   # Ensure that the non-root user running the container has the necessary group permissions to
   # access files in mounted volumes.
-  pod_security_context = [{
+  pod_security_context = {
     fs_group = 1999
-  }]
+    run_as_non_root = true
+    run_as_user = 1999
+    run_as_group = 1999
+  }
   readiness_probe = [{
     initial_delay_seconds = 30
     period_seconds = 5
@@ -846,12 +850,6 @@ module "fin-PostgresMaster" {
     publish_not_ready_addresses = true
     type = "ClusterIP"
   }
-  security_context = [{
-    run_as_non_root = true
-    run_as_user = 1999
-    run_as_group = 1999
-    read_only_root_filesystem = false
-  }]
   statefulset_name = local.statefulset_postgres_master
   update_strategy = {
     type = "RollingUpdate"
@@ -915,7 +913,7 @@ module "fin-PostgresMaster" {
 }
 
 module "fin-PostgresReplica" {
-  count = var.db_postgres && !var.k8s_crds ? 1 : 0
+  count = var.db_postgres && !var.k8s_crds ? /*1*/0 : 0
   depends_on = [
     module.fin-PostgresMaster
   ]
@@ -965,25 +963,31 @@ module "fin-PostgresReplica" {
   string to be executed by the shell. The -c flag tells the shell to read commands from the string
   argument that follows.
   ***/
-    # chown -R $(POSTGRES_USER):$(POSTGRES_USER) /var/lib/postgresql/data &&
     # chown -R 1999:1999 /wsf_data_dir/config &&
     # chown -R 1999:1999 /wsf_data_dir
+    #  &&
+    # chown -R 1999:1999 /var/lib/postgresql/data &&
     # chown -R 1999:1999 /var/lib/postgresql/data
-  args = ["-c",
+  args = [
     <<-EOT
     /usr/local/bin/docker-entrypoint.sh postgres
     config_file=/wsf_data_dir/config/postgres/postgresql.conf
     EOT
   ]
   command = ["/bin/bash"]
+  containers_security_context = {
+    allow_privilege_escalation = false
+    privileged = false
+    read_only_root_filesystem = false
+  }
   image_pull_policy = "IfNotPresent"
   image_tag = var.postgres_image_tag
   init_container = [{
-    name = "setup-replica-data-directory"
+    name = "init-replica"
     env = {
       PGDATA = var.pgdata
       PGHOST = local.service_name_postgres_master
-      PGPASSWORD = "rpassword"
+      # PGPASSWORD = var.replication_password
     }
 
 
@@ -1018,13 +1022,10 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     ]
     image = var.postgres_image_tag
     image_pull_policy = "IfNotPresent"
-    security_context = [{
-      run_as_non_root = true
-      run_as_user = 1999
-      run_as_group = 1999
+    security_context = {
       read_only_root_filesystem = false
-      privileged = true
-    }]
+      privileged = false
+    }
     volume_mounts = [{
       name = "wsf"
       mount_path = "/wsf_data_dir"
@@ -1054,9 +1055,12 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
   namespace = local.namespace
   # Ensure that the non-root user running the container has the necessary group permissions to
   # access files in mounted volumes.
-  pod_security_context = [{
+  pod_security_context = {
     fs_group = 1999
-  }]
+    run_as_non_root = true
+    run_as_user = 1999
+    run_as_group = 1999
+  }
   readiness_probe = [{
     initial_delay_seconds = 30
     period_seconds = 5
@@ -1090,6 +1094,7 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
       POSTGRES_DB = var.postgres_db
       POSTGRES_USER = var.postgres_user
       POSTGRES_PASSWORD = var.postgres_password
+      PGPASSWORD =  var.postgres_password
       REPLICATION_PASSWORD = var.replication_password
     }
     type = "Opaque"
@@ -1125,12 +1130,6 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     publish_not_ready_addresses = true
     type = "ClusterIP"
   }
-  security_context = [{
-    run_as_non_root = true
-    run_as_user = 1999
-    run_as_group = 1999
-    read_only_root_filesystem = false
-  }]
   statefulset_name = local.statefulset_postgres_replica
   update_strategy = {
     type = "RollingUpdate"
@@ -1175,13 +1174,7 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     name = "config"
     mount_path = "/wsf_data_dir/config"
     read_only = false
-  }/*, {
-    name = "init-scripts"
-    # https://hub.docker.com/_/postgres#initialization-scripts
-    mount_path = "/docker-entrypoint-initdb.d/create-replication-user.sh"
-    sub_path = "create-replication-user.sh"
-    read_only = false
-  }*/]
+  }]
 }
 
 
@@ -1191,35 +1184,8 @@ module "fin-MySqlServer" {
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/statefulset"
   #
-  affinity = {
-    pod_anti_affinity = {
-      required_during_scheduling_ignored_during_execution = [{
-        topology_key = "kubernetes.io/hostname"
-        label_selector = {
-          match_expressions = [{
-            "key" = "aff-mysql-server"
-            "operator" = "In"
-            "values" = ["running"]
-          }]
-        }
-      }]
-    }
-  }
   app_name = var.app_name
   app_version = var.app_version
-  # config_map = [{
-  #   name = "${var.app_name}-mysql-config-map"
-  #   namespace = local.namespace
-  #   labels = {
-  #     "app" = var.app_name
-  #   }
-  #   data = {
-  #     "MYSQL_DATABASE" = var.mysql_database
-  #     "MYSQL_USER" = var.mysql_user
-  #     "MYSQL_PASSWORD" = var.mysql_password
-  #     "MYSQL_ROOT_PASSWORD" = var.mysql_root_password
-  #   }
-  # }]
   /***
   "-c": This is the first argument. It's typically used in conjunction with a shell command (like
   /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
@@ -1290,45 +1256,7 @@ module "fin-MySqlServer" {
     "aff-mysql-server" = "running"
     "app" = var.app_name
   }
-  /*
-  liveness_probe = [{
-    initial_delay_seconds = 150
-    period_seconds = 30
-    timeout_seconds = 30
-    # failure_threshold = 60
-    exec = {
-      command = [
-        "bash",
-        "-c",
-        <<-EOT
-        |
-        mysqladmin -uroot -p$MYSQL_ROOT_PASSWORD ping
-        EOT
-    ]}
-  }]
-  */
   namespace = local.namespace
-  pod_security_context = [{
-    fs_group = 2200
-  }]
-  /*
-  readiness_probe = [{
-    initial_delay_seconds = 150
-    period_seconds = 30
-    timeout_seconds = 30
-    # failure_threshold = 60
-    # success_threshold = 1
-    exec = {
-      command = [
-        "bash",
-        "-c",
-        <<-EOT
-        |
-        mysql -h127.0.0.1 -uroot -p$MYSQL_ROOT_PASSWORD -e'SELECT 1'
-        EOT
-    ]}
-  }]
-  */
   # Always use 3 or more nodes for fault tolerance.
   replicas = 3
   resources = {  # QoS - Guaranteed
@@ -1351,12 +1279,6 @@ module "fin-MySqlServer" {
     }
     type = "Opaque"
     immutable = true
-  }]
-  security_context = [{
-    run_as_non_root = true
-    run_as_user = 1100
-    run_as_group = 1100
-    read_only_root_filesystem = false
   }]
   service = {
     name = "${local.svc_mysql}-headless"
@@ -1524,12 +1446,6 @@ module "fin-MySqlRouter" {
       MYSQL_PASSWORD = var.mysql_router_password
     }
     type = "Opaque"
-  }]
-  security_context = [{
-    run_as_non_root = true
-    run_as_user = 1100
-    run_as_group = 1100
-    read_only_root_filesystem = false
   }]
   service = {
     name = "${local.svc_mysql_router}"
