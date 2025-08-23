@@ -79,6 +79,34 @@ variable config_map {
     immutable = optional(bool, false)
   }))
 }
+# https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/pod#nested-schema-for-speccontainersecurity_context
+variable containers_security_context {  # spec.containers[x].securityContext
+  default = {}
+  type = object({
+    allow_privilege_escalation = optional(bool)
+    capabilities = optional(object({
+      add = optional(list(string))
+      drop = optional(list(string))
+    }))
+    privileged = optional(bool)
+    read_only_root_filesystem = optional(bool)
+    # Processes inside container will run as primary group "run_as_group".
+    run_as_group = optional(number)
+    run_as_non_root = optional(bool)
+    # Processes inside container will run as user "run_as_user".
+    run_as_user = optional(number)
+    se_linux_options = optional(object({
+      user = optional(string)
+      role = optional(string)
+      type = optional(string)
+      level = optional(string)
+    }))
+    seccomp_profile = optional(object({
+      type = optional(string)
+      localhost_profile = optional(string)
+    }))
+  })
+}
 variable cr_login_server {
   default = ""
   type = string
@@ -144,13 +172,30 @@ variable init_container {
     command = optional(list(string))
     env = optional(map(any), {})
     env_from_secrets = optional(list(string), [])
-    security_context = optional(list(object({
-      run_as_non_root = bool
-      run_as_user = number
-      run_as_group = number
-      read_only_root_filesystem = bool
-      privileged = bool
-    })), [])
+    security_context = optional(object({
+      allow_privilege_escalation = optional(bool)
+      capabilities = optional(object({
+        add = optional(list(string))
+        drop = optional(list(string))
+      }))
+      privileged = optional(bool)
+      read_only_root_filesystem = optional(bool)
+      # Processes inside container will run as primary group "run_as_group".
+      run_as_group = optional(number)
+      run_as_non_root = optional(bool)
+      # Processes inside container will run as user "run_as_user".
+      run_as_user = optional(number)
+      se_linux_options = optional(object({
+        user = string
+        role = string
+        type = string
+        level = string
+      }))
+      seccomp_profile = optional(object({
+        type = string
+       localhost_profile = optional(string)
+      }))
+    }))
     volume_mounts = optional(list(object({
       name = string
       mount_path = string
@@ -236,15 +281,44 @@ variable persistent_volume_claims {
     storage_class_name = optional(string)
   }))
 }
-variable pod_security_context {
-  default = []
-  type = list(object({
-    run_as_user = optional(string)
-    run_as_group = optional(string)
-    fs_group = optional(string)
+# https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/pod#nested-schema-for-specsecurity_context
+variable pod_security_context {  # spec.securityContext
+  default = {}
+  type = object({
+    # fs_group ensures that any volumes mounted by the Pod will have their ownership changed to
+    # this specified group ID.
+    # The "volumeMounts.mountPath" will have its group ownership set to "fs_group".
+    # Any files created within "mountPath" by the container will be owned by user "run_as_user"
+    # and group "fs_group" (due to "fsGroup").
+    fs_group = optional(number)
     fs_group_change_policy = optional(string)
+    # Processes inside container will run as primary group "run_as_group".
+    run_as_group = optional(number)
+    run_as_non_root = optional(bool)
+    # Processes inside container will run as user "run_as_user".
+    run_as_user = optional(number)
+    se_linux_options = optional(object({
+      user = optional(string)
+      role = optional(string)
+      type = optional(string)
+      level = optional(string)
+    }))
+    seccomp_profile = optional(object({
+      type = optional(string)
+      localhost_profile = optional(string)
+    }))
     supplemental_groups = optional(set(number))
-  }))
+    sysctl = optional(list(object({
+      name = string
+      value = string
+    })), [])
+    windows_options = optional(object({
+      gmsa_credential_spec = optional(string)
+      gmsa_credential_spec_name = optional(string)
+      host_process = optional(bool)
+      run_as_username = optional(string)
+    }))
+  })
 }
 # https://registry.terraform.io/providers/hashicorp/kubernetes/2.25.2/docs/resources/deployment#progress_deadline_seconds-1
 variable progress_deadline_seconds {
@@ -925,18 +999,14 @@ resource "kubernetes_deployment" "stateless" {
         but can be overridden at the container level.
         ***/
         dynamic "security_context" {
-          for_each = var.pod_security_context
-          iterator = it
+          for_each = var.pod_security_context == {} ? [] : [1]
           content {
-            run_as_user = it.value["run_as_user"]
-            run_as_group = it.value["run_as_group"]
             /***
             Set the group that owns the pod volumes. This group will be used by K8s to change the
             permissions of all files/directories in the volumes, when the volumes are mounted by
             a pod.
             ***/
-            fs_group = it.value["fs_group"]
-            supplemental_groups = it.value["supplemental_groups"]
+            fs_group = var.pod_security_context.fs_group
             /***
             By default, Kubernetes recursively changes ownership and permissions for the contents
             of each volume to match the fsGroup specified in a Pod's securityContext when that
@@ -945,7 +1015,44 @@ resource "kubernetes_deployment" "stateless" {
             field inside a securityContext to control the way that Kubernetes checks and manages
             ownership and permissions for a volume.
             ***/
-            fs_group_change_policy = it.value["fs_group_change_policy"]
+            fs_group_change_policy = var.pod_security_context.fs_group_change_policy
+            run_as_group = var.pod_security_context.run_as_group
+            run_as_non_root = var.pod_security_context.run_as_non_root
+            run_as_user = var.pod_security_context.run_as_user
+            dynamic "se_linux_options" {
+              for_each = var.pod_security_context.se_linux_options == null ? [] : [1]
+              content {
+                user = var.pod_security_context.se_linux_options.user
+                role = var.pod_security_context.se_linux_options.role
+                type = var.pod_security_context.se_linux_options.type
+                level = var.pod_security_context.se_linux_options.level
+              }
+            }
+            dynamic "seccomp_profile" {
+              for_each = var.pod_security_context.seccomp_profile == null ? [] : [1]
+              content {
+                type = var.pod_security_context.seccomp_profile.type
+                localhost_profile = var.pod_security_context.seccomp_profile.localhost_profile
+              }
+            }
+            supplemental_groups = var.pod_security_context.supplemental_groups
+            dynamic "sysctl" {
+              for_each = var.pod_security_context.sysctl
+              iterator = it
+              content {
+                name = it.name
+                value = it.value
+              }
+            }
+            dynamic "windows_options" {
+              for_each = var.pod_security_context.windows_options == null ? [] : [1]
+              content {
+                gmsa_credential_spec = var.pod_security_context.windows_options.gmsa_credential_spec
+                gmsa_credential_spec_name = var.pod_security_context.windows_options.gmsa_credential_spec_name
+                host_process = var.pod_security_context.windows_options.host_process
+                run_as_username = var.pod_security_context.windows_options.run_as_username
+              }
+            }
           }
         }
         # These containers are run during pod initialization.
@@ -974,14 +1081,38 @@ resource "kubernetes_deployment" "stateless" {
             }
             command = it.value["command"]
             dynamic "security_context" {
-              for_each = it.value["security_context"]
-              iterator = it1
+              for_each = it.value.security_context == null ? [] : [1]
+              # iterator = it1
               content {
-                run_as_non_root = it1.value["run_as_non_root"]
-                run_as_user = it1.value["run_as_user"]
-                run_as_group = it1.value["run_as_group"]
-                read_only_root_filesystem = it1.value["read_only_root_filesystem"]
-                privileged = it1.value["privileged"]
+                allow_privilege_escalation = it.value.security_context.allow_privilege_escalation
+                dynamic "capabilities" {
+                  for_each = it.value.security_context.capabilities == null ? [] : [1]
+                  content {
+                    add = it.value.security_context.capabilities.add
+                    drop = it.value.security_context.capabilities.drop
+                  }
+                }
+                privileged = it.value.security_context.privileged
+                read_only_root_filesystem = it.value.security_context.read_only_root_filesystem
+                run_as_group = it.value.security_context.run_as_group
+                run_as_non_root = it.value.security_context.run_as_non_root
+                run_as_user = it.value.security_context.run_as_user
+                dynamic "se_linux_options" {
+                  for_each = it.value.security_context.se_linux_options == null ? [] : [1]
+                  content {
+                    user = it.value.security_context.se_linux_options.user
+                    role = it.value.security_context.se_linux_options.role
+                    type = it.value.security_context.se_linux_options.type
+                    level = it.value.security_context.se_linux_options.level
+                  }
+                }
+                dynamic "seccomp_profile" {
+                  for_each = it.value.security_context.seccomp_profile == null ? [] : [1]
+                  content {
+                    type = it.value.security_context.seccomp_profile.type
+                    localhost_profile = it.value.security_context.seccomp_profile.localhost_profile
+                  }
+                }
               }
             }
             dynamic "volume_mount" {
@@ -1047,12 +1178,37 @@ resource "kubernetes_deployment" "stateless" {
           Container settings do not affect the Pod's Volumes.
           ***/
           dynamic "security_context" {
-            for_each = var.security_context
+            for_each = var.containers_security_context == {} ? [] : [1]
             content {
-              run_as_non_root = security_context.value["run_as_non_root"]
-              run_as_user = security_context.value["run_as_user"]
-              run_as_group = security_context.value["run_as_group"]
-              read_only_root_filesystem = security_context.value["read_only_root_filesystem"]
+              allow_privilege_escalation = var.containers_security_context.allow_privilege_escalation
+              dynamic "capabilities" {
+                for_each = var.containers_security_context.capabilities == null ? [] : [1]
+                content {
+                  add = var.containers_security_context.capabilities.add
+                  drop = var.containers_security_context.capabilities.drop
+                }
+              }
+              privileged = var.containers_security_context.privileged
+              read_only_root_filesystem = var.containers_security_context.read_only_root_filesystem
+              run_as_group = var.containers_security_context.run_as_group
+              run_as_non_root = var.containers_security_context.run_as_non_root
+              run_as_user = var.containers_security_context.run_as_user
+              dynamic "se_linux_options" {
+                for_each = var.containers_security_context.se_linux_options == null ? [] : [1]
+                content {
+                  user = var.containers_security_context.se_linux_options.user
+                  role = var.containers_security_context.se_linux_options.role
+                  type = var.containers_security_context.se_linux_options.type
+                  level = var.containers_security_context.se_linux_options.level
+                }
+              }
+              dynamic "seccomp_profile" {
+                for_each = var.containers_security_context.seccomp_profile == null ? [] : [1]
+                content {
+                  type = var.containers_security_context.seccomp_profile.type
+                  localhost_profile = var.containers_security_context.seccomp_profile.localhost_profile
+                }
+              }
             }
           }
           /***
