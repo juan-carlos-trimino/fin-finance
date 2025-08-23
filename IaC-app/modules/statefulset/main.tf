@@ -945,6 +945,11 @@ resource "kubernetes_stateful_set" "stateful_set" {
           }
           command = var.command
           args = var.args
+          /***
+          Security settings that you specify for a container apply only to the individual
+          container, and they override settings made at the Pod level when there is overlap.
+          Container settings do not affect the Pod's Volumes.
+          ***/
           dynamic "security_context" {
             for_each = var.containers_security_context == {} ? [] : [1]
             content {
