@@ -482,20 +482,6 @@ variable secrets {
   }))
   sensitive = true
 }
-variable security_context {
-  default = [{
-    run_as_non_root = false
-    run_as_user = 0
-    run_as_group = 0
-    read_only_root_filesystem = false
-  }]
-  type = list(object({
-    run_as_non_root = bool
-    run_as_user = number
-    run_as_group = number
-    read_only_root_filesystem = bool
-  }))
-}
 variable service {
   # default = null
   type = object({
