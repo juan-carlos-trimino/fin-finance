@@ -179,6 +179,11 @@ variable init_container {
         drop = optional(list(string))
       }))
       privileged = optional(bool)
+      /***
+      For security reasons, you want to prevent processes running in a container from writing to
+      the container's filesystem. If you make the container's filesystem read-only, you will need
+      to mount a volume in every directory the app writes information; e.g., logs.
+      ***/
       read_only_root_filesystem = optional(bool)
       # Processes inside container will run as primary group "run_as_group".
       run_as_group = optional(number)

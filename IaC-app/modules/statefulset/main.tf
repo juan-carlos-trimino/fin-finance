@@ -453,6 +453,11 @@ variable update_strategy {
     partition = optional(number)
   })
 }
+/***
+When an app running in a pod needs to persist data to disk and have that same data available even
+when the pod is rescheduled to another node, the data must be stored on some type of
+network-attached storage (NAS).
+***/
 variable volume_claim_templates {
   default = []
   type = list(object({
@@ -1238,6 +1243,9 @@ resource "kubernetes_stateful_set" "stateful_set" {
       iterator = it
       content {
         metadata {
+          /***
+          The name of the volume must be referenced when mounting the volume.
+          ***/
           name = it.value["name"]
           namespace = it.value["namespace"]
           labels = it.value["labels"]
