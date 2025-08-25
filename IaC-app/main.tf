@@ -716,7 +716,7 @@ module "fin-PostgresMaster" {
     PGDATA = var.pgdata
   }
   env_field = [{
-    name = "POP_IP"
+    name = "POD_IP"
     field_path = "status.podIP"
   }]
   config_map = [{
@@ -752,33 +752,28 @@ module "fin-PostgresMaster" {
   containers_security_context = {
     allow_privilege_escalation = false
     privileged = false
-    read_only_root_filesystem = false
+    read_only_root_filesystem = true
   }
+  command = ["/bin/bash"]
   /***
   "-c": This is the first argument. It's typically used in conjunction with a shell command (like
   /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
   string to be executed by the shell. The -c flag tells the shell to read commands from the string
   argument that follows.
   ***/
-    # chown -R 1999:1999 /wsf_data_dir/config &&
-    # chown -R 1999:1999 /wsf_data_dir
-    # chown -R 1999:1999 /var/lib/postgresql/data
   args = ["-c",
     <<-EOT
     /usr/local/bin/docker-entrypoint.sh postgres
     config_file=/wsf_data_dir/config/postgres/postgresql.conf
     EOT
   ]
-  command = ["/bin/bash"]
   image_pull_policy = "IfNotPresent"
   image_tag = var.postgres_image_tag
   init_container = [{
     name = "init-master"
     command = ["/bin/sh",
-      "-c",
-      "mkdir -p /wsf_data_dir/data/archive && chown -v -R 1999:1999 /wsf_data_dir && chmod -v -R 750 /wsf_data_dir && id"
-      # mkdir -p /wsf_data_dir/data/archive &&
-      # && chown -R 1999:1999 /docker-entrypoint-initdb.d"
+     "-c",
+     "mkdir -p /wsf_data_dir/data/archive && chown -v -R 1999:1999 /wsf_data_dir"
     ]
     image = "busybox:1.34.1"
     image_pull_policy = "IfNotPresent"
@@ -786,47 +781,14 @@ module "fin-PostgresMaster" {
       run_as_user = 0
       run_as_group = 0
       run_as_non_root = false
-      read_only_root_filesystem = true
-      privileged = true
+      read_only_root_filesystem = false
+      privileged = false
     }
     volume_mounts = [{
       name = "wsf"
       mount_path = "/wsf_data_dir"
       read_only = false
-    }
-
-# {
-#     name = "data"
-#     mount_path = "/wsf_data_dir/data"
-#     read_only = false
-#   },
-
-
-# {
-#     name = "archive"
-#     mount_path = "/wsf_data_dir/data/archive"
-#     read_only = false
-#   },
-
-
-# {
-#     name = "config"
-#     mount_path = "/wsf_data_dir/config"
-#     read_only = false
-#   },
-  #    {
-  #   name = "script"
-  #   namespace = local.namespace
-  #   labels = {
-  #     "app" = var.app_name
-  #     "db" = var.postgres_db_label
-  #   }
-  #   # https://hub.docker.com/_/postgres#initialization-scripts
-  #   mount_path = "/docker-entrypoint-initdb.d/create-replication-user.sh"
-  #   sub_path = "create-replication-user.sh"
-  #   read_only = false
-  # }
-  ]
+    }]
   }]
   labels = {
     # "aff-mysql-server" = "running"
@@ -840,11 +802,9 @@ module "fin-PostgresMaster" {
     failure_threshold = 3  # Number of consecutive failures before marking unready.
     success_threshold = 1
     exec = {
-      command = ["pg_isready",
-        # "--host", "$POD_IP",
-        # "--port", "5432",
-        "--username", "${var.postgres_user}",
-        "--dbname", "${var.postgres_db}"
+      command = ["/bin/sh",
+        "-c",
+        "pg_isready --host $POD_IP --port 5432 --username ${var.postgres_user} --dbname ${var.postgres_db}"
       ]
     }
   }]
@@ -865,9 +825,9 @@ module "fin-PostgresMaster" {
     # success_threshold = 1
     exec = {
       # https://www.postgresql.org/docs/current/app-pg-isready.html
-      command = ["pg_isready",
-        "-U", "${var.postgres_user}",
-        "-d", "${var.postgres_db}"
+      command = ["/bin/sh",
+        "-c",
+        "pg_isready --host $POD_IP --port 5432 --username ${var.postgres_user} --dbname ${var.postgres_db}"
       ]
     }
   }]
@@ -962,11 +922,16 @@ module "fin-PostgresMaster" {
     name = "config"
     mount_path = "/wsf_data_dir/config"
     read_only = false
-  },
-
-
-
-   {
+  }, {
+    name = "wsf"
+    /***
+    For security reasons, you want to prevent processes running in a container from writing to the
+    container's filesystem. If you make the container's filesystem read-only, you will need to
+    mount a volume in every directory the app writes information; e.g., logs.
+    ***/
+    mount_path = "/var/run/postgresql"  # The path where Postgres stores its data.
+    read_only = false
+  }, {
     name = "script"
     namespace = local.namespace
     labels = {
@@ -980,7 +945,7 @@ module "fin-PostgresMaster" {
 }
 
 module "fin-PostgresReplica" {
-  count = var.db_postgres && !var.k8s_crds ? /*1*/0 : 0
+  count = var.db_postgres && !var.k8s_crds ? 1 : 0
   depends_on = [
     module.fin-PostgresMaster
   ]
@@ -993,7 +958,7 @@ module "fin-PostgresReplica" {
     PGDATA = var.pgdata
   }
   env_field = [{
-    name = "POP_IP"
+    name = "POD_IP"
     field_path = "status.podIP"
   }]
   config_map = [{
@@ -1035,7 +1000,7 @@ module "fin-PostgresReplica" {
     #  &&
     # chown -R 1999:1999 /var/lib/postgresql/data &&
     # chown -R 1999:1999 /var/lib/postgresql/data
-  args = [
+  args = ["-c",
     <<-EOT
     /usr/local/bin/docker-entrypoint.sh postgres
     config_file=/wsf_data_dir/config/postgres/postgresql.conf
@@ -1054,7 +1019,6 @@ module "fin-PostgresReplica" {
     env = {
       PGDATA = var.pgdata
       PGHOST = local.service_name_postgres_master
-      # PGPASSWORD = var.replication_password
     }
 
 
@@ -1075,21 +1039,27 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     command = ["/bin/bash",
       "-c",
       # https://www.postgresql.org/docs/current/app-pgbasebackup.html
+        # chown -v -R 1999:1999 $PGDATA;
       <<-EOT
+      printenv
       mkdir -p $PGDATA
+      mkdir -p /wsf_data_dir/config && chown -v -R 1999:1999 /wsf_data_dir
       if [ -z "$(ls -A $PGDATA)" ];
       then
-        echo "Running pg_basebackup to catch up replication server...";
-        pg_basebackup -h $PGHOST -R -D $PGDATA -P -U replication;
-        chown -R 1999:1999 $PGDATA;
+        echo "Running pg_basebackup to catch up replication server..."
+        pg_basebackup -h $PGHOST -R -D $PGDATA -P -U replication
       else
-        echo "Skipping pg_basebackup because directory is not empty";
+        echo "Skipping pg_basebackup because directory is not empty"
       fi
+      id
       EOT
     ]
     image = var.postgres_image_tag
     image_pull_policy = "IfNotPresent"
     security_context = {
+      run_as_user = 0
+      run_as_group = 0
+      run_as_non_root = false
       read_only_root_filesystem = false
       privileged = false
     }
@@ -1111,11 +1081,9 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     failure_threshold = 3  # Number of consecutive failures before marking unready.
     success_threshold = 1
     exec = {
-      command = ["pg_isready",
-        "--host", "$POD_IP",
-        "--port", "5432",
-        "--username", "${var.postgres_user}",
-        "--dbname", "${var.postgres_db}"
+      command = ["/bin/sh",
+        "-c",
+        "pg_isready --host $POD_IP --port 5432 --username ${var.postgres_user} --dbname ${var.postgres_db}"
       ]
     }
   }]
@@ -1136,11 +1104,9 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     # success_threshold = 1
     exec = {
       # https://www.postgresql.org/docs/current/app-pg-isready.html
-      command = ["pg_isready",
-        "--host", "$POD_IP",
-        "--port", "5432",
-        "-U", "${var.postgres_user}",
-        "-d", "${var.postgres_db}"
+      command = ["/bin/sh",
+        "-c",
+        "pg_isready --host $POD_IP --port 5432 --username ${var.postgres_user} --dbname ${var.postgres_db}"
       ]
     }
   }]
@@ -1161,7 +1127,7 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
       POSTGRES_DB = var.postgres_db
       POSTGRES_USER = var.postgres_user
       POSTGRES_PASSWORD = var.postgres_password
-      PGPASSWORD =  var.postgres_password
+      # PGPASSWORD =  var.postgres_password
       REPLICATION_PASSWORD = var.replication_password
     }
     type = "Opaque"
@@ -1238,10 +1204,14 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     mount_path = "/wsf_data_dir"
     read_only = false
   }, {
-    name = "config"
+    name = "wsf"
+    mount_path = "/var/run/postgresql"  # The path where Postgres stores its data.
+    read_only = false
+  }/*, {
+    name = "wfs"
     mount_path = "/wsf_data_dir/config"
     read_only = false
-  }]
+  }*/]
 }
 
 
