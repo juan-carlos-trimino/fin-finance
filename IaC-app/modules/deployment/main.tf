@@ -167,6 +167,7 @@ variable init_container {
   default = []
   type = list(object({
     name = string
+    args = optional(list(string), [])
     image = string
     image_pull_policy = optional(string)
     command = optional(list(string))
@@ -1051,9 +1052,9 @@ resource "kubernetes_deployment" "stateless" {
           for_each = var.init_container
           iterator = it
           content {
-            name = it.value["name"]
-            image = it.value["image"]
-            image_pull_policy = it.value["image_pull_policy"]
+            name = it.value.name
+            args = it.value.args
+            command = it.value.command
             dynamic "env" {
               for_each = it.value["env"]
               content {
@@ -1070,7 +1071,8 @@ resource "kubernetes_deployment" "stateless" {
                 }
               }
             }
-            command = it.value["command"]
+            image = it.value.image
+            image_pull_policy = it.value.image_pull_policy
             dynamic "security_context" {
               for_each = it.value.security_context == null ? [] : [1]
               # iterator = it1
@@ -1120,10 +1122,11 @@ resource "kubernetes_deployment" "stateless" {
         }
         container {
           name = var.deployment_name
+          args = var.args
+          command = var.command
           image_pull_policy = var.image_pull_policy
           image = local.image_tag
           /***
-          Environment variables must be defined before they are used!!!
           To list all of the environment variables:
           Linux: $ printenv
           ***/
@@ -1137,10 +1140,10 @@ resource "kubernetes_deployment" "stateless" {
           dynamic "env" {
             for_each = var.env_field
             content {
-              name = env.value["env_name"]
+              name = env.value.env_name
               value_from {
                 field_ref {
-                  field_path = env.value["field_path"]
+                  field_path = env.value.field_path
                 }
               }
             }
@@ -1149,7 +1152,7 @@ resource "kubernetes_deployment" "stateless" {
             for_each = var.config_map
             content {
               config_map_ref {
-                name = env_from.value["name"]
+                name = env_from.value.name
               }
             }
           }
@@ -1161,8 +1164,6 @@ resource "kubernetes_deployment" "stateless" {
               }
             }
           }
-          command = var.command
-          args = var.args
           /***
           Security settings that you specify for a container apply only to the individual
           container, and they override settings made at the Pod level when there is overlap.
@@ -1400,6 +1401,14 @@ resource "kubernetes_deployment" "stateless" {
         the new container can use all the files that were written to the volume by previous
         containers. Furthermore, if a pod contains multiple containers, the volume can be used by
         all of them at once.
+
+        A configMap volume will expose each entry of the ConfigMap as a file. The process running
+        in the container can obtain the entry's value by reading the contents of the file.
+
+        While a ConfigMap is typically mounted directly as a read-only volume, it is possible to
+        make its contents writable within a Pod by copying them into an emptyDir volume using an
+        initContainer. This is often necessary for applications that require modifying their
+        configuration files during runtime.
         ***/
         dynamic "volume" {
           for_each = var.volume_config_map
@@ -1424,16 +1433,16 @@ resource "kubernetes_deployment" "stateless" {
           for_each = var.volume_secrets
           iterator = it
           content {
-            name = it.value["name"]
+            name = it.value.name
             secret {
-              secret_name = it.value["secret_name"]
-              default_mode = it.value["default_mode"]
+              secret_name = it.value.secret_name
+              default_mode = it.value.default_mode
               dynamic "items" {
-                for_each = it.value["items"]
+                for_each = it.value.items
                 iterator = itn
                 content {
-                  key = itn.value["key"]
-                  path = itn.value["path"]
+                  key = itn.value.key
+                  path = itn.value.path
                 }
               }
             }

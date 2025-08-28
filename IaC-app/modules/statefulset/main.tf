@@ -108,6 +108,10 @@ variable env {
   default = {}
   type = map(any)
 }
+/***
+A Pod can use environment variables to expose information about itself to containers running in the
+Pod.
+***/
 variable env_field {
   default = []
   type = list(object({
@@ -115,6 +119,15 @@ variable env_field {
     field_path = string
   }))
 }
+/***
+Be aware that the default imagePullPolicy depends on the image tag. If a container refers to the
+latest tag (either explicitly or by not specifying the tag at all), imagePullPolicy defaults to
+Always, but if the container refers to any other tag, the policy defaults to IfNotPresent.
+
+When using a tag other than latest, the imagePullPolicy property must be set if changes are made
+to an image without changing the tag. Better yet, always push changes to an image under a new
+tag.
+***/
 variable image_pull_policy {
   default = "Always"
   type = string
@@ -127,6 +140,7 @@ variable init_container {
   default = []
   type = list(object({
     name = string
+    args = optional(list(string), [])
     image = string
     image_pull_policy = optional(string)
     command = optional(list(string))
@@ -139,6 +153,11 @@ variable init_container {
         drop = optional(list(string))
       }))
       privileged = optional(bool)
+      /***
+      For security reasons, you want to prevent processes running in a container from writing to
+      the container's filesystem. If you make the container's filesystem read-only, you will need
+      to mount a volume in every directory the app writes information; e.g., logs.
+      ***/
       read_only_root_filesystem = optional(bool)
       # Processes inside container will run as primary group "run_as_group".
       run_as_group = optional(number)
@@ -297,6 +316,26 @@ variable replicas {
   default = 1
   type = number
 }
+/***
+Quality of Service (QoS) classes for pods:
+(1) BestEffort (lowest priority) - It's assigned to pods that do not have any requests or limits
+    set at all (in any of their containers).
+(2) Burstable - Pods have some lower-bound resource guarantees based on the request, but do not
+    require a specific limit. A Pod is given a QoS class of Burstable if:
+    * The Pod does not meet the criteria for QoS class Guaranteed.
+    * At least one Container in the Pod has a memory or CPU request or limit.
+(3) Guaranteed (highest priority) - It's assigned to pods whose containers' requests are equal to
+    the limits for all resources (for each container in the pod). For a pod's class to be
+    Guaranteed, three things need to be true:
+    * Requests and limits need to be set for both CPU and memory.
+    * They need to be set for each container.
+    * They need to be equal; the limit needs to match the request for each resource in each
+      container.
+If a Container specifies its own memory limit, but does not specify a memory request, Kubernetes
+automatically assigns a memory request that matches the limit. Similarly, if a Container
+specifies its own CPU limit, but does not specify a CPU request, Kubernetes automatically assigns
+a CPU request that matches the limit.
+***/
 variable resources {
   default = {}
   type = object({
@@ -506,6 +545,15 @@ variable volume_empty_dir {
     size_limit = optional(string)
   }))
 }
+/***
+In Linux when a filesystem is mounted into a non-empty directory, the directory will only contain
+the files from the newly mounted filesystem. The files in the original directory are inaccessible
+for as long as the filesystem is mounted. In cases when the original directory contains crucial
+files, mounting a volume could break the container. To overcome this limitation, K8s provides an
+additional subPath property on the volumeMount; this property mounts a single file or a single
+directory from the volume instead of mounting the whole volume, and it does not hide the existing
+files in the original directory.
+***/
 variable volume_mount {
   default = []
   type = list(object({
@@ -543,6 +591,23 @@ locals {
   pod_selector_label = "ps-${var.statefulset_name}"
 }
 
+/***
+(1) The maximum size of a Secret is limited to 1MB.
+(2) K8s helps keep Secrets safe by making sure each Secret is only distributed to the nodes that
+    run the pods that need access to the Secret.
+(3) On the nodes, Secrets are always stored in memory and never written to physical storage. (The
+    secret volume uses an in-memory filesystem (tmpfs) for the Secret files.)
+(4) From K8s version 1.7, etcd stores Secrets in encrypted form.
+(5) A Secret's entries can contain binary values, not only plain-text. Base64 encoding allows you
+    to include the binary data in YAML or JSON, which are both plaint-text formats.
+(6) Even though Secrets can be exposed through environment variables, you may want to avoid doing
+    so because they may get exposed inadvertently. For example,
+    *	Apps usually dump environment variables in error reports or even write them to the app log at
+      startup.
+    *	Children processes inherit all the environment variables of the parent process thereby you
+      have no way of knowing what happens with your secret data.
+    To be safe, always use secret volumes for exposing Secrets.
+***/
 resource "kubernetes_secret" "secrets" {
   count = length(var.secrets)
   metadata {
@@ -562,6 +627,12 @@ resource "kubernetes_secret" "secrets" {
   immutable = var.secrets[count.index].immutable
 }
 
+/***
+A ServiceAccount is used by an application running inside a pod to authenticate itself with the
+API server. A default ServiceAccount is automatically created for each namespace; each pod is
+associated with exactly one ServiceAccount, but multiple pods can use the same ServiceAccount. A
+pod can only use a ServiceAccount from the same namespace.
+***/
 resource "kubernetes_service_account" "service_account" {
   count = var.service_account == null ? 0 : 1
   metadata {
@@ -637,6 +708,10 @@ resource "kubernetes_role_binding" "role_binding" {
   }
 }
 
+/***
+The contents of the ConfigMap are passed to containers as either environment variables or as files
+in a volume.
+***/
 resource "kubernetes_config_map" "config" {
   count = length(var.config_map)
   metadata {
@@ -832,18 +907,18 @@ resource "kubernetes_stateful_set" "stateful_set" {
           for_each = var.init_container
           iterator = it
           content {
-            name = it.value["name"]
-            image = it.value["image"]
-            image_pull_policy = it.value["image_pull_policy"]
+            name = it.value.name
+            args = it.value.args
+            command = it.value.command
             dynamic "env" {
-              for_each = it.value["env"]
+              for_each = it.value.env
               content {
                 name = env.key
                 value = env.value
               }
             }
             dynamic "env_from" {
-              for_each = it.value["env_from_secrets"]
+              for_each = it.value.env_from_secrets
               iterator = it1
               content {
                 secret_ref {
@@ -851,10 +926,10 @@ resource "kubernetes_stateful_set" "stateful_set" {
                 }
               }
             }
-            command = it.value["command"]
+            image = it.value.image
+            image_pull_policy = it.value.image_pull_policy
             dynamic "security_context" {
               for_each = it.value.security_context == null ? [] : [1]
-              # iterator = it1
               content {
                 allow_privilege_escalation = it.value.security_context.allow_privilege_escalation
                 dynamic "capabilities" {
@@ -888,23 +963,22 @@ resource "kubernetes_stateful_set" "stateful_set" {
               }
             }
             dynamic "volume_mount" {
-              for_each = it.value["volume_mounts"]
+              for_each = it.value.volume_mounts
               iterator = it1
               content {
-                name = it1.value["name"]
-                mount_path = it1.value["mount_path"]
-                sub_path = it1.value["sub_path"]
-                read_only = it1.value["read_only"]
+                name = it1.value.name
+                mount_path = it1.value.mount_path
+                sub_path = it1.value.sub_path
+                read_only = it1.value.read_only
               }
             }
           }
         }
         container {
           name = var.statefulset_name
-          image = var.image_tag
-          image_pull_policy = var.image_pull_policy
+          args = var.args
+          command = var.command
           /***
-          Environment variables must be defined before they are used!!!
           To list all of the environment variables:
           Linux: $ printenv
           ***/
@@ -918,10 +992,10 @@ resource "kubernetes_stateful_set" "stateful_set" {
           dynamic "env" {
             for_each = var.env_field
             content {
-              name = env.value["name"]
+              name = env.value.name
               value_from {
                 field_ref {
-                  field_path = env.value["field_path"]
+                  field_path = env.value.field_path
                 }
               }
             }
@@ -930,7 +1004,7 @@ resource "kubernetes_stateful_set" "stateful_set" {
             for_each = var.config_map
             content {
               config_map_ref {
-                name = env_from.value["name"]
+                name = env_from.value.name
               }
             }
           }
@@ -948,8 +1022,8 @@ resource "kubernetes_stateful_set" "stateful_set" {
               }
             }
           }
-          command = var.command
-          args = var.args
+          image = var.image_tag
+          image_pull_policy = var.image_pull_policy
           /***
           Security settings that you specify for a container apply only to the individual
           container, and they override settings made at the Pod level when there is overlap.
@@ -1191,6 +1265,11 @@ resource "kubernetes_stateful_set" "stateful_set" {
 
         A configMap volume will expose each entry of the ConfigMap as a file. The process running
         in the container can obtain the entry's value by reading the contents of the file.
+
+        While a ConfigMap is typically mounted directly as a read-only volume, it is possible to
+        make its contents writable within a Pod by copying them into an emptyDir volume using an
+        initContainer. This is often necessary for applications that require modifying their
+        configuration files during runtime.
         ***/
         dynamic "volume" {
           for_each = var.volume_config_map
@@ -1215,16 +1294,16 @@ resource "kubernetes_stateful_set" "stateful_set" {
           for_each = var.volume_secrets
           iterator = it
           content {
-            name = it.value["name"]
+            name = it.value.name
             secret {
-              secret_name = it.value["secret_name"]
-              default_mode = it.value["default_mode"]
+              secret_name = it.value.secret_name
+              default_mode = it.value.default_mode
               dynamic "items" {
-                for_each = it.value["items"]
+                for_each = it.value.items
                 iterator = itn
                 content {
-                  key = itn.value["key"]
-                  path = itn.value["path"]
+                  key = itn.value.key
+                  path = itn.value.path
                 }
               }
             }
