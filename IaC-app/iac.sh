@@ -197,35 +197,38 @@ then
     #   certificaterequests.cert-manager.io \
     #   orders.acme.cert-manager.io \
     #   challenges.acme.cert-manager.io
-    printf "\n*****************************"
-    printf "\nDeleting traefik's CRDs."
-    printf "\n*****************************\n"
-    kubectl delete crd \
-      ingressroutes.traefik.io \
-      ingressroutetcps.traefik.io \
-      ingressrouteudps.traefik.io \
-      middlewares.traefik.io \
-      middlewaretcps.traefik.io \
-      serverstransports.traefik.io \
-      serverstransporttcps.traefik.io \
-      tlsoptions.traefik.io \
-      tlsstores.traefik.io \
-      traefikservices.traefik.io \
-      accesscontrolpolicies.hub.traefik.io \
-      aiservices.hub.traefik.io \
-      apibundles.hub.traefik.io \
-      apicatalogitems.hub.traefik.io \
-      apiplans.hub.traefik.io \
-      apiportals.hub.traefik.io \
-      apiratelimits.hub.traefik.io \
-      apis.hub.traefik.io \
-      apiversions.hub.traefik.io \
-      managedsubscriptions.hub.traefik.io
-    #   gatewayclasses.gateway.networking.k8s.io \
-    #   gateways.gateway.networking.k8s.io \
-    #   grpcroutes.gateway.networking.k8s.io \
-    #   httproutes.gateway.networking.k8s.io \
-    #   referencegrants.gateway.networking.k8s.io
+    if [ "$REVERSE_PROXY" == "true" ]
+    then
+      printf "\n*****************************"
+      printf "\nDeleting traefik's CRDs."
+      printf "\n*****************************\n"
+      kubectl delete crd \
+        ingressroutes.traefik.io \
+        ingressroutetcps.traefik.io \
+        ingressrouteudps.traefik.io \
+        middlewares.traefik.io \
+        middlewaretcps.traefik.io \
+        serverstransports.traefik.io \
+        serverstransporttcps.traefik.io \
+        tlsoptions.traefik.io \
+        tlsstores.traefik.io \
+        traefikservices.traefik.io \
+        accesscontrolpolicies.hub.traefik.io \
+        aiservices.hub.traefik.io \
+        apibundles.hub.traefik.io \
+        apicatalogitems.hub.traefik.io \
+        apiplans.hub.traefik.io \
+        apiportals.hub.traefik.io \
+        apiratelimits.hub.traefik.io \
+        apis.hub.traefik.io \
+        apiversions.hub.traefik.io \
+        managedsubscriptions.hub.traefik.io
+      #   gatewayclasses.gateway.networking.k8s.io \
+      #   gateways.gateway.networking.k8s.io \
+      #   grpcroutes.gateway.networking.k8s.io \
+      #   httproutes.gateway.networking.k8s.io \
+      #   referencegrants.gateway.networking.k8s.io
+    fi
     print_time_elapsed "$start_time"
   fi
 elif [ "$1" == "deploy" ]
