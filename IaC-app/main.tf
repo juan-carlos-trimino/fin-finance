@@ -782,7 +782,6 @@ module "fin-PostgresMaster" {
         mkdir -p "$PGDATA"
         printf "Creating archive directory...\n"
         mkdir -p /wsf_data_dir/data/archive
-        chown -v -R 1999:1999 /wsf_data_dir && chmod -R 760 /wsf_data_dir
       fi
       #
       if [ "$STANDBY_MODE" == "on" ];
@@ -790,12 +789,13 @@ module "fin-PostgresMaster" {
         # Initialize from backup if data directory is empty.
         if [ -z "$(ls -A "$PGDATA")" ];
         then
+          printf "Initializing from backup...\n"
           # The PGPASSWORD environment variable in PostgreSQL allows the specification of a password
           # for database connections without requiring interactive input. This variable can be set in
           # the shell before executing PostgreSQL client applications like psql or pg_dump.
           export PGPASSWORD=$REPLICATION_PASSWORD
           # https://www.postgresql.org/docs/current/app-pgbasebackup.html
-          pg_basebackup -h $PGHOST -p 5432 -D "$(PGDATA)" -U replication -R -Xs -Fp
+          pg_basebackup -v -h $PGHOST -p 5432 -D $PGDATA -U replication -R -Xs -Fp
         fi
       else
         # cat /postgres/initdb/create-replication-user.sh
@@ -811,8 +811,9 @@ module "fin-PostgresMaster" {
         sed -i 's/#REPLICATION_PASSWORD/$(REPLICATION_PASSWORD)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
         printf "Changing permissions for emptyDir...\n"
         chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
-        cat /docker-entrypoint-initdb.d/create-replication-user.sh
+        # cat /docker-entrypoint-initdb.d/create-replication-user.sh
       fi
+      chown -v -R 1999:1999 /wsf_data_dir && chmod -R 760 /wsf_data_dir
       EOT
     ]
     command = ["/bin/sh"]
@@ -1072,19 +1073,20 @@ module "fin-PostgresReplica" {
         mkdir -p "$PGDATA"
         printf "Creating archive directory...\n"
         mkdir -p /wsf_data_dir/data/archive
-        chown -v -R 1999:1999 /wsf_data_dir && chmod -R 760 /wsf_data_dir
       fi
+      #
       if [ "$STANDBY_MODE" == "on" ];
       then
         # Initialize from backup if data directory is empty.
         if [ -z "$(ls -A "$PGDATA")" ];
         then
+          printf "Initializing from backup...\n"
           # The PGPASSWORD environment variable in PostgreSQL allows the specification of a password
           # for database connections without requiring interactive input. This variable can be set in
           # the shell before executing PostgreSQL client applications like psql or pg_dump.
           export PGPASSWORD=$REPLICATION_PASSWORD
           # https://www.postgresql.org/docs/current/app-pgbasebackup.html
-          pg_basebackup -h $PGHOST -p 5432 -D "$(PGDATA)" -U replication -R -Xs -Fp
+          pg_basebackup -v -h $PGHOST -p 5432 -D $PGDATA -U replication -R -Xs -Fp
         fi
       else
         # cat /postgres/initdb/create-replication-user.sh
@@ -1102,8 +1104,7 @@ module "fin-PostgresReplica" {
         chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
         # cat /docker-entrypoint-initdb.d/create-replication-user.sh
       fi
-      printf "Changing permissions for emptyDir...\n"
-      chown -v -R 1999:1999 /var && chmod -R 750 /var
+      chown -v -R 1999:1999 /wsf_data_dir && chmod -R 760 /wsf_data_dir
       EOT
     ]
     command = ["/bin/sh"]
@@ -1139,11 +1140,11 @@ module "fin-PostgresReplica" {
       name = "writable-initdb-volume"
       mount_path = "/docker-entrypoint-initdb.d"
       read_only = false
-    }, {
+    }/*, {
       name = "writable-lib"
       mount_path = "/var/lib/pgsql"
       read_only = false
-    }]
+    }*/]
   }]
   labels = {
     # "aff-mysql-server" = "running"
@@ -1282,15 +1283,9 @@ module "fin-PostgresReplica" {
     name = "writable-initdb-volume"
     mount_path = "docker-entrypoint-initdb.d"
     read_only = false
-  }, {
-    name = "writable-lib"
-    mount_path = "/var/lib/pgsql"
-    read_only = false
   }]
   volume_empty_dir = [{
     name = "writable-initdb-volume"
-  }, {
-    name = "writable-lib"
   }]
 }
 
