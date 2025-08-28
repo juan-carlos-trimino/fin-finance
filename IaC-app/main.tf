@@ -712,13 +712,15 @@ module "fin-PostgresMaster" {
   #
   app_name = var.app_name
   app_version = var.app_version
-  env = {
-    PGDATA = var.pgdata
-  }
-  env_field = [{
-    name = "POD_IP"
-    field_path = "status.podIP"
-  }]
+  /***
+  "-c": This is the first argument. It's typically used in conjunction with a shell command (like
+  /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
+  string to be executed by the shell. The -c flag tells the shell to read commands from the string
+  argument that follows.
+  ***/
+  args = ["-c",
+    "config_file=/postgres/config/postgresql.conf"
+  ]
   config_map = [{
     # Same as volume_config_map.config_map_name.
     name = "${local.statefulset_postgres_master}-postgres-conf-files"
@@ -731,11 +733,8 @@ module "fin-PostgresMaster" {
       # https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
       "pg_hba.conf" = "${file("${var.path_postgres_configs}/pg_hba.conf")}"
       # https://www.postgresql.org/docs/current/auth-username-maps.html
-      # "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
-      # Share by master and replica.
+      "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
       "postgresql.conf" = "${file("${var.path_postgres_configs}/postgresql.conf")}"
-      # Only for master.
-      "master.conf" = "${file("${var.path_postgres_configs}/master.conf")}"
     }
   }, {
     # Same as volume.volume_config_map.config_map_name.name.
@@ -754,28 +753,80 @@ module "fin-PostgresMaster" {
     privileged = false
     read_only_root_filesystem = true
   }
-  command = ["/bin/bash"]
-  /***
-  "-c": This is the first argument. It's typically used in conjunction with a shell command (like
-  /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
-  string to be executed by the shell. The -c flag tells the shell to read commands from the string
-  argument that follows.
-  ***/
-  args = ["-c",
-    <<-EOT
-    /usr/local/bin/docker-entrypoint.sh postgres
-    config_file=/wsf_data_dir/config/postgres/postgresql.conf
-    EOT
-  ]
+  env = {
+    PGDATA = var.pgdata
+  }
+  env_field = [{
+    name = "POD_IP"
+    field_path = "status.podIP"
+  }]
   image_pull_policy = "IfNotPresent"
   image_tag = var.postgres_image_tag
   init_container = [{
     name = "init-master"
-    command = ["/bin/sh",
-     "-c",
-     "mkdir -p /wsf_data_dir/data/archive && chown -v -R 1999:1999 /wsf_data_dir"
+    args = ["-c",
+      <<-EOT
+      # Check if variable is set and not empty.
+      if [[ ! -n "$STANDBY_MODE" ]];
+      then
+        printf "The environment variable STANDBY_MODE is unset or empty.\n"
+        printf "Set to \"on\" for primary server.\n"
+        printf "Set to \"off\" for secondary (backup) server.\n"
+        exit 1
+      fi
+      # The variable holding the path to the directory is enclosed in double quotes to handle
+      # potential spaces or special characters in the path.
+      if [ ! -d "$PGDATA" ];
+      then
+        printf "Creating data directory...\n"
+        mkdir -p "$PGDATA"
+        printf "Creating archive directory...\n"
+        mkdir -p /wsf_data_dir/data/archive
+        chown -v -R 1999:1999 /wsf_data_dir && chmod -R 760 /wsf_data_dir
+      fi
+      #
+      if [ "$STANDBY_MODE" == "on" ];
+      then
+        # Initialize from backup if data directory is empty.
+        if [ -z "$(ls -A "$PGDATA")" ];
+        then
+          # The PGPASSWORD environment variable in PostgreSQL allows the specification of a password
+          # for database connections without requiring interactive input. This variable can be set in
+          # the shell before executing PostgreSQL client applications like psql or pg_dump.
+          export PGPASSWORD=$REPLICATION_PASSWORD
+          # https://www.postgresql.org/docs/current/app-pgbasebackup.html
+          pg_basebackup -h $PGHOST -p 5432 -D "$(PGDATA)" -U replication -R -Xs -Fp
+        fi
+      else
+        # cat /postgres/initdb/create-replication-user.sh
+        # https://hub.docker.com/_/postgres#initialization-scripts
+        if [ ! -d "/docker-entrypoint-initdb.d" ];
+        then
+          mkdir /docker-entrypoint-initdb.d
+        fi
+        cp /postgres/initdb/* /docker-entrypoint-initdb.d/
+        printf "Adding credential...\n"
+        sed -i 's/#POSTGRES_USER/$(POSTGRES_USER)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+        sed -i 's/#POSTGRES_DB/$(POSTGRES_DB)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+        sed -i 's/#REPLICATION_PASSWORD/$(REPLICATION_PASSWORD)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+        printf "Changing permissions for emptyDir...\n"
+        chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
+        cat /docker-entrypoint-initdb.d/create-replication-user.sh
+      fi
+      EOT
     ]
-    image = "busybox:1.34.1"
+    command = ["/bin/sh"]
+    env = {
+      PGDATA = var.pgdata
+      PGHOST = ""
+      # on - Secondary.
+      # off - Primary.
+      STANDBY_MODE = "off"
+    }
+    env_from_secrets = [
+      "${local.statefulset_postgres_master}-secret"
+    ]
+    image = var.postgres_image_tag
     image_pull_policy = "IfNotPresent"
     security_context = {
       run_as_user = 0
@@ -787,6 +838,15 @@ module "fin-PostgresMaster" {
     volume_mounts = [{
       name = "wsf"
       mount_path = "/wsf_data_dir"
+      read_only = false
+    }, {
+      name = "readonly-initdb-volume"
+      # https://hub.docker.com/_/postgres#initialization-scripts
+      mount_path = "/postgres/initdb"
+      read_only = false
+    }, {
+      name = "writable-initdb-volume"
+      mount_path = "/docker-entrypoint-initdb.d"
       read_only = false
     }]
   }]
@@ -804,7 +864,7 @@ module "fin-PostgresMaster" {
     exec = {
       command = ["/bin/sh",
         "-c",
-        "pg_isready --host $POD_IP --port 5432 --username ${var.postgres_user} --dbname ${var.postgres_db}"
+        "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
       ]
     }
   }]
@@ -827,7 +887,7 @@ module "fin-PostgresMaster" {
       # https://www.postgresql.org/docs/current/app-pg-isready.html
       command = ["/bin/sh",
         "-c",
-        "pg_isready --host $POD_IP --port 5432 --username ${var.postgres_user} --dbname ${var.postgres_db}"
+        "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
       ]
     }
   }]
@@ -893,34 +953,27 @@ module "fin-PostgresMaster" {
     storage_class_name = "oci-bv"
   }]
   volume_config_map = [{
-    name = "config"
+    name = "config-volume"
     config_map_name = "${local.statefulset_postgres_master}-postgres-conf-files"
-    default_mode = "0660"
+    default_mode = "0760"
     items = [{
       key = "pg_hba.conf"
       path = "pg_hba.conf"
-    }, /*{
+    }, {
       key = "pg_ident.conf"
       path = "pg_ident.conf"
-    },*/ {
+    }, {
       key = "postgresql.conf"
       path = "postgresql.conf"
-    }, {
-      key = "master.conf"
-      path = "master.conf"
     }]
   }, {
-    name = "script"
+    name = "readonly-initdb-volume"
     config_map_name = "${local.statefulset_postgres_master}-postgres-script-files"
-    default_mode = "0760"
+    default_mode = "0750"
   }]
   volume_mount = [{
     name = "wsf"
     mount_path = "/wsf_data_dir"
-    read_only = false
-  }, {
-    name = "config"
-    mount_path = "/wsf_data_dir/config"
     read_only = false
   }, {
     name = "wsf"
@@ -932,15 +985,16 @@ module "fin-PostgresMaster" {
     mount_path = "/var/run/postgresql"  # The path where Postgres stores its data.
     read_only = false
   }, {
-    name = "script"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-      "db" = var.postgres_db_label
-    }
-    # https://hub.docker.com/_/postgres#initialization-scripts
-    mount_path = "/docker-entrypoint-initdb.d/create-replication-user.sh"
-    sub_path = "create-replication-user.sh"
+    name = "config-volume"
+    mount_path = "/postgres/config"
+    read_only = false
+  }, {
+    name = "writable-initdb-volume"
+    mount_path = "docker-entrypoint-initdb.d"
+    read_only = false
+  }]
+  volume_empty_dir = [{
+    name = "writable-initdb-volume"
   }]
 }
 
@@ -954,6 +1008,41 @@ module "fin-PostgresReplica" {
   #
   app_name = var.app_name
   app_version = var.app_version
+  args = ["-c",
+    "config_file=/postgres/config/postgresql.conf"
+  ]
+  config_map = [{
+    # Same as volume_config_map.config_map_name.
+    name = "${local.statefulset_postgres_replica}-postgres-conf-files"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
+    data = {
+      # https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
+      "pg_hba.conf" = "${file("${var.path_postgres_configs}/pg_hba.conf")}"
+      # https://www.postgresql.org/docs/current/auth-username-maps.html
+      "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
+      "postgresql.conf" = "${file("${var.path_postgres_configs}/postgresql.conf")}"
+    }
+  }, {
+    # Same as volume.volume_config_map.config_map_name.name.
+    name = "${local.statefulset_postgres_replica}-postgres-script-files"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
+    data = {
+      "create-replication-user.sh" = "${file("${var.path_postgres_scripts}/create-replication-user.sh")}"
+    }
+  }]
+  containers_security_context = {
+    allow_privilege_escalation = false
+    privileged = false
+    read_only_root_filesystem = true
+  }
   env = {
     PGDATA = var.pgdata
   }
@@ -961,98 +1050,72 @@ module "fin-PostgresReplica" {
     name = "POD_IP"
     field_path = "status.podIP"
   }]
-  config_map = [{
-    # Same as volume_config_map.config_map_name.
-    name = "${local.statefulset_postgres_replica}-postgres-conf-files"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    data = {
-      # https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
-      # "pg_hba.conf" = "${file("${var.path_postgres_configs}/pg_hba.conf")}"
-      # https://www.postgresql.org/docs/current/auth-username-maps.html
-      # "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
-      # Share by master and slave.
-      "postgresql.conf" = "${file("${var.path_postgres_configs}/postgresql.conf")}"
-      # Only for master.
-      "replica.conf" = "${file("${var.path_postgres_configs}/replica.conf")}"
-    }
-  }/*, {
-    # Same as volume_config_map.config_map_name.
-    name = "${var.app_name}-postgres-script-files"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    data = {
-      "create-replication-user.sh" = "${file("${var.path_postgres_scripts}/create-replication-user.sh")}"
-    }
-  }*/]
-  /***
-  "-c": This is the first argument. It's typically used in conjunction with a shell command (like
-  /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
-  string to be executed by the shell. The -c flag tells the shell to read commands from the string
-  argument that follows.
-  ***/
-    # chown -R 1999:1999 /wsf_data_dir/config &&
-    # chown -R 1999:1999 /wsf_data_dir
-    #  &&
-    # chown -R 1999:1999 /var/lib/postgresql/data &&
-    # chown -R 1999:1999 /var/lib/postgresql/data
-  args = ["-c",
-    <<-EOT
-    /usr/local/bin/docker-entrypoint.sh postgres
-    config_file=/wsf_data_dir/config/postgres/postgresql.conf
-    EOT
-  ]
-  command = ["/bin/bash"]
-  containers_security_context = {
-    allow_privilege_escalation = false
-    privileged = false
-    read_only_root_filesystem = false
-  }
   image_pull_policy = "IfNotPresent"
   image_tag = var.postgres_image_tag
   init_container = [{
     name = "init-replica"
+    args = ["-c",
+      <<-EOT
+      # Check if variable is set and not empty.
+      if [[ ! -n "$STANDBY_MODE" ]];
+      then
+        printf "The environment variable STANDBY_MODE is unset or empty.\n"
+        printf "Set to \"on\" for primary server.\n"
+        printf "Set to \"off\" for secondary (backup) server.\n"
+        exit 1
+      fi
+      # The variable holding the path to the directory is enclosed in double quotes to handle
+      # potential spaces or special characters in the path.
+      if [ ! -d "$PGDATA" ];
+      then
+        printf "Creating data directory...\n"
+        mkdir -p "$PGDATA"
+        printf "Creating archive directory...\n"
+        mkdir -p /wsf_data_dir/data/archive
+        chown -v -R 1999:1999 /wsf_data_dir && chmod -R 760 /wsf_data_dir
+      fi
+      if [ "$STANDBY_MODE" == "on" ];
+      then
+        # Initialize from backup if data directory is empty.
+        if [ -z "$(ls -A "$PGDATA")" ];
+        then
+          # The PGPASSWORD environment variable in PostgreSQL allows the specification of a password
+          # for database connections without requiring interactive input. This variable can be set in
+          # the shell before executing PostgreSQL client applications like psql or pg_dump.
+          export PGPASSWORD=$REPLICATION_PASSWORD
+          # https://www.postgresql.org/docs/current/app-pgbasebackup.html
+          pg_basebackup -h $PGHOST -p 5432 -D "$(PGDATA)" -U replication -R -Xs -Fp
+        fi
+      else
+        # cat /postgres/initdb/create-replication-user.sh
+        # https://hub.docker.com/_/postgres#initialization-scripts
+        if [ ! -d "/docker-entrypoint-initdb.d" ];
+        then
+          mkdir /docker-entrypoint-initdb.d
+        fi
+        cp /postgres/initdb/* /docker-entrypoint-initdb.d/
+        printf "Adding credential...\n"
+        sed -i 's/#POSTGRES_USER/$(POSTGRES_USER)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+        sed -i 's/#POSTGRES_DB/$(POSTGRES_DB)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+        sed -i 's/#REPLICATION_PASSWORD/$(REPLICATION_PASSWORD)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+        printf "Changing permissions for emptyDir...\n"
+        chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
+        # cat /docker-entrypoint-initdb.d/create-replication-user.sh
+      fi
+      printf "Changing permissions for emptyDir...\n"
+      chown -v -R 1999:1999 /var && chmod -R 750 /var
+      EOT
+    ]
+    command = ["/bin/sh"]
     env = {
       PGDATA = var.pgdata
       PGHOST = local.service_name_postgres_master
+      # on - Secondary.
+      # off - Primary.
+      STANDBY_MODE = "on"
     }
-
-
- /***
-        The PGPASSWORD environment variable in PostgreSQL allows the specification of a password for database connections without requiring interactive input. This variable can be set in the shell before executing PostgreSQL client applications like psql or pg_dump.
-
-For improved security, consider using the following alternatives:
-.pgpass file:
-.
-A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on Windows) can store connection details, including passwords, in a more secure manner. The file permissions must be set correctly (e.g., chmod 600 ~/.pgpass) to prevent unauthorized access.
-
-        ***/
     env_from_secrets = [
-      "replica-data-directory-secret"
-    ]
-
-
-    command = ["/bin/bash",
-      "-c",
-      # https://www.postgresql.org/docs/current/app-pgbasebackup.html
-        # chown -v -R 1999:1999 $PGDATA;
-      <<-EOT
-      printenv
-      mkdir -p $PGDATA
-      mkdir -p /wsf_data_dir/config && chown -v -R 1999:1999 /wsf_data_dir
-      if [ -z "$(ls -A $PGDATA)" ];
-      then
-        echo "Running pg_basebackup to catch up replication server..."
-        pg_basebackup -h $PGHOST -R -D $PGDATA -P -U replication
-      else
-        echo "Skipping pg_basebackup because directory is not empty"
-      fi
-      id
-      EOT
+      "${local.statefulset_postgres_replica}-secret"
     ]
     image = var.postgres_image_tag
     image_pull_policy = "IfNotPresent"
@@ -1066,6 +1129,19 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     volume_mounts = [{
       name = "wsf"
       mount_path = "/wsf_data_dir"
+      read_only = false
+    }, {
+      name = "readonly-initdb-volume"
+      # https://hub.docker.com/_/postgres#initialization-scripts
+      mount_path = "/postgres/initdb"
+      read_only = false
+    }, {
+      name = "writable-initdb-volume"
+      mount_path = "/docker-entrypoint-initdb.d"
+      read_only = false
+    }, {
+      name = "writable-lib"
+      mount_path = "/var/lib/pgsql"
       read_only = false
     }]
   }]
@@ -1083,7 +1159,7 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     exec = {
       command = ["/bin/sh",
         "-c",
-        "pg_isready --host $POD_IP --port 5432 --username ${var.postgres_user} --dbname ${var.postgres_db}"
+        "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
       ]
     }
   }]
@@ -1106,7 +1182,7 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
       # https://www.postgresql.org/docs/current/app-pg-isready.html
       command = ["/bin/sh",
         "-c",
-        "pg_isready --host $POD_IP --port 5432 --username ${var.postgres_user} --dbname ${var.postgres_db}"
+        "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
       ]
     }
   }]
@@ -1121,26 +1197,14 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     namespace = local.namespace
     labels = {
       "app" = var.app_name
+      "db" = var.postgres_db_label
     }
     # Plain-text data.
     data = {
       POSTGRES_DB = var.postgres_db
       POSTGRES_USER = var.postgres_user
       POSTGRES_PASSWORD = var.postgres_password
-      # PGPASSWORD =  var.postgres_password
       REPLICATION_PASSWORD = var.replication_password
-    }
-    type = "Opaque"
-    immutable = true
-  }, {
-    name = "replica-data-directory-secret"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    # Plain-text data.
-    data = {
-      PGPASSWORD = var.replication_password
     }
     type = "Opaque"
     immutable = true
@@ -1150,6 +1214,7 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     namespace = local.namespace
     labels = {
       "app" = var.app_name
+      "db" = var.postgres_db_label
     }
     ports = [{
       name = "postgres"
@@ -1172,6 +1237,7 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     namespace = local.namespace
     labels = {
       "app" = var.app_name
+      "db" = var.postgres_db_label
     }
     volume_mode = "Filesystem"
     # https://kubernetes.io/docs/concepts/storage/persistent-volumes/?ref=kodekloud.com#access-modes
@@ -1182,22 +1248,23 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     storage_class_name = "oci-bv"
   }]
   volume_config_map = [{
-    name = "config"
+    name = "config-volume"
     config_map_name = "${local.statefulset_postgres_replica}-postgres-conf-files"
-    default_mode = "0660"
-    items = [/*{
+    default_mode = "0760"
+    items = [{
       key = "pg_hba.conf"
       path = "pg_hba.conf"
     }, {
       key = "pg_ident.conf"
       path = "pg_ident.conf"
-    },*/ {
+    }, {
       key = "postgresql.conf"
       path = "postgresql.conf"
-    }, {
-      key = "replica.conf"
-      path = "replica.conf"
     }]
+  }, {
+    name = "readonly-initdb-volume"
+    config_map_name = "${local.statefulset_postgres_replica}-postgres-script-files"
+    default_mode = "0750"
   }]
   volume_mount = [{
     name = "wsf"
@@ -1207,11 +1274,24 @@ A password file (~/.pgpass on Linux/macOS, %APPDATA%\postgresql\pgpass.conf on W
     name = "wsf"
     mount_path = "/var/run/postgresql"  # The path where Postgres stores its data.
     read_only = false
-  }/*, {
-    name = "wfs"
-    mount_path = "/wsf_data_dir/config"
+  }, {
+    name = "config-volume"
+    mount_path = "/postgres/config"
     read_only = false
-  }*/]
+  }, {
+    name = "writable-initdb-volume"
+    mount_path = "docker-entrypoint-initdb.d"
+    read_only = false
+  }, {
+    name = "writable-lib"
+    mount_path = "/var/lib/pgsql"
+    read_only = false
+  }]
+  volume_empty_dir = [{
+    name = "writable-initdb-volume"
+  }, {
+    name = "writable-lib"
+  }]
 }
 
 
@@ -1230,19 +1310,6 @@ module "fin-MySqlServer" {
   argument that follows.
   ***/
   args = ["-c",
-    /***
-    --server-id: https://dev.mysql.com/doc/refman/8.0/en/replication-options.html#sysvar_server_id
-    --log-bin: https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html#sysvar_log_bin
-    --binlog-checksum: https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html#option_mysqld_binlog-checksum
-    --max-relay-log-size: https://dev.mysql.com/doc/refman/8.0/en/replication-options-replica.html#option_mysqld_max-relay-log-size
-    --max-binlog-size: https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html#sysvar_max_binlog_size
-    --gtid-mode: https://dev.mysql.com/doc/refman/8.0/en/replication-options-gtids.html#sysvar_gtid_mode
-    --enforce-gtid-consistency: https://dev.mysql.com/doc/refman/8.0/en/replication-options-gtids.html#sysvar_enforce_gtid_consistency
-    --datadir: https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_datadir
-    --verbose: https://dev.mysql.com/doc/refman/8.0/en/server-options.html#option_mysqld_verbose
-    --default-authentication-plugin: https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_default_authentication_plugin
-    --report-host: https://dev.mysql.com/doc/refman/8.0/en/replication-options-replica.html#sysvar_report_host
-    ***/
     /***
     In Terraform, both << and <<- are used to define heredoc strings, which are multi-line string
     literals. The key difference lies in how they handle indentation:
@@ -1268,18 +1335,6 @@ module "fin-MySqlServer" {
     ***/
     # >-
     <<-EOT
-    /usr/local/bin/docker-entrypoint.sh mysqld
-    --server-id=$((40 +  $(echo $HOSTNAME | grep -o '[^-]*$') + 1))
-    --log-bin=OFF
-    --binlog-checksum=NONE
-    --max-relay-log-size=0
-    --max-binlog-size=524288
-    --enforce-gtid-consistency=ON
-    --gtid-mode=ON
-    --datadir=$HOMEwsf_data_dir/mysql
-    --verbose
-    --default-authentication-plugin=caching_sha2_password
-    --report-host=$HOSTNAME.${local.svc_dns_mysql_server}
     EOT
   ]
   command = ["/bin/bash"]
@@ -1289,34 +1344,8 @@ module "fin-MySqlServer" {
     MYSQL_ROOT_HOST = var.mysql_root_host
   }
   image_tag = var.mysql_image_tag
-  labels = {
-    "aff-mysql-server" = "running"
-    "app" = var.app_name
-  }
   namespace = local.namespace
   # Always use 3 or more nodes for fault tolerance.
-  replicas = 3
-  resources = {  # QoS - Guaranteed
-    limits_cpu = "500m"
-    limits_memory = "1Gi"
-  }
-  # If the order of Secrets changes, the Deployment must be changed accordingly. See
-  # spec.image_pull_secrets.
-  secrets = [{
-    name = "${local.svc_mysql}-secret"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    # Plain-text data.
-    data = {
-      MYSQL_USER = var.mysql_user
-      MYSQL_PASSWORD = var.mysql_password
-      MYSQL_ROOT_PASSWORD = var.mysql_root_password
-    }
-    type = "Opaque"
-    immutable = true
-  }]
   service = {
     name = "${local.svc_mysql}-headless"
     namespace = local.namespace
