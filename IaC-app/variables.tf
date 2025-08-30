@@ -186,6 +186,14 @@ variable traefik_le_email {
   type = string
 }
 
+###########
+# busybox #
+###########
+variable busybox {
+  default = "busybox:1.37.0-musl"
+  type = string
+}
+
 ##############
 # PostgreSQL #
 ##############
@@ -224,7 +232,7 @@ variable postgres_password {
   type = string
 }
 
-variable replication_password {
+variable postgres_replication_password {
   description = "REPLICATION_PASSWORD: Secret for PostgreSQL Authentication."
   default = "<required>"
   sensitive = true
@@ -232,18 +240,18 @@ variable replication_password {
 }
 
 # https://hub.docker.com/_/postgres#pgdata
-variable pgdata {
+variable postgres_data {
   description = "PGDATA: It defines another location for the database files."
   default = "/wsf_data_dir/data/pgdata"
   type = string
 }
 
-variable path_postgres_configs {
+variable postgres_config_path {
   default = "./utilities/postgres/configs"
   type = string
 }
 
-variable path_postgres_scripts {
+variable postgres_script_path {
   default = "./utilities/postgres/scripts"
   type = string
 }

@@ -728,10 +728,10 @@ module "fin-PostgresMaster" {
     }
     data = {
       # https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
-      "pg_hba.conf" = "${file("${var.path_postgres_configs}/pg_hba.conf")}"
+      "pg_hba.conf" = "${file("${var.postgres_config_path}/pg_hba.conf")}"
       # https://www.postgresql.org/docs/current/auth-username-maps.html
-      "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
-      "postgresql.conf" = "${file("${var.path_postgres_configs}/postgresql.conf")}"
+      "pg_ident.conf" = "${file("${var.postgres_config_path}/pg_ident.conf")}"
+      "postgresql.conf" = "${file("${var.postgres_config_path}/postgresql.conf")}"
     }
   }, {
     # Same as volume.volume_config_map.config_map_name.name.
@@ -742,7 +742,7 @@ module "fin-PostgresMaster" {
       "db" = var.postgres_db_label
     }
     data = {
-      "create-replication-user.sh" = "${file("${var.path_postgres_scripts}/create-replication-user.sh")}"
+      "create-replication-user.sh" = "${file("${var.postgres_script_path}/create-replication-user.sh")}"
     }
   }]
   containers_security_context = {
@@ -751,7 +751,7 @@ module "fin-PostgresMaster" {
     read_only_root_filesystem = true
   }
   env = {
-    PGDATA = var.pgdata
+    PGDATA = var.postgres_data
   }
   env_field = [{
     name = "POD_IP"
@@ -810,12 +810,13 @@ module "fin-PostgresMaster" {
         chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
         # cat /docker-entrypoint-initdb.d/create-replication-user.sh
       fi
+      printf "Changing permissions for /wsf_data_dir...\n"
       chown -v -R 1999:1999 /wsf_data_dir && chmod -R 760 /wsf_data_dir
       EOT
     ]
     command = ["/bin/sh"]
     env = {
-      PGDATA = var.pgdata
+      PGDATA = var.postgres_data
       PGHOST = ""
       # on - Secondary.
       # off - Primary.
@@ -907,7 +908,7 @@ module "fin-PostgresMaster" {
       POSTGRES_DB = var.postgres_db
       POSTGRES_USER = var.postgres_user
       POSTGRES_PASSWORD = var.postgres_password
-      REPLICATION_PASSWORD = var.replication_password
+      REPLICATION_PASSWORD = var.postgres_replication_password
     }
     type = "Opaque"
     immutable = true
@@ -1019,10 +1020,10 @@ module "fin-PostgresReplica" {
     }
     data = {
       # https://www.postgresql.org/docs/current/auth-pg-hba-conf.html
-      "pg_hba.conf" = "${file("${var.path_postgres_configs}/pg_hba.conf")}"
+      "pg_hba.conf" = "${file("${var.postgres_config_path}/pg_hba.conf")}"
       # https://www.postgresql.org/docs/current/auth-username-maps.html
-      "pg_ident.conf" = "${file("${var.path_postgres_configs}/pg_ident.conf")}"
-      "postgresql.conf" = "${file("${var.path_postgres_configs}/postgresql.conf")}"
+      "pg_ident.conf" = "${file("${var.postgres_config_path}/pg_ident.conf")}"
+      "postgresql.conf" = "${file("${var.postgres_config_path}/postgresql.conf")}"
     }
   }, {
     # Same as volume.volume_config_map.config_map_name.name.
@@ -1033,7 +1034,7 @@ module "fin-PostgresReplica" {
       "db" = var.postgres_db_label
     }
     data = {
-      "create-replication-user.sh" = "${file("${var.path_postgres_scripts}/create-replication-user.sh")}"
+      "create-replication-user.sh" = "${file("${var.postgres_script_path}/create-replication-user.sh")}"
     }
   }]
   containers_security_context = {
@@ -1042,7 +1043,7 @@ module "fin-PostgresReplica" {
     read_only_root_filesystem = true
   }
   env = {
-    PGDATA = var.pgdata
+    PGDATA = var.postgres_data
   }
   env_field = [{
     name = "POD_IP"
@@ -1101,12 +1102,13 @@ module "fin-PostgresReplica" {
         chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
         # cat /docker-entrypoint-initdb.d/create-replication-user.sh
       fi
+      printf "Changing permissions for /wsf_data_dir...\n"
       chown -v -R 1999:1999 /wsf_data_dir && chmod -R 760 /wsf_data_dir
       EOT
     ]
     command = ["/bin/sh"]
     env = {
-      PGDATA = var.pgdata
+      PGDATA = var.postgres_data
       PGHOST = local.service_name_postgres_master
       # on - Secondary.
       # off - Primary.
@@ -1202,7 +1204,7 @@ module "fin-PostgresReplica" {
       POSTGRES_DB = var.postgres_db
       POSTGRES_USER = var.postgres_user
       POSTGRES_PASSWORD = var.postgres_password
-      REPLICATION_PASSWORD = var.replication_password
+      REPLICATION_PASSWORD = var.postgres_replication_password
     }
     type = "Opaque"
     immutable = true
@@ -1286,7 +1288,53 @@ module "fin-PostgresReplica" {
   }]
 }
 
-
+module "fin-PostgresBackup" {
+  count = var.db_postgres && !var.k8s_crds ? 1 : 0
+  depends_on = [
+    module.fin-PostgresMaster
+  ]
+  # Specify the location of the module, which contains the file main.tf.
+  source = "./modules/cronjob"
+  #
+  cron_job = {
+    metadata = {
+      name = "postgres-backup-cronjon"
+      labels = {
+        "app" = var.app_name
+        "db" = var.postgres_db_label
+      }
+      namespace = local.namespace
+    }
+    spec = {
+      schedule = "* * * * *"
+      job_template = {
+        metadata = {
+          name = "postgres-backup-job"
+          labels = {
+            "app" = var.app_name
+            "db" = var.postgres_db_label
+          }
+          namespace = local.namespace
+        }
+        spec = {
+          template = {
+            spec = {
+              container = [{
+                name = "postgres-backup-container"
+                command = ["/bin/sh",
+                  "-c",
+                  "date; echo Hello from K8s"
+                ]
+                image = var.busybox
+                image_pull_policy = "IfNotPresent"
+              }]
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
     /***
     In Terraform, both << and <<- are used to define heredoc strings, which are multi-line string

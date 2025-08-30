@@ -414,7 +414,6 @@ variable secrets {
   sensitive = true
 }
 variable service {
-  # default = null
   type = object({
     name = string
     namespace = string

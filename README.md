@@ -97,11 +97,9 @@ fin-finance
  | | | └ .gitkeep
  | | ├ postgres
  | | | ├ configs
- | | | | ├ master.conf
  | | | | ├ pg_hba.conf
  | | | | ├ pg_ident.conf
- | | | | ├ postgresql.conf
- | | | | └ replica.conf
+ | | | | └ postgresql.conf
  | | | ├ scripts
  | | | | └ create-replication-user.sh
  | | | └ .gitkeep
