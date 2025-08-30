@@ -290,6 +290,9 @@ IaC-app/*
 !IaC-app/variables.tf
 !IaC-app/modules/
 IaC-app/modules/*
+!IaC-app/modules/cronjob/
+IaC-app/modules/cronjob/*
+!IaC-app/modules/cronjob/main.tf
 !IaC-app/modules/deployment/
 IaC-app/modules/deployment/*
 !IaC-app/modules/deployment/main.tf
