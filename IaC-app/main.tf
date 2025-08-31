@@ -707,17 +707,248 @@ module "fin-PostgresMaster" {
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/statefulset"
   #
-  app_name = var.app_name
-  app_version = var.app_version
-  /***
-  "-c": This is the first argument. It's typically used in conjunction with a shell command (like
-  /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
-  string to be executed by the shell. The -c flag tells the shell to read commands from the string
-  argument that follows.
-  ***/
-  args = ["-c",
-    "config_file=/postgres/config/postgresql.conf"
-  ]
+  labels = {
+    # "aff-mysql-server" = "running"
+    "app" = var.app_name
+    "db" = var.postgres_db_label
+  }
+  namespace = local.namespace
+  replicas = 1
+  statefulset_name = local.statefulset_postgres_master
+  update_strategy = {
+    type = "RollingUpdate"
+  }
+  volume_claim_templates = [{
+    name = "wsf"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
+    volume_mode = "Filesystem"
+    # https://kubernetes.io/docs/concepts/storage/persistent-volumes/?ref=kodekloud.com#access-modes
+    access_modes = ["ReadWriteOnce"]
+    # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
+    # for less than 50GB, the request is rounded up to 50GB.
+    storage = "50Gi"
+    storage_class_name = "oci-bv"
+  }]
+  #######
+  # Pod #
+  #######
+  pod = {
+    container = [{
+      name = local.statefulset_postgres_master
+      /***
+      "-c": This is the first argument. It's typically used in conjunction with a shell command (like
+      /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
+      string to be executed by the shell. The -c flag tells the shell to read commands from the string
+      argument that follows.
+      ***/
+      args = ["-c",
+        "config_file=/postgres/config/postgresql.conf"
+      ]
+      env = {
+        PGDATA = var.postgres_data
+      }
+      env_field = [{
+        name = "POD_IP"
+        field_path = "status.podIP"
+      }]
+      env_from_secrets = [
+        "${local.statefulset_postgres_master}-secret"
+      ]
+      image = var.postgres_image_tag
+      image_pull_policy = "IfNotPresent"
+      liveness_probe = [{
+        initial_delay_seconds = 60  # Delay before the first probe.
+        period_seconds = 10  # How often to perform the probe.
+        timeout_seconds = 3  # Timeout for the probe command.
+        failure_threshold = 3  # Number of consecutive failures before marking unready.
+        success_threshold = 1
+        exec = {
+          command = ["/bin/sh",
+            "-c",
+            "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
+          ]
+        }
+      }]
+      readiness_probe = [{
+        initial_delay_seconds = 30
+        period_seconds = 5
+        timeout_seconds = 3
+        failure_threshold = 3
+        # success_threshold = 1
+        exec = {
+          # https://www.postgresql.org/docs/current/app-pg-isready.html
+          command = ["/bin/sh",
+            "-c",
+            "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
+          ]
+        }
+      }]
+      resources = {  # QoS - Guaranteed
+        limits_cpu = "250m"
+        limits_memory = "1Gi"
+      }
+      security_context = {
+        allow_privilege_escalation = false
+        privileged = false
+        read_only_root_filesystem = true
+      }
+      volume_mounts = [{
+        name = "wsf"
+        mount_path = "/wsf_data_dir"
+        read_only = false
+      }, {
+        name = "wsf"
+        /***
+        For security reasons, you want to prevent processes running in a container from writing to the
+        container's filesystem. If you make the container's filesystem read-only, you will need to
+        mount a volume in every directory the app writes information; e.g., logs.
+        ***/
+        mount_path = "/var/run/postgresql"  # The path where Postgres stores its data.
+        read_only = false
+      }, {
+        name = "config-volume"
+        mount_path = "/postgres/config"
+        read_only = false
+      }, {
+        name = "writable-initdb-volume"
+        mount_path = "docker-entrypoint-initdb.d"
+        read_only = false
+      }]
+    }]
+    init_container = [{
+      name = "init-master"
+      args = ["-c",
+        <<-EOT
+        # Check if variable is set and not empty.
+        if [[ ! -n "$STANDBY_MODE" ]];
+        then
+          printf "The environment variable STANDBY_MODE is unset or empty.\n"
+          printf "Set to \"on\" for primary server.\n"
+          printf "Set to \"off\" for secondary (backup) server.\n"
+          exit 1
+        fi
+        # The variable holding the path to the directory is enclosed in double quotes to handle
+        # potential spaces or special characters in the path.
+        if [ ! -d "$PGDATA" ];
+        then
+          printf "Creating data directory...\n"
+          mkdir -p "$PGDATA"
+          printf "Creating archive directory...\n"
+          mkdir -p /wsf_data_dir/data/archive
+        fi
+        #
+        if [ "$STANDBY_MODE" == "on" ];
+        then
+          # Initialize from backup if data directory is empty.
+          if [ -z "$(ls -A "$PGDATA")" ];
+          then
+            printf "Initializing from backup...\n"
+            # The PGPASSWORD environment variable in PostgreSQL allows the specification of a password
+            # for database connections without requiring interactive input. This variable can be set in
+            # the shell before executing PostgreSQL client applications like psql or pg_dump.
+            export PGPASSWORD=$REPLICATION_PASSWORD
+            # https://www.postgresql.org/docs/current/app-pgbasebackup.html
+            pg_basebackup -v -h $PGHOST -p 5432 -D $PGDATA -U replication -R -Xs -Fp
+          fi
+        else
+          # cat /postgres/initdb/create-replication-user.sh
+          # https://hub.docker.com/_/postgres#initialization-scripts
+          if [ ! -d "/docker-entrypoint-initdb.d" ];
+          then
+            mkdir /docker-entrypoint-initdb.d
+          fi
+          cp /postgres/initdb/* /docker-entrypoint-initdb.d/
+          printf "Adding credential...\n"
+          sed -i 's/#POSTGRES_USER/$(POSTGRES_USER)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+          sed -i 's/#POSTGRES_DB/$(POSTGRES_DB)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+          sed -i 's/#REPLICATION_PASSWORD/$(REPLICATION_PASSWORD)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+          printf "Changing permissions for emptyDir...\n"
+          chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
+          # cat /docker-entrypoint-initdb.d/create-replication-user.sh
+        fi
+        printf "Changing permissions for /wsf_data_dir...\n"
+        chown -v -R 1999:1999 /wsf_data_dir && chmod -v -R 760 /wsf_data_dir
+        EOT
+      ]
+      command = ["/bin/sh"]
+      env = {
+        PGDATA = var.postgres_data
+        PGHOST = ""
+        # on - Secondary.
+        # off - Primary.
+        STANDBY_MODE = "off"
+      }
+      env_from_secrets = [
+        "${local.statefulset_postgres_master}-secret"
+      ]
+      image = var.postgres_image_tag
+      image_pull_policy = "IfNotPresent"
+      security_context = {
+        run_as_user = 0
+        run_as_group = 0
+        run_as_non_root = false
+        read_only_root_filesystem = false
+        privileged = false
+      }
+      volume_mounts = [{
+        name = "wsf"
+        mount_path = "/wsf_data_dir"
+        read_only = false
+      }, {
+        name = "readonly-initdb-volume"
+        # https://hub.docker.com/_/postgres#initialization-scripts
+        mount_path = "/postgres/initdb"
+        read_only = true
+      }, {
+        name = "writable-initdb-volume"
+        mount_path = "/docker-entrypoint-initdb.d"
+        read_only = false
+      }]
+    }]
+    labels = {
+      # "aff-mysql-server" = "running"
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
+    restart_policy = "Always"
+    # Ensure that the non-root user running the container has the necessary group permissions to
+    # access files in mounted volumes.
+    security_context = {
+      fs_group = 1999
+      run_as_non_root = true
+      run_as_user = 1999
+      run_as_group = 1999
+    }
+    volume_config_map = [{
+      name = "config-volume"
+      config_map_name = "${local.statefulset_postgres_master}-postgres-conf-files"
+      default_mode = "0760"
+      items = [{
+        key = "pg_hba.conf"
+        path = "pg_hba.conf"
+      }, {
+        key = "pg_ident.conf"
+        path = "pg_ident.conf"
+      }, {
+        key = "postgresql.conf"
+        path = "postgresql.conf"
+      }]
+    }, {
+      name = "readonly-initdb-volume"
+      config_map_name = "${local.statefulset_postgres_master}-postgres-script-files"
+      default_mode = "0750"
+    }]
+    volume_empty_dir = [{
+      name = "writable-initdb-volume"
+    }]
+  }
+  #############
+  # Resources #
+  #############
   config_map = [{
     # Same as volume_config_map.config_map_name.
     name = "${local.statefulset_postgres_master}-postgres-conf-files"
@@ -745,157 +976,6 @@ module "fin-PostgresMaster" {
       "create-replication-user.sh" = "${file("${var.postgres_script_path}/create-replication-user.sh")}"
     }
   }]
-  containers_security_context = {
-    allow_privilege_escalation = false
-    privileged = false
-    read_only_root_filesystem = true
-  }
-  env = {
-    PGDATA = var.postgres_data
-  }
-  env_field = [{
-    name = "POD_IP"
-    field_path = "status.podIP"
-  }]
-  image_pull_policy = "IfNotPresent"
-  image_tag = var.postgres_image_tag
-  init_container = [{
-    name = "init-master"
-    args = ["-c",
-      <<-EOT
-      # Check if variable is set and not empty.
-      if [[ ! -n "$STANDBY_MODE" ]];
-      then
-        printf "The environment variable STANDBY_MODE is unset or empty.\n"
-        printf "Set to \"on\" for primary server.\n"
-        printf "Set to \"off\" for secondary (backup) server.\n"
-        exit 1
-      fi
-      # The variable holding the path to the directory is enclosed in double quotes to handle
-      # potential spaces or special characters in the path.
-      if [ ! -d "$PGDATA" ];
-      then
-        printf "Creating data directory...\n"
-        mkdir -p "$PGDATA"
-        printf "Creating archive directory...\n"
-        mkdir -p /wsf_data_dir/data/archive
-      fi
-      #
-      if [ "$STANDBY_MODE" == "on" ];
-      then
-        # Initialize from backup if data directory is empty.
-        if [ -z "$(ls -A "$PGDATA")" ];
-        then
-          printf "Initializing from backup...\n"
-          # The PGPASSWORD environment variable in PostgreSQL allows the specification of a password
-          # for database connections without requiring interactive input. This variable can be set in
-          # the shell before executing PostgreSQL client applications like psql or pg_dump.
-          export PGPASSWORD=$REPLICATION_PASSWORD
-          # https://www.postgresql.org/docs/current/app-pgbasebackup.html
-          pg_basebackup -v -h $PGHOST -p 5432 -D $PGDATA -U replication -R -Xs -Fp
-        fi
-      else
-        # cat /postgres/initdb/create-replication-user.sh
-        # https://hub.docker.com/_/postgres#initialization-scripts
-        if [ ! -d "/docker-entrypoint-initdb.d" ];
-        then
-          mkdir /docker-entrypoint-initdb.d
-        fi
-        cp /postgres/initdb/* /docker-entrypoint-initdb.d/
-        printf "Adding credential...\n"
-        sed -i 's/#POSTGRES_USER/$(POSTGRES_USER)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
-        sed -i 's/#POSTGRES_DB/$(POSTGRES_DB)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
-        sed -i 's/#REPLICATION_PASSWORD/$(REPLICATION_PASSWORD)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
-        printf "Changing permissions for emptyDir...\n"
-        chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
-        # cat /docker-entrypoint-initdb.d/create-replication-user.sh
-      fi
-      printf "Changing permissions for /wsf_data_dir...\n"
-      chown -v -R 1999:1999 /wsf_data_dir && chmod -R 760 /wsf_data_dir
-      EOT
-    ]
-    command = ["/bin/sh"]
-    env = {
-      PGDATA = var.postgres_data
-      PGHOST = ""
-      # on - Secondary.
-      # off - Primary.
-      STANDBY_MODE = "off"
-    }
-    env_from_secrets = [
-      "${local.statefulset_postgres_master}-secret"
-    ]
-    image = var.postgres_image_tag
-    image_pull_policy = "IfNotPresent"
-    security_context = {
-      run_as_user = 0
-      run_as_group = 0
-      run_as_non_root = false
-      read_only_root_filesystem = false
-      privileged = false
-    }
-    volume_mounts = [{
-      name = "wsf"
-      mount_path = "/wsf_data_dir"
-      read_only = false
-    }, {
-      name = "readonly-initdb-volume"
-      # https://hub.docker.com/_/postgres#initialization-scripts
-      mount_path = "/postgres/initdb"
-      read_only = false
-    }, {
-      name = "writable-initdb-volume"
-      mount_path = "/docker-entrypoint-initdb.d"
-      read_only = false
-    }]
-  }]
-  labels = {
-    # "aff-mysql-server" = "running"
-    "app" = var.app_name
-    "db" = var.postgres_db_label
-  }
-  liveness_probe = [{
-    initial_delay_seconds = 60  # Delay before the first probe.
-    period_seconds = 10  # How often to perform the probe.
-    timeout_seconds = 3  # Timeout for the probe command.
-    failure_threshold = 3  # Number of consecutive failures before marking unready.
-    success_threshold = 1
-    exec = {
-      command = ["/bin/sh",
-        "-c",
-        "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
-      ]
-    }
-  }]
-  namespace = local.namespace
-  # Ensure that the non-root user running the container has the necessary group permissions to
-  # access files in mounted volumes.
-  pod_security_context = {
-    fs_group = 1999
-    run_as_non_root = true
-    run_as_user = 1999
-    run_as_group = 1999
-  }
-  readiness_probe = [{
-    initial_delay_seconds = 30
-    period_seconds = 5
-    timeout_seconds = 3
-    failure_threshold = 3
-    # success_threshold = 1
-    exec = {
-      # https://www.postgresql.org/docs/current/app-pg-isready.html
-      command = ["/bin/sh",
-        "-c",
-        "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
-      ]
-    }
-  }]
-  # Always use 3 or more nodes for fault tolerance.
-  replicas = 1
-  resources = {  # QoS - Guaranteed
-    limits_cpu = "250m"
-    limits_memory = "1Gi"
-  }
   secrets = [{
     name = "${local.statefulset_postgres_master}-secret"
     namespace = local.namespace
@@ -926,13 +1006,27 @@ module "fin-PostgresMaster" {
       target_port = 5432
       protocol = "TCP"
     }]
-    selector = {
-      "svc_selector_label" = "svc-${local.service_name_postgres_master}"
-    }
     publish_not_ready_addresses = true
     type = "ClusterIP"
   }
-  statefulset_name = local.statefulset_postgres_master
+}
+
+module "fin-PostgresReplica" {
+  count = var.db_postgres && !var.k8s_crds ? 1 : 0
+  depends_on = [
+    module.fin-PostgresMaster
+  ]
+  # Specify the location of the module, which contains the file main.tf.
+  source = "./modules/statefulset"
+  #
+  labels = {
+    # "aff-mysql-server" = "running"
+    "app" = var.app_name
+    "db" = var.postgres_db_label
+  }
+  namespace = local.namespace
+  replicas = 1
+  statefulset_name = local.statefulset_postgres_replica
   update_strategy = {
     type = "RollingUpdate"
   }
@@ -951,65 +1045,211 @@ module "fin-PostgresMaster" {
     storage = "50Gi"
     storage_class_name = "oci-bv"
   }]
-  volume_config_map = [{
-    name = "config-volume"
-    config_map_name = "${local.statefulset_postgres_master}-postgres-conf-files"
-    default_mode = "0760"
-    items = [{
-      key = "pg_hba.conf"
-      path = "pg_hba.conf"
-    }, {
-      key = "pg_ident.conf"
-      path = "pg_ident.conf"
-    }, {
-      key = "postgresql.conf"
-      path = "postgresql.conf"
+  #######
+  # Pod #
+  #######
+  pod = {
+    container = [{
+      name = local.statefulset_postgres_replica
+      args = ["-c",
+        "config_file=/postgres/config/postgresql.conf"
+      ]
+      env = {
+        PGDATA = var.postgres_data
+      }
+      env_field = [{
+        name = "POD_IP"
+        field_path = "status.podIP"
+      }]
+      env_from_secrets = [
+        "${local.statefulset_postgres_replica}-secret"
+      ]
+      image = var.postgres_image_tag
+      image_pull_policy = "IfNotPresent"
+      liveness_probe = [{
+        initial_delay_seconds = 60  # Delay before the first probe.
+        period_seconds = 10  # How often to perform the probe.
+        timeout_seconds = 3  # Timeout for the probe command.
+        failure_threshold = 3  # Number of consecutive failures before marking unready.
+        success_threshold = 1
+        exec = {
+          command = ["/bin/sh",
+            "-c",
+            "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
+          ]
+        }
+      }]
+      readiness_probe = [{
+        initial_delay_seconds = 30
+        period_seconds = 5
+        timeout_seconds = 3
+        failure_threshold = 3
+        # success_threshold = 1
+        exec = {
+          # https://www.postgresql.org/docs/current/app-pg-isready.html
+          command = ["/bin/sh",
+            "-c",
+            "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
+          ]
+        }
+      }]
+      resources = {  # QoS - Guaranteed
+        limits_cpu = "100m"
+        limits_memory = "256Mi"
+      }
+      security_context = {
+        allow_privilege_escalation = false
+        privileged = false
+        read_only_root_filesystem = true
+      }
+      volume_mounts = [{
+        name = "wsf"
+        mount_path = "/wsf_data_dir"
+        read_only = false
+      }, {
+        name = "wsf"
+        mount_path = "/var/run/postgresql"  # The path where Postgres stores its data.
+        read_only = false
+      }, {
+        name = "config-volume"
+        mount_path = "/postgres/config"
+        read_only = false
+      }, {
+        name = "writable-initdb-volume"
+        mount_path = "docker-entrypoint-initdb.d"
+        read_only = false
+      }]
     }]
-  }, {
-    name = "readonly-initdb-volume"
-    config_map_name = "${local.statefulset_postgres_master}-postgres-script-files"
-    default_mode = "0750"
-  }]
-  volume_mount = [{
-    name = "wsf"
-    mount_path = "/wsf_data_dir"
-    read_only = false
-  }, {
-    name = "wsf"
-    /***
-    For security reasons, you want to prevent processes running in a container from writing to the
-    container's filesystem. If you make the container's filesystem read-only, you will need to
-    mount a volume in every directory the app writes information; e.g., logs.
-    ***/
-    mount_path = "/var/run/postgresql"  # The path where Postgres stores its data.
-    read_only = false
-  }, {
-    name = "config-volume"
-    mount_path = "/postgres/config"
-    read_only = false
-  }, {
-    name = "writable-initdb-volume"
-    mount_path = "docker-entrypoint-initdb.d"
-    read_only = false
-  }]
-  volume_empty_dir = [{
-    name = "writable-initdb-volume"
-  }]
-}
-
-module "fin-PostgresReplica" {
-  count = var.db_postgres && !var.k8s_crds ? 1 : 0
-  depends_on = [
-    module.fin-PostgresMaster
-  ]
-  # Specify the location of the module, which contains the file main.tf.
-  source = "./modules/statefulset"
-  #
-  app_name = var.app_name
-  app_version = var.app_version
-  args = ["-c",
-    "config_file=/postgres/config/postgresql.conf"
-  ]
+    init_container = [{
+      name = "init-replica"
+      args = ["-c",
+        <<-EOT
+        # Check if variable is set and not empty.
+        if [[ ! -n "$STANDBY_MODE" ]];
+        then
+          printf "The environment variable STANDBY_MODE is unset or empty.\n"
+          printf "Set to \"on\" for primary server.\n"
+          printf "Set to \"off\" for secondary (backup) server.\n"
+          exit 1
+        fi
+        # The variable holding the path to the directory is enclosed in double quotes to handle
+        # potential spaces or special characters in the path.
+        if [ ! -d "$PGDATA" ];
+        then
+          printf "Creating data directory...\n"
+          mkdir -p "$PGDATA"
+          printf "Creating archive directory...\n"
+          mkdir -p /wsf_data_dir/data/archive
+        fi
+        #
+        if [ "$STANDBY_MODE" == "on" ];
+        then
+          # Initialize from backup if data directory is empty.
+          if [ -z "$(ls -A "$PGDATA")" ];
+          then
+            printf "Initializing from backup...\n"
+            # The PGPASSWORD environment variable in PostgreSQL allows the specification of a password
+            # for database connections without requiring interactive input. This variable can be set in
+            # the shell before executing PostgreSQL client applications like psql or pg_dump.
+            export PGPASSWORD=$REPLICATION_PASSWORD
+            # https://www.postgresql.org/docs/current/app-pgbasebackup.html
+            pg_basebackup -v -h $PGHOST -p 5432 -D $PGDATA -U replication -R -Xs -Fp
+          fi
+        else
+          # cat /postgres/initdb/create-replication-user.sh
+          # https://hub.docker.com/_/postgres#initialization-scripts
+          if [ ! -d "/docker-entrypoint-initdb.d" ];
+          then
+            mkdir /docker-entrypoint-initdb.d
+          fi
+          cp /postgres/initdb/* /docker-entrypoint-initdb.d/
+          printf "Adding credential...\n"
+          sed -i 's/#POSTGRES_USER/$(POSTGRES_USER)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+          sed -i 's/#POSTGRES_DB/$(POSTGRES_DB)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+          sed -i 's/#REPLICATION_PASSWORD/$(REPLICATION_PASSWORD)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
+          printf "Changing permissions for emptyDir...\n"
+          chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
+          # cat /docker-entrypoint-initdb.d/create-replication-user.sh
+        fi
+        printf "Changing permissions for /wsf_data_dir...\n"
+        chown -v -R 1999:1999 /wsf_data_dir && chmod -v -R 760 /wsf_data_dir
+        EOT
+      ]
+      command = ["/bin/sh"]
+      env = {
+        PGDATA = var.postgres_data
+        PGHOST = local.service_name_postgres_master
+        # on - Secondary.
+        # off - Primary.
+        STANDBY_MODE = "on"
+      }
+      env_from_secrets = [
+        "${local.statefulset_postgres_replica}-secret"
+      ]
+      image = var.postgres_image_tag
+      image_pull_policy = "IfNotPresent"
+      security_context = {
+        run_as_user = 0
+        run_as_group = 0
+        run_as_non_root = false
+        read_only_root_filesystem = false
+        privileged = false
+      }
+      volume_mounts = [{
+        name = "wsf"
+        mount_path = "/wsf_data_dir"
+        read_only = false
+      }, {
+        name = "readonly-initdb-volume"
+        # https://hub.docker.com/_/postgres#initialization-scripts
+        mount_path = "/postgres/initdb"
+        read_only = true
+      }, {
+        name = "writable-initdb-volume"
+        mount_path = "/docker-entrypoint-initdb.d"
+        read_only = false
+      }]
+    }]
+    labels = {
+      # "aff-mysql-server" = "running"
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
+    restart_policy = "Always"
+    # Ensure that the non-root user running the container has the necessary group permissions to
+    # access files in mounted volumes.
+    security_context = {
+      fs_group = 1999
+      run_as_non_root = true
+      run_as_user = 1999
+      run_as_group = 1999
+    }
+    volume_config_map = [{
+      name = "config-volume"
+      config_map_name = "${local.statefulset_postgres_replica}-postgres-conf-files"
+      default_mode = "0760"
+      items = [{
+        key = "pg_hba.conf"
+        path = "pg_hba.conf"
+      }, {
+        key = "pg_ident.conf"
+        path = "pg_ident.conf"
+      }, {
+        key = "postgresql.conf"
+        path = "postgresql.conf"
+      }]
+    }, {
+      name = "readonly-initdb-volume"
+      config_map_name = "${local.statefulset_postgres_replica}-postgres-script-files"
+      default_mode = "0750"
+    }]
+    volume_empty_dir = [{
+      name = "writable-initdb-volume"
+    }]
+  }
+  #############
+  # Resources #
+  #############
   config_map = [{
     # Same as volume_config_map.config_map_name.
     name = "${local.statefulset_postgres_replica}-postgres-conf-files"
@@ -1037,161 +1277,6 @@ module "fin-PostgresReplica" {
       "create-replication-user.sh" = "${file("${var.postgres_script_path}/create-replication-user.sh")}"
     }
   }]
-  containers_security_context = {
-    allow_privilege_escalation = false
-    privileged = false
-    read_only_root_filesystem = true
-  }
-  env = {
-    PGDATA = var.postgres_data
-  }
-  env_field = [{
-    name = "POD_IP"
-    field_path = "status.podIP"
-  }]
-  image_pull_policy = "IfNotPresent"
-  image_tag = var.postgres_image_tag
-  init_container = [{
-    name = "init-replica"
-    args = ["-c",
-      <<-EOT
-      # Check if variable is set and not empty.
-      if [[ ! -n "$STANDBY_MODE" ]];
-      then
-        printf "The environment variable STANDBY_MODE is unset or empty.\n"
-        printf "Set to \"on\" for primary server.\n"
-        printf "Set to \"off\" for secondary (backup) server.\n"
-        exit 1
-      fi
-      # The variable holding the path to the directory is enclosed in double quotes to handle
-      # potential spaces or special characters in the path.
-      if [ ! -d "$PGDATA" ];
-      then
-        printf "Creating data directory...\n"
-        mkdir -p "$PGDATA"
-        printf "Creating archive directory...\n"
-        mkdir -p /wsf_data_dir/data/archive
-      fi
-      #
-      if [ "$STANDBY_MODE" == "on" ];
-      then
-        # Initialize from backup if data directory is empty.
-        if [ -z "$(ls -A "$PGDATA")" ];
-        then
-          printf "Initializing from backup...\n"
-          # The PGPASSWORD environment variable in PostgreSQL allows the specification of a password
-          # for database connections without requiring interactive input. This variable can be set in
-          # the shell before executing PostgreSQL client applications like psql or pg_dump.
-          export PGPASSWORD=$REPLICATION_PASSWORD
-          # https://www.postgresql.org/docs/current/app-pgbasebackup.html
-          pg_basebackup -v -h $PGHOST -p 5432 -D $PGDATA -U replication -R -Xs -Fp
-        fi
-      else
-        # cat /postgres/initdb/create-replication-user.sh
-        # https://hub.docker.com/_/postgres#initialization-scripts
-        if [ ! -d "/docker-entrypoint-initdb.d" ];
-        then
-          mkdir /docker-entrypoint-initdb.d
-        fi
-        cp /postgres/initdb/* /docker-entrypoint-initdb.d/
-        printf "Adding credential...\n"
-        sed -i 's/#POSTGRES_USER/$(POSTGRES_USER)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
-        sed -i 's/#POSTGRES_DB/$(POSTGRES_DB)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
-        sed -i 's/#REPLICATION_PASSWORD/$(REPLICATION_PASSWORD)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
-        printf "Changing permissions for emptyDir...\n"
-        chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
-        # cat /docker-entrypoint-initdb.d/create-replication-user.sh
-      fi
-      printf "Changing permissions for /wsf_data_dir...\n"
-      chown -v -R 1999:1999 /wsf_data_dir && chmod -R 760 /wsf_data_dir
-      EOT
-    ]
-    command = ["/bin/sh"]
-    env = {
-      PGDATA = var.postgres_data
-      PGHOST = local.service_name_postgres_master
-      # on - Secondary.
-      # off - Primary.
-      STANDBY_MODE = "on"
-    }
-    env_from_secrets = [
-      "${local.statefulset_postgres_replica}-secret"
-    ]
-    image = var.postgres_image_tag
-    image_pull_policy = "IfNotPresent"
-    security_context = {
-      run_as_user = 0
-      run_as_group = 0
-      run_as_non_root = false
-      read_only_root_filesystem = false
-      privileged = false
-    }
-    volume_mounts = [{
-      name = "wsf"
-      mount_path = "/wsf_data_dir"
-      read_only = false
-    }, {
-      name = "readonly-initdb-volume"
-      # https://hub.docker.com/_/postgres#initialization-scripts
-      mount_path = "/postgres/initdb"
-      read_only = false
-    }, {
-      name = "writable-initdb-volume"
-      mount_path = "/docker-entrypoint-initdb.d"
-      read_only = false
-    }/*, {
-      name = "writable-lib"
-      mount_path = "/var/lib/pgsql"
-      read_only = false
-    }*/]
-  }]
-  labels = {
-    # "aff-mysql-server" = "running"
-    "app" = var.app_name
-    "db" = var.postgres_db_label
-  }
-  liveness_probe = [{
-    initial_delay_seconds = 60  # Delay before the first probe.
-    period_seconds = 10  # How often to perform the probe.
-    timeout_seconds = 3  # Timeout for the probe command.
-    failure_threshold = 3  # Number of consecutive failures before marking unready.
-    success_threshold = 1
-    exec = {
-      command = ["/bin/sh",
-        "-c",
-        "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
-      ]
-    }
-  }]
-  namespace = local.namespace
-  # Ensure that the non-root user running the container has the necessary group permissions to
-  # access files in mounted volumes.
-  pod_security_context = {
-    fs_group = 1999
-    run_as_non_root = true
-    run_as_user = 1999
-    run_as_group = 1999
-  }
-  readiness_probe = [{
-    initial_delay_seconds = 30
-    period_seconds = 5
-    timeout_seconds = 3
-    failure_threshold = 3
-    # success_threshold = 1
-    exec = {
-      # https://www.postgresql.org/docs/current/app-pg-isready.html
-      command = ["/bin/sh",
-        "-c",
-        "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
-      ]
-    }
-  }]
-  # Always use 3 or more nodes for fault tolerance.
-  replicas = 1
-  resources = {  # QoS - Guaranteed
-    limits_cpu = "100m"
-    limits_memory = "256Mi"
-  }
   secrets = [{
     name = "${local.statefulset_postgres_replica}-secret"
     namespace = local.namespace
@@ -1228,64 +1313,6 @@ module "fin-PostgresReplica" {
     publish_not_ready_addresses = true
     type = "ClusterIP"
   }
-  statefulset_name = local.statefulset_postgres_replica
-  update_strategy = {
-    type = "RollingUpdate"
-  }
-  volume_claim_templates = [{
-    name = "wsf"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-      "db" = var.postgres_db_label
-    }
-    volume_mode = "Filesystem"
-    # https://kubernetes.io/docs/concepts/storage/persistent-volumes/?ref=kodekloud.com#access-modes
-    access_modes = ["ReadWriteOnce"]
-    # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
-    # for less than 50GB, the request is rounded up to 50GB.
-    storage = "50Gi"
-    storage_class_name = "oci-bv"
-  }]
-  volume_config_map = [{
-    name = "config-volume"
-    config_map_name = "${local.statefulset_postgres_replica}-postgres-conf-files"
-    default_mode = "0760"
-    items = [{
-      key = "pg_hba.conf"
-      path = "pg_hba.conf"
-    }, {
-      key = "pg_ident.conf"
-      path = "pg_ident.conf"
-    }, {
-      key = "postgresql.conf"
-      path = "postgresql.conf"
-    }]
-  }, {
-    name = "readonly-initdb-volume"
-    config_map_name = "${local.statefulset_postgres_replica}-postgres-script-files"
-    default_mode = "0750"
-  }]
-  volume_mount = [{
-    name = "wsf"
-    mount_path = "/wsf_data_dir"
-    read_only = false
-  }, {
-    name = "wsf"
-    mount_path = "/var/run/postgresql"  # The path where Postgres stores its data.
-    read_only = false
-  }, {
-    name = "config-volume"
-    mount_path = "/postgres/config"
-    read_only = false
-  }, {
-    name = "writable-initdb-volume"
-    mount_path = "docker-entrypoint-initdb.d"
-    read_only = false
-  }]
-  volume_empty_dir = [{
-    name = "writable-initdb-volume"
-  }]
 }
 
 module "fin-PostgresBackup" {
@@ -1298,39 +1325,51 @@ module "fin-PostgresBackup" {
   #
   cron_job = {
     metadata = {
-      name = "postgres-backup-cronjon"
+      name = "postgres-backup-cronjob"
       labels = {
         "app" = var.app_name
         "db" = var.postgres_db_label
       }
       namespace = local.namespace
     }
-    spec = {
-      schedule = "* * * * *"
-      job_template = {
-        metadata = {
-          name = "postgres-backup-job"
-          labels = {
-            "app" = var.app_name
-            "db" = var.postgres_db_label
-          }
-          namespace = local.namespace
+    concurrency_policy = "Replace"
+    schedule = "5 * * * *"
+    job_template = {
+      metadata = {
+        name = "postgres-backup-job"
+        labels = {
+          "app" = var.app_name
+          "db" = var.postgres_db_label
         }
-        spec = {
-          template = {
-            spec = {
-              container = [{
-                name = "postgres-backup-container"
-                command = ["/bin/sh",
-                  "-c",
-                  "date; echo Hello from K8s"
-                ]
-                image = var.busybox
-                image_pull_policy = "IfNotPresent"
-              }]
-            }
-          }
+        namespace = local.namespace
+      }
+      container = [{
+        name = "postgres-backup-container"
+        command = ["/bin/sh",
+          "-c",
+          "date; echo Hello from K8s; sleep 99999"
+        ]
+        image = var.busybox
+        image_pull_policy = "IfNotPresent"
+        security_context = {
+          allow_privilege_escalation = false
+          privileged = false
+          read_only_root_filesystem = true
         }
+      }]
+      pod_metadata = {
+        name = "postgres-backup-pod"
+        labels = {
+          "app" = var.app_name
+          "db" = var.postgres_db_label
+        }
+      }
+      restart_policy = "OnFailure"
+      security_context = {
+        fs_group = 2999
+        run_as_non_root = true
+        run_as_user = 2999
+        run_as_group = 2999
       }
     }
   }
