@@ -199,105 +199,24 @@ module "certificate" {
 ###################################################################################################
 # Application                                                                                     #
 ###################################################################################################
+
 module "fin-finances-persistent" {
   count = var.persistent_disk && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/deployment"
   dir_path = ".."
   #
-  affinity = {
-    pod_anti_affinity = {
-      required_during_scheduling_ignored_during_execution = [{
-        topology_key = "kubernetes.io/hostname"
-        label_selector = {
-          # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
-          # the label "aff-finances: running".
-          match_expressions = [{
-            "key" = "aff-finances"
-            "operator" = "In"
-            "values" = ["running"]
-          }]
-        }
-      }]
-    }
-  }
-  app_name = var.app_name
   app_version = var.app_version
   build_image = var.build_image
-  containers_security_context = {
-    allow_privilege_escalation = false
-    privileged = false
-    read_only_root_filesystem = true
-    run_as_non_root = true
-  }
   cr_login_server = local.cr_login_server
-  cr_username = var.cr_username
   cr_password = var.cr_password
-  # Configure environment variables specific to the app.
-  env = {
-    PPROF = var.pprof
-    K8S = true
-    HTTP_PORT = "8080"
-    SVC_NAME = local.service_name_finances
-    APP_NAME_VER = "${var.app_name} ${var.app_version}"
-    MAX_RETRIES = 3
-  }
-  # *** env_field ***
-  # env_field = [{
-  #   env_name = "POD_ID"
-  #   field_path = "status.podIP"
-  # }]
-  # *** env_field ***
-  # *** s3 storage ***
-  # env_secret = [{
-  #   env_name = "AWS_SECRET_ACCESS_KEY"
-  #   secret_name = "${local.deployment_finances}-s3-storage"
-  #   secret_key = "aws_secret_access_key"
-  # },
-  # {
-  #   env_name = "OBJ_STORAGE_NS"
-  #   secret_name = "${local.deployment_finances}-s3-storage"
-  #   secret_key = "obj_storage_ns"
-  # },
-  # {
-  #   env_name = "AWS_REGION"
-  #   secret_name = "${local.deployment_finances}-s3-storage"
-  #   secret_key = "region"
-  # },
-  # {
-  #   env_name = "AWS_ACCESS_KEY_ID"
-  #   secret_name = "${local.deployment_finances}-s3-storage"
-  #   secret_key = "aws_access_key_id"
-  # }]
-  # *** s3 storage ***
-  image_tag = var.build_image ? "" : "${var.cr_username}/${local.deployment_finances}:${var.app_version}"
+  cr_username = var.cr_username
+  deployment_name = local.deployment_finances
+  image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.deployment_finances}:${var.app_version}"
   labels = {
     "aff-finances" = "running"
     "app" = var.app_name
   }
-  # You should always define a liveness probe. Keep probes light.
-  liveness_probe = [{
-    initial_delay_seconds = 5
-    period_seconds = 20
-    timeout_seconds = 1
-    # Don't bother implementing retry loops; K8s will retry the probe.
-    failure_threshold = 1
-    success_threshold = 1
-    http_get = [{
-      path = "/liveness"
-      port = 8080
-      scheme = "HTTP"
-    }]
-    # tcp_socket = {
-    #   port = 8080
-    # }
-    # exec = {
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "ls -al /wsf_data_dir"
-    # ]}
-  }]
   namespace = local.namespace
   persistent_volume_claims = [{
     name = "${var.app_name}-pvc"
@@ -313,46 +232,151 @@ module "fin-finances-persistent" {
     storage_size = "50Gi"
     storage_class_name = "oci-bv"
   }]
-  # Ensure that the non-root user running the container has the necessary group permissions to
-  # access files in mounted volumes.
-  pod_security_context = {
-    fs_group = 1100
-    run_as_non_root = true
-    run_as_user = 1100
-    run_as_group = 1100
-  }
-  # You should always define a readiness probe, even if it's as simple as sending an HTTP request
-  # to the base URL.
-  readiness_probe = [{
-    # Always remember to set an initial delay to account for your app's startup time.
-    initial_delay_seconds = 2
-    period_seconds = 25
-    timeout_seconds = 1
-    failure_threshold = 3
-    success_threshold = 1
-    http_get = [{
-      path = "/readiness"
-      port = 8080
-      scheme = "HTTP"
-    }]
-    # tcp_socket = {
-    #   port = 8088
-    # }
-    # exec = {
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "ls -al /wsf_data_dir"
-    # ]}
-  }]
   replicas = 3
-  # Limits and requests for CPU resources are measured in millicores. If the container needs one
-  # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
-  # value of '250m.'
-  resources = {  # QoS - Guaranteed
-    limits_cpu = "300m"
-    limits_memory = "300Mi"
+  strategy = {
+    type = "RollingUpdate"
+    max_surge = 1
+    max_unavailable = 0
   }
+  #######
+  # Pod #
+  #######
+  pod = {
+    container = [{
+      name = local.deployment_finances
+      affinity = {
+        pod_anti_affinity = {
+          required_during_scheduling_ignored_during_execution = [{
+            topology_key = "kubernetes.io/hostname"
+            label_selector = {
+              # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
+              # the label "aff-finances: running".
+              match_expressions = [{
+                "key" = "aff-finances"
+                "operator" = "In"
+                "values" = ["running"]
+              }]
+            }
+          }]
+        }
+      }
+      # Configure environment variables specific to the app.
+      env = {
+        PPROF = var.pprof
+        K8S = true
+        HTTP_PORT = "8080"
+        SVC_NAME = local.service_name_finances
+        APP_NAME_VER = "${var.app_name} ${var.app_version}"
+        MAX_RETRIES = 3
+      }
+      # *** s3 storage ***
+      # env_secret = [{
+      #   env_name = "AWS_SECRET_ACCESS_KEY"
+      #   secret_name = "${local.deployment_finances}-s3-storage"
+      #   secret_key = "aws_secret_access_key"
+      # },
+      # {
+      #   env_name = "OBJ_STORAGE_NS"
+      #   secret_name = "${local.deployment_finances}-s3-storage"
+      #   secret_key = "obj_storage_ns"
+      # },
+      # {
+      #   env_name = "AWS_REGION"
+      #   secret_name = "${local.deployment_finances}-s3-storage"
+      #   secret_key = "region"
+      # },
+      # {
+      #   env_name = "AWS_ACCESS_KEY_ID"
+      #   secret_name = "${local.deployment_finances}-s3-storage"
+      #   secret_key = "aws_access_key_id"
+      # }]
+      # *** s3 storage ***
+      # You should always define a liveness probe. Keep probes light.
+      liveness_probe = [{
+        initial_delay_seconds = 5
+        period_seconds = 20
+        timeout_seconds = 1
+        # Don't bother implementing retry loops; K8s will retry the probe.
+        failure_threshold = 1
+        success_threshold = 1
+        http_get = [{
+          path = "/liveness"
+          port = 8080
+          scheme = "HTTP"
+        }]
+        # tcp_socket = {
+        #   port = 8080
+        # }
+        # exec = {
+        #   command = [
+        #     "/bin/sh",
+        #     "-c",
+        #     "ls -al /wsf_data_dir"
+        # ]}
+      }]
+      # You should always define a readiness probe, even if it's as simple as sending an HTTP
+      # request to the base URL.
+      readiness_probe = [{
+        # Always remember to set an initial delay to account for your app's startup time.
+        initial_delay_seconds = 2
+        period_seconds = 25
+        timeout_seconds = 1
+        failure_threshold = 3
+        success_threshold = 1
+        http_get = [{
+          path = "/readiness"
+          port = 8080
+          scheme = "HTTP"
+        }]
+        # tcp_socket = {
+        #   port = 8088
+        # }
+        # exec = {
+        #   command = [
+        #     "/bin/sh",
+        #     "-c",
+        #     "ls -al /wsf_data_dir"
+        # ]}
+      }]
+      # Limits and requests for CPU resources are measured in millicores. If the container needs
+      # one full core to run, use the value '1000m.' If the container only needs 1/4 of a core,
+      # use the value of '250m.'
+      resources = {  # QoS - Guaranteed
+        limits_cpu = "300m"
+        limits_memory = "300Mi"
+      }
+      security_context = {
+        allow_privilege_escalation = false
+        privileged = false
+        read_only_root_filesystem = true
+      }
+      volume_mounts = [{
+        name = "wsf"
+        mount_path = "/wsf_data_dir"
+        read_only = false
+      }]
+    }]
+    # See empty_dir.
+    labels = {
+      "aff-finances" = "running"
+      "app" = var.app_name
+    }
+    # Ensure that the non-root user running the container has the necessary group permissions to
+    # access files in mounted volumes.
+    security_context = {
+      fs_group = 1100
+      run_as_non_root = true
+      run_as_user = 1100
+      run_as_group = 1100
+    }
+    volume_pv = [{
+      name = "wsf"
+      claim_name = "${var.app_name}-pvc"
+    }]
+  }
+  #############
+  # Resources #
+  #############
   role = {
     name = "${local.deployment_finances}-role"
     namespace = local.namespace
@@ -406,18 +430,18 @@ module "fin-finances-persistent" {
     }
     type = "kubernetes.io/dockerconfigjson"
   },
-  # *** s3 storage ***
-  # {
-  #   name = "${local.deployment_finances}-s3-storage"
-  #   data = {
-  #     obj_storage_ns = var.obj_storage_ns
-  #     region = var.region
-  #     aws_access_key_id = var.aws_access_key_id
-  #     aws_secret_access_key = var.aws_secret_access_key
-  #   }
-  #   type = "Opaque"
-  # }
-  # *** s3 storage ***
+    # *** s3 storage ***
+    # {
+    #   name = "${local.deployment_finances}-s3-storage"
+    #   data = {
+    #     obj_storage_ns = var.obj_storage_ns
+    #     region = var.region
+    #     aws_access_key_id = var.aws_access_key_id
+    #     aws_secret_access_key = var.aws_secret_access_key
+    #   }
+    #   type = "Opaque"
+    # }
+    # *** s3 storage ***
   ]
   service = {
     name = local.service_name_finances
@@ -431,9 +455,6 @@ module "fin-finances-persistent" {
       target_port = 8080
       protocol = "TCP"
     }]
-    selector = {
-      "svc_selector_label" = "svc-${local.service_name_finances}"
-    }
     type = "ClusterIP"
   }
   service_account = {
@@ -452,21 +473,6 @@ module "fin-finances-persistent" {
     # }
     ]
   }
-  deployment_name = local.deployment_finances
-  strategy = {
-    type = "RollingUpdate"
-    max_surge = 1
-    max_unavailable = 0
-  }
-  volume_mount = [{
-    name = "wsf"
-    mount_path = "/wsf_data_dir"
-    read_only = false
-  }]
-  volume_pv = [{
-    name = "wsf"
-    claim_name = "${var.app_name}-pvc"
-  }]
 }
 
 module "fin-finances-empty" {  # Using emptyDir.
@@ -475,134 +481,162 @@ module "fin-finances-empty" {  # Using emptyDir.
   source = "./modules/deployment"
   dir_path = ".."
   #
-  affinity = {
-    pod_anti_affinity = {
-      required_during_scheduling_ignored_during_execution = [{
-        topology_key = "kubernetes.io/hostname"
-        label_selector = {
-          # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
-          # the label "aff-finances: running".
-          match_expressions = [{
-            "key" = "aff-finances"
-            "operator" = "In"
-            "values" = ["running"]
-          }]
-        }
-      }]
-    }
-  }
-  app_name = var.app_name
   app_version = var.app_version
   build_image = var.build_image
-  containers_security_context = {
-    allow_privilege_escalation = false
-    privileged = false
-    read_only_root_filesystem = true
-  }
   cr_login_server = local.cr_login_server
   cr_password = var.cr_password
   cr_username = var.cr_username
-  # Configure environment variables specific to the app.
-  env = {
-    PPROF = var.pprof
-    K8S = true
-    HTTP_PORT = "8080"
-    SVC_NAME = local.service_name_finances
-    APP_NAME_VER = "${var.app_name} ${var.app_version}"
-    MAX_RETRIES = 3
-  }
+  deployment_name = local.deployment_finances
   image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.deployment_finances}:${var.app_version}"
-  # See empty_dir.
-  init_container = [{
-    name = "file-permission"
-    #
-    command = ["/bin/sh",
-      "-c",
-      "chown -v -R 1100:1100 /wsf_data_dir && chmod -R 750 /wsf_data_dir"
-    ]
-    image = "busybox:1.34.1"
-    image_pull_policy = "IfNotPresent"
-    security_context = {
-      run_as_non_root = false
-      run_as_user = 0
-      run_as_group = 0
-      read_only_root_filesystem = true
-      privileged = true
-    }
-    volume_mounts = [{
-      name = "wsf"
-      mount_path = "/wsf_data_dir"
-      read_only = false
-    }]
-  }]
   labels = {
     "aff-finances" = "running"
     "app" = var.app_name
   }
-  # You should always define a liveness probe. Keep probes light.
-  liveness_probe = [{
-    initial_delay_seconds = 5
-    period_seconds = 20
-    timeout_seconds = 1
-    # Don't bother implementing retry loops; K8s will retry the probe.
-    failure_threshold = 1
-    success_threshold = 1
-    http_get = [{
-      path = "/liveness"
-      port = 8080
-      scheme = "HTTP"
-    }]
-    # tcp_socket = {
-    #   port = 8080
-    # }
-    # exec = {
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "ls -al /wsf_data_dir"
-    # ]}
-  }]
   namespace = local.namespace
-  # Ensure that the non-root user running the container has the necessary group permissions to
-  # access files in mounted volumes.
-  pod_security_context = {
-    fs_group = 1100
-    run_as_non_root = true
-    run_as_user = 1100
-    run_as_group = 1100
-  }
-  # You should always define a readiness probe, even if it's as simple as sending an HTTP request
-  # to the base URL.
-  readiness_probe = [{
-    # Always remember to set an initial delay to account for your app's startup time.
-    initial_delay_seconds = 2
-    period_seconds = 25
-    timeout_seconds = 1
-    failure_threshold = 3
-    success_threshold = 1
-    http_get = [{
-      path = "/readiness"
-      port = 8080
-      scheme = "HTTP"
-    }]
-    # tcp_socket = {
-    #   port = 8088
-    # }
-    # exec = {
-    #   command = [
-    #     "/bin/sh",
-    #     "-c",
-    #     "ls -al /wsf_data_dir"
-    # ]}
-  }]
   replicas = 3
-  # Limits and requests for CPU resources are measured in millicores. If the container needs one
-  # full core to run, use the value '1000m.' If the container only needs 1/4 of a core, use the
-  # value of '250m.'
-  resources = {  # QoS - Guaranteed
-    limits_cpu = "300m"
-    limits_memory = "300Mi"
+  strategy = {
+    type = "RollingUpdate"
+    max_surge = 1
+    max_unavailable = 0
   }
+  #######
+  # Pod #
+  #######
+  pod = {
+    container = [{
+      name = local.deployment_finances
+      affinity = {
+        pod_anti_affinity = {
+          required_during_scheduling_ignored_during_execution = [{
+            topology_key = "kubernetes.io/hostname"
+            label_selector = {
+              # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
+              # the label "aff-finances: running".
+              match_expressions = [{
+                "key" = "aff-finances"
+                "operator" = "In"
+                "values" = ["running"]
+              }]
+            }
+          }]
+        }
+      }
+      # Configure environment variables specific to the app.
+      env = {
+        PPROF = var.pprof
+        K8S = true
+        HTTP_PORT = "8080"
+        SVC_NAME = local.service_name_finances
+        APP_NAME_VER = "${var.app_name} ${var.app_version}"
+        MAX_RETRIES = 3
+      }
+      # You should always define a liveness probe. Keep probes light.
+      liveness_probe = [{
+        initial_delay_seconds = 5
+        period_seconds = 20
+        timeout_seconds = 1
+        # Don't bother implementing retry loops; K8s will retry the probe.
+        failure_threshold = 1
+        success_threshold = 1
+        http_get = [{
+          path = "/liveness"
+          port = 8080
+          scheme = "HTTP"
+        }]
+        # tcp_socket = {
+        #   port = 8080
+        # }
+        # exec = {
+        #   command = [
+        #     "/bin/sh",
+        #     "-c",
+        #     "ls -al /wsf_data_dir"
+        # ]}
+      }]
+      # You should always define a readiness probe, even if it's as simple as sending an HTTP
+      # request to the base URL.
+      readiness_probe = [{
+        # Always remember to set an initial delay to account for your app's startup time.
+        initial_delay_seconds = 2
+        period_seconds = 25
+        timeout_seconds = 1
+        failure_threshold = 3
+        success_threshold = 1
+        http_get = [{
+          path = "/readiness"
+          port = 8080
+          scheme = "HTTP"
+        }]
+        # tcp_socket = {
+        #   port = 8088
+        # }
+        # exec = {
+        #   command = [
+        #     "/bin/sh",
+        #     "-c",
+        #     "ls -al /wsf_data_dir"
+        # ]}
+      }]
+      # Limits and requests for CPU resources are measured in millicores. If the container needs
+      # one full core to run, use the value '1000m.' If the container only needs 1/4 of a core,
+      # use the value of '250m.'
+      resources = {  # QoS - Guaranteed
+        limits_cpu = "300m"
+        limits_memory = "300Mi"
+      }
+      security_context = {
+        allow_privilege_escalation = false
+        privileged = false
+        read_only_root_filesystem = true
+      }
+      volume_mounts = [{
+        name = "wsf"
+        mount_path = "/wsf_data_dir"
+        read_only = false
+      }]
+    }]
+    # See empty_dir.
+    init_container = [{
+      name = "init-finances-emptydir"
+      command = ["/bin/sh",
+        "-c",
+        "chown -v -R 1100:1100 /wsf_data_dir && chmod -v -R 750 /wsf_data_dir"
+      ]
+      image = var.busybox
+      image_pull_policy = "IfNotPresent"
+      security_context = {
+        run_as_non_root = false
+        run_as_user = 0
+        run_as_group = 0
+        read_only_root_filesystem = true
+        privileged = false
+      }
+      volume_mounts = [{
+        name = "wsf"
+        mount_path = "/wsf_data_dir"
+        read_only = false
+      }]
+    }]
+    labels = {
+      "aff-finances" = "running"
+      "app" = var.app_name
+    }
+    # Ensure that the non-root user running the container has the necessary group permissions to
+    # access files in mounted volumes.
+    security_context = {
+      fs_group = 1100
+      run_as_non_root = true
+      run_as_user = 1100
+      run_as_group = 1100
+    }
+    # When using the emptyDir{}, the init_container is required.
+    volume_empty_dir = [{
+      name = "wsf"
+    }]
+  }
+  #############
+  # Resources #
+  #############
   role = {
     name = "${local.deployment_finances}-role"
     namespace = local.namespace
@@ -668,9 +702,6 @@ module "fin-finances-empty" {  # Using emptyDir.
       target_port = 8080
       protocol = "TCP"
     }]
-    selector = {
-      "svc_selector_label" = "svc-${local.service_name_finances}"
-    }
     type = "ClusterIP"
   }
   service_account = {
@@ -685,30 +716,14 @@ module "fin-finances-empty" {  # Using emptyDir.
       name = "${local.deployment_finances}-registry-credentials"
     }]
   }
-  deployment_name = local.deployment_finances
-  strategy = {
-    type = "RollingUpdate"
-    max_surge = 1
-    max_unavailable = 0
-  }
-  # When using the emptyDir{}, the init_container is required.
-  volume_empty_dir = [{
-    name = "wsf"
-  }]
-  volume_mount = [{
-    name = "wsf"
-    mount_path = "/wsf_data_dir"
-    read_only = false
-  }]
 }
 
 module "fin-PostgresMaster" {
-  count = var.db_postgres && !var.k8s_crds ? 1 : 0
+  count = var.db_postgres && !var.k8s_crds ? /*1*/0 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/statefulset"
   #
   labels = {
-    # "aff-mysql-server" = "running"
     "app" = var.app_name
     "db" = var.postgres_db_label
   }
@@ -910,7 +925,6 @@ module "fin-PostgresMaster" {
       }]
     }]
     labels = {
-      # "aff-mysql-server" = "running"
       "app" = var.app_name
       "db" = var.postgres_db_label
     }
@@ -1012,7 +1026,7 @@ module "fin-PostgresMaster" {
 }
 
 module "fin-PostgresReplica" {
-  count = var.db_postgres && !var.k8s_crds ? 1 : 0
+  count = var.db_postgres && !var.k8s_crds ? /*1*/0 : 0
   depends_on = [
     module.fin-PostgresMaster
   ]
@@ -1316,7 +1330,7 @@ module "fin-PostgresReplica" {
 }
 
 module "fin-PostgresBackup" {
-  count = var.db_postgres && !var.k8s_crds ? 1 : 0
+  count = var.db_postgres && !var.k8s_crds ? /*1*/0 : 0
   depends_on = [
     module.fin-PostgresMaster
   ]
