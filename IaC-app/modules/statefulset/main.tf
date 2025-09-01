@@ -729,7 +729,7 @@ resource "kubernetes_stateful_set" "stateful_set" {
         # Labels attach to the Pod.
         labels = local.pod_labels
       }
-      #
+      # The Pod template's specification.
       spec {
         dynamic "affinity" {
           for_each = var.pod.affinity == {} ? [] : [1]
@@ -1129,8 +1129,8 @@ resource "kubernetes_stateful_set" "stateful_set" {
                       for_each = it2.value.http_header
                       iterator = it3
                       content {
-                        name = it3.value["name"]
-                        value = it3.value["value"]
+                        name = it3.value.name
+                        value = it3.value.value
                       }
                     }
                   }
@@ -1140,7 +1140,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
                 process' exit status code.
                 ***/
                 dynamic "exec" {
-                  # for_each = it.value["exec"] != null ? [it.value["exec"]] : []
                   for_each = it1.value.exec != null ? [it1.value.exec] : []
                   content {
                     command = exec.value.command
@@ -1151,7 +1150,6 @@ resource "kubernetes_stateful_set" "stateful_set" {
                 If the connection is established, the container is considered ready.
                 ***/
                 dynamic "tcp_socket" {
-                  # for_each = it.value["tcp_socket"] != null ? [it.value["tcp_socket"]] : []
                   for_each = it1.value.tcp_socket != null ? [it1.value.tcp_socket] : []
                   content {
                     port = tcp_socket.value.port
@@ -1328,11 +1326,11 @@ resource "kubernetes_service" "headless_service" {
       for_each = var.service.ports
       iterator = it
       content {
-        name = it.value["name"]
-        port = it.value["service_port"]
-        target_port = it.value["target_port"]
-        node_port = it.value["node_port"]
-        protocol = it.value["protocol"]
+        name = it.value.name
+        port = it.value.service_port
+        target_port = it.value.target_port
+        node_port = it.value.node_port
+        protocol = it.value.protocol
       }
     }
     type = var.service.type
