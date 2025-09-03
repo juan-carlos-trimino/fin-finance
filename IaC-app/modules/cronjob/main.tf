@@ -80,6 +80,7 @@ variable cron_job {
           name = string
           field_path = string
         })))
+        env_from_secrets = optional(list(string), [])
         image = optional(string)
         image_pull_policy = optional(string, "Always")
         port = optional(object({
@@ -152,6 +153,56 @@ variable cron_job {
     })
   })
 }
+variable env_from_secrets {
+  default = []
+  type = list(object({
+    name = string
+    namespace = string
+    labels = optional(map(string), {})
+    annotations = optional(map(string), {})
+    data = optional(map(string), {})
+    binary_data = optional(map(string), {})  # base64 encoding.
+    type = optional(string, "Opaque")
+    immutable = optional(bool, true)
+  }))
+  sensitive = true
+}
+
+/***
+(1) The maximum size of a Secret is limited to 1MB.
+(2) K8s helps keep Secrets safe by making sure each Secret is only distributed to the nodes that
+    run the pods that need access to the Secret.
+(3) On the nodes, Secrets are always stored in memory and never written to physical storage. (The
+    secret volume uses an in-memory filesystem (tmpfs) for the Secret files.)
+(4) From K8s version 1.7, etcd stores Secrets in encrypted form.
+(5) A Secret's entries can contain binary values, not only plain-text. Base64 encoding allows you
+    to include the binary data in YAML or JSON, which are both plaint-text formats.
+(6) Even though Secrets can be exposed through environment variables, you may want to avoid doing
+    so because they may get exposed inadvertently. For example,
+    *	Apps usually dump environment variables in error reports or even write them to the app log at
+      startup.
+    *	Children processes inherit all the environment variables of the parent process thereby you
+      have no way of knowing what happens with your secret data.
+    To be safe, always use secret volumes for exposing Secrets.
+***/
+resource "kubernetes_secret" "secrets" {
+  count = length(var.env_from_secrets)
+  metadata {
+    name = var.env_from_secrets[count.index].name
+    namespace = var.env_from_secrets[count.index].namespace
+    labels = var.env_from_secrets[count.index].labels
+    annotations = var.env_from_secrets[count.index].annotations
+  }
+  # Plain-text data.
+  data = var.env_from_secrets[count.index].data
+  /***
+  ***/
+  binary_data = var.env_from_secrets[count.index].binary_data
+  # https://kubernetes.io/docs/concepts/configuration/secret/#secret-types
+  # https://kubernetes.io/docs/concepts/configuration/secret/#serviceaccount-token-secrets
+  type = var.env_from_secrets[count.index].type
+  immutable = var.env_from_secrets[count.index].immutable
+}
 
 # https://registry.terraform.io/providers/hashicorp/kubernetes/1.10.0/docs/resources/cron_job
 # https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cron_job#spec-2
@@ -188,6 +239,15 @@ resource "kubernetes_cron_job_v1" "cronjob" {
                 name = it.value.name
                 args = it.value.args
                 command = it.value.command
+                dynamic "env_from" {
+                  for_each = it.value.env_from_secrets
+                  iterator = it1
+                  content {
+                    secret_ref {
+                      name = it1.value
+                    }
+                  }
+                }
                 image = it.value.image
                 image_pull_policy = it.value.image_pull_policy
                 dynamic "security_context" {
