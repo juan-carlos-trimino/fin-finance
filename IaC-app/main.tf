@@ -199,7 +199,30 @@ module "certificate" {
 ###################################################################################################
 # Application                                                                                     #
 ###################################################################################################
+/***
+Deployments can utilize Persistent Volumes (PVs) and Persistent Volume Claims (PVCs) for storage,
+but when a Deployment uses a PVC, all replicas manage by the Deployment share the same PVC. This
+requires the underlying storage to support ReadWriteMany (RWX). In RWX, the volume can be
+concurrently mounted to any of the nodes in the cluster with read-write access for any pod. If the
+stateless application requires read-only volumes, then the underlying storage needs to support
+ReadOnlyMany (ROX); ROX is similar to RWX, but it only supports read-only access for any pod.
 
+Warning:
+Since the underlying storage does not support RWX, I am using the ReadWriteOnce (RWO) access mode.
+In this access mode, the volume can be mounted as read-write by a single node, but it allows
+multiple pods to access (read-write) that volume when the pods are running on the same node.
+
+*** DEPLOYMENTS WITH ONE OR MULTIPLE REPLICAS WILL NOT WORK USING RWO ***
+
+If the deployment has only one replica, the failure manifests itself the minute the pod is assigned
+to another node. When this occurs, the pod in the new node will try to create a new volume, but the
+new volume will use the same name as the volume in the first node; hence, K8s will fail while
+creating the container.
+
+If the deployment has multiple replicas, the failure manifests itself the minute one of the
+replicas is assigned to a second node during deployment. In this case, the application will not be
+deployed, but the issue is the same as with the single replica.
+***/
 module "fin-finances-persistent" {
   count = var.persistent_disk && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
@@ -218,21 +241,7 @@ module "fin-finances-persistent" {
     "app" = var.app_name
   }
   namespace = local.namespace
-  persistent_volume_claims = [{
-    name = "${var.app_name}-pvc"
-    namespace = local.namespace
-    labels = {
-      "app" = var.app_name
-    }
-    volume_mode = "Filesystem"
-    # The volume can be mounted as read-write by many nodes.
-    access_modes = ["ReadWriteOnce"]
-    # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
-    # for less than 50GB, the request is rounded up to 50GB.
-    storage_size = "50Gi"
-    storage_class_name = "oci-bv"
-  }]
-  replicas = 3
+  replicas = 1
   strategy = {
     type = "RollingUpdate"
     max_surge = 1
@@ -377,6 +386,19 @@ module "fin-finances-persistent" {
   #############
   # Resources #
   #############
+  persistent_volume_claims = [{
+    name = "${var.app_name}-pvc"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    volume_mode = "Filesystem"
+    access_modes = ["ReadWriteOnce"]
+    # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
+    # for less than 50GB, the request is rounded up to 50GB.
+    storage_size = "50Gi"
+    storage_class_name = "oci-bv"
+  }]
   role = {
     name = "${local.deployment_finances}-role"
     namespace = local.namespace
@@ -719,7 +741,7 @@ module "fin-finances-empty" {  # Using emptyDir.
 }
 
 module "fin-PostgresMaster" {
-  count = var.db_postgres && !var.k8s_crds ? /*1*/0 : 0
+  count = var.db_postgres && !var.k8s_crds ? 1 : 0
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/statefulset"
   #
@@ -1026,7 +1048,7 @@ module "fin-PostgresMaster" {
 }
 
 module "fin-PostgresReplica" {
-  count = var.db_postgres && !var.k8s_crds ? /*1*/0 : 0
+  count = var.db_postgres && !var.k8s_crds ? 1 : 0
   depends_on = [
     module.fin-PostgresMaster
   ]
@@ -1330,10 +1352,10 @@ module "fin-PostgresReplica" {
 }
 
 module "fin-PostgresBackup" {
-  count = var.db_postgres && !var.k8s_crds ? /*1*/0 : 0
-  depends_on = [
-    module.fin-PostgresMaster
-  ]
+  count = var.db_postgres && !var.k8s_crds ? 1 : /*0*/1
+  # depends_on = [
+  #   module.fin-PostgresMaster
+  # ]
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/cronjob"
   #
@@ -1347,8 +1369,8 @@ module "fin-PostgresBackup" {
       namespace = local.namespace
     }
     concurrency_policy = "Replace"
-    schedule = "5 * * * *"
-    job_template = {
+    schedule = "*/1 * * * *"  # https://crontab.guru/
+    job_template = {  # The pod.
       metadata = {
         name = "postgres-backup-job"
         labels = {
@@ -1361,7 +1383,10 @@ module "fin-PostgresBackup" {
         name = "postgres-backup-container"
         command = ["/bin/sh",
           "-c",
-          "date; echo Hello from K8s; sleep 99999"
+          "printenv POSTGRES_USER; printenv POSTGRES_DB; sleep 60s"
+        ]
+        env_from_secrets = [
+          "postgres-backup-cronjob-secret-secret"
         ]
         image = var.busybox
         image_pull_policy = "IfNotPresent"
@@ -1387,6 +1412,22 @@ module "fin-PostgresBackup" {
       }
     }
   }
+  env_from_secrets = [{
+    name = "postgres-backup-cronjob-secret-secret"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
+    # Plain-text data.
+    data = {
+      POSTGRES_DB = var.postgres_db
+      POSTGRES_USER = var.postgres_user
+      POSTGRES_PASSWORD = var.postgres_password
+    }
+    type = "Opaque"
+    immutable = true
+  }]
 }
 
     /***
