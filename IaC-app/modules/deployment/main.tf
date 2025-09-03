@@ -832,6 +832,21 @@ resource "kubernetes_config_map" "config" {
   immutable = var.config_map[count.index].immutable
 }
 
+/***
+The random resources generate randomness only when they are created; the results produced are
+stored in the Terraform state and re-used until the inputs change, prompting the resource to be
+recreated. The resources all provide a map argument called 'keepers' that can be populated with
+arbitrary key/value pairs that should be selected such that they remain the same until new random
+values are desired.
+***/
+resource "random_string" "unique_string" {
+  length = 5
+  special = false  # Exclude special characters.
+  upper = true  # Include uppercase letters.
+  lower = true  # Include lowercase letters.
+  numeric = true # Include numbers.
+}
+
 # Deployment -> Stateless.
 resource "kubernetes_deployment" "stateless" {
   depends_on = [
@@ -1016,18 +1031,18 @@ resource "kubernetes_deployment" "stateless" {
             args = it.value.args
             command = it.value.command
             dynamic "env" {
-              for_each = it.value["env"]
+              for_each = it.value.env
               content {
                 name = env.key
                 value = env.value
               }
             }
             dynamic "env_from" {
-              for_each = it.value["env_from_secrets"]
+              for_each = it.value.env_from_secrets
               iterator = it1
               content {
                 secret_ref {
-                  name = it1.value["name"]
+                  name = it1.value
                 }
               }
             }
