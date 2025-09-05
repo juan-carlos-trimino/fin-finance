@@ -101,7 +101,8 @@ fin-finance
  | | | | ├ pg_ident.conf
  | | | | └ postgresql.conf
  | | | ├ scripts
- | | | | └ create-replication-user.sh
+ | | | | ├ create-replication-user.sh
+ | | | | └ postgres-backup.sh
  | | | └ .gitkeep
  | | └ .gitkeep
  | ├ .terraform.lock.hcl
