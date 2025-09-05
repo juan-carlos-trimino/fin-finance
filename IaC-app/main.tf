@@ -35,6 +35,7 @@ locals {
   service_name_postgres_master = "fin-postgres-master-headless"
   statefulset_postgres_replica = "fin-postgres-replica"
   service_name_postgres_replica = "fin-postgres-replica-headless"
+  cronjob_postgres_backup = "fin-postgres-cronjob-backup"
   ############
   # Services #
   ############
@@ -962,7 +963,7 @@ module "fin-PostgresMaster" {
     volume_config_map = [{
       name = "config-volume"
       config_map_name = "${local.statefulset_postgres_master}-postgres-conf-files"
-      default_mode = "0760"
+      default_mode = "0550"
       items = [{
         key = "pg_hba.conf"
         path = "pg_hba.conf"
@@ -976,7 +977,7 @@ module "fin-PostgresMaster" {
     }, {
       name = "readonly-initdb-volume"
       config_map_name = "${local.statefulset_postgres_master}-postgres-script-files"
-      default_mode = "0750"
+      default_mode = "0550"
     }]
     volume_empty_dir = [{
       name = "writable-initdb-volume"
@@ -1263,7 +1264,7 @@ module "fin-PostgresReplica" {
     volume_config_map = [{
       name = "config-volume"
       config_map_name = "${local.statefulset_postgres_replica}-postgres-conf-files"
-      default_mode = "0760"
+      default_mode = "0550"
       items = [{
         key = "pg_hba.conf"
         path = "pg_hba.conf"
@@ -1277,7 +1278,7 @@ module "fin-PostgresReplica" {
     }, {
       name = "readonly-initdb-volume"
       config_map_name = "${local.statefulset_postgres_replica}-postgres-script-files"
-      default_mode = "0750"
+      default_mode = "0550"
     }]
     volume_empty_dir = [{
       name = "writable-initdb-volume"
@@ -1359,61 +1360,107 @@ module "fin-PostgresBackup" {
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/cronjob"
   #
+
+
+
+
+
+
   cron_job = {
-    metadata = {
-      name = "postgres-backup-cronjob"
-      labels = {
-        "app" = var.app_name
-        "db" = var.postgres_db_label
-      }
-      namespace = local.namespace
+    name = local.cronjob_postgres_backup
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
     }
-    concurrency_policy = "Replace"
+    namespace = local.namespace
+    concurrency_policy = "Forbid"  # Do not allow concurrent executions.
     schedule = "*/1 * * * *"  # https://crontab.guru/
-    job_template = {  # The pod.
-      metadata = {
-        name = "postgres-backup-job"
-        labels = {
-          "app" = var.app_name
-          "db" = var.postgres_db_label
-        }
-        namespace = local.namespace
-      }
-      container = [{
-        name = "postgres-backup-container"
-        command = ["/bin/sh",
-          "-c",
-          "printenv POSTGRES_USER; printenv POSTGRES_DB; sleep 60s"
-        ]
-        env_from_secrets = [
-          "postgres-backup-cronjob-secret-secret"
-        ]
-        image = var.busybox
-        image_pull_policy = "IfNotPresent"
-        security_context = {
-          allow_privilege_escalation = false
-          privileged = false
-          read_only_root_filesystem = true
-        }
-      }]
-      pod_metadata = {
-        name = "postgres-backup-pod"
-        labels = {
-          "app" = var.app_name
-          "db" = var.postgres_db_label
-        }
-      }
-      restart_policy = "OnFailure"
-      security_context = {
-        fs_group = 2999
-        run_as_non_root = true
-        run_as_user = 2999
-        run_as_group = 2999
-      }
-    }
   }
+
+
+  job_template = {  # The pod.
+    # metadata = {
+      name = "${local.cronjob_postgres_backup}-job-template"
+    #   labels = {
+    #     "app" = var.app_name
+    #     "db" = var.postgres_db_label
+    #   }
+      namespace = local.namespace
+    # }
+    container = [{
+      name = "${local.cronjob_postgres_backup}-container"
+      # command = ["/bin/sh",
+      #   "-c",
+      #   # "echo \"hello world\"; sleep 120s"
+      #   # "ls -al /postgres/backup; ./postgres/backup/postgres-backup.sh; sleep 60s"
+      #   "printf \"hello\n\"; printenv POSTGRES_DB; ./postgres/backup/postgres-backup.sh; sleep 60s"
+      # ]
+      command = ["/bin/bash", "-c", "./postgres/backup/postgres-backup.sh; sleep 120s"]
+
+
+
+      env_from_secrets = [
+        "${local.cronjob_postgres_backup}-secrets"
+      ]
+      image = var.postgres_image_tag
+      image_pull_policy = "IfNotPresent"
+      security_context = {
+        allow_privilege_escalation = false
+        privileged = false
+        read_only_root_filesystem = true
+      }
+
+
+      volume_mounts = [{
+        name = "readonly-backup-volume"
+        mount_path = "/postgres/backup"
+        read_only = true
+      }]
+
+
+    }]
+    # pod_metadata = {
+    #   name = "${local.cronjob_postgres_backup}-pod1"
+    #   labels = {
+    #     "app" = var.app_name
+    #     "db" = var.postgres_db_label
+    #   }
+    # }
+    restart_policy = "OnFailure"
+    security_context = {
+      fs_group = 2999
+      run_as_non_root = true
+      run_as_user = 2999
+      run_as_group = 2999
+    }
+
+    volume_config_map = [{
+      name = "readonly-backup-volume"
+      config_map_name = "${local.cronjob_postgres_backup}-script-files"
+      default_mode = "0550"
+    }]
+  }
+
+
+
+  #############
+  # Resources #
+  #############
+  config_map = [{
+    # Same as volume_config_map.config_map_name.
+    name = "${local.cronjob_postgres_backup}-script-files"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
+    data = {
+      "postgres-backup.sh" = "${file("${var.postgres_script_path}/postgres-backup.sh")}"
+    }
+  }]
+
   env_from_secrets = [{
-    name = "postgres-backup-cronjob-secret-secret"
+    name = "${local.cronjob_postgres_backup}-secrets"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
