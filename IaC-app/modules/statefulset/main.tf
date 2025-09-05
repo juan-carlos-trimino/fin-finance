@@ -79,6 +79,8 @@ variable pod {
         name = string
         field_path = string
       })), [])
+      # Passing all entries of a ConfigMap as environment variables at once (envFrom).
+      env_from_config_map = optional(list(string), [])
       env_from_secrets = optional(list(string), [])
       image = string
       /***
@@ -239,6 +241,8 @@ variable pod {
       image_pull_policy = optional(string)
       command = optional(list(string))
       env = optional(map(any), {})
+      # Passing all entries of a ConfigMap as environment variables at once (envFrom).
+      env_from_config_map = optional(list(string), [])
       env_from_secrets = optional(list(string), [])
       security_context = optional(object({
         allow_privilege_escalation = optional(bool)
@@ -872,6 +876,15 @@ resource "kubernetes_stateful_set" "stateful_set" {
               }
             }
             dynamic "env_from" {
+              for_each = it.value.env_from_config_map
+              iterator = it1
+              content {
+                config_map_ref {
+                  name = it1.value
+                }
+              }
+            }
+            dynamic "env_from" {
               for_each = it.value.env_from_secrets
               iterator = it1
               content {
@@ -958,10 +971,11 @@ resource "kubernetes_stateful_set" "stateful_set" {
               }
             }
             dynamic "env_from" {
-              for_each = var.config_map
+              for_each = it.value.env_from_config_map
+              iterator = it1
               content {
                 config_map_ref {
-                  name = env_from.value.name
+                  name = it1.value
                 }
               }
             }

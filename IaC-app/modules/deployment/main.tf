@@ -156,6 +156,7 @@ variable pod {
         name = string
         field_path = string
       })), [])
+      # Passing all entries of a ConfigMap as environment variables at once (envFrom).
       env_from_secrets = optional(list(string), [])
       # image = string jct
       /***
@@ -315,6 +316,7 @@ variable pod {
       image_pull_policy = optional(string)
       command = optional(list(string))
       env = optional(map(any), {})
+      # Passing all entries of a ConfigMap as environment variables at once (envFrom).
       env_from_secrets = optional(list(string), [])
       security_context = optional(object({
         allow_privilege_escalation = optional(bool)
