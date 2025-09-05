@@ -379,6 +379,7 @@ IaC-app/utilities/postgres/configs/*
 !IaC-app/utilities/postgres/scripts/
 IaC-app/utilities/postgres/scripts/*
 !IaC-app/utilities/postgres/scripts/create-replication-user.sh
+!IaC-app/utilities/postgres/scripts/postgres-backup.sh
 !IaC-app/utilities/postgres/.gitkeep
 !IaC-app/utilities/.gitkeep
 ###########
