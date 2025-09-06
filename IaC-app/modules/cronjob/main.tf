@@ -67,6 +67,44 @@ variable job_template {
     #   name = optional(string)
     #   labels = optional(map(string))
     # }), {})
+    affinity = optional(object({
+      # affinity_type = string
+      pod_anti_affinity = optional(object({
+        required_during_scheduling_ignored_during_execution = optional(list(object({
+          topology_key = string
+          namespaces = optional(set(string), [])
+          label_selector = optional(object({
+            match_labels = optional(map(string), {})
+            match_expressions = optional(list(object({
+              key = string
+              # Valid operators are In, NotIn, Exists, and DoesNotExist.
+              operator = string
+              # If the operator is In or NotIn, the values array must be non-empty. If the operator is
+              # Exists or DoesNotExist, the values array must be empty.
+              values = set(string)
+            })), [])
+          }), {})
+        })), [])
+      }), {})
+      #
+      pod_affinity = optional(object({
+        required_during_scheduling_ignored_during_execution = optional(list(object({
+          topology_key = string
+          namespaces = optional(set(string), [])
+          label_selector = optional(object({
+            match_labels = optional(map(string), {})
+            match_expressions = optional(list(object({
+              key = string
+              # Valid operators are In, NotIn, Exists, and DoesNotExist.
+              operator = string
+              # If the operator is In or NotIn, the values array must be non-empty. If the operator is
+              # Exists or DoesNotExist, the values array must be empty.
+              values = set(string)
+            })), [])
+          }), {})
+        })), [])
+      }), {})
+    }), {})
     active_deadline_seconds = optional(number)
     backoff_limit = optional(number, 6)
     backoff_limit_per_index = optional(number)
@@ -295,6 +333,62 @@ resource "kubernetes_cron_job_v1" "cronjob" {
             # labels = var.job_template.pod_metadata.labels
           }
           spec {
+
+            dynamic "affinity" {
+              for_each = var.job_template.affinity == {} ? [] : [1]
+              content {
+                dynamic "pod_anti_affinity" {
+                  for_each = var.job_template.affinity.pod_anti_affinity == {} ? [] : [1]
+                  content {
+                    dynamic "required_during_scheduling_ignored_during_execution" {
+                      for_each = var.job_template.affinity.pod_anti_affinity.required_during_scheduling_ignored_during_execution
+                      iterator = it
+                      content {
+                        label_selector {
+                          match_labels = it.value.label_selector.match_labels
+                          dynamic "match_expressions" {
+                            for_each = it.value.label_selector.match_expressions
+                            iterator = it1
+                            content {
+                              key = it1.value.key
+                              operator = it1.value.operator
+                              values = it1.value.values
+                            }
+                          }
+                        }
+                        topology_key = "kubernetes.io/hostname"
+                      }
+                    }
+                  }
+                }
+                dynamic "pod_affinity" {
+                  for_each = var.job_template.affinity.pod_affinity == {} ? [] : [1]
+                  content {
+                    dynamic "required_during_scheduling_ignored_during_execution" {
+                      for_each = var.job_template.affinity.pod_affinity.required_during_scheduling_ignored_during_execution
+                      iterator = it
+                      content {
+                        label_selector {
+                          match_labels = it.value.label_selector.match_labels
+                          dynamic "match_expressions" {
+                            for_each = it.value.label_selector.match_expressions
+                            iterator = it1
+                            content {
+                              key = it1.value.key
+                              operator = it1.value.operator
+                              values = it1.value.values
+                            }
+                          }
+                        }
+                        topology_key = "kubernetes.io/hostname"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+
             dynamic "container" {
               for_each = var.job_template.container
               iterator = it
