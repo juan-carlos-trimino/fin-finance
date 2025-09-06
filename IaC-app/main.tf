@@ -512,7 +512,7 @@ module "fin-finances-empty" {  # Using emptyDir.
   deployment_name = local.deployment_finances
   image_tag = var.build_image == true ? "" : "${var.cr_username}/${local.deployment_finances}:${var.app_version}"
   labels = {
-    "aff-finances" = "running"
+    "finances" = "running"
     "app" = var.app_name
   }
   namespace = local.namespace
@@ -526,24 +526,24 @@ module "fin-finances-empty" {  # Using emptyDir.
   # Pod #
   #######
   pod = {
+    affinity = {
+      pod_anti_affinity = {
+        required_during_scheduling_ignored_during_execution = [{
+          topology_key = "kubernetes.io/hostname"
+          label_selector = {
+            # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
+            # the label "finances: running".
+            match_expressions = [{
+              "key" = "finances"
+              "operator" = "In"
+              "values" = ["running"]
+            }]
+          }
+        }]
+      }
+    }
     container = [{
       name = local.deployment_finances
-      affinity = {
-        pod_anti_affinity = {
-          required_during_scheduling_ignored_during_execution = [{
-            topology_key = "kubernetes.io/hostname"
-            label_selector = {
-              # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
-              # the label "aff-finances: running".
-              match_expressions = [{
-                "key" = "aff-finances"
-                "operator" = "In"
-                "values" = ["running"]
-              }]
-            }
-          }]
-        }
-      }
       # Configure environment variables specific to the app.
       env = {
         PPROF = var.pprof
