@@ -196,6 +196,69 @@ variable job_template {
         read_only = optional(bool)
       })), [])
     }))
+
+    init_container = optional(list(object({
+      name = string
+      args = optional(list(string))
+      command = optional(list(string))
+      env = optional(map(any))
+      env_field = optional(list(object({
+        name = string
+        field_path = string
+      })), [])
+      # Passing all entries of a ConfigMap as environment variables at once (envFrom).
+      env_from_config_map = optional(list(string), [])
+      env_from_secrets = optional(list(string), [])
+      image = optional(string)
+      image_pull_policy = optional(string, "Always")
+      port = optional(object({
+        requests_cpu = optional(string)
+        requests_memory = optional(string)
+        limits_cpu = optional(string)
+        limits_memory = optional(string)
+      }))
+      security_context = optional(object({
+        allow_privilege_escalation = optional(bool)
+        capabilities = optional(object({
+          add = optional(list(string))
+          drop = optional(list(string))
+        }))
+        privileged = optional(bool, false)
+        read_only_root_filesystem = optional(bool, false)
+        # Processes inside container will run as primary group "run_as_group".
+        run_as_group = optional(number)
+        run_as_non_root = optional(bool)
+        # Processes inside container will run as user "run_as_user".
+        run_as_user = optional(number)
+        se_linux_options = optional(object({
+          user = optional(string)
+          role = optional(string)
+          type = optional(string)
+          level = optional(string)
+        }))
+        seccomp_profile = optional(object({
+          type = optional(string)
+          localhost_profile = optional(string)
+        }))
+      }), {})
+      /***
+      In Linux when a filesystem is mounted into a non-empty directory, the directory will only contain
+      the files from the newly mounted filesystem. The files in the original directory are inaccessible
+      for as long as the filesystem is mounted. In cases when the original directory contains crucial
+      files, mounting a volume could break the container. To overcome this limitation, K8s provides an
+      additional subPath property on the volumeMount; this property mounts a single file or a single
+      directory from the volume instead of mounting the whole volume, and it does not hide the existing
+      files in the original directory.
+      ***/
+      volume_mounts = optional(list(object({
+        name = string
+        mount_path = string
+        sub_path = optional(string)
+        read_only = optional(bool)
+      })), [])
+    })), [])
+
+
     restart_policy = optional(string, "Always")
     security_context = optional(object({
       # fs_group ensures that any volumes mounted by the Pod will have their ownership changed to
@@ -250,7 +313,39 @@ variable job_template {
         path = string
       })), [])
     })), [])
+    volume_pv = optional(list(object({
+      name = string
+      claim_name = string
+    })), [])
   })
+}
+variable persistent_volume_claims {
+  default = []
+  type = list(object({
+    name = string
+    namespace = string
+    labels = optional(map(string), {})
+    /***
+    ReadWriteOnce (RWO) - Only a single NODE can mount the volume for reading and writing.
+    ReadOnlyMany (ROX) - Multiple NODES can mount the volume for reading.
+    ReadWriteMany (RWX) - Multiple NODES can mount the volume for both reading and writing.
+    ***/
+    access_modes = list(string)
+    /***
+    A volumeMode of Filesystem presents a volume as a directory within the Pod's filesystem while
+    a volumeMode of Block presents it as a raw block storage device. Filesystem is the default
+    and usually preferred mode, enabling standard file system operations on the volume. Block
+    mode is used for applications that need direct access to the block device, like databases
+    requiring low-latency access.
+    ***/
+    volume_mode = optional(string, "Filesystem")
+    storage_size = string
+    /***
+    By specifying an empty string ("") as the storage class name, the PVC binds to a
+    pre-provisioned PV instead of dynamically provisioning a new one.
+    ***/
+    storage_class_name = optional(string)
+  }))
 }
 
 /***
@@ -304,6 +399,37 @@ resource "kubernetes_secret" "secrets" {
   type = var.env_from_secrets[count.index].type
   immutable = var.env_from_secrets[count.index].immutable
 }
+
+
+/***
+PersistentVolumeClaims can only be created in a specific namespace; they can then only be used by
+pods in the same namespace.
+***/
+resource "kubernetes_persistent_volume_claim" "pvc" {
+  count = length(var.persistent_volume_claims)
+  metadata {
+    name = var.persistent_volume_claims[count.index].name
+    namespace = var.persistent_volume_claims[count.index].namespace
+    labels = var.persistent_volume_claims[count.index].labels
+  }
+  spec {
+    # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+    access_modes = var.persistent_volume_claims[count.index].access_modes
+    volume_mode = var.persistent_volume_claims[count.index].volume_mode
+    resources {
+      requests = {
+        storage = var.persistent_volume_claims[count.index].storage_size
+      }
+    }
+    /***
+    If a value for storageClassName isn't explicitly specify, the cluster's default storage class
+    is used.
+    ***/
+    storage_class_name = var.persistent_volume_claims[count.index].storage_class_name
+  }
+}
+
+
 
 # https://registry.terraform.io/providers/hashicorp/kubernetes/1.10.0/docs/resources/cron_job
 # https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cron_job#spec-2
@@ -387,6 +513,87 @@ resource "kubernetes_cron_job_v1" "cronjob" {
                 }
               }
             }
+
+
+
+            dynamic "init_container" {
+              for_each = var.job_template.init_container
+              iterator = it
+              content {
+                name = it.value.name
+                args = it.value.args
+                command = it.value.command
+
+                dynamic "env_from" {
+                  for_each = it.value.env_from_config_map
+                  iterator = it1
+                  content {
+                    config_map_ref {
+                      name = it1.value
+                    }
+                  }
+                }
+
+                dynamic "env_from" {
+                  for_each = it.value.env_from_secrets
+                  iterator = it1
+                  content {
+                    secret_ref {
+                      name = it1.value
+                    }
+                  }
+                }
+                image = it.value.image
+                image_pull_policy = it.value.image_pull_policy
+                dynamic "security_context" {
+                  for_each = it.value.security_context == {} ? [] : [1]
+                  content {
+                    allow_privilege_escalation = it.value.security_context.allow_privilege_escalation
+                    dynamic "capabilities" {
+                      for_each = it.value.security_context.capabilities == null ? [] : [1]
+                      content {
+                        add = it.value.security_context.capabilities.value.add
+                        drop = it.value.security_context.capabilities.value.drop
+                      }
+                    }
+                    privileged = it.value.security_context.privileged
+                    read_only_root_filesystem = it.value.security_context.read_only_root_filesystem
+                    run_as_group = it.value.security_context.run_as_group
+                    run_as_non_root = it.value.security_context.run_as_non_root
+                    run_as_user = it.value.security_context.run_as_user
+                    dynamic "se_linux_options" {
+                      for_each = it.value.security_context.se_linux_options == null ? [] : [1]
+                      content {
+                        user = it.value.security_context.se_linux_options.user
+                        role = it.value.security_context.se_linux_options.role
+                        type = it.value.security_context.se_linux_options.type
+                        level = it.value.security_context.se_linux_options.level
+                      }
+                    }
+                    dynamic "seccomp_profile" {
+                      for_each = it.value.security_context.seccomp_profile == null ? [] : [1]
+                      content {
+                        type = it.value.security_context.seccomp_profile.type
+                        localhost_profile = it.value.security_context.seccomp_profile.localhost_profile
+                      }
+                    }
+                  }
+                }
+
+                dynamic "volume_mount" {
+                  for_each = it.value.volume_mounts
+                  iterator = it1
+                  content {
+                    name = it1.value.name
+                    mount_path = it1.value.mount_path
+                    sub_path = it1.value.sub_path
+                    read_only = it1.value.read_only
+                  }
+                }
+
+              }
+            }
+
 
 
             dynamic "container" {
@@ -545,6 +752,25 @@ resource "kubernetes_cron_job_v1" "cronjob" {
                 }
               }
             }
+
+            /***
+            Pods access storage by using the claim as a volume. Claims must exist in the same
+            namespace as the Pod using the claim. The cluster finds the claim in the Pod's namespace
+            and uses it to get the PersistentVolume backing the claim. The volume is then mounted to
+            the host and into the Pod.
+            ***/
+            dynamic "volume" {
+              for_each = var.job_template.volume_pv
+              iterator = it
+              content {
+                name = it.value.name
+                persistent_volume_claim {
+                  claim_name = it.value.claim_name
+                }
+              }
+            }
+
+
 
           }
         }
