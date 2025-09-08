@@ -776,7 +776,7 @@ module "fin-PostgresMaster" {
   #######
   pod = {
     container = [{
-      name = local.statefulset_postgres_master
+      name = "${local.statefulset_postgres_master}-container"
       /***
       "-c": This is the first argument. It's typically used in conjunction with a shell command (like
       /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
@@ -1104,7 +1104,7 @@ module "fin-PostgresReplica" {
       }
     }
     container = [{
-      name = local.statefulset_postgres_replica
+      name = "${local.statefulset_postgres_replica}-container"
       args = ["-c",
         "config_file=/postgres/config/postgresql.conf"
       ]
@@ -1222,7 +1222,7 @@ module "fin-PostgresReplica" {
           sed -i 's/#POSTGRES_DB/$(POSTGRES_DB)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
           sed -i 's/#REPLICATION_PASSWORD/$(REPLICATION_PASSWORD)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
           printf "Changing permissions for emptyDir...\n"
-          chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
+          chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -v -R 750 /docker-entrypoint-initdb.d
           # cat /docker-entrypoint-initdb.d/create-replication-user.sh
         fi
         printf "Changing permissions for /wsf_data_dir...\n"
@@ -1414,7 +1414,7 @@ module "fin-PostgresBackup" {
         PGHOST = local.service_name_postgres_master
       }
       env_from_secrets = [
-        "${local.cronjob_postgres_backup}-secrets"
+        "${local.cronjob_postgres_backup}-secret"
       ]
       image = var.postgres_image_tag
       image_pull_policy = "IfNotPresent"
@@ -1483,8 +1483,6 @@ module "fin-PostgresBackup" {
       claim_name = "wsf-pvc"
     }]
   }
-
-
   #############
   # Resources #
   #############
@@ -1500,9 +1498,8 @@ module "fin-PostgresBackup" {
       "postgres-backup.sh" = "${file("${var.postgres_script_path}/postgres-backup.sh")}"
     }
   }]
-
   env_from_secrets = [{
-    name = "${local.cronjob_postgres_backup}-secrets"
+    name = "${local.cronjob_postgres_backup}-secret"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -1517,7 +1514,6 @@ module "fin-PostgresBackup" {
     type = "Opaque"
     immutable = true
   }]
-
   persistent_volume_claims = [{
     name = "wsf-pvc"
     namespace = local.namespace
