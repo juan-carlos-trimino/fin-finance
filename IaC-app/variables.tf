@@ -190,7 +190,7 @@ variable traefik_le_email {
 # busybox #
 ###########
 variable busybox {
-  default = "busybox:1.37.0-musl"
+  default = "arm64v8/busybox:musl"
   type = string
 }
 
