@@ -56,17 +56,47 @@ variable env_from_secrets {
   sensitive = true
 }
 # https://kubernetes.io/docs/concepts/workloads/controllers/job/
+# https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cron_job_v1#nested-schema-for-specjob_template
 variable job_template {
   type = object({
-    # metadata = optional(object({
-      name = optional(string)
-    #   labels = optional(map(string))
-      namespace = optional(string, "default")
-    # }), {})
-    # pod_metadata = optional(object({
-    #   name = optional(string)
-    #   labels = optional(map(string))
-    # }), {})
+    # spec.job_template
+    name = optional(string)
+    labels = optional(map(string))
+    namespace = optional(string, "default")
+    # spec.job_template.spec
+    active_deadline_seconds = optional(number)
+    backoff_limit = optional(number, 6)
+    backoff_limit_per_index = optional(number)
+    completions = optional(number)
+    completion_mode = optional(string, "NonIndexed")
+    manual_selector = optional(bool)
+    max_failed_indexes = optional(number)
+    parallelism = optional(number)
+    pod_failure_policy = optional(list(object({
+      rule = list(object({
+        action = string
+        on_exit_codes = list(object({
+          values = list(number)
+          container_name = optional(string)
+          operator = optional(string)
+        }))
+        on_pod_condition = list(object({
+          status = string
+          type = string
+        }))
+      }))
+    })))
+    selector = optional(list(object({
+      match_expressions = optional(list(object({
+        key = string
+        operator = string
+        values = set(string)
+      })))
+      match_labels = map(string)
+    })))
+    ttl_seconds_after_finished = optional(string)
+    # spec.job_template.spec.template
+    active_deadline_seconds = optional(number)
     affinity = optional(object({
       # affinity_type = string
       pod_anti_affinity = optional(object({
@@ -105,37 +135,6 @@ variable job_template {
         })), [])
       }), {})
     }), {})
-    active_deadline_seconds = optional(number)
-    backoff_limit = optional(number, 6)
-    backoff_limit_per_index = optional(number)
-    max_failed_indexes = optional(number)
-    completion_mode = optional(string, "NonIndexed")
-    completions = optional(number)
-    manual_selector = optional(bool)
-    parallelism = optional(number)
-    pod_failure_policy = optional(list(object({
-      rule = list(object({
-        action = string
-        on_exit_codes = list(object({
-          values = list(number)
-          container_name = optional(string)
-          operator = optional(string)
-        }))
-        on_pod_condition = list(object({
-          status = string
-          type = string
-        }))
-      }))
-    })))
-    selector = optional(list(object({
-      match_expressions = optional(list(object({
-        key = string
-        operator = string
-        values = set(string)
-      })))
-      match_labels = map(string)
-    })))
-    ttl_seconds_after_finished = optional(string)
     container = list(object({
       name = string
       args = optional(list(string))
@@ -196,7 +195,6 @@ variable job_template {
         read_only = optional(bool)
       })), [])
     }))
-
     init_container = optional(list(object({
       name = string
       args = optional(list(string))
@@ -257,8 +255,6 @@ variable job_template {
         read_only = optional(bool)
       })), [])
     })), [])
-
-
     restart_policy = optional(string, "Always")
     security_context = optional(object({
       # fs_group ensures that any volumes mounted by the Pod will have their ownership changed to
@@ -400,7 +396,6 @@ resource "kubernetes_secret" "secrets" {
   immutable = var.env_from_secrets[count.index].immutable
 }
 
-
 /***
 PersistentVolumeClaims can only be created in a specific namespace; they can then only be used by
 pods in the same namespace.
@@ -429,8 +424,6 @@ resource "kubernetes_persistent_volume_claim" "pvc" {
   }
 }
 
-
-
 # https://registry.terraform.io/providers/hashicorp/kubernetes/1.10.0/docs/resources/cron_job
 # https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cron_job#spec-2
 resource "kubernetes_cron_job_v1" "cronjob" {
@@ -449,17 +442,16 @@ resource "kubernetes_cron_job_v1" "cronjob" {
     job_template {  # The pod.
       metadata {
         name = var.job_template.name
-        # labels = var.job_template.labels
+        labels = var.job_template.labels
         namespace = var.job_template.namespace
       }
       spec {
         template {  # Describe the pod.
           metadata {
-            # name = var.job_template.pod_metadata.name
-            # labels = var.job_template.pod_metadata.labels
+            name = var.job_template.name
+            labels = var.job_template.labels
           }
           spec {
-
             dynamic "affinity" {
               for_each = var.job_template.affinity == {} ? [] : [1]
               content {
@@ -513,89 +505,6 @@ resource "kubernetes_cron_job_v1" "cronjob" {
                 }
               }
             }
-
-
-
-            dynamic "init_container" {
-              for_each = var.job_template.init_container
-              iterator = it
-              content {
-                name = it.value.name
-                args = it.value.args
-                command = it.value.command
-
-                dynamic "env_from" {
-                  for_each = it.value.env_from_config_map
-                  iterator = it1
-                  content {
-                    config_map_ref {
-                      name = it1.value
-                    }
-                  }
-                }
-
-                dynamic "env_from" {
-                  for_each = it.value.env_from_secrets
-                  iterator = it1
-                  content {
-                    secret_ref {
-                      name = it1.value
-                    }
-                  }
-                }
-                image = it.value.image
-                image_pull_policy = it.value.image_pull_policy
-                dynamic "security_context" {
-                  for_each = it.value.security_context == {} ? [] : [1]
-                  content {
-                    allow_privilege_escalation = it.value.security_context.allow_privilege_escalation
-                    dynamic "capabilities" {
-                      for_each = it.value.security_context.capabilities == null ? [] : [1]
-                      content {
-                        add = it.value.security_context.capabilities.value.add
-                        drop = it.value.security_context.capabilities.value.drop
-                      }
-                    }
-                    privileged = it.value.security_context.privileged
-                    read_only_root_filesystem = it.value.security_context.read_only_root_filesystem
-                    run_as_group = it.value.security_context.run_as_group
-                    run_as_non_root = it.value.security_context.run_as_non_root
-                    run_as_user = it.value.security_context.run_as_user
-                    dynamic "se_linux_options" {
-                      for_each = it.value.security_context.se_linux_options == null ? [] : [1]
-                      content {
-                        user = it.value.security_context.se_linux_options.user
-                        role = it.value.security_context.se_linux_options.role
-                        type = it.value.security_context.se_linux_options.type
-                        level = it.value.security_context.se_linux_options.level
-                      }
-                    }
-                    dynamic "seccomp_profile" {
-                      for_each = it.value.security_context.seccomp_profile == null ? [] : [1]
-                      content {
-                        type = it.value.security_context.seccomp_profile.type
-                        localhost_profile = it.value.security_context.seccomp_profile.localhost_profile
-                      }
-                    }
-                  }
-                }
-
-                dynamic "volume_mount" {
-                  for_each = it.value.volume_mounts
-                  iterator = it1
-                  content {
-                    name = it1.value.name
-                    mount_path = it1.value.mount_path
-                    sub_path = it1.value.sub_path
-                    read_only = it1.value.read_only
-                  }
-                }
-
-              }
-            }
-
-
-
             dynamic "container" {
               for_each = var.job_template.container
               iterator = it
@@ -603,7 +512,6 @@ resource "kubernetes_cron_job_v1" "cronjob" {
                 name = it.value.name
                 args = it.value.args
                 command = it.value.command
-
                 dynamic "env_from" {
                   for_each = it.value.env_from_config_map
                   iterator = it1
@@ -613,7 +521,6 @@ resource "kubernetes_cron_job_v1" "cronjob" {
                     }
                   }
                 }
-
                 dynamic "env_from" {
                   for_each = it.value.env_from_secrets
                   iterator = it1
@@ -659,7 +566,6 @@ resource "kubernetes_cron_job_v1" "cronjob" {
                     }
                   }
                 }
-
                 dynamic "volume_mount" {
                   for_each = it.value.volume_mounts
                   iterator = it1
@@ -670,7 +576,79 @@ resource "kubernetes_cron_job_v1" "cronjob" {
                     read_only = it1.value.read_only
                   }
                 }
-
+              }
+            }
+            dynamic "init_container" {
+              for_each = var.job_template.init_container
+              iterator = it
+              content {
+                name = it.value.name
+                args = it.value.args
+                command = it.value.command
+                dynamic "env_from" {
+                  for_each = it.value.env_from_config_map
+                  iterator = it1
+                  content {
+                    config_map_ref {
+                      name = it1.value
+                    }
+                  }
+                }
+                dynamic "env_from" {
+                  for_each = it.value.env_from_secrets
+                  iterator = it1
+                  content {
+                    secret_ref {
+                      name = it1.value
+                    }
+                  }
+                }
+                image = it.value.image
+                image_pull_policy = it.value.image_pull_policy
+                dynamic "security_context" {
+                  for_each = it.value.security_context == {} ? [] : [1]
+                  content {
+                    allow_privilege_escalation = it.value.security_context.allow_privilege_escalation
+                    dynamic "capabilities" {
+                      for_each = it.value.security_context.capabilities == null ? [] : [1]
+                      content {
+                        add = it.value.security_context.capabilities.value.add
+                        drop = it.value.security_context.capabilities.value.drop
+                      }
+                    }
+                    privileged = it.value.security_context.privileged
+                    read_only_root_filesystem = it.value.security_context.read_only_root_filesystem
+                    run_as_group = it.value.security_context.run_as_group
+                    run_as_non_root = it.value.security_context.run_as_non_root
+                    run_as_user = it.value.security_context.run_as_user
+                    dynamic "se_linux_options" {
+                      for_each = it.value.security_context.se_linux_options == null ? [] : [1]
+                      content {
+                        user = it.value.security_context.se_linux_options.user
+                        role = it.value.security_context.se_linux_options.role
+                        type = it.value.security_context.se_linux_options.type
+                        level = it.value.security_context.se_linux_options.level
+                      }
+                    }
+                    dynamic "seccomp_profile" {
+                      for_each = it.value.security_context.seccomp_profile == null ? [] : [1]
+                      content {
+                        type = it.value.security_context.seccomp_profile.type
+                        localhost_profile = it.value.security_context.seccomp_profile.localhost_profile
+                      }
+                    }
+                  }
+                }
+                dynamic "volume_mount" {
+                  for_each = it.value.volume_mounts
+                  iterator = it1
+                  content {
+                    name = it1.value.name
+                    mount_path = it1.value.mount_path
+                    sub_path = it1.value.sub_path
+                    read_only = it1.value.read_only
+                  }
+                }
               }
             }
             restart_policy = var.job_template.restart_policy
@@ -732,7 +710,6 @@ resource "kubernetes_cron_job_v1" "cronjob" {
                 }
               }
             }
-
             dynamic "volume" {
               for_each = var.job_template.volume_config_map
               iterator = it
@@ -752,7 +729,6 @@ resource "kubernetes_cron_job_v1" "cronjob" {
                 }
               }
             }
-
             /***
             Pods access storage by using the claim as a volume. Claims must exist in the same
             namespace as the Pod using the claim. The cluster finds the claim in the Pod's namespace
@@ -769,9 +745,6 @@ resource "kubernetes_cron_job_v1" "cronjob" {
                 }
               }
             }
-
-
-
           }
         }
       }
