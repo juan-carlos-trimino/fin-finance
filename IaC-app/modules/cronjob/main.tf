@@ -96,7 +96,6 @@ variable job_template {
     })))
     ttl_seconds_after_finished = optional(string)
     # spec.job_template.spec.template
-    active_deadline_seconds = optional(number)
     affinity = optional(object({
       # affinity_type = string
       pod_anti_affinity = optional(object({
