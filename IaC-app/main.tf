@@ -368,7 +368,6 @@ module "fin-finances-persistent" {
     }]
     # See empty_dir.
     labels = {
-      "aff-finances" = "running"
       "app" = var.app_name
     }
     # Ensure that the non-root user running the container has the necessary group permissions to
@@ -749,6 +748,7 @@ module "fin-PostgresMaster" {
   labels = {
     "app" = var.app_name
     "db" = var.postgres_db_label
+    "postgres-db" = "primary"
   }
   namespace = local.namespace
   replicas = 1
@@ -905,11 +905,11 @@ module "fin-PostgresMaster" {
           sed -i 's/#POSTGRES_DB/$(POSTGRES_DB)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
           sed -i 's/#REPLICATION_PASSWORD/$(REPLICATION_PASSWORD)/g' /docker-entrypoint-initdb.d/create-replication-user.sh
           printf "Changing permissions for emptyDir...\n"
-          chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -R 750 /docker-entrypoint-initdb.d
+          chown -v -R 1999:1999 /docker-entrypoint-initdb.d && chmod -v -R 750 /docker-entrypoint-initdb.d
           # cat /docker-entrypoint-initdb.d/create-replication-user.sh
         fi
         printf "Changing permissions for /wsf_data_dir...\n"
-        chown -v -R 1999:1999 /wsf_data_dir && chmod -v -R 760 /wsf_data_dir
+        chown -v -R 1999:1999 /wsf_data_dir && chmod -v -R 750 /wsf_data_dir
         EOT
       ]
       command = ["/bin/sh"]
@@ -929,8 +929,9 @@ module "fin-PostgresMaster" {
         run_as_user = 0
         run_as_group = 0
         run_as_non_root = false
-        read_only_root_filesystem = false
+        allow_privilege_escalation = false
         privileged = false
+        read_only_root_filesystem = true
       }
       volume_mounts = [{
         name = "wsf"
@@ -1057,9 +1058,9 @@ module "fin-PostgresReplica" {
   source = "./modules/statefulset"
   #
   labels = {
-    # "aff-mysql-server" = "running"
     "app" = var.app_name
     "db" = var.postgres_db_label
+    "postgres-db" = "secondary"
   }
   namespace = local.namespace
   replicas = 1
@@ -1086,6 +1087,22 @@ module "fin-PostgresReplica" {
   # Pod #
   #######
   pod = {
+    affinity = {
+      pod_anti_affinity = {
+        required_during_scheduling_ignored_during_execution = [{
+          topology_key = "kubernetes.io/hostname"
+          label_selector = {
+            # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
+            # the label "postgres-db: primary".
+            match_expressions = [{
+              "key" = "postgres-db"
+              "operator" = "In"
+              "values" = ["primary"]
+            }]
+          }
+        }]
+      }
+    }
     container = [{
       name = local.statefulset_postgres_replica
       args = ["-c",
@@ -1209,7 +1226,7 @@ module "fin-PostgresReplica" {
           # cat /docker-entrypoint-initdb.d/create-replication-user.sh
         fi
         printf "Changing permissions for /wsf_data_dir...\n"
-        chown -v -R 1999:1999 /wsf_data_dir && chmod -v -R 760 /wsf_data_dir
+        chown -v -R 1999:1999 /wsf_data_dir && chmod -v -R 750 /wsf_data_dir
         EOT
       ]
       command = ["/bin/sh"]
@@ -1229,8 +1246,9 @@ module "fin-PostgresReplica" {
         run_as_user = 0
         run_as_group = 0
         run_as_non_root = false
-        read_only_root_filesystem = false
+        allow_privilege_escalation = false
         privileged = false
+        read_only_root_filesystem = true
       }
       volume_mounts = [{
         name = "wsf"
@@ -1248,7 +1266,6 @@ module "fin-PostgresReplica" {
       }]
     }]
     labels = {
-      # "aff-mysql-server" = "running"
       "app" = var.app_name
       "db" = var.postgres_db_label
     }
@@ -1353,19 +1370,13 @@ module "fin-PostgresReplica" {
 }
 
 module "fin-PostgresBackup" {
-  count = var.db_postgres && !var.k8s_crds ? 1 : /*0*/1
-  # depends_on = [
-  #   module.fin-PostgresMaster
-  # ]
+  count = var.db_postgres && !var.k8s_crds ? 1 : 0
+  depends_on = [
+    module.fin-PostgresMaster
+  ]
   # Specify the location of the module, which contains the file main.tf.
   source = "./modules/cronjob"
   #
-
-
-
-
-
-
   cron_job = {
     name = local.cronjob_postgres_backup
     labels = {
@@ -1374,31 +1385,34 @@ module "fin-PostgresBackup" {
     }
     namespace = local.namespace
     concurrency_policy = "Forbid"  # Do not allow concurrent executions.
-    schedule = "*/1 * * * *"  # https://crontab.guru/
+    # schedule = "*/1 * * * *"  # https://crontab.guru/
+    # Run every day at midnight.
+    schedule = "0 0 * * *"  # https://crontab.guru/
   }
-
-
   job_template = {  # The pod.
-    # metadata = {
-      name = "${local.cronjob_postgres_backup}-job-template"
-    #   labels = {
-    #     "app" = var.app_name
-    #     "db" = var.postgres_db_label
-    #   }
-      namespace = local.namespace
-    # }
+    name = "${local.cronjob_postgres_backup}-job-template"
+    affinity = {
+      pod_anti_affinity = {
+        required_during_scheduling_ignored_during_execution = [{
+          topology_key = "kubernetes.io/hostname"
+          label_selector = {
+            # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
+            # the label "postgres-db: primary,secondary".
+            match_expressions = [{
+              "key" = "postgres-db"
+              "operator" = "In"
+              "values" = ["primary", "secondary"]
+            }]
+          }
+        }]
+      }
+    }
     container = [{
       name = "${local.cronjob_postgres_backup}-container"
-      # command = ["/bin/sh",
-      #   "-c",
-      #   # "echo \"hello world\"; sleep 120s"
-      #   # "ls -al /postgres/backup; ./postgres/backup/postgres-backup.sh; sleep 60s"
-      #   "printf \"hello\n\"; printenv POSTGRES_DB; ./postgres/backup/postgres-backup.sh; sleep 60s"
-      # ]
-      command = ["/bin/bash", "-c", "./postgres/backup/postgres-backup.sh; sleep 120s"]
-
-
-
+      command = ["./postgres/backup/postgres-backup.sh"]
+      env = {
+        PGHOST = local.service_name_postgres_master
+      }
       env_from_secrets = [
         "${local.cronjob_postgres_backup}-secrets"
       ]
@@ -1409,23 +1423,49 @@ module "fin-PostgresBackup" {
         privileged = false
         read_only_root_filesystem = true
       }
-
-
       volume_mounts = [{
         name = "readonly-backup-volume"
         mount_path = "/postgres/backup"
         read_only = true
+      }, {
+        name = "wsf"
+        mount_path = "/wsf_dir"
+        read_only = false
       }]
-
-
     }]
-    # pod_metadata = {
-    #   name = "${local.cronjob_postgres_backup}-pod1"
-    #   labels = {
-    #     "app" = var.app_name
-    #     "db" = var.postgres_db_label
-    #   }
-    # }
+    init_container = [{
+      name = "init-pv-container"
+      args = ["-c",
+        <<-EOT
+        printf "Changing permissions for /wsf_data_dir...\n"
+        chmod -v -R 750 /wsf_data_dir
+        chown -v -R 2999:2999 /wsf_data_dir
+        EOT
+      ]
+      # Change permissions on a Kubernetes Persistent Volume.
+      command = ["/bin/sh"]
+      image = var.busybox
+      image_pull_policy = "IfNotPresent"
+      security_context = {
+        run_as_user = 0
+        run_as_group = 0
+        run_as_non_root = false
+        allow_privilege_escalation = false
+        privileged = false
+        read_only_root_filesystem = true
+      }
+      volume_mounts = [{
+        name = "wsf"
+        mount_path = "/wsf_data_dir"
+        read_only = false
+      }]
+    }]
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+      "cron-job" = "${local.cronjob_postgres_backup}"  # For pvc-inspector-pod.
+    }
+    namespace = local.namespace
     restart_policy = "OnFailure"
     security_context = {
       fs_group = 2999
@@ -1433,14 +1473,16 @@ module "fin-PostgresBackup" {
       run_as_user = 2999
       run_as_group = 2999
     }
-
     volume_config_map = [{
       name = "readonly-backup-volume"
       config_map_name = "${local.cronjob_postgres_backup}-script-files"
       default_mode = "0550"
     }]
+    volume_pv = [{
+      name = "wsf"
+      claim_name = "wsf-pvc"
+    }]
   }
-
 
 
   #############
@@ -1475,7 +1517,25 @@ module "fin-PostgresBackup" {
     type = "Opaque"
     immutable = true
   }]
+
+  persistent_volume_claims = [{
+    name = "wsf-pvc"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
+    volume_mode = "Filesystem"
+    # https://kubernetes.io/docs/concepts/storage/persistent-volumes/?ref=kodekloud.com#access-modes
+    access_modes = ["ReadWriteOnce"]
+    # The minimum amount of persistent storage that a PVC can request is 50GB. If the request is
+    # for less than 50GB, the request is rounded up to 50GB.
+    storage_size = "50Gi"
+    storage_class_name = "oci-bv"
+  }]
 }
+
+
 
     /***
     In Terraform, both << and <<- are used to define heredoc strings, which are multi-line string
