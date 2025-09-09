@@ -1386,8 +1386,8 @@ module "fin-PostgresBackup" {
     namespace = local.namespace
     concurrency_policy = "Forbid"  # Do not allow concurrent executions.
     # schedule = "*/1 * * * *"  # https://crontab.guru/
-    # Run every day at midnight.
-    schedule = "0 0 * * *"  # https://crontab.guru/
+    # Run every day at 04:00.
+    schedule = "0 4 * * *"  # https://crontab.guru/
   }
   job_template = {  # The pod.
     name = "${local.cronjob_postgres_backup}-job-template"
@@ -1397,7 +1397,7 @@ module "fin-PostgresBackup" {
           topology_key = "kubernetes.io/hostname"
           label_selector = {
             # Tell K8s to avoid scheduling a replica in a node where there is already a replica with
-            # the label "postgres-db: primary,secondary".
+            # the label "postgres-db: primary OR postgres-db: secondary".
             match_expressions = [{
               "key" = "postgres-db"
               "operator" = "In"
@@ -1429,7 +1429,7 @@ module "fin-PostgresBackup" {
         read_only = true
       }, {
         name = "wsf"
-        mount_path = "/wsf_dir"
+        mount_path = "/wsf_data_dir"
         read_only = false
       }]
     }]
@@ -1514,6 +1514,60 @@ module "fin-PostgresBackup" {
     type = "Opaque"
     immutable = true
   }]
+  job = {
+    name = "immediate-job"
+    backoff_limit = 3
+    container = [{
+      command = ["./postgres/backup/postgres-backup.sh"]
+      image = var.postgres_image_tag
+      image_pull_policy = "IfNotPresent"
+      env = {
+        PGHOST = local.service_name_postgres_master
+      }
+      env_from_secrets = [
+        "${local.cronjob_postgres_backup}-secret"
+      ]
+      security_context = {
+        allow_privilege_escalation = false
+        privileged = false
+        read_only_root_filesystem = true
+      }
+      volume_mounts = [{
+        name = "readonly-backup-volume"
+        mount_path = "/postgres/backup"
+        read_only = true
+      }, {
+        name = "wsf"
+        mount_path = "/wsf_data_dir"
+        read_only = false
+      }]
+    }]
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
+    namespace = local.namespace
+    restart_policy = "OnFailure"
+    security_context = {
+      fs_group = 2999
+      run_as_non_root = true
+      run_as_user = 2999
+      run_as_group = 2999
+    }
+    volume_config_map = [{
+      name = "readonly-backup-volume"
+      config_map_name = "${local.cronjob_postgres_backup}-script-files"
+      default_mode = "0550"
+    }]
+    volume_pv = [{
+      name = "wsf"
+      claim_name = "wsf-pvc"
+    }]
+    timeouts = {
+      # See the sleep function in postgres-backup.sh.
+      create = "400s"
+    }
+  }
   persistent_volume_claims = [{
     name = "wsf-pvc"
     namespace = local.namespace
@@ -1530,6 +1584,7 @@ module "fin-PostgresBackup" {
     storage_class_name = "oci-bv"
   }]
 }
+
 
 
 
