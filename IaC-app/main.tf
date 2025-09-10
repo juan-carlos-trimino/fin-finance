@@ -1563,10 +1563,10 @@ module "fin-PostgresBackup" {
       name = "wsf"
       claim_name = "wsf-pvc"
     }]
-    timeouts = {
-      # See the sleep function in postgres-backup.sh.
-      create = "400s"
-    }
+    # timeouts = {
+    #   # See the sleep function in postgres-backup.sh.
+    #   create = "400s"
+    # }
   }
   persistent_volume_claims = [{
     name = "wsf-pvc"
