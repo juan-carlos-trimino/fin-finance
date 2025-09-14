@@ -34,6 +34,8 @@ locals {
   statefulset_postgres_master = "fin-postgres-master"
   service_name_postgres_master = "fin-postgres-master-headless"
   statefulset_postgres_replica = "fin-postgres-replica"
+  job_postgres_sql = "fin-postgres-sql-job"
+  job_postgres_pvc = "fin-postgres-consume-pvc-job"
   service_name_postgres_replica = "fin-postgres-replica-headless"
   cronjob_postgres_backup = "fin-postgres-cronjob-backup"
   ############
@@ -778,16 +780,20 @@ module "fin-PostgresMaster" {
     container = [{
       name = "${local.statefulset_postgres_master}-container"
       /***
-      "-c": This is the first argument. It's typically used in conjunction with a shell command (like
-      /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a command
-      string to be executed by the shell. The -c flag tells the shell to read commands from the string
-      argument that follows.
+      "-c": This is the first argument. It's typically used in conjunction with a shell command
+      (like /bin/sh or /bin/bash) to indicate that the following string should be interpreted as a
+      command string to be executed by the shell. The -c flag tells the shell to read commands from
+      the string argument that follows.
       ***/
-      args = ["-c",
-        "config_file=/postgres/config/postgresql.conf"
+      args = [<<-EOT
+        printf "Initializing postgres...\n"
+        /usr/local/bin/docker-entrypoint.sh postgres --config_file=/postgres/config/postgresql.conf
+        EOT
       ]
+      command = ["/bin/sh", "-c"]
       env = {
         PGDATA = var.postgres_data
+        PGPORT = var.postgres_port
       }
       env_field = [{
         name = "POD_IP"
@@ -807,7 +813,7 @@ module "fin-PostgresMaster" {
         exec = {
           command = ["/bin/sh",
             "-c",
-            "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
+            "pg_isready --host=$(POD_IP) --username=$(POSTGRES_USER)"
           ]
         }
       }]
@@ -821,7 +827,7 @@ module "fin-PostgresMaster" {
           # https://www.postgresql.org/docs/current/app-pg-isready.html
           command = ["/bin/sh",
             "-c",
-            "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
+            "pg_isready --host=$(POD_IP) --username=$(POSTGRES_USER)"
           ]
         }
       }]
@@ -850,7 +856,7 @@ module "fin-PostgresMaster" {
       }, {
         name = "config-volume"
         mount_path = "/postgres/config"
-        read_only = false
+        read_only = true
       }, {
         name = "writable-initdb-volume"
         mount_path = "docker-entrypoint-initdb.d"
@@ -890,7 +896,7 @@ module "fin-PostgresMaster" {
             # the shell before executing PostgreSQL client applications like psql or pg_dump.
             export PGPASSWORD=$REPLICATION_PASSWORD
             # https://www.postgresql.org/docs/current/app-pgbasebackup.html
-            pg_basebackup -v -h $PGHOST -p 5432 -D $PGDATA -U replication -R -Xs -Fp
+            pg_basebackup -v -D $PGDATA -U replication -R -Xs -Fp
           fi
         else
           # cat /postgres/initdb/create-replication-user.sh
@@ -915,6 +921,7 @@ module "fin-PostgresMaster" {
       command = ["/bin/sh"]
       env = {
         PGDATA = var.postgres_data
+        PGPORT = var.postgres_port
         PGHOST = ""
         # on - Secondary.
         # off - Primary.
@@ -963,7 +970,7 @@ module "fin-PostgresMaster" {
     }
     volume_config_map = [{
       name = "config-volume"
-      config_map_name = "${local.statefulset_postgres_master}-postgres-conf-files"
+      config_map_name = "${local.statefulset_postgres_master}-conf-files"
       default_mode = "0550"
       items = [{
         key = "pg_hba.conf"
@@ -977,7 +984,7 @@ module "fin-PostgresMaster" {
       }]
     }, {
       name = "readonly-initdb-volume"
-      config_map_name = "${local.statefulset_postgres_master}-postgres-script-files"
+      config_map_name = "${local.statefulset_postgres_master}-script-files"
       default_mode = "0550"
     }]
     volume_empty_dir = [{
@@ -989,7 +996,7 @@ module "fin-PostgresMaster" {
   #############
   config_map = [{
     # Same as volume_config_map.config_map_name.
-    name = "${local.statefulset_postgres_master}-postgres-conf-files"
+    name = "${local.statefulset_postgres_master}-conf-files"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -1004,7 +1011,7 @@ module "fin-PostgresMaster" {
     }
   }, {
     # Same as volume.volume_config_map.config_map_name.name.
-    name = "${local.statefulset_postgres_master}-postgres-script-files"
+    name = "${local.statefulset_postgres_master}-script-files"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -1013,7 +1020,102 @@ module "fin-PostgresMaster" {
     data = {
       "create-replication-user.sh" = "${file("${var.postgres_script_path}/create-replication-user.sh")}"
     }
+  }, {
+    # Same as volume.volume_config_map.config_map_name.name.
+    name = "${local.statefulset_postgres_master}-sql-files"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
+    data = {
+      "admin.sql" = "${file("${var.postgres_databases_path}/admin/admin.sql")}"
+    }
   }]
+  job = {
+    name = local.job_postgres_sql
+    backoff_limit = 3
+    container = [{
+      name = "${local.job_postgres_sql}-container"
+      /***
+      The pg_isready utility in PostgreSQL is designed to check the connection status of a
+      PostgreSQL database server. It determines whether a server is accepting connections and
+      returns an exit status to indicate the result. This is particularly useful in scripting and
+      automation, especially when dealing with server startup or containerized environments where
+      you need to ensure the database is fully operational before other services attempt to
+      connect.
+
+      pg_isready attempts to establish a connection to the specified PostgreSQL server, using
+      parameters like hostname, port, and username. It does not require a correct password or
+      database name to determine the server's status, though providing incorrect values will result
+      in a logged failed connection attempt on the server side.
+
+      If your database is running initialization scripts (e.g., in Docker's
+      /docker-entrypoint-initdb.d), pg_isready might report the server as ready even if these
+      scripts are still running and the database is not fully populated. Consider the implications
+      for your specific use case.
+      ***/
+      args = [
+        <<-EOT
+        # This script will repeatedly check the PostgreSQL server's status every 2 seconds until
+        # pg_isready returns an exit status of 0, indicating that the server is accepting
+        # connections.
+        until pg_isready -U $POSTGRES_USER;
+        do
+          printf "Waiting for PostgreSQL at $(PGHOST):$(PGPORT); retrying in 2 seconds...\n"
+          sleep 2s
+        done
+        printf "PostgreSQL is ready to accept connections!\n"
+        printf "Running custom sql scripts...\n"
+        export PGPASSWORD=$POSTGRES_PASSWORD
+        psql -v -U $POSTGRES_USER -d template1 -f /postgres/sql/admin.sql
+        printf "Done running custom sql scripts...\n"
+        EOT
+      ]
+      command = ["sh", "-c"]
+      image = var.postgres_image_tag
+      image_pull_policy = "IfNotPresent"
+      # https://www.postgresql.org/docs/current/libpq-envars.html
+      env = {
+        PGHOST = local.service_name_postgres_master
+        PGPORT = var.postgres_port
+      }
+      env_from_secrets = [
+        "${local.statefulset_postgres_master}-secret"
+      ]
+      security_context = {
+        allow_privilege_escalation = false
+        privileged = false
+        read_only_root_filesystem = true
+      }
+      volume_mounts = [{
+        name = "sql-volume"
+        mount_path = "/postgres/sql"
+        read_only = true
+      }]
+    }]
+    labels = {
+      "app" = var.app_name
+      "db" = var.postgres_db_label
+    }
+    namespace = local.namespace
+    restart_policy = "OnFailure"
+    security_context = {
+      fs_group = 2999
+      run_as_non_root = true
+      run_as_user = 2999
+      run_as_group = 2999
+    }
+    volume_config_map = [{
+      name = "sql-volume"
+      config_map_name = "${local.statefulset_postgres_master}-sql-files"
+      default_mode = "0550"
+    }]
+    # timeouts = {
+    #   # See the sleep function in postgres-backup.sh.
+    #   create = "400s"
+    # }
+  }
   secrets = [{
     name = "${local.statefulset_postgres_master}-secret"
     namespace = local.namespace
@@ -1110,6 +1212,7 @@ module "fin-PostgresReplica" {
       ]
       env = {
         PGDATA = var.postgres_data
+        PGPORT = var.postgres_port
       }
       env_field = [{
         name = "POD_IP"
@@ -1129,7 +1232,7 @@ module "fin-PostgresReplica" {
         exec = {
           command = ["/bin/sh",
             "-c",
-            "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
+            "pg_isready --host=$(POD_IP) --username=$(POSTGRES_USER)"
           ]
         }
       }]
@@ -1143,7 +1246,7 @@ module "fin-PostgresReplica" {
           # https://www.postgresql.org/docs/current/app-pg-isready.html
           command = ["/bin/sh",
             "-c",
-            "pg_isready --host=$(POD_IP) --port=5432 --username=${var.postgres_user} --dbname=${var.postgres_db}"
+            "pg_isready --host=$(POD_IP) --username=$(POSTGRES_USER)"
           ]
         }
       }]
@@ -1207,7 +1310,7 @@ module "fin-PostgresReplica" {
             # the shell before executing PostgreSQL client applications like psql or pg_dump.
             export PGPASSWORD=$REPLICATION_PASSWORD
             # https://www.postgresql.org/docs/current/app-pgbasebackup.html
-            pg_basebackup -v -h $PGHOST -p 5432 -D $PGDATA -U replication -R -Xs -Fp
+            pg_basebackup -v -h $PGHOST -D $PGDATA -U replication -R -Xs -Fp
           fi
         else
           # cat /postgres/initdb/create-replication-user.sh
@@ -1233,6 +1336,7 @@ module "fin-PostgresReplica" {
       env = {
         PGDATA = var.postgres_data
         PGHOST = local.service_name_postgres_master
+        PGPORT = var.postgres_port
         # on - Secondary.
         # off - Primary.
         STANDBY_MODE = "on"
@@ -1280,7 +1384,7 @@ module "fin-PostgresReplica" {
     }
     volume_config_map = [{
       name = "config-volume"
-      config_map_name = "${local.statefulset_postgres_replica}-postgres-conf-files"
+      config_map_name = "${local.statefulset_postgres_replica}-conf-files"
       default_mode = "0550"
       items = [{
         key = "pg_hba.conf"
@@ -1294,7 +1398,7 @@ module "fin-PostgresReplica" {
       }]
     }, {
       name = "readonly-initdb-volume"
-      config_map_name = "${local.statefulset_postgres_replica}-postgres-script-files"
+      config_map_name = "${local.statefulset_postgres_replica}-script-files"
       default_mode = "0550"
     }]
     volume_empty_dir = [{
@@ -1306,7 +1410,7 @@ module "fin-PostgresReplica" {
   #############
   config_map = [{
     # Same as volume_config_map.config_map_name.
-    name = "${local.statefulset_postgres_replica}-postgres-conf-files"
+    name = "${local.statefulset_postgres_replica}-conf-files"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -1321,7 +1425,7 @@ module "fin-PostgresReplica" {
     }
   }, {
     # Same as volume.volume_config_map.config_map_name.name.
-    name = "${local.statefulset_postgres_replica}-postgres-script-files"
+    name = "${local.statefulset_postgres_replica}-script-files"
     namespace = local.namespace
     labels = {
       "app" = var.app_name
@@ -1515,9 +1619,10 @@ module "fin-PostgresBackup" {
     immutable = true
   }]
   job = {
-    name = "immediate-job"
+    name = local.job_postgres_pvc
     backoff_limit = 3
     container = [{
+      name = "${local.job_postgres_pvc}-container"
       command = ["./postgres/backup/postgres-backup.sh"]
       image = var.postgres_image_tag
       image_pull_policy = "IfNotPresent"
