@@ -16,6 +16,116 @@ variable config_map {
     immutable = optional(bool, false)
   }))
 }
+variable job {
+  default = null
+  type = object({
+    name = string
+    backoff_limit = optional(number, 6)
+    labels = optional(map(string))
+    namespace = optional(string, "default")
+    container = list(object({
+      name = optional(string)
+      args = optional(list(string))
+      command = optional(list(string))
+      env = optional(map(any), {})
+      # Passing all entries of a ConfigMap as environment variables at once (envFrom).
+      env_from_config_map = optional(list(string), [])
+      env_from_secrets = optional(list(string), [])
+      image = optional(string)
+      image_pull_policy = optional(string, "Always")
+      security_context = optional(object({
+        allow_privilege_escalation = optional(bool)
+        capabilities = optional(object({
+          add = optional(list(string))
+          drop = optional(list(string))
+        }))
+        privileged = optional(bool, false)
+        read_only_root_filesystem = optional(bool, false)
+        # Processes inside container will run as primary group "run_as_group".
+        run_as_group = optional(number)
+        run_as_non_root = optional(bool)
+        # Processes inside container will run as user "run_as_user".
+        run_as_user = optional(number)
+        se_linux_options = optional(object({
+          user = optional(string)
+          role = optional(string)
+          type = optional(string)
+          level = optional(string)
+        }))
+        seccomp_profile = optional(object({
+          type = optional(string)
+          localhost_profile = optional(string)
+        }))
+      }), {})
+      volume_mounts = optional(list(object({
+        name = string
+        mount_path = string
+        sub_path = optional(string)
+        read_only = optional(bool)
+      })), [])
+    }))
+    restart_policy = optional(string, "Always")
+    security_context = optional(object({
+      # fs_group ensures that any volumes mounted by the Pod will have their ownership changed to
+      # this specified group ID.
+      # The "volumeMounts.mountPath" will have its group ownership set to "fs_group".
+      # Any files created within "mountPath" by the container will be owned by user "run_as_user"
+      # and group "fs_group" (due to "fsGroup").
+      fs_group = optional(number)
+      fs_group_change_policy = optional(string)
+      # Processes inside container will run as primary group "run_as_group".
+      run_as_group = optional(number)
+      run_as_non_root = optional(bool)
+      # Processes inside container will run as user "run_as_user".
+      run_as_user = optional(number)
+      se_linux_options = optional(object({
+        user = optional(string)
+        role = optional(string)
+        type = optional(string)
+        level = optional(string)
+      }))
+      seccomp_profile = optional(object({
+        type = optional(string)
+        localhost_profile = optional(string)
+      }))
+      supplemental_groups = optional(set(number))
+      sysctl = optional(list(object({
+        name = string
+        value = string
+      })), [])
+      windows_options = optional(object({
+        gmsa_credential_spec = optional(string)
+        gmsa_credential_spec_name = optional(string)
+        host_process = optional(bool)
+        run_as_username = optional(string)
+      }))
+    }), {})
+    timeouts = optional(object({
+      create = optional(string)
+    }), {})
+    volume_config_map = optional(list(object({
+      name = string
+      # Name of the ConfigMap containing the files to add to the container.
+      config_map_name = string
+      # Although ConfigMaps should be used for non-sensitive configuration data, you may want to
+      # make the file readable and writeble only to the user and group that owned the file; e.g.,
+      # default_mode = "0660" (-rw-rw----)
+      # The default permission is "0644" (-rw-r--r--)
+      default_mode = optional(string)
+      # An array of keys from the ConfigMap to create as files.
+      items = optional(list(object({
+        # The configMap entry.
+        key = string
+        # The entry's value should be stored in this file.
+        path = string
+      })), [])
+    })), [])
+    volume_pv = optional(list(object({
+      name = string
+      claim_name = string
+    })), [])
+  })
+}
 variable labels {
   default = {}
   type = map(string)
@@ -553,6 +663,221 @@ locals {
     svc_selector_lbl = local.service_selector_label
   }
   pod_labels = merge(var.pod.labels, local.tmp_pod_lbls)
+}
+
+/***
+To run a K8s CronJob immediately once and then subsequently according to its schedule using
+Terraform, you will need to create a standalone Kubernetes Job for immediate execution since a
+direct "run immediately" trigger within the CronJob definition itself is not available. K8s
+CronJobs are designed for scheduled, recurring tasks.
+
+Deployment Strategy:
+Apply the Terraform configuration containing both the kubernetes_job_v1 and kubernetes_cron_job_v1
+resources. The immediate_job will be created and executed upon the terraform apply. The schedule
+cronjob will then take over for subsequent, recurring executions based on its defined schedule.
+This approach ensures the task runs immediately once and then continues on its defined schedule
+using standard K8s resources managed by Terraform.
+***/
+resource "kubernetes_job_v1" "immediate_job" {
+  count = var.job == null ? 0 : 1
+  metadata {
+    name = var.job.name
+    labels = var.job.labels
+    namespace = var.job.namespace
+  }
+  spec {
+    template {
+      metadata {
+        labels = var.job.labels
+      }
+      spec {
+        dynamic "container" {
+          for_each = var.job.container
+          iterator = it
+          content {
+            name = it.value.name
+            args = it.value.args
+            command = it.value.command
+            /***
+            To list all of the environment variables:
+            Linux: $ printenv
+            ***/
+            dynamic "env" {
+              for_each = it.value.env
+              content {
+                name = env.key
+                value = env.value
+              }
+            }
+            dynamic "env_from" {
+              for_each = it.value.env_from_config_map
+              iterator = it1
+              content {
+                config_map_ref {
+                  name = it1.value
+                }
+              }
+            }
+            dynamic "env_from" {
+              for_each = it.value.env_from_secrets
+              iterator = it1
+              content {
+                secret_ref {
+                  name = it1.value
+                }
+              }
+            }
+            image = it.value.image
+            image_pull_policy = it.value.image_pull_policy
+            dynamic "security_context" {
+              for_each = it.value.security_context == {} ? [] : [1]
+              content {
+                allow_privilege_escalation = it.value.security_context.allow_privilege_escalation
+                dynamic "capabilities" {
+                  for_each = it.value.security_context.capabilities == null ? [] : [1]
+                  content {
+                    add = it.value.security_context.capabilities.value.add
+                    drop = it.value.security_context.capabilities.value.drop
+                  }
+                }
+                privileged = it.value.security_context.privileged
+                read_only_root_filesystem = it.value.security_context.read_only_root_filesystem
+                run_as_group = it.value.security_context.run_as_group
+                run_as_non_root = it.value.security_context.run_as_non_root
+                run_as_user = it.value.security_context.run_as_user
+                dynamic "se_linux_options" {
+                  for_each = it.value.security_context.se_linux_options == null ? [] : [1]
+                  content {
+                    user = it.value.security_context.se_linux_options.user
+                    role = it.value.security_context.se_linux_options.role
+                    type = it.value.security_context.se_linux_options.type
+                    level = it.value.security_context.se_linux_options.level
+                  }
+                }
+                dynamic "seccomp_profile" {
+                  for_each = it.value.security_context.seccomp_profile == null ? [] : [1]
+                  content {
+                    type = it.value.security_context.seccomp_profile.type
+                    localhost_profile = it.value.security_context.seccomp_profile.localhost_profile
+                  }
+                }
+              }
+            }
+            dynamic "volume_mount" {
+              for_each = it.value.volume_mounts
+              iterator = it1
+              content {
+                name = it1.value.name
+                mount_path = it1.value.mount_path
+                sub_path = it1.value.sub_path
+                read_only = it1.value.read_only
+              }
+            }
+          }
+        }
+        restart_policy = var.job.restart_policy
+        dynamic "security_context" {
+          for_each = var.job.security_context == {} ? [] : [1]
+          content {
+            /***
+            Set the group that owns the pod volumes. This group will be used by K8s to change the
+            permissions of all files/directories in the volumes, when the volumes are mounted by
+            a pod.
+            ***/
+            fs_group = var.job.security_context.fs_group
+            /***
+            By default, Kubernetes recursively changes ownership and permissions for the contents
+            of each volume to match the fsGroup specified in a Pod's securityContext when that
+            volume is mounted. For large volumes, checking and changing ownership and permissions
+            can take a lot of time, slowing Pod startup. You can use the fsGroupChangePolicy
+            field inside a securityContext to control the way that Kubernetes checks and manages
+            ownership and permissions for a volume.
+            ***/
+            fs_group_change_policy = var.job.security_context.fs_group_change_policy
+            run_as_group = var.job.security_context.run_as_group
+            run_as_non_root = var.job.security_context.run_as_non_root
+            run_as_user = var.job.security_context.run_as_user
+            dynamic "se_linux_options" {
+              for_each = var.job.security_context.se_linux_options == null ? [] : [1]
+              content {
+                user = var.job.security_context.se_linux_options.user
+                role = var.job.security_context.se_linux_options.role
+                type = var.job.security_context.se_linux_options.type
+                level = var.job.security_context.se_linux_options.level
+              }
+            }
+            dynamic "seccomp_profile" {
+              for_each = var.job.security_context.seccomp_profile == null ? [] : [1]
+              content {
+                type = var.job.security_context.seccomp_profile.type
+                localhost_profile = var.job.security_context.seccomp_profile.localhost_profile
+              }
+            }
+            supplemental_groups = var.job.security_context.supplemental_groups
+            dynamic "sysctl" {
+              for_each = var.job.security_context.sysctl
+              iterator = it
+              content {
+                name = it.name
+                value = it.value
+              }
+            }
+            dynamic "windows_options" {
+              for_each = var.job.security_context.windows_options == null ? [] : [1]
+              content {
+                gmsa_credential_spec = var.job.security_context.gmsa_credential_spec
+                gmsa_credential_spec_name = var.job.security_context.gmsa_credential_spec_name
+                host_process = var.job.security_context.host_process
+                run_as_username = var.job.security_context.run_as_username
+              }
+            }
+          }
+        }
+        dynamic "volume" {
+          for_each = var.job.volume_config_map
+          iterator = it
+          content {
+            name = it.value.name
+            config_map {
+              name = it.value.config_map_name
+              default_mode = it.value.default_mode
+              dynamic "items" {
+                for_each = it.value.items
+                iterator = it1
+                content {
+                  key = it1.value.key
+                  path = it1.value.path
+                }
+              }
+            }
+          }
+        }
+        dynamic "volume" {
+          for_each = var.job.volume_pv
+          iterator = it
+          content {
+            name = it.value.name
+            persistent_volume_claim {
+              claim_name = it.value.claim_name
+            }
+          }
+        }
+      }
+    }
+    backoff_limit = var.job.backoff_limit  # Number of retries before marking as failed.
+  }
+  /***
+  The error "Error: job: finances/immediate-job" is not in complete state means Terraform did not
+  receive a "Completed" status from the K8s Job within the configured timeout. This is common when
+  using the kubernetes_job resource to run one-off tasks during a terraform apply.
+
+  If the job takes a long time to run but eventually succeeds, you may need to increase the timeout
+  value for the resource in your Terraform configuration. This allows Terraform to wait longer
+  before failing the apply.
+  ***/
+  timeouts {
+    create = var.job.timeouts.create
+  }
 }
 
 /***
