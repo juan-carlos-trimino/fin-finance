@@ -69,6 +69,7 @@ variable job {
     labels = optional(map(string))
     namespace = optional(string, "default")
     container = list(object({
+      name = optional(string)
       args = optional(list(string))
       command = optional(list(string))
       env = optional(map(any), {})
@@ -109,9 +110,65 @@ variable job {
       })), [])
     }))
     restart_policy = optional(string, "Always")
+    security_context = optional(object({
+      # fs_group ensures that any volumes mounted by the Pod will have their ownership changed to
+      # this specified group ID.
+      # The "volumeMounts.mountPath" will have its group ownership set to "fs_group".
+      # Any files created within "mountPath" by the container will be owned by user "run_as_user"
+      # and group "fs_group" (due to "fsGroup").
+      fs_group = optional(number)
+      fs_group_change_policy = optional(string)
+      # Processes inside container will run as primary group "run_as_group".
+      run_as_group = optional(number)
+      run_as_non_root = optional(bool)
+      # Processes inside container will run as user "run_as_user".
+      run_as_user = optional(number)
+      se_linux_options = optional(object({
+        user = optional(string)
+        role = optional(string)
+        type = optional(string)
+        level = optional(string)
+      }))
+      seccomp_profile = optional(object({
+        type = optional(string)
+        localhost_profile = optional(string)
+      }))
+      supplemental_groups = optional(set(number))
+      sysctl = optional(list(object({
+        name = string
+        value = string
+      })), [])
+      windows_options = optional(object({
+        gmsa_credential_spec = optional(string)
+        gmsa_credential_spec_name = optional(string)
+        host_process = optional(bool)
+        run_as_username = optional(string)
+      }))
+    }), {})
     timeouts = optional(object({
       create = optional(string)
     }), {})
+    volume_config_map = optional(list(object({
+      name = string
+      # Name of the ConfigMap containing the files to add to the container.
+      config_map_name = string
+      # Although ConfigMaps should be used for non-sensitive configuration data, you may want to
+      # make the file readable and writeble only to the user and group that owned the file; e.g.,
+      # default_mode = "0660" (-rw-rw----)
+      # The default permission is "0644" (-rw-r--r--)
+      default_mode = optional(string)
+      # An array of keys from the ConfigMap to create as files.
+      items = optional(list(object({
+        # The configMap entry.
+        key = string
+        # The entry's value should be stored in this file.
+        path = string
+      })), [])
+    })), [])
+    volume_pv = optional(list(object({
+      name = string
+      claim_name = string
+    })), [])
   })
 }
 # https://kubernetes.io/docs/concepts/workloads/controllers/job/
@@ -509,10 +566,10 @@ resource "kubernetes_job_v1" "immediate_job" {
       }
       spec {
         dynamic "container" {
-          for_each = var.job_template.container
+          for_each = var.job.container
           iterator = it
           content {
-            name = "${it.value.name}-container"
+            name = it.value.name
             args = it.value.args
             command = it.value.command
             /***
@@ -594,14 +651,14 @@ resource "kubernetes_job_v1" "immediate_job" {
         }
         restart_policy = var.job.restart_policy
         dynamic "security_context" {
-          for_each = var.job_template.security_context == {} ? [] : [1]
+          for_each = var.job.security_context == {} ? [] : [1]
           content {
             /***
             Set the group that owns the pod volumes. This group will be used by K8s to change the
             permissions of all files/directories in the volumes, when the volumes are mounted by
             a pod.
             ***/
-            fs_group = var.job_template.security_context.fs_group
+            fs_group = var.job.security_context.fs_group
             /***
             By default, Kubernetes recursively changes ownership and permissions for the contents
             of each volume to match the fsGroup specified in a Pod's securityContext when that
@@ -610,29 +667,29 @@ resource "kubernetes_job_v1" "immediate_job" {
             field inside a securityContext to control the way that Kubernetes checks and manages
             ownership and permissions for a volume.
             ***/
-            fs_group_change_policy = var.job_template.security_context.fs_group_change_policy
-            run_as_group = var.job_template.security_context.run_as_group
-            run_as_non_root = var.job_template.security_context.run_as_non_root
-            run_as_user = var.job_template.security_context.run_as_user
+            fs_group_change_policy = var.job.security_context.fs_group_change_policy
+            run_as_group = var.job.security_context.run_as_group
+            run_as_non_root = var.job.security_context.run_as_non_root
+            run_as_user = var.job.security_context.run_as_user
             dynamic "se_linux_options" {
-              for_each = var.job_template.security_context.se_linux_options == null ? [] : [1]
+              for_each = var.job.security_context.se_linux_options == null ? [] : [1]
               content {
-                user = var.job_template.security_context.se_linux_options.user
-                role = var.job_template.security_context.se_linux_options.role
-                type = var.job_template.security_context.se_linux_options.type
-                level = var.job_template.security_context.se_linux_options.level
+                user = var.job.security_context.se_linux_options.user
+                role = var.job.security_context.se_linux_options.role
+                type = var.job.security_context.se_linux_options.type
+                level = var.job.security_context.se_linux_options.level
               }
             }
             dynamic "seccomp_profile" {
-              for_each = var.job_template.security_context.seccomp_profile == null ? [] : [1]
+              for_each = var.job.security_context.seccomp_profile == null ? [] : [1]
               content {
-                type = var.job_template.security_context.seccomp_profile.type
-                localhost_profile = var.job_template.security_context.seccomp_profile.localhost_profile
+                type = var.job.security_context.seccomp_profile.type
+                localhost_profile = var.job.security_context.seccomp_profile.localhost_profile
               }
             }
-            supplemental_groups = var.job_template.security_context.supplemental_groups
+            supplemental_groups = var.job.security_context.supplemental_groups
             dynamic "sysctl" {
-              for_each = var.job_template.security_context.sysctl
+              for_each = var.job.security_context.sysctl
               iterator = it
               content {
                 name = it.name
@@ -640,18 +697,18 @@ resource "kubernetes_job_v1" "immediate_job" {
               }
             }
             dynamic "windows_options" {
-              for_each = var.job_template.security_context.windows_options == null ? [] : [1]
+              for_each = var.job.security_context.windows_options == null ? [] : [1]
               content {
-                gmsa_credential_spec = var.job_template.security_context.gmsa_credential_spec
-                gmsa_credential_spec_name = var.job_template.security_context.gmsa_credential_spec_name
-                host_process = var.job_template.security_context.host_process
-                run_as_username = var.job_template.security_context.run_as_username
+                gmsa_credential_spec = var.job.security_context.gmsa_credential_spec
+                gmsa_credential_spec_name = var.job.security_context.gmsa_credential_spec_name
+                host_process = var.job.security_context.host_process
+                run_as_username = var.job.security_context.run_as_username
               }
             }
           }
         }
         dynamic "volume" {
-          for_each = var.job_template.volume_config_map
+          for_each = var.job.volume_config_map
           iterator = it
           content {
             name = it.value.name
@@ -670,7 +727,7 @@ resource "kubernetes_job_v1" "immediate_job" {
           }
         }
         dynamic "volume" {
-          for_each = var.job_template.volume_pv
+          for_each = var.job.volume_pv
           iterator = it
           content {
             name = it.value.name
