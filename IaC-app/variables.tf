@@ -200,12 +200,18 @@ variable busybox {
 variable postgres_image_tag {  # https://www.postgresql.org/docs/release/
   description = "PostgreSQL Docker images (https://hub.docker.com/_/postgres)."
   type = string
-  default = "postgres:17.5-alpine3.22"
+  default = "postgres:17.6-alpine3.22"
 }
 
 variable postgres_db_label {
   type = string
   default = "postgres"
+}
+
+variable postgres_port {
+  description = "PGPORT behaves the same as the port connection parameter."
+  type = number
+  default = 5432
 }
 
 # https://hub.docker.com/_/postgres#postgres_db
@@ -253,5 +259,10 @@ variable postgres_config_path {
 
 variable postgres_script_path {
   default = "./utilities/postgres/scripts"
+  type = string
+}
+
+variable postgres_databases_path {
+  default = "./utilities/postgres/databases"
   type = string
 }
