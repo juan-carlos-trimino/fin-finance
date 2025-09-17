@@ -100,6 +100,12 @@ fin-finance
  | | | | ├ pg_hba.conf
  | | | | ├ pg_ident.conf
  | | | | └ postgresql.conf
+ | | | ├ databases
+ | | | | ├ banking-system
+ | | | | | ├ baseline
+ | | | | | | └ banking-system.sql
+ | | | | | └ .gitkeep
+ | | | | └ .gitkeep
  | | | ├ scripts
  | | | | ├ create-replication-user.sh
  | | | | └ postgres-backup.sh
