@@ -1029,7 +1029,7 @@ module "fin-PostgresMaster" {
       "db" = var.postgres_db_label
     }
     data = {
-      "admin.sql" = "${file("${var.postgres_databases_path}/admin/admin.sql")}"
+      "admin.sql" = "${file("${var.postgres_databases_path}/banking-system/baseline/banking-system.sql")}"
     }
   }]
   job = {
@@ -1111,10 +1111,12 @@ module "fin-PostgresMaster" {
       config_map_name = "${local.statefulset_postgres_master}-sql-files"
       default_mode = "0550"
     }]
-    # timeouts = {
-    #   # See the sleep function in postgres-backup.sh.
-    #   create = "400s"
-    # }
+    timeouts = {
+      # If the job takes too long, K8s ends the deployment and issues the error:
+      #   Error: job: finances/fin-postgres-sql-job is not in complete state
+      # To avoid the error, set the timeout accordingly.
+      create = "120s"
+    }
   }
   secrets = [{
     name = "${local.statefulset_postgres_master}-secret"
@@ -1152,7 +1154,7 @@ module "fin-PostgresMaster" {
 }
 
 module "fin-PostgresReplica" {
-  count = var.db_postgres && !var.k8s_crds ? 1 : 0
+  count = var.db_postgres && !var.k8s_crds ? /*1*/0 : 0
   depends_on = [
     module.fin-PostgresMaster
   ]
@@ -1474,7 +1476,7 @@ module "fin-PostgresReplica" {
 }
 
 module "fin-PostgresBackup" {
-  count = var.db_postgres && !var.k8s_crds ? 1 : 0
+  count = var.db_postgres && !var.k8s_crds ? /*1*/0 : 0
   depends_on = [
     module.fin-PostgresMaster
   ]
