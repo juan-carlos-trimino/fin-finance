@@ -267,7 +267,7 @@ variable postgres_databases_script_path {
   type = string
 }
 
-variable postgres_databases_path {
-  default = "./utilities/postgres/databases"
+variable postgres_sql_path {
+  default = "./utilities/postgres/sql"
   type = string
 }
