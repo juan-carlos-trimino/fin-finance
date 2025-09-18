@@ -1,0 +1,2 @@
+Using an empty file (.gitkeep) in order to force the presence of the directory in the versioning system.
+(An empty directory cannot be part of a tree under the Git versioning system.)
