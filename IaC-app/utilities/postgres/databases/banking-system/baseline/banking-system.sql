@@ -1,3 +1,6 @@
+SELECT 'Output from script, run began at: ' AS "Script Information",
+  NOW() AS "Date and Time Executed";
+
 -- *******************
 -- Create the database
 -- *******************
@@ -20,6 +23,10 @@ WITH
 -- Create the schemas
 -- ******************
 CREATE SCHEMA IF NOT EXISTS bs;
+
+-- Once connected, set the search path to look for objects in your schema first, and if not found,
+-- to fall back to the default public schema.
+SET search_path TO bs, public;
 
 -- *****************
 -- Create the tables
@@ -120,3 +127,6 @@ CREATE TABLE IF NOT EXISTS bs.tbl_transactions (
     REFERENCES bs.tbl_account(account_id)
     ON DELETE CASCADE
 );
+
+SELECT 'Output from script, run ended at: ' AS "Script Information",
+  NOW() AS "Date and Time Executed";
