@@ -1030,7 +1030,7 @@ module "fin-PostgresMaster" {
       "db" = var.postgres_db_label
     }
     data = {
-      "banking-system.sql" = "${file("${var.postgres_sql_path}/banking-system/baseline/banking-system.sql")}"
+      "banking-system.sql" = "${file("${var.postgres_sql_path}/baseline/banking-system.sql")}"
     }
   }]
   job = {
@@ -1057,7 +1057,7 @@ module "fin-PostgresMaster" {
       for your specific use case.
       ***/
       args = [
-        "./postgres/databases-scripts/banking-system.sh ./postgres/sql/banking-system.sql"
+        "./postgres/scripts/banking-system.sh ./postgres/sql/banking-system.sql"
       ]
       command = ["bash", "-c"]
       image = var.postgres_image_tag
@@ -1080,8 +1080,8 @@ module "fin-PostgresMaster" {
         mount_path = "/postgres/sql"
         read_only = true
       }, {
-        name = "readonly-databases-volume"
-        mount_path = "/postgres/databases-scripts"
+        name = "script-volume"
+        mount_path = "/postgres/scripts"
         read_only = true
       }]
     }]
@@ -1102,7 +1102,7 @@ module "fin-PostgresMaster" {
       config_map_name = "${local.statefulset_postgres_master}-sql-files"
       default_mode = "0550"
     }, {
-      name = "readonly-databases-volume"
+      name = "script-volume"
       config_map_name = "${local.statefulset_postgres_master}-script-files"
       default_mode = "0550"
     }]
