@@ -1019,6 +1019,7 @@ module "fin-PostgresMaster" {
     }
     data = {
       "create-replication-user.sh" = "${file("${var.postgres_script_path}/create-replication-user.sh")}"
+      "banking-system.sh" = "${file("${var.postgres_databases_script_path}/banking-system.sh")}"
     }
   }, {
     # Same as volume.volume_config_map.config_map_name.name.
@@ -1029,7 +1030,7 @@ module "fin-PostgresMaster" {
       "db" = var.postgres_db_label
     }
     data = {
-      "admin.sql" = "${file("${var.postgres_databases_path}/banking-system/baseline/banking-system.sql")}"
+      "banking-system.sql" = "${file("${var.postgres_databases_path}/banking-system/baseline/banking-system.sql")}"
     }
   }]
   job = {
@@ -1056,23 +1057,9 @@ module "fin-PostgresMaster" {
       for your specific use case.
       ***/
       args = [
-        <<-EOT
-        # This script will repeatedly check the PostgreSQL server's status every 2 seconds until
-        # pg_isready returns an exit status of 0, indicating that the server is accepting
-        # connections.
-        until pg_isready -U $POSTGRES_USER;
-        do
-          printf "Waiting for PostgreSQL at $(PGHOST):$(PGPORT); retrying in 2 seconds...\n"
-          sleep 2s
-        done
-        printf "PostgreSQL is ready to accept connections!\n"
-        printf "Running custom sql scripts...\n"
-        export PGPASSWORD=$POSTGRES_PASSWORD
-        psql -v -U $POSTGRES_USER -d template1 -f /postgres/sql/admin.sql
-        printf "Done running custom sql scripts...\n"
-        EOT
+        "./postgres/databases-scripts/banking-system.sh ./postgres/sql/banking-system.sql"
       ]
-      command = ["sh", "-c"]
+      command = ["bash", "-c"]
       image = var.postgres_image_tag
       image_pull_policy = "IfNotPresent"
       # https://www.postgresql.org/docs/current/libpq-envars.html
@@ -1092,6 +1079,10 @@ module "fin-PostgresMaster" {
         name = "sql-volume"
         mount_path = "/postgres/sql"
         read_only = true
+      }, {
+        name = "readonly-databases-volume"
+        mount_path = "/postgres/databases-scripts"
+        read_only = true
       }]
     }]
     labels = {
@@ -1109,6 +1100,10 @@ module "fin-PostgresMaster" {
     volume_config_map = [{
       name = "sql-volume"
       config_map_name = "${local.statefulset_postgres_master}-sql-files"
+      default_mode = "0550"
+    }, {
+      name = "readonly-databases-volume"
+      config_map_name = "${local.statefulset_postgres_master}-script-files"
       default_mode = "0550"
     }]
     timeouts = {
