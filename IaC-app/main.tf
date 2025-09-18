@@ -1019,7 +1019,7 @@ module "fin-PostgresMaster" {
     }
     data = {
       "create-replication-user.sh" = "${file("${var.postgres_script_path}/create-replication-user.sh")}"
-      "banking-system.sh" = "${file("${var.postgres_databases_script_path}/banking-system.sh")}"
+      "banking-system.sh" = "${file("${var.postgres_script_path}/banking-system.sh")}"
     }
   }, {
     # Same as volume.volume_config_map.config_map_name.name.
