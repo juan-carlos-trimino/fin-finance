@@ -105,10 +105,8 @@ fin-finance
  | | | | ├ create-replication-user.sh
  | | | | └ postgres-backup.sh
  | | | ├ sql
- | | | | ├ banking-system
- | | | | | ├ baseline
- | | | | | | └ banking-system.sql
- | | | | | └ .gitkeep
+ | | | | ├ baseline
+ | | | | | └ banking-system.sql
  | | | | └ .gitkeep
  | | | └ .gitkeep
  | | └ .gitkeep
