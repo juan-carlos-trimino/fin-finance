@@ -1030,7 +1030,7 @@ module "fin-PostgresMaster" {
       "db" = var.postgres_db_label
     }
     data = {
-      "banking-system.sql" = "${file("${var.postgres_databases_path}/banking-system/baseline/banking-system.sql")}"
+      "banking-system.sql" = "${file("${var.postgres_sql_path}/banking-system/baseline/banking-system.sql")}"
     }
   }]
   job = {
