@@ -93,6 +93,7 @@ fin-finance
  | ├ utilities
  | | ├ general
  | | | ├ scripts
+ | | | | ├ health-check.sh
  | | | | └ inspect-pod-node.sh
  | | | └ .gitkeep
  | | ├ postgres
