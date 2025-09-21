@@ -252,6 +252,11 @@ variable postgres_data {
   type = string
 }
 
+variable general_script_path {
+  default = "./utilities/general/scripts"
+  type = string
+}
+
 variable postgres_config_path {
   default = "./utilities/postgres/configs"
   type = string
