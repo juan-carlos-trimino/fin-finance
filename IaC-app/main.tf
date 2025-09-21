@@ -556,50 +556,50 @@ module "fin-finances-empty" {  # Using emptyDir.
       }
       # You should always define a liveness probe. Keep probes light.
       liveness_probe = [{
-        initial_delay_seconds = 5
-        period_seconds = 20
-        timeout_seconds = 1
+        initial_delay_seconds = 7
+        period_seconds = 25
+        timeout_seconds = 3
         # Don't bother implementing retry loops; K8s will retry the probe.
-        failure_threshold = 1
+        failure_threshold = 3
         success_threshold = 1
-        http_get = [{
-          path = "/liveness"
-          port = 8080
-          scheme = "HTTP"
-        }]
+        # http_get = [{
+        #   path = "/liveness"
+        #   port = 8080
+        #   scheme = "HTTP"
+        # }]
         # tcp_socket = {
         #   port = 8080
         # }
-        # exec = {
-        #   command = [
-        #     "/bin/sh",
-        #     "-c",
-        #     "ls -al /wsf_data_dir"
-        # ]}
+        exec = {
+          command = [
+            "/scripts/health/health-check.sh",
+            "localhost:8080/liveness",
+            "/wsf_data_dir/health-logs/probes.log"
+        ]}
       }]
       # You should always define a readiness probe, even if it's as simple as sending an HTTP
       # request to the base URL.
       readiness_probe = [{
         # Always remember to set an initial delay to account for your app's startup time.
-        initial_delay_seconds = 2
+        initial_delay_seconds = 5
         period_seconds = 25
-        timeout_seconds = 1
+        timeout_seconds = 3
         failure_threshold = 3
         success_threshold = 1
-        http_get = [{
-          path = "/readiness"
-          port = 8080
-          scheme = "HTTP"
-        }]
+        # http_get = [{
+        #   path = "/readiness"
+        #   port = 8080
+        #   scheme = "HTTP"
+        # }]
         # tcp_socket = {
         #   port = 8088
         # }
-        # exec = {
-        #   command = [
-        #     "/bin/sh",
-        #     "-c",
-        #     "ls -al /wsf_data_dir"
-        # ]}
+        exec = {
+          command = [
+            "/scripts/health/health-check.sh",
+            "localhost:8080/readiness",
+            "/wsf_data_dir/health-logs/probes.log"
+        ]}
       }]
       # Limits and requests for CPU resources are measured in millicores. If the container needs
       # one full core to run, use the value '1000m.' If the container only needs 1/4 of a core,
@@ -617,15 +617,23 @@ module "fin-finances-empty" {  # Using emptyDir.
         name = "wsf"
         mount_path = "/wsf_data_dir"
         read_only = false
+      }, {
+        name = "script-volume"
+        mount_path = "/scripts/health"
+        read_only = true
       }]
     }]
     # See empty_dir.
     init_container = [{
       name = "init-finances-emptydir"
-      command = ["/bin/sh",
-        "-c",
-        "chown -v -R 1100:1100 /wsf_data_dir && chmod -v -R 750 /wsf_data_dir"
+      args = ["-c",
+        <<-EOT
+        mkdir -p /wsf_data_dir/health-logs
+        touch /wsf_data_dir/health-logs/probes.log
+        chown -v -R 1100:1100 /wsf_data_dir && chmod -v -R 750 /wsf_data_dir
+        EOT
       ]
+      command = ["/bin/sh"]
       image = var.busybox
       image_pull_policy = "IfNotPresent"
       security_context = {
@@ -653,6 +661,11 @@ module "fin-finances-empty" {  # Using emptyDir.
       run_as_user = 1100
       run_as_group = 1100
     }
+    volume_config_map = [{
+      name = "script-volume"
+      config_map_name = "${local.deployment_finances}-script-files"
+      default_mode = "0550"
+    }]
     # When using the emptyDir{}, the init_container is required.
     volume_empty_dir = [{
       name = "wsf"
@@ -661,6 +674,17 @@ module "fin-finances-empty" {  # Using emptyDir.
   #############
   # Resources #
   #############
+  config_map = [{
+    # Same as volume.volume_config_map.config_map_name.name.
+    name = "${local.deployment_finances}-script-files"
+    namespace = local.namespace
+    labels = {
+      "app" = var.app_name
+    }
+    data = {
+      "health-check.sh" = "${file("${var.general_script_path}/health-check.sh")}"
+    }
+  }]
   role = {
     name = "${local.deployment_finances}-role"
     namespace = local.namespace
