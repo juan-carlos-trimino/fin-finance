@@ -14,6 +14,7 @@ import (
   "os"
   "strconv"
   "strings"
+  "time"
 )
 
 type WfSiAccuratePages struct {
@@ -295,4 +296,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
     logger.LogError(errString, "-1")
     panic(errString)
   }
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
+    correlationId)
 }
