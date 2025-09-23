@@ -100,9 +100,9 @@ func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   // uuid, ret := t.(string)
-	// if !ret {
-	// 	uuid = "-1"
-	// }
+  if correlationId == "" {
+    correlationId = "-1"
+  }
 
   if !probes {
     logger.LogInfo("Entering ServeHTTP/main.", correlationId)
