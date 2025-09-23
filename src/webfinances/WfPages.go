@@ -2,7 +2,7 @@ package webfinances
 
 import (
   "github.com/juan-carlos-trimino/gplogger"
-  "github.com/juan-carlos-trimino/gpmiddlewares"
+  "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gpsessions"
   //Package template (html/template) implements data-driven templates for generating HTML output
   //safe against code injection. It provides the same interface as text/template and should be used
@@ -42,12 +42,22 @@ func invalidSession(res http.ResponseWriter) {
 type WfPages struct{}
 
 func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering IndexPage/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering IndexPage/webfinances.", correlationId)
   tmpl.ExecuteTemplate(res, "index_page", nil)
 }
 
 func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering LoginPage/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering LoginPage/webfinances.", correlationId)
   un := req.PostFormValue("username")
   pw := req.PostFormValue("password")
   if !sessions.ValidateUser(un, pw) {
@@ -76,8 +86,12 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering LogoutPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering LogoutPage/webfinances.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
@@ -90,8 +104,12 @@ func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering WelcomePage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering WelcomePage/webfinances.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
@@ -104,8 +122,12 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering ContactPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering ContactPage/webfinances.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
@@ -118,8 +140,12 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering AboutPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering AboutPage/webfinances.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
@@ -136,108 +162,212 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) PublicHomeFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicHomeFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicHomeFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/css/home.css")
 }
 
 func (p WfPages) PublicGetParamsFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicGetParamsFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicGetParamsFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/getParams.js")
 }
 
 func (p WfPages) PublicMortgageFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicMortgageFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicMortgageFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/mortgage.js")
 }
 
 func (p WfPages) PublicOaInterestRateFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicOaInterestRateFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicOaInterestRateFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/OaInterestRate.js")
 }
 
 func (p WfPages) PublicOaPresentValueFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicOaPresentValueFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicOaPresentValueFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/OaPresentValue.js")
 }
 
 func (p WfPages) PublicOaFutureValueFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicOaFutureValueFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicOaFutureValueFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/OaFutureValue.js")
 }
 
 func (p WfPages) PublicOaCompoundingPeriodsFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicOaCompoundingPeriodsFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicOaCompoundingPeriodsFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/OaCompoundingPeriods.js")
 }
 
 func (p WfPages) PublicOaEqualPeriodicPaymentsFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicOaEqualPeriodicPaymentsFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicOaEqualPeriodicPaymentsFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/OaEqualPeriodicPayments.js")
 }
 
 func (p WfPages) PublicOaGrowingAnnuityFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicOaGrowingAnnuityFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicOaGrowingAnnuityFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/OaGrowingAnnuity.js")
 }
 
 func (p WfPages) PublicOaPerpetuityFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicOaPerpetuityFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicOaPerpetuityFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/OaPerpetuity.js")
 }
 
 func (p WfPages) PublicAdCompoundingPeriodsFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicAdCompoundingPeriodsFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicAdCompoundingPeriodsFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/AdCompoundingPeriods.js")
 }
 
 func (p WfPages) PublicAdEqualPeriodicPaymentsFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicAdEqualPeriodicPaymentsFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicAdEqualPeriodicPaymentsFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/AdEqualPeriodicPayments.js")
 }
 
 func (p WfPages) PublicAdFutureValueFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicAdFutureValueFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicAdFutureValueFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/AdFutureValue.js")
 }
 
 func (p WfPages) PublicAdPresentValueFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicAdPresentValueFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicAdPresentValueFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/AdPresentValue.js")
 }
 
 func (p WfPages) PublicBondsFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicBondsFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicBondsFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/bonds.js")
 }
 
 func (p WfPages) PublicBondsYTMFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicBondsYTMFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicBondsYTMFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/bondsYTM.js")
 }
 
 func (p WfPages) PublicMiscellaneousFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicMiscellaneousFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicMiscellaneousFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/miscellaneous.js")
 }
 
 func (p WfPages) PublicSimpleInterestAccurateFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicSimpleInterestAccurateFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicSimpleInterestAccurateFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/SimpleInterestAccurate.js")
 }
 
 func (p WfPages) PublicSimpleInterestBankersFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicSimpleInterestBankersFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicSimpleInterestBankersFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/SimpleInterestBankers.js")
 }
 
 func (p WfPages) PublicSimpleInterestOrdinaryFile(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering PublicSimpleInterestOrdinaryFile/webfinances.", "-1")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering PublicSimpleInterestOrdinaryFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/SimpleInterestOrdinary.js")
 }
 
 func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering FinancesPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering FinancesPage/webfinances.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
@@ -250,8 +380,12 @@ func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering SimpleInterestPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering SimpleInterestPage/webfinances.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
@@ -264,8 +398,12 @@ func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) 
 }
 
 func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering OrdinaryAnnuityPage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering OrdinaryAnnuityPage/webfinances.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
@@ -278,8 +416,12 @@ func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request)
 }
 
 func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering AnnuityDuePage/webfinances.", "-1")
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  if correlationId == "" {
+    correlationId = "-1"
+  }
+  logger.LogInfo("Entering AnnuityDuePage/webfinances.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)

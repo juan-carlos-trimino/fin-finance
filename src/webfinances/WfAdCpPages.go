@@ -7,7 +7,7 @@ import (
   "fmt"
   "html/template"
   "github.com/juan-carlos-trimino/gplogger"
-  "github.com/juan-carlos-trimino/gpmiddlewares"
+  "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
   "net/http"

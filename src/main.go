@@ -8,7 +8,7 @@ import (
   "context"
   "crypto/tls"
   "errors"
-	"finance/config"
+  "finance/config"
   "finance/security"
   "finance/webfinances"
   "fmt"
@@ -30,7 +30,7 @@ import (
   **/
   // _ "net/http/pprof" //Blank import of pprof.
   "github.com/juan-carlos-trimino/gplogger"
-  "github.com/juan-carlos-trimino/gpmiddlewares"
+  "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gps3storage"
   "github.com/juan-carlos-trimino/gpsessions"
@@ -94,11 +94,26 @@ nonexported struct response; we're passing the struct by reference (we're passin
 response) and not by value.
 ***/
 func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-  logger.LogInfo("Entering ServeHTTP/main.", "-1")
-  logger.LogInfo(fmt.Sprintf("Method: %s, Request URI: %s", req.Method, req.RequestURI), "-1")
+  var probes bool = strings.EqualFold("/liveness", req.URL.Path) ||
+                    strings.EqualFold("/readiness", req.URL.Path)
+  fmt.Printf("wwwwwwwwwwww\n")
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  // uuid, ret := t.(string)
+	// if !ret {
+	// 	uuid = "-1"
+	// }
+
+  if !probes {
+    logger.LogInfo("Entering ServeHTTP/main.", correlationId)
+    logger.LogInfo(fmt.Sprintf("Method: %s, Request URI: %s", req.Method, req.RequestURI), correlationId)
+  }
   //Implement route forwarding.
-  if handler, ok := h.mux[req.URL.Path]; ok {
-    logger.LogInfo(fmt.Sprintf("URL Path: %s", req.URL.Path), "-1")
+  if handler, ok := h.mux[req.URL.Path]; ok {//jct
+    if !probes {
+      logger.LogInfo(fmt.Sprintf("New request with correlation id: %s", correlationId), correlationId)
+      logger.LogInfo(fmt.Sprintf("URL Path: %s", req.URL.Path), correlationId)
+    }
     handler(res, req)
     return
   }
@@ -335,8 +350,8 @@ func makeHandlers() *handlers {
   ***/
   h.mux = make(map[string]http.HandlerFunc, 128)
   h.mux["/readiness"] = func (res http.ResponseWriter, req *http.Request) {
-    fmt.Println("Readiness probe.")
-    res.WriteHeader(http.StatusOK)
+    fmt.Println("Readiness probe.")  //jct
+    res.WriteHeader(http.StatusOK/*http.StatusNotFound*/)
   }
   h.mux["/liveness"] = func (res http.ResponseWriter, req *http.Request) {
     fmt.Println("Liveness probe.")
