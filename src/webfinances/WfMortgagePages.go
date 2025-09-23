@@ -14,6 +14,7 @@ import (
   "os"
   "strconv"
   "strings"
+  "time"
 )
 
 var mortgage_notes = [...]string {
@@ -285,4 +286,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
     logger.LogError(errString, "-1")
     panic(errString)
   }
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
+    correlationId)
 }

@@ -14,6 +14,7 @@ import (
   "os"
   "strconv"
   "strings"
+  "time"
 )
 
 type WfOaCpPages struct {
@@ -226,4 +227,7 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
     logger.LogError(errString, "-1")
     panic(errString)
   }
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
+    correlationId)
 }

@@ -14,6 +14,7 @@ import (
 	"os"
   "strconv"
   "strings"
+  "time"
 )
 
 type WfAdEppPages struct {
@@ -182,4 +183,7 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
     logger.LogError(errString, "-1")
     panic(errString)
   }
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
+    correlationId)
 }

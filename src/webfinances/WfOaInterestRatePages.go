@@ -14,6 +14,7 @@ import (
   "os"
   "strconv"
   "strings"
+  "time"
 )
 
 type WfOaInterestRatePages struct {
@@ -131,4 +132,7 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
     logger.LogError(errString, "-1")
     panic(errString)
   }
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
+    correlationId)
 }

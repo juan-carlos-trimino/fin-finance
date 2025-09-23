@@ -14,6 +14,7 @@ import (
   "os"
   "strconv"
   "strings"
+  "time"
 )
 
 type WfOaPerpetuityPages struct {
@@ -170,4 +171,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
     logger.LogError(errString, "-1")
     panic(errString)
   }
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
+    correlationId)
 }
