@@ -53,6 +53,7 @@ const (
   users string = "user.txt"
   bucketName string = "fin-finances"
   dataDirName string = "wsf_data_dir"
+  falseCorrelationId = "-1"
 )
 
 /***
@@ -101,7 +102,7 @@ func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   // uuid, ret := t.(string)
   if correlationId == "" {
-    correlationId = "-1"
+    correlationId = falseCorrelationId
   }
 
   if !probes {
@@ -128,14 +129,14 @@ func main() {
   }
   //
   if config.GetHttp() {
-    logger.LogInfo(fmt.Sprintf("Using HTTP PORT: %d", config.GetHttpPort()), "-1")
+    logger.LogInfo(fmt.Sprintf("Using HTTP PORT: %d", config.GetHttpPort()), falseCorrelationId)
   }
-  logger.LogInfo(fmt.Sprintf("Server: %s", config.GetServer()), "-1")
+  logger.LogInfo(fmt.Sprintf("Server: %s", config.GetServer()), falseCorrelationId)
   if config.GetHttps() {
-    logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %d", config.GetHttpsPort()), "-1")
+    logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %d", config.GetHttpsPort()), falseCorrelationId)
   }
-  logger.LogInfo(fmt.Sprintf("Using SHUTDOWN_TIMEOUT: %d", config.GetShutDownTimeout()), "-1")
-  logger.LogInfo(fmt.Sprintf("OS: %s", osu.GetOS()), "-1")
+  logger.LogInfo(fmt.Sprintf("Using SHUTDOWN_TIMEOUT: %d", config.GetShutDownTimeout()), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("OS: %s", osu.GetOS()), falseCorrelationId)
   homeDir, err := os.UserHomeDir()
   if err != nil {
     panic("home" + err.Error())
@@ -143,7 +144,7 @@ func main() {
   buffer := strings.Builder{}
   //Grow to a larger size to reduce future resizes of the buffer.
   buffer.Grow(1024)
-  logger.LogInfo(fmt.Sprintf("Home directory: %s", homeDir), "-1")
+  logger.LogInfo(fmt.Sprintf("Home directory: %s", homeDir), falseCorrelationId)
   if homeDir[len(homeDir) - 1] != '/' {
     buffer.WriteString(homeDir)
     buffer.WriteByte('/')
@@ -151,23 +152,23 @@ func main() {
     buffer.WriteString(homeDir)
   }
   dataDir := buffer.String() + dataDirName
-  logger.LogInfo(fmt.Sprintf("Data directory: %s", dataDir), "-1")
+  logger.LogInfo(fmt.Sprintf("Data directory: %s", dataDir), falseCorrelationId)
   numCpus, maxProcs := osu.CpusAvailable()
-  logger.LogInfo(fmt.Sprintf("Number of CPUs: %d", numCpus), "-1")
-  logger.LogInfo(fmt.Sprintf("GOMAXPROCS: %d", maxProcs), "-1")
+  logger.LogInfo(fmt.Sprintf("Number of CPUs: %d", numCpus), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("GOMAXPROCS: %d", maxProcs), falseCorrelationId)
   if userName, err := osu.GetUsername(); err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogError(fmt.Sprintf("%+v", err), falseCorrelationId)
   } else {
-    logger.LogInfo(fmt.Sprintf("Username: %s", userName), "-1")
+    logger.LogInfo(fmt.Sprintf("Username: %s", userName), falseCorrelationId)
   }
-  logger.LogInfo(fmt.Sprintf("Username: %s", config.GetUser()), "-1")
+  logger.LogInfo(fmt.Sprintf("Username: %s", config.GetUser()), falseCorrelationId)
   //
   if ok, err := osu.IsRoot(); err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogError(fmt.Sprintf("%+v", err), falseCorrelationId)
   } else if ok {
-    logger.LogInfo("The current user is running as root.", "-1")
+    logger.LogInfo("The current user is running as root.", falseCorrelationId)
   } else {
-    logger.LogInfo("The current user is not running as root.", "-1")
+    logger.LogInfo("The current user is not running as root.", falseCorrelationId)
   }
   readUsers(dataDir, users)
   webfinances.SetupDirStructure(dataDir)
@@ -242,14 +243,16 @@ func main() {
         httpsServer.TLSConfig = makeTlsConfig()
       }
       go waitForServer(httpsServer, signalChan2, &wg)
-      logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpsServer.Addr), "-1")
+      logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpsServer.Addr),
+        falseCorrelationId)
       //Because the paths of the key and cert were set in the TLSConfig field, set the certFile and
       //keyFile arguments to empty strings.
       err := (*httpsServer).ListenAndServeTLS("", "")
       if errors.Is(err, http.ErrServerClosed) {
-        logger.LogError(fmt.Sprintf("Server has been closed at port %s.", httpsServer.Addr), "-1")
+        logger.LogError(fmt.Sprintf("Server has been closed at port %s.", httpsServer.Addr),
+          falseCorrelationId)
       } else if err != nil {
-        logger.LogInfo(fmt.Sprintf("Server error: %+v", err), "-1")
+        logger.LogInfo(fmt.Sprintf("Server error: %+v", err), falseCorrelationId)
         signalChan2 <- syscall.SIGINT //Let the goroutine finish.
       }
     }()
@@ -272,7 +275,8 @@ func main() {
     }
     fmt.Println("*********** env ***************")
     env ***/
-    logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpServer.Addr), "-1")
+    logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpServer.Addr),
+      falseCorrelationId)
     /***
     ListenAndServe runs forever, or until the server fails (or fails to start) with an error,
     always non-nil, which it returns.
@@ -283,9 +287,10 @@ func main() {
     ***/
     err := (*httpServer).ListenAndServe()
     if errors.Is(err, http.ErrServerClosed) {
-      logger.LogInfo(fmt.Sprintf("Server has been closed at port %s.", httpServer.Addr), "-1")
+      logger.LogInfo(fmt.Sprintf("Server has been closed at port %s.", httpServer.Addr),
+        falseCorrelationId)
     } else if err != nil {
-      logger.LogError(fmt.Sprintf("Server error: %+v", err), "-1")
+      logger.LogError(fmt.Sprintf("Server error: %+v", err), falseCorrelationId)
       signalChan1 <- syscall.SIGINT //Let the goroutine finish.
     }
   }
@@ -470,7 +475,7 @@ func makeHttpToHttpsRedirectHandler(port int) *handlers {
     u := req.URL
     u.Host = net.JoinHostPort(host, strconv.Itoa(port))
     u.Scheme = "https"
-    logger.LogInfo(fmt.Sprintf("Redirecting to %s", u.String()), "-1")
+    logger.LogInfo(fmt.Sprintf("Redirecting to %s", u.String()), falseCorrelationId)
     http.Redirect(res, req, u.String(), http.StatusMovedPermanently)
   }
   return h
@@ -566,7 +571,7 @@ func Timeout(res http.ResponseWriter, req *http.Request) {
 
 func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.WaitGroup) {
   logger.LogInfo(fmt.Sprintf("Waiting for notification to shut down the server at %s.",
-   server.Addr), "-1")
+    server.Addr), falseCorrelationId)
   /***
   signal.Notify disables the default behavior for a given set of asynchronous signals and instead
   delivers them over one or more registered channels.
@@ -587,7 +592,8 @@ func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.Wait
   }()
   //https://pkg.go.dev/net/http#Server.Shutdown
   if err := server.Shutdown(ctx); err != nil {
-    logger.LogError(fmt.Sprintf("Server shutdown failed: %+v", err), "-1")  //https://pkg.go.dev/fmt
+    //https://pkg.go.dev/fmt
+    logger.LogError(fmt.Sprintf("Server shutdown failed: %+v", err), falseCorrelationId)
   }
 }
 
