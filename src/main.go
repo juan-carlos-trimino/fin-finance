@@ -95,8 +95,8 @@ nonexported struct response; we're passing the struct by reference (we're passin
 response) and not by value.
 ***/
 func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-  var probes bool = strings.EqualFold("/liveness", req.URL.Path) ||
-                    strings.EqualFold("/readiness", req.URL.Path)
+  var probes bool = false //strings.EqualFold("/liveness", req.URL.Path) ||
+                    //strings.EqualFold("/readiness", req.URL.Path)
   fmt.Printf("wwwwwwwwwwww\n")
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
@@ -357,10 +357,20 @@ func makeHandlers() *handlers {
   h.mux["/readiness"] = func (res http.ResponseWriter, req *http.Request) {
     fmt.Println("Readiness probe.")  //jct
     res.WriteHeader(http.StatusOK/*http.StatusNotFound*/)
+    ctxKey := middlewares.MwContextKey{}
+    correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+    startTime, _ := ctxKey.GetStartTime(req.Context())
+    logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
+      correlationId)
   }
   h.mux["/liveness"] = func (res http.ResponseWriter, req *http.Request) {
     fmt.Println("Liveness probe.")
     res.WriteHeader(http.StatusOK)
+    ctxKey := middlewares.MwContextKey{}
+    correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+    startTime, _ := ctxKey.GetStartTime(req.Context())
+    logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
+      correlationId)
   }
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile

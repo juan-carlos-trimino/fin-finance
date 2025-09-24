@@ -28,6 +28,9 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
     return
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
+    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering OaPvPages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
@@ -184,7 +187,6 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
     logger.LogError(errString, "-1")
     panic(errString)
   }
-  startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
     correlationId)
 }
