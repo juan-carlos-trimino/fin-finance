@@ -89,7 +89,7 @@ type miscellaneousFields struct {
   Fd7Result string `json:"fd7Result"`
 }
 
-func newMiscellaneousFields(dir1, dir2 string) *miscellaneousFields {
+func newMiscellaneousFields(dir1, dir2, correlationId string) *miscellaneousFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -100,12 +100,14 @@ func newMiscellaneousFields(dir1, dir2 string) *miscellaneousFields {
     err := json.Unmarshal(obj, &m)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &m
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "miscellaneous.txt"), correlationId)
   }
   return &miscellaneousFields {
     CurrentPage: "rhs-ui1",
@@ -176,7 +178,7 @@ type mortgageFields struct {
   Fd3Result [3]string `json:"fd3Result"`
 }
 
-func newMortgageFields(dir1, dir2 string) *mortgageFields {
+func newMortgageFields(dir1, dir2, correlationId string) *mortgageFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -187,12 +189,14 @@ func newMortgageFields(dir1, dir2 string) *mortgageFields {
     err := json.Unmarshal(obj, &m)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &m
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "mortgage.txt"), correlationId)
   }
   return &mortgageFields {
     CurrentPage: "rhs-ui1",
@@ -301,7 +305,7 @@ type bondsFields struct {
   // Fd8Result [2]string `json:"fd8Result"`
 }
 
-func newBondsFields(dir1, dir2 string) *bondsFields {
+func newBondsFields(dir1, dir2, correlationId string) *bondsFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -312,12 +316,14 @@ func newBondsFields(dir1, dir2 string) *bondsFields {
     err := json.Unmarshal(obj, &b)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &b
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "bonds.txt"), correlationId)
   }
   return &bondsFields {
     CurrentPage: "rhs-ui1",
@@ -418,7 +424,7 @@ type adFvFields struct {
   Fd2Result string `json:"fd2Result"`
 }
 
-func newAdFvFields(dir1, dir2 string) *adFvFields {
+func newAdFvFields(dir1, dir2, correlationId string) *adFvFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -429,12 +435,14 @@ func newAdFvFields(dir1, dir2 string) *adFvFields {
     err := json.Unmarshal(obj, &a)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &a
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adfv.txt"), correlationId)
   }
   return &adFvFields {
     CurrentPage: "rhs-ui2",
@@ -479,7 +487,7 @@ type adPvFields struct {
   Fd2Result string `json:"fd2Result"`
 }
 
-func newAdPvFields(dir1, dir2 string) *adPvFields {
+func newAdPvFields(dir1, dir2, correlationId string) *adPvFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -490,12 +498,14 @@ func newAdPvFields(dir1, dir2 string) *adPvFields {
     err := json.Unmarshal(obj, &a)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &a
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adpv.txt"), correlationId)
   }
   return &adPvFields {
     CurrentPage: "rhs-ui2",
@@ -544,7 +554,7 @@ type adCpFields struct {
   Fd3Result string `json:"fd3Result"`
 }
 
-func newAdCpFields(dir1, dir2 string) *adCpFields {
+func newAdCpFields(dir1, dir2, correlationId string) *adCpFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -555,12 +565,14 @@ func newAdCpFields(dir1, dir2 string) *adCpFields {
     err := json.Unmarshal(obj, &a)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &a
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adcp.txt"), correlationId)
   }
   return &adCpFields {
     CurrentPage: "rhs-ui2",
@@ -609,7 +621,7 @@ type adEppFields struct {
   Fd2Result string `json:"fd2Result"`
 }
 
-func newAdEppFields(dir1, dir2 string) *adEppFields {
+func newAdEppFields(dir1, dir2, correlationId string) *adEppFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -620,12 +632,14 @@ func newAdEppFields(dir1, dir2 string) *adEppFields {
     err := json.Unmarshal(obj, &a)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &a
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adepp.txt"), correlationId)
   }
   return &adEppFields {
     CurrentPage: "rhs-ui1",
@@ -678,7 +692,7 @@ func getOaCpFields(userName string) *oaCpFields {
   return currentFields[userName].oaCp
 }
 
-func newOaCpFields(dir1, dir2 string) *oaCpFields {
+func newOaCpFields(dir1, dir2, correlationId string) *oaCpFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -689,12 +703,14 @@ func newOaCpFields(dir1, dir2 string) *oaCpFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &o
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oacp.txt"), correlationId)
   }
   return &oaCpFields {
     CurrentPage: "rhs-ui1",
@@ -743,7 +759,7 @@ func getOaEppFields(userName string) *oaEppFields {
   return currentFields[userName].oaEpp
 }
 
-func newOaEppFields(dir1, dir2 string) *oaEppFields {
+func newOaEppFields(dir1, dir2, correlationId string) *oaEppFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -754,12 +770,14 @@ func newOaEppFields(dir1, dir2 string) *oaEppFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &o
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oaepp.txt"), correlationId)
   }
   return &oaEppFields {
     CurrentPage: "rhs-ui1",
@@ -800,7 +818,7 @@ type oaFvFields struct {
   Fd2Result string `json:"fd2Result"`
 }
 
-func newOaFvFields(dir1, dir2 string) *oaFvFields {
+func newOaFvFields(dir1, dir2, correlationId string) *oaFvFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -811,12 +829,14 @@ func newOaFvFields(dir1, dir2 string) *oaFvFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &o
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oafv.txt"), correlationId)
   }
   return &oaFvFields {
     CurrentPage: "rhs-ui1",
@@ -861,7 +881,7 @@ type oaGaFields struct {
   Fd2Result string `json:"fd2Result"`
 }
 
-func newOaGaFields(dir1, dir2 string) *oaGaFields {
+func newOaGaFields(dir1, dir2, correlationId string) *oaGaFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -872,12 +892,14 @@ func newOaGaFields(dir1, dir2 string) *oaGaFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &o
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oaga.txt"), correlationId)
   }
   return &oaGaFields {
     CurrentPage: "rhs-ui1",
@@ -915,7 +937,7 @@ type oaInterestRateFields struct {
   Fd1Result string `json:"fd1Result"`
 }
 
-func newOaInterestRateFields(dir1, dir2 string) *oaInterestRateFields {
+func newOaInterestRateFields(dir1, dir2, correlationId string) *oaInterestRateFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -926,12 +948,15 @@ func newOaInterestRateFields(dir1, dir2 string) *oaInterestRateFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &o
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oainterestrate.txt"),
+      correlationId)
   }
   return &oaInterestRateFields {
     CurrentPage: "rhs-ui1",
@@ -966,7 +991,7 @@ type oaPerpetuityFields struct {
   Fd2Result string `json:"fd2Result"`
 }
 
-func newOaPerpetuityFields(dir1, dir2 string) *oaPerpetuityFields {
+func newOaPerpetuityFields(dir1, dir2, correlationId string) *oaPerpetuityFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -977,12 +1002,14 @@ func newOaPerpetuityFields(dir1, dir2 string) *oaPerpetuityFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &o
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oaperpetuity.txt"), correlationId)
   }
   return &oaPerpetuityFields {
     CurrentPage: "rhs-ui1",
@@ -1024,7 +1051,7 @@ type oaPvFields struct {
   Fd2Result string `json:"fd2Result"`
 }
 
-func newOaPvFields(dir1, dir2 string) *oaPvFields {
+func newOaPvFields(dir1, dir2, correlationId string) *oaPvFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -1035,12 +1062,14 @@ func newOaPvFields(dir1, dir2 string) *oaPvFields {
     err := json.Unmarshal(obj, &o)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &o
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oapv.txt"), correlationId)
   }
   return &oaPvFields {
     CurrentPage: "rhs-ui1",
@@ -1098,7 +1127,7 @@ type siAccurateFields struct {
   Fd4Result string `json:"fd4Result"`
 }
 
-func newSiAccurateFields(dir1, dir2 string) *siAccurateFields {
+func newSiAccurateFields(dir1, dir2, correlationId string) *siAccurateFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -1109,12 +1138,14 @@ func newSiAccurateFields(dir1, dir2 string) *siAccurateFields {
     err := json.Unmarshal(obj, &s)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &s
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "siaccurate.txt"), correlationId)
   }
   return &siAccurateFields {
     CurrentPage: "rhs-ui1",
@@ -1184,7 +1215,7 @@ type siBankersFields struct {
   Fd4Result string `json:"fd4Result"`
 }
 
-func newSiBankersFields(dir1, dir2 string) *siBankersFields {
+func newSiBankersFields(dir1, dir2, correlationId string) *siBankersFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -1195,12 +1226,14 @@ func newSiBankersFields(dir1, dir2 string) *siBankersFields {
     err := json.Unmarshal(obj, &s)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &s
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "sibankers.txt"), correlationId)
   }
   return &siBankersFields {
     CurrentPage: "rhs-ui1",
@@ -1269,7 +1302,7 @@ type siOrdinaryFields struct {
   Fd4Result string `json:"fd4Result"`
 }
 
-func newSiOrdinaryFields(dir1, dir2 string) *siOrdinaryFields {
+func newSiOrdinaryFields(dir1, dir2, correlationId string) *siOrdinaryFields {
   dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
@@ -1280,12 +1313,14 @@ func newSiOrdinaryFields(dir1, dir2 string) *siOrdinaryFields {
     err := json.Unmarshal(obj, &s)
     if err != nil {
       //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), "-1")
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     } else {
       return &s
     }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "siordinary.txt"), correlationId)
   }
   return &siOrdinaryFields {
     CurrentPage: "rhs-ui1",
@@ -1323,26 +1358,26 @@ func getSiOrdinaryFields(userName string) *siOrdinaryFields {
   return currentFields[userName].siOrdinary
 }
 
-func AddSessionDataPerUser(userName string) {
+func AddSessionDataPerUser(userName, correlationId string) {
   if _, ok := currentFields[userName]; !ok {
     fd := &fields{
-      miscellaneous: newMiscellaneousFields(mainDir, userName),
-      mortgage: newMortgageFields(mainDir, userName),
-      bonds: newBondsFields(mainDir, userName),
-      adFv: newAdFvFields(mainDir, userName),
-      adPv: newAdPvFields(mainDir, userName),
-      adCp: newAdCpFields(mainDir, userName),
-      adEpp: newAdEppFields(mainDir, userName),
-      oaCp: newOaCpFields(mainDir, userName),
-      oaEpp: newOaEppFields(mainDir, userName),
-      oaFv: newOaFvFields(mainDir, userName),
-      oaGa: newOaGaFields(mainDir, userName),
-      oaInterestRate: newOaInterestRateFields(mainDir, userName),
-      oaPerpetuity: newOaPerpetuityFields(mainDir, userName),
-      oaPv: newOaPvFields(mainDir, userName),
-      siAccurate: newSiAccurateFields(mainDir, userName),
-      siBankers: newSiBankersFields(mainDir, userName),
-      siOrdinary: newSiOrdinaryFields(mainDir, userName),
+      miscellaneous: newMiscellaneousFields(mainDir, userName, correlationId),
+      mortgage: newMortgageFields(mainDir, userName, correlationId),
+      bonds: newBondsFields(mainDir, userName, correlationId),
+      adFv: newAdFvFields(mainDir, userName, correlationId),
+      adPv: newAdPvFields(mainDir, userName, correlationId),
+      adCp: newAdCpFields(mainDir, userName, correlationId),
+      adEpp: newAdEppFields(mainDir, userName, correlationId),
+      oaCp: newOaCpFields(mainDir, userName, correlationId),
+      oaEpp: newOaEppFields(mainDir, userName, correlationId),
+      oaFv: newOaFvFields(mainDir, userName, correlationId),
+      oaGa: newOaGaFields(mainDir, userName, correlationId),
+      oaInterestRate: newOaInterestRateFields(mainDir, userName, correlationId),
+      oaPerpetuity: newOaPerpetuityFields(mainDir, userName, correlationId),
+      oaPv: newOaPvFields(mainDir, userName, correlationId),
+      siAccurate: newSiAccurateFields(mainDir, userName, correlationId),
+      siBankers: newSiBankersFields(mainDir, userName, correlationId),
+      siOrdinary: newSiOrdinaryFields(mainDir, userName, correlationId),
     }
     currentFields[userName] = fd
   }

@@ -67,8 +67,8 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
   if !sessions.ValidateUser(un, pw) {
     invalidSession(res)
   } else {
-    sessionToken, session := sessions.AddEntryToSessions(un)
-    AddSessionDataPerUser(un)
+		sessionToken, session := sessions.AddEntryToSessions(un)
+    AddSessionDataPerUser(un, correlationId)
     /***
     Once a cookie is set on a client, it is sent along with every subsequent request. Cookies store
     historical information (including user login information) on the client's computer. The
