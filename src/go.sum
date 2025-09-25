@@ -8,14 +8,10 @@ github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9Y
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfCI6z80xFu9LTZmf1ZRjMHUOPmWr69U=
-github.com/juan-carlos-trimino/go-middlewares v1.1.0 h1:2SmGCoKiqPtMrrtlQiL4FpNluRJU0CjcYF2XohVPpPQ=
-github.com/juan-carlos-trimino/go-middlewares v1.1.0/go.mod h1:whgvcB/XFMZksq2pDELZPi8wNAoYrVdrq7/7OReIR9Y=
-github.com/juan-carlos-trimino/go-middlewares v1.1.1 h1:lhLLr0nwa/sWW8we7F8+GKV8UVUi0UKOMN4S6KmzkVY=
-github.com/juan-carlos-trimino/go-middlewares v1.1.1/go.mod h1:whgvcB/XFMZksq2pDELZPi8wNAoYrVdrq7/7OReIR9Y=
-github.com/juan-carlos-trimino/go-middlewares v1.1.2 h1:JT6zaaVhqZcC1zGsd7mXDG9gznL6Q8Xn4aX/pQLhWnY=
-github.com/juan-carlos-trimino/go-middlewares v1.1.2/go.mod h1:tjKuE88zdr5U2bDXjXqOPobClPLgfK38prG3ZgmmzFU=
 github.com/juan-carlos-trimino/go-middlewares v1.1.3 h1:nN+KNFGr3f5VfPVLZM4Ef7sb6122HlkwUWUItR9bQ0Y=
 github.com/juan-carlos-trimino/go-middlewares v1.1.3/go.mod h1:sNtQet6jYsLQyomd5sDfV3/h88C4CS9B2R+UEBYZefc=
+github.com/juan-carlos-trimino/go-os v1.1.0 h1:XDwEZ/2Me9IW/RN6agN9/KzjWC8dT8dgrDVDy23eRLY=
+github.com/juan-carlos-trimino/go-os v1.1.0/go.mod h1:PJaYpmLtlhvgLNE5UTyG3xMI/5r3oSoBmcPh+3zC9+Q=
 github.com/juan-carlos-trimino/gplogger v1.0.7 h1:BQVilUhSzwd7Mpk7BEsGM91jXS4ZqGvsaQOuCBsspAo=
 github.com/juan-carlos-trimino/gplogger v1.0.7/go.mod h1:wzt8B1+I/L3eFMyGnPn/RY1gIKJURDU4j+INH7WMcao=
 github.com/juan-carlos-trimino/gposu v1.0.1 h1:yKz1dIerJei5kgrGvk/4lVcNZsP0wk1hsl9AIcOoL9Q=

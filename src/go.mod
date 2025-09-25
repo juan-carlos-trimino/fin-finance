@@ -15,6 +15,7 @@ go 1.24.3
 
 require (
 	github.com/juan-carlos-trimino/go-middlewares v1.1.3
+	github.com/juan-carlos-trimino/go-os v1.1.0
 	github.com/juan-carlos-trimino/gplogger v1.0.7
 	github.com/juan-carlos-trimino/gposu v1.0.1
 	github.com/juan-carlos-trimino/gps3storage v1.0.1

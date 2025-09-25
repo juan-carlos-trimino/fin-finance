@@ -31,7 +31,7 @@ import (
   // _ "net/http/pprof" //Blank import of pprof.
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/gposu"
+  "github.com/juan-carlos-trimino/go-os"
   "github.com/juan-carlos-trimino/gps3storage"
   "github.com/juan-carlos-trimino/gpsessions"
   "golang.org/x/crypto/acme/autocert"
