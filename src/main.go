@@ -95,26 +95,21 @@ nonexported struct response; we're passing the struct by reference (we're passin
 response) and not by value.
 ***/
 func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-  var probes bool = false //strings.EqualFold("/liveness", req.URL.Path) ||
-                    //strings.EqualFold("/readiness", req.URL.Path)
-  fmt.Printf("wwwwwwwwwwww\n")
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  // uuid, ret := t.(string)
   if correlationId == "" {
     correlationId = falseCorrelationId
   }
-
-  if !probes {
+  var prevent_probes bool = !((strings.EqualFold("/liveness", req.URL.Path) ||
+                               strings.EqualFold("/readiness", req.URL.Path)) &&
+                               config.GetPreventProbesOutput(correlationId))
+  if prevent_probes {
     logger.LogInfo("Entering ServeHTTP/main.", correlationId)
-    logger.LogInfo(fmt.Sprintf("Method: %s, Request URI: %s", req.Method, req.RequestURI), correlationId)
+    logger.LogInfo(fmt.Sprintf("Method: %s, Request URI: %s", req.Method, req.RequestURI),
+     correlationId)
   }
   //Implement route forwarding.
-  if handler, ok := h.mux[req.URL.Path]; ok {//jct
-    if !probes {
-      logger.LogInfo(fmt.Sprintf("New request with correlation id: %s", correlationId), correlationId)
-      logger.LogInfo(fmt.Sprintf("URL Path: %s", req.URL.Path), correlationId)
-    }
+  if handler, ok := h.mux[req.URL.Path]; ok {
     handler(res, req)
     return
   }
@@ -122,20 +117,23 @@ func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-  if !config.GetHttp() && !config.GetHttps() {
+  if !config.GetHttp(falseCorrelationId) && !config.GetHttps(falseCorrelationId) {
     fmt.Println("You can run only HTTP (default), only HTTPS (set environment variables to:" +
                 " HTTP=false and HTTPS=true), or both (set environment variable to: HTTPS=true).")
     return
   }
   //
-  if config.GetHttp() {
-    logger.LogInfo(fmt.Sprintf("Using HTTP PORT: %d", config.GetHttpPort()), falseCorrelationId)
+  if config.GetHttp(falseCorrelationId) {
+    logger.LogInfo(fmt.Sprintf("Using HTTP PORT: %d", config.GetHttpPort(falseCorrelationId)),
+     falseCorrelationId)
   }
   logger.LogInfo(fmt.Sprintf("Server: %s", config.GetServer()), falseCorrelationId)
-  if config.GetHttps() {
-    logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %d", config.GetHttpsPort()), falseCorrelationId)
+  if config.GetHttps(falseCorrelationId) {
+    logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %d", config.GetHttpsPort(falseCorrelationId)),
+     falseCorrelationId)
   }
-  logger.LogInfo(fmt.Sprintf("Using SHUTDOWN_TIMEOUT: %d", config.GetShutDownTimeout()), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("Using SHUTDOWN_TIMEOUT: %d",
+   config.GetShutDownTimeout(falseCorrelationId)), falseCorrelationId)
   logger.LogInfo(fmt.Sprintf("OS: %s", osu.GetOS()), falseCorrelationId)
   homeDir, err := os.UserHomeDir()
   if err != nil {
@@ -178,16 +176,16 @@ func main() {
   ***/
   var wg sync.WaitGroup = sync.WaitGroup{}
   var httpServer *http.Server
-  if config.GetHttp() {
-    if config.GetK8s() {
-      httpServer = makeServer(config.GetHttpPort(), makeHandlersS3(makeHandlers()))
+  if config.GetHttp(falseCorrelationId) {
+    if config.GetK8s(falseCorrelationId) {
+      httpServer = makeServer(config.GetHttpPort(falseCorrelationId), makeHandlersS3(makeHandlers()))
     } else {
-      httpServer = makeServer(config.GetHttpPort(), makeHandlers())
+      httpServer = makeServer(config.GetHttpPort(falseCorrelationId), makeHandlers())
     }
   }
   //https://pkg.go.dev/golang.org/x/crypto/acme/autocert
   var certMan autocert.Manager
-  if config.GetLetsEncryptCert() {
+  if config.GetLetsEncryptCert(falseCorrelationId) {
     certMan = autocert.Manager{
       //It always returns true to indicate acceptance of the CA's Terms of Service during account
       //registration.
@@ -197,7 +195,7 @@ func main() {
     }
   }
   //
-  if config.GetHttps() {
+  if config.GetHttps(falseCorrelationId) {
     wg.Add(1)
     /***
     A channel is a communication mechanism that lets one goroutine send values to another
@@ -211,24 +209,25 @@ func main() {
     ***/
     //Buffered channel capacity 1; notifier will not block.
     var signalChan2 chan os.Signal = make(chan os.Signal, 1)
-    if config.GetHttp() {
-      if config.GetLetsEncryptCert() {
+    if config.GetHttp(falseCorrelationId) {
+      if config.GetLetsEncryptCert(falseCorrelationId) {
         //https://pkg.go.dev/golang.org/x/crypto/acme/autocert#Manager.HTTPHandler
         httpServer.Handler = certMan.HTTPHandler(nil)
       } else {
-        httpServer.Handler = makeHttpToHttpsRedirectHandler(config.GetHttpsPort())
+        httpServer.Handler = makeHttpToHttpsRedirectHandler(config.GetHttpsPort(falseCorrelationId))
       }
     }
     signalChan2 = make(chan os.Signal, 1) //Buffered channel capacity 1; notifier will not block.
     go func() {
       var httpsServer *http.Server = nil
-      if config.GetK8s() {
-        httpsServer = makeServer(config.GetHttpsPort(), makeHandlersS3(makeHandlers()))
+      if config.GetK8s(falseCorrelationId) {
+        httpsServer = makeServer(config.GetHttpsPort(falseCorrelationId),
+         makeHandlersS3(makeHandlers()))
       } else {
-        httpsServer = makeServer(config.GetHttpsPort(), makeHandlers())
+        httpsServer = makeServer(config.GetHttpsPort(falseCorrelationId), makeHandlers())
       }
       //
-      if config.GetLetsEncryptCert() {
+      if config.GetLetsEncryptCert(falseCorrelationId) {
         httpsServer.TLSConfig = &tls.Config{
           MinVersion: tls.VersionTLS13,
           CipherSuites: nil,
@@ -258,7 +257,7 @@ func main() {
     }()
   }
   //
-  if config.GetHttp() {
+  if config.GetHttp(falseCorrelationId) {
     wg.Add(1)
     signalChan1 := make(chan os.Signal, 1)
     /***
@@ -355,22 +354,30 @@ func makeHandlers() *handlers {
   ***/
   h.mux = make(map[string]http.HandlerFunc, 128)
   h.mux["/readiness"] = func (res http.ResponseWriter, req *http.Request) {
-    fmt.Println("Readiness probe.")  //jct
-    res.WriteHeader(http.StatusOK/*http.StatusNotFound*/)
+    res.WriteHeader(http.StatusOK/*http.StatusNotFound*/)//jct
     ctxKey := middlewares.MwContextKey{}
     correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-    startTime, _ := ctxKey.GetStartTime(req.Context())
-    logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-      correlationId)
+    if !config.GetPreventProbesOutput(correlationId) {
+      startTime, _ := ctxKey.GetStartTime(req.Context())
+      logger.LogInfo(fmt.Sprintf("Readiness probe. Request took %vms\n",
+       time.Since(startTime).Microseconds()), correlationId)
+    }
   }
   h.mux["/liveness"] = func (res http.ResponseWriter, req *http.Request) {
-    fmt.Println("Liveness probe.")
-    res.WriteHeader(http.StatusOK)
     ctxKey := middlewares.MwContextKey{}
     correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-    startTime, _ := ctxKey.GetStartTime(req.Context())
-    logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-      correlationId)
+    prevent_probes := !config.GetPreventProbesOutput(correlationId)
+    if prevent_probes {
+      startTime, _ := ctxKey.GetStartTime(req.Context())
+      logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
+       startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+    }
+    res.WriteHeader(http.StatusOK)
+    if prevent_probes {
+      startTime, _ := ctxKey.GetStartTime(req.Context())
+      logger.LogInfo(fmt.Sprintf("Liveness probe. Request took %vms\n",
+       time.Since(startTime).Microseconds()), correlationId)
+    }
   }
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
@@ -421,7 +428,7 @@ func makeHandlers() *handlers {
   h.mux["/fin/simpleinterest/bankers"] = middlewares.ValidateSessions(wfsib.SimpleInterestBankersPages)
   h.mux["/fin/simpleinterest/ordinary"] = middlewares.ValidateSessions(wfsio.SimpleInterestOrdinaryPages)
   h.mux["/fin/miscellaneous"] = middlewares.ValidateSessions(wfmisc.MiscellaneousPages)
-  if config.GetPprof() {
+  if config.GetPprof(falseCorrelationId) {
     h.mux["/debug/pprof/"] = pprof.Index
     h.mux["/debug/pprof/heap"] = pprof.Handler("heap").ServeHTTP
     h.mux["/debug/pprof/block"] = pprof.Handler("block").ServeHTTP
@@ -592,7 +599,8 @@ func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.Wait
     syscall.SIGTERM, //Kubernetes sends a SIGTERM.
   )
   <- signalChan //Waiting for the signal; signal is discarded.
-  ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.GetShutDownTimeout()) * time.Second)
+  ctx, cancel := context.WithTimeout(context.Background(),
+   time.Duration(config.GetShutDownTimeout(falseCorrelationId)) * time.Second)
   defer func() {
     //Extra handling goes here...
     close(signalChan)
