@@ -7,7 +7,7 @@
       "path": "../gplogger"
     },
     {
-      "path": "../gposu"
+      "path": "../go-os"
     },
     {
       "path": "."
@@ -16,7 +16,7 @@
       "path": "../fin-finance-admin"
     },
     {
-      "path": "../gpmiddlewares"
+      "path": "../go-middlewares"
     },
     {
       "path": "../gpsessions"
@@ -46,6 +46,7 @@
           "HTTPS": "true",
           "LE_CERT": "false",
           "K8S": "false",
+          "PREVENT_PROBES_OUTPUT": "true"
           // "PORT": "8081",
           // "SHUTDOWN_TIMEOUT": "10"
         },
