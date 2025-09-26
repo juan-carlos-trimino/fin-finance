@@ -68,8 +68,7 @@ func GetHttpsPort(correlationId string) int {
 }
 
 func GetK8s(correlationId string) bool {
-  ev, exists := os.LookupEnv("K8S")
-  if exists {
+  if ev, exists := os.LookupEnv("K8S"); exists {
     v, err := strconv.ParseBool(ev)
     if err == nil {
       return v
