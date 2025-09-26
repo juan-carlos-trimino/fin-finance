@@ -11,11 +11,6 @@ fin-finance
  | ├ workflows
  | | └ github-actions-demo.yml
  | └ .gitkeep
- ├ .vscode
- | ├ .gitignore
- | ├ LICENSE
- | ├ README.md
- | └ settings.json
  ├ IaC-K8s
  | ├ oracle
  | | ├ modules

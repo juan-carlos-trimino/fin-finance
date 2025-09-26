@@ -5,7 +5,6 @@
 !.dockerignore
 !.gitignore
 !Dockerfile-prod
-!fin-finance.code-workspace
 !LICENSE
 !README.md
 # ... and these files under the 'src' directory...
@@ -18,6 +17,10 @@
 !.github/workflows/
 .github/workflows/*
 !.github/workflows/github-actions-demo.yml
+# ... and these files under the 'src' directory...
+# !.vscode/
+# .vscode/*
+# !.vscode/launch.json
 # ... and these files under the 'src' directory...
 !src/
 src/*
