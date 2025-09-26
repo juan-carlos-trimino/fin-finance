@@ -8,16 +8,14 @@ import (
 )
 
 func GetServer() string {
-  ev, exists := os.LookupEnv("SERVER")
-  if !exists {
-    return ""  //Default value.
+  if ev, exists := os.LookupEnv("SERVER"); exists {
+    return ev
   }
-  return ev
+  return ""  //Default value.
 }
 
 func GetHttp(correlationId string) bool {
-  ev, exists := os.LookupEnv("HTTP")
-  if exists {
+  if ev, exists := os.LookupEnv("HTTP"); exists {
     v, err := strconv.ParseBool(ev)
     if err == nil {
       return v
@@ -29,8 +27,7 @@ func GetHttp(correlationId string) bool {
 }
 
 func GetHttpPort(correlationId string) int {
-  ev, exists := os.LookupEnv("HTTP_PORT")
-  if exists {
+  if ev, exists := os.LookupEnv("HTTP_PORT"); exists {
     v, err := strconv.Atoi(ev)
     if err == nil {
       return v
@@ -42,8 +39,7 @@ func GetHttpPort(correlationId string) int {
 }
 
 func GetHttps(correlationId string) bool {
-  ev, exists := os.LookupEnv("HTTPS")
-  if exists {
+  if ev, exists := os.LookupEnv("HTTPS"); exists {
     v, err := strconv.ParseBool(ev)
     if err == nil {
       return v
@@ -55,8 +51,7 @@ func GetHttps(correlationId string) bool {
 }
 
 func GetHttpsPort(correlationId string) int {
-  ev, exists := os.LookupEnv("HTTPS_PORT")
-  if exists {
+  if ev, exists := os.LookupEnv("HTTPS_PORT"); exists {
     v, err := strconv.Atoi(ev)
     if err == nil {
       return v
@@ -80,8 +75,7 @@ func GetK8s(correlationId string) bool {
 }
 
 func GetShutDownTimeout(correlationId string) int {
-  ev, exists := os.LookupEnv("SHUTDOWN_TIMEOUT")
-  if exists {
+  if ev, exists := os.LookupEnv("SHUTDOWN_TIMEOUT"); exists {
     v, err := strconv.Atoi(ev)
     if err == nil {
       return v
@@ -93,8 +87,7 @@ func GetShutDownTimeout(correlationId string) int {
 }
 
 func GetPprof(correlationId string) bool {
-  ev, exists := os.LookupEnv("PPROF")
-  if exists {
+  if ev, exists := os.LookupEnv("PPROF"); exists {
     v, err := strconv.ParseBool(ev)
     if err == nil {
       return v
@@ -106,8 +99,7 @@ func GetPprof(correlationId string) bool {
 }
 
 func GetLetsEncryptCert(correlationId string) bool {
-  ev, exists := os.LookupEnv("LE_CERT")
-  if exists {
+  if ev, exists := os.LookupEnv("LE_CERT"); exists {
     v, err := strconv.ParseBool(ev)
     if err == nil {
       return v
@@ -119,16 +111,14 @@ func GetLetsEncryptCert(correlationId string) bool {
 }
 
 func GetUser() string {
-  ev, exists := os.LookupEnv("USER")
-  if !exists {
-    return ""  //Default value.
+  if ev, exists := os.LookupEnv("USER"); exists {
+    return ev
   }
-  return ev
+  return ""  //Default value.
 }
 
 func GetPreventProbesOutput(correlationId string) bool {
-  ev, exists := os.LookupEnv("PREVENT_PROBES_OUTPUT")
-  if exists {
+  if ev, exists := os.LookupEnv("PREVENT_PROBES_OUTPUT"); exists {
     v, err := strconv.ParseBool(ev)
     if err == nil {
       return v
