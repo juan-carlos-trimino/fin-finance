@@ -548,6 +548,7 @@ module "fin-finances-empty" {  # Using emptyDir.
       # Configure environment variables specific to the app.
       env = {
         PPROF = var.pprof
+        PREVENT_PROBES_OUTPUT = false
         K8S = true
         HTTP_PORT = "8080"
         SVC_NAME = local.service_name_finances
