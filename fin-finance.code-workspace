@@ -1,29 +1,27 @@
 {
-  "folders": [
-    {
-      "path": ".."
+  "folders": [{
+      "path": "src/"
+    }, {
+      "path": "../fin-finance-admin/src/"
     },
-    {
-      "path": "../gplogger"
-    },
-    {
-      "path": "../go-os"
-    },
-    {
-      "path": "."
-    },
-    {
-      "path": "../fin-finance-admin"
-    },
-    {
-      "path": "../go-middlewares"
-    },
-    {
-      "path": "../gpsessions"
-    },
-    {
-      "path": "../gps3storage"
-    }
+    // {
+    //   "path": "../go-os"
+    // },
+    // {
+    //   "path": "."
+    // },
+    // {
+    //   "path": "../fin-finance-admin"
+    // },
+    // {
+    //   "path": "../go-middlewares"
+    // },
+    // {
+    //   "path": "../gpsessions"
+    // },
+    // {
+    //   "path": "../gps3storage"
+    // }
   ],
   "settings": {},
   "launch": {
