@@ -1,8 +1,0 @@
-# Ignore everything.
-**
-
-# But include these...
-!.gitignore
-!LICENSE
-!README.md
-!settings.json
