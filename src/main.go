@@ -354,7 +354,7 @@ func makeHandlers() *handlers {
   ***/
   h.mux = make(map[string]http.HandlerFunc, 128)
   h.mux["/readiness"] = func (res http.ResponseWriter, req *http.Request) {
-    res.WriteHeader(http.StatusOK/*http.StatusNotFound*/)//jct
+    res.WriteHeader(http.StatusOK)
     ctxKey := middlewares.MwContextKey{}
     correlationId, _ := ctxKey.GetCorrelationId(req.Context())
     if !config.GetPreventProbesOutput(correlationId) {
