@@ -90,6 +90,8 @@ fin-finance
  | | | ├ scripts
  | | | | ├ health-check.sh
  | | | | └ inspect-pod-node.sh
+ | | | ├ yaml
+ | | | | └ pvc-inspector-pod.yaml
  | | | └ .gitkeep
  | | ├ postgres
  | | | ├ configs

@@ -373,6 +373,9 @@ IaC-app/utilities/general/*
 IaC-app/utilities/general/scripts/*
 !IaC-app/utilities/general/scripts/health-check.sh
 !IaC-app/utilities/general/scripts/inspect-pod-node.sh
+!IaC-app/utilities/general/yaml/
+IaC-app/utilities/general/yaml/*
+!IaC-app/utilities/general/yaml/pvc-inspector-pod.yaml
 !IaC-app/utilities/postgres/
 IaC-app/utilities/postgres/*
 !IaC-app/utilities/postgres/configs/
