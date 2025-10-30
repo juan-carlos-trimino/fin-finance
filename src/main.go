@@ -1,5 +1,10 @@
 //go:build linux && !windows
 // +build linux,!windows
+//
+//To fold all block comments:
+//  Ctrl+K and Ctrl+/
+//To unfold all block comments:
+//  Ctrl+K and Ctrl+J
 
 // HTTP server.
 package main
@@ -42,6 +47,9 @@ import (
   "sync"
   "syscall"
   "time"
+
+bs "finance/databases/banking-system"  //Importing a package and assigning it a local alias.
+
 )
 
 var (  //Environment variables.
@@ -54,6 +62,16 @@ const (
   bucketName string = "fin-finances"
   dataDirName string = "wsf_data_dir"
   falseCorrelationId = "-1"
+
+	host = "localhost"
+	port = 5432
+	user = "postgres"
+	password = "postgres"
+	dbname = "postgres"
+	sslmode = "disable"  //Or "require", "prefer", etc., depending on your setup.
+
+
+
 )
 
 /***
@@ -117,6 +135,109 @@ func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+
+////////////////////////////
+// //postgresql://[user[:password]@][host[:port]]/[dbname][?option1=value1&option2=value2]
+// var connString string = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", "postgres", "postgres", "localhost", "5432", "postgres")
+
+for _, s := range strings.Split(osu.ShowPermissions("../IaC-app/utilities/postgres/sql/baseline/banking-system.sql", false), "\n") {
+  if s != "" {
+    logger.LogInfo(s, falseCorrelationId)
+  }
+}
+bs.ExecuteSqlScript(context.Background(), host, user, password, dbname, sslmode, port, falseCorrelationId)
+// fileInfo, err := os.Stat("../IaC-app/utilities/postgres/sql/baseline/banking-system.sql")
+// if err != nil {
+// fmt.Printf("Error getting file info: %v\n", err)
+// os.Exit(-1)
+// }
+// err = os.Chmod("../IaC-app/utilities/postgres/sql/baseline/banking-system.sql", 0644)
+// if err == nil {
+// fmt.Println("Error changing file mode:", err)
+// os.Exit(-1)
+// }
+
+// cmd := exec.Command("psql", "-U", "postgres", "-d", "postgres", "-f", "../IaC-app/utilities/postgres/sql/baseline/banking-system.sql")
+// cmd := exec.Command("psql", connString, "-f", "../IaC-app/utilities/postgres/sql/baseline/banking-system.sql")
+// out, err1 := cmd.CombinedOutput()
+// if err1 != nil {
+//    logger.LogError(fmt.Sprintf("Command failed: %v", err1), falseCorrelationId)
+//   os.Exit(-1)
+// }
+// fmt.Printf("Command output:\n%s\n", out)
+
+// err = os.Chmod("../IaC-app/utilities/postgres/sql/baseline/banking-system.sql", fileInfo.Mode().Perm())
+// if err != nil {
+// fmt.Println("Error changing file mode:", err)
+// os.Exit(-1)
+// }
+// for _, s := range strings.Split(osu.ShowPermissions("../IaC-app/utilities/postgres/sql/baseline/banking-system.sql", false), "\n") {
+//   if s != "" {
+//     logger.LogInfo(s, falseCorrelationId)
+//   }
+// }
+
+
+
+//postgresql://[user[:password]@][host[:port]]/[dbname][?option1=value1&option2=value2]
+var connString string = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", "postgres", "postgres", "localhost", "5432", "db_banking_system")
+
+fmt.Println(connString)
+bank, ok := bs.GetBsInstance(context.Background(), connString, falseCorrelationId)
+if !ok {
+fmt.Println("Database error.")
+os.Exit(-1)
+}
+defer bank.Close()
+bank.VerifyConnection(context.Background(), falseCorrelationId)
+
+
+var userName *string = bs.StringPtr("jcruz")
+var password *string = bs.StringPtr("pw")
+var customerType *string = nil
+var firstName *string = bs.StringPtr("Jose")
+var middleName *string = bs.StringPtr("Cesar")
+var lastName *string = bs.StringPtr("Cruz")
+var dateOfBirth *time.Time = bs.TimePtr(time.Date(2025, time.October, 29, 0, 0, 0, 0, time.UTC))
+var taxIdentifier *string = bs.StringPtr("123-45-6789")
+var address1 *string = bs.StringPtr("1234 Street")
+var address2 *string = nil
+var cityName *string = bs.StringPtr("city")
+var stateName *string = bs.StringPtr("state")
+var countryName *string = bs.StringPtr("country")
+var zipCode *string = bs.StringPtr("88008")
+var primaryEmail *string = nil
+var secondaryEmail *string = nil
+var primaryPhone *string = bs.StringPtr("8800-844")
+var secondaryPhone *string = nil
+bank.CustomerInfo(context.Background(), userName, password, customerType, firstName, middleName, lastName,
+ dateOfBirth, taxIdentifier, address1, address2, cityName, stateName, countryName, zipCode, primaryEmail,
+ secondaryEmail, primaryPhone, secondaryPhone, falseCorrelationId)
+
+userName = bs.StringPtr("ccedeno")
+password = bs.StringPtr("pw")
+customerType = nil
+firstName = bs.StringPtr("Cesar")
+middleName = nil
+lastName = bs.StringPtr("Cedeno")
+dateOfBirth = bs.TimePtr(time.Date(1955, time.April, 19, 0, 0, 0, 0, time.UTC)) //sPtr("1934-11-30")
+taxIdentifier = bs.StringPtr("123-45-6789")
+address1 = bs.StringPtr("1234 Street")
+address2 = nil
+cityName = bs.StringPtr("city")
+stateName = bs.StringPtr("state")
+countryName = bs.StringPtr("country")
+zipCode = bs.StringPtr("88008")
+primaryEmail = nil
+secondaryEmail = nil
+primaryPhone = bs.StringPtr("8800-844")
+secondaryPhone = nil
+bank.CustomerInfo(context.Background(), userName, password, customerType, firstName, middleName, lastName,
+ dateOfBirth, taxIdentifier, address1, address2, cityName, stateName, countryName, zipCode, primaryEmail,
+ secondaryEmail, primaryPhone, secondaryPhone, falseCorrelationId)
+
+
+//////////////////////////
   if !config.GetHttp(falseCorrelationId) && !config.GetHttps(falseCorrelationId) {
     fmt.Println("You can run only HTTP (default), only HTTPS (set environment variables to:" +
                 " HTTP=false and HTTPS=true), or both (set environment variable to: HTTPS=true).")
