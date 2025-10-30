@@ -42,6 +42,13 @@ src/concurrency/*
 src/config/*
 !src/config/config.go
 # ... and this directory and its file...
+!src/databases/
+src/databases/*
+!src/databases/banking-system/
+src/databases/banking-system/*
+!src/databases/banking-system/banking-system.go
+!src/databases/.gitkeep
+# ... and this directory and its file...
 !src/finances/
 src/finances/*
 !src/finances/Annuities_test.go
