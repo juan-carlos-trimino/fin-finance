@@ -8,8 +8,10 @@ package banking_system
 import (
   "context"
   "fmt"
+  "github.com/google/uuid"
   "github.com/jackc/pgx/v5"
   "github.com/jackc/pgx/v5/pgxpool"
+  "github.com/juan-carlos-trimino/go-os"
   "github.com/juan-carlos-trimino/gplogger"
   "os/exec"
   "strings"
@@ -19,32 +21,76 @@ import (
 
 /***
 Notes:
-In pgx, you can use named arguments for stored procedures by using the pgx.NamedArgs type, where parameter names are prefixed with an @ symbol in the query string. The library will then automatically rewrite the query to use positional parameters ($1, $2, etc.) before execution.
+In pgx, you can use named arguments for stored procedures by using the pgx.NamedArgs type, where
+parameter names are prefixed with an @ symbol in the query string. The library will then
+automatically rewrite the query to use positional parameters ($1, $2, etc.) before execution.
 ***/
 const (
-  SP_CUSTOMER_INFO = "CALL bs.sp_customer_info(@userName, @password, @customerType, @firstName, " +
+  // SP_CUSTOMER_INFO = "CALL bs.sp_customer_info(@userName, @password, @customerType, @firstName, " +
+  //  "@middleName, @lastName, @dateOfBirth, @taxIdentifier, @address1, @address2, @cityName, " +
+  //  "@stateName, @countryName, @zipCode, @primaryEmail, @secondaryEmail, @primaryPhone, " +
+  //  "@secondaryPhone)"
+
+  SP_CUSTOMER_INFO = "CALL bs.sp_customer_info(@userName, @password, @firstName, " +
    "@middleName, @lastName, @dateOfBirth, @taxIdentifier, @address1, @address2, @cityName, " +
-   "@stateName, @countryName, @zipCode, @primaryEmail, @secondaryEmail, @primaryPhone, @secondaryPhone)"
+   "@stateName, @countryName, @zipCode, @primaryEmail, @secondaryEmail, @primaryPhone, " +
+   "@secondaryPhone)"
+  QR_GET_ALL_CUSTOMERS = "SELECT customer_id, customer_type, username, password_hash, " +
+   "created_at, updated_at FROM bs.tbl_customer"
+  QR_GET_ALL_CUSTOMERS_INFO = "SELECT customer_info_id, customer_id, first_name, COALESCE(middle_name, ''), " +
+   "last_name, date_of_birth, tax_identifier, address_1, COALESCE(address_2, ''), city_name, state_name, " +
+   "country_name, COALESCE(zip_code, ''), COALESCE(primary_email, ''), COALESCE(secondary_email, ''), primary_phone, COALESCE(secondary_phone, ''), " +
+   "created_at, updated_at FROM bs.tbl_customer_info"
+    // fmt.Printf("%s - %s - %s - %s - %s - %s -- %s -- %s - %s - %s - %s - %s - %s - %s - %s- %s - %s - %s\n",
+    //  c.UserName, c.Password, c.CustomerType, c.FirstName, c.MiddleName, c.LastName, c.DateOfBirth,
+    //  c.TaxIdentifier, c.Address1, c.Address2, c.CityName, c.StateName, c.CountryName, c.ZipCode, c.PrimaryEmail,
+    //  c.SecondaryEmail, c.PrimaryPhone, c.SecondaryPhone)
 )
 
 /////////////
-type Book struct {
-    ID       int
-    Title    string
-    Author   string
-    Quantity int
-}
-
-type BookStore interface {
-    InsertBookIntoDatabase(Book) error
-    GetBookDetailsByID(int) (*Book, error)
-    GetAllBookDetails(int) (*[]Book, error)
-    UpdateBookDetails(int, Book) error
-    DeleteBookFromDatabase(int) error
-}
+/////////////
+/////////////
 /////////////
 
 
+// type Customer struct {
+//   CustomerId int //`json: "customer_id"`
+//   CustomerType string //`json: "customer_type"`
+//   UserName string //`json: "username"`
+//   Password string //`json: "password_hash"`
+//   CreatedAt time.Time //`json: "created_at"`
+//   UpdatedAt time.Time //`json: "updated_at"`
+// }
+
+type Customer struct {
+	Id uuid.UUID // Maps to a PostgreSQL UUID column
+  // Id UUID //`json: "customer_id"`
+  Username string //`json: "username"`
+  Password_hash string //`json: "password_hash"`
+  First_name string
+  Middle_name string
+  Last_name string
+  Birth_date time.Time
+	Gender byte
+  Address_1 string
+  Address_2 string
+  City_name string
+  State_name string
+  Country_name string
+  Zip_code string
+  Primary_email string
+  Secondary_email string
+  Primary_phone string
+  Secondary_phone string
+  Created_at time.Time
+  Updated_at time.Time
+}
+
+
+/////////////
+/////////////
+/////////////
+/////////////
 
 /***
 The Singleton pattern in Go ensures that a specific type has only one instance throughout the
@@ -71,7 +117,7 @@ var (
 )
 
 //Initialize the connection pool.
-func GetBsInstance(ctx context.Context, connString, correlationId string) (*bankingSystem, bool) {
+func InitializeBsPool(ctx context.Context, connString, correlationId string) *bankingSystem {
   /***
   The anonymous function passed to bsOnce.Do will be executed only once across all calls to
   GetBsInstance(), even if multiple goroutines call it concurrently. This ensures thread-safe
@@ -90,10 +136,52 @@ func GetBsInstance(ctx context.Context, connString, correlationId string) (*bank
   })
   //Return the single instance of the Singleton.
   if bsInstance == nil {
-    return nil, false
+    return nil
   } else {
-    return bsInstance, true
+    return bsInstance
   }
+}
+
+func GetBsInstance() (*bankingSystem) {
+  //Return the single instance of the Singleton.
+  if bsInstance == nil {
+    return nil
+  } else {
+    return bsInstance
+  }
+}
+
+func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, sslmode string, port int,
+  pathToScript, correlationId string) bool {
+  for _, str := range strings.Split(osu.ShowPermissions(pathToScript, false), "\n") {
+    if str != "" {
+      logger.LogInfo(str, correlationId)
+    }
+  }
+  //postgresql://[user[:password]@][host[:port]]/[dbname][?option1=value1&option2=value2]
+  //var connString string = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password,
+  //host, port, dbname, sslmode)
+  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port,
+   user, password, dbname, sslmode)
+  conn, err := pgx.Connect(ctx, psqlInfo)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("pgx.Connect failed: %v", err), correlationId)
+    return false
+  }
+  defer conn.Close(ctx)
+  cmd := exec.Command("psql", psqlInfo, "-f", pathToScript)
+  out, err := cmd.CombinedOutput()
+  if err != nil {
+    logger.LogError(fmt.Sprintf("SQL script failed: %v", err), correlationId)
+    return false
+  }
+  //
+  for _, str := range strings.Split(string(out), "\n") {  //Convert []byte to string.
+    if str != "" {
+      logger.LogInfo(str, correlationId)
+    }
+  }
+  return true
 }
 
 //StringPtr is a helper function to return a pointer to a string.
@@ -127,39 +215,11 @@ func (bs *bankingSystem) Close() {
 
 
 
-func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, sslmode string, port int, correlationId string) bool {
-  //postgresql://[user[:password]@][host[:port]]/[dbname][?option1=value1&option2=value2]
-  //var connString string = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", "postgres", "postgres", "localhost", "5432", "postgres")
-  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port,
-   user, password, dbname, sslmode)
-  conn, err := pgx.Connect(ctx, psqlInfo)
-  if err != nil {
-    logger.LogError(fmt.Sprintf("%v", err), correlationId)
-    return false
-  }
-  defer conn.Close(ctx)
-  cmd := exec.Command("psql", psqlInfo, "-f", "../IaC-app/utilities/postgres/sql/baseline/banking-system.sql")
-  out, err := cmd.CombinedOutput()
-  if err != nil {
-    logger.LogError(fmt.Sprintf("Execute SQL script failed: %v", err), correlationId)
-    return false
-  }
-  //
-  for _, str := range strings.Split(string(out), "\n") {  //Convert []byte to string.
-    if str != "" {
-      logger.LogInfo(str, correlationId)
-    }
-  }
-  return true
-}
-
-
-
-
+/***
 func (bs *bankingSystem) CustomerInfo(ctx context.Context, userName, password, customerType,
-  firstName, middleName, lastName *string, dateOfBirth *time.Time, taxIdentifier, address1, address2, cityName,
-  stateName, countryName, zipCode, primaryEmail, secondaryEmail, primaryPhone, secondaryPhone *string,
-  correlationId string) {
+  firstName, middleName, lastName *string, dateOfBirth *time.Time, taxIdentifier, address1,
+  address2, cityName, stateName, countryName, zipCode, primaryEmail, secondaryEmail,
+  primaryPhone, secondaryPhone *string, correlationId string) bool {
   args := pgx.NamedArgs{
     "userName": userName,
     "password": password,
@@ -182,12 +242,70 @@ func (bs *bankingSystem) CustomerInfo(ctx context.Context, userName, password, c
   }
   //Use Exec when the stored procedure does not return a result set.
   _, err := bs.bsPool.Exec(ctx, SP_CUSTOMER_INFO, args)
-    // userName, password, customerType, firstName,
-    // middleName, lastName, dateOfBirth, taxIdentifier, address1, address2, cityName, stateName,
-    // countryName, zipCode, primaryEmail, secondaryEmail, primaryPhone, secondaryPhone)
   if err != nil {
-    logger.LogError(fmt.Sprintf("Error calling stored procedure CustomerInfo: %v", err), correlationId)
+    logger.LogError(fmt.Sprintf("Stored procedure bs.sp_customer_info failed: %v", err),
+     correlationId)
+    return false
   } else {
-    logger.LogInfo("Stored procedure bs.sp_customer_info called successfully (no return value).", correlationId)
+    logger.LogInfo("Stored procedure bs.sp_customer_info was successful (no return value).",
+     correlationId)
+    return true
   }
 }
+
+func (bs *bankingSystem) GetAllCustomer(ctx context.Context, correlationId string) []Customer {
+  rows, err := bs.bsPool.Query(ctx, QR_GET_ALL_CUSTOMERS)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("Function bs.fn_get_all_customers failed: %v", err), correlationId)
+    return nil
+  }
+  defer rows.Close()
+  var customers []Customer
+  for rows.Next() {
+    var c Customer
+    err = rows.Scan(&c.CustomerId, &c.CustomerType, &c.UserName, &c.Password, &c.CreatedAt, &c.UpdatedAt)
+    // err = rows.Scan(&c.UserName, &c.Password, &c.CustomerType, &c.FirstName, &c.MiddleName, &c.LastName,
+    //   &c.DateOfBirth, &c.TaxIdentifier, &c.Address1, &c.Address2, &c.CityName, &c.StateName, &c.CountryName, &c.ZipCode, &c.PrimaryEmail,
+    //   &c.SecondaryEmail, &c.PrimaryPhone, &c.SecondaryPhone)
+    if err != nil {
+      logger.LogError(fmt.Sprintf("Error scanning row: %v", err), correlationId)
+      return nil
+    }
+    customers = append(customers, c)
+  }
+  //
+  if err = rows.Err(); err != nil {
+    logger.LogError(fmt.Sprintf("Error after iterating rows: %v", err), correlationId)
+  }
+  return customers
+}
+
+
+
+
+
+func (bs *bankingSystem) GetAllCustomerInfo(ctx context.Context, correlationId string) []CustomerInfo {
+  rows, err := bs.bsPool.Query(ctx, QR_GET_ALL_CUSTOMERS_INFO)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("Function bs.fn_get_all_customers failed: %v", err), correlationId)
+    return nil
+  }
+  defer rows.Close()
+  var customers []CustomerInfo
+  for rows.Next() {
+    var c CustomerInfo
+    err = rows.Scan(&c.CustomerInfoId, &c.CustomerId, &c.FirstName, &c.MiddleName, &c.LastName, &c.DateOfBirth, &c.TaxIdentifier, &c.Address_1, &c.Address_2, &c.CityName, &c.StateName, &c.CountryName, &c.ZipCode, &c.PrimaryEmail, &c.SecondaryEmail, &c.PrimaryPhone, &c.SecondaryPhone, &c.CreatedAt, &c.UpdatedAt)
+
+    if err != nil {
+      logger.LogError(fmt.Sprintf("Error scanning row: %v", err), correlationId)
+      return nil
+    }
+    customers = append(customers, c)
+  }
+  //
+  if err = rows.Err(); err != nil {
+    logger.LogError(fmt.Sprintf("Error after iterating rows: %v", err), correlationId)
+  }
+  return customers
+}
+***/
