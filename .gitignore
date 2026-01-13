@@ -126,6 +126,7 @@ src/webfinances/templates/*
 !src/webfinances/templates/footer.html
 !src/webfinances/templates/header.html
 !src/webfinances/templates/index.html
+!src/webfinances/templates/login.html
 !src/webfinances/templates/ordinaryannuity.html
 !src/webfinances/templates/simpleinterest.html
 !src/webfinances/templates/welcome.html
