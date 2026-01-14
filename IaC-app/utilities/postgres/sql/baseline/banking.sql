@@ -23,9 +23,9 @@ WITH
 \qecho 'Current database version:'
 SELECT version();
 
--- ******************
+-- ************************************************************************************************
 -- Create the schemas
--- ******************
+-- ************************************************************************************************
 CREATE SCHEMA IF NOT EXISTS customers;
 CREATE SCHEMA IF NOT EXISTS accounts;
 
