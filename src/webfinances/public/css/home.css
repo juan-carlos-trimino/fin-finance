@@ -215,8 +215,8 @@ button[disabled] {
   /* Align labels to the end of the grid cell (right-align) */
   justify-self: end;
 }
-.form-grid input {
-}
+/* .form-grid input {
+} */
 /*** Form grid ***/
 
 /*** Radio ***/
