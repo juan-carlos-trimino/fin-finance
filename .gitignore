@@ -44,9 +44,10 @@ src/config/*
 # ... and this directory and its file...
 !src/databases/
 src/databases/*
-!src/databases/banking-system/
-src/databases/banking-system/*
-!src/databases/banking-system/banking-system.go
+!src/databases/banking/
+src/databases/banking/*
+!src/databases/banking/init-banking.go
+!src/databases/banking/banking.go
 !src/databases/.gitkeep
 # ... and this directory and its file...
 !src/finances/
