@@ -85,10 +85,11 @@ func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, sslmode
     }
   }
   //postgresql://[user[:password]@][host[:port]]/[dbname][?option1=value1&option2=value2]
-  //var connString string = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password,
-  //host, port, dbname, sslmode)
-  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port,
-   user, password, dbname, sslmode)
+  // var connString string = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password,
+  //   host, port, dbname)
+  // fmt.Println(connString)
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port,
+    user, password, dbname, sslmode)
   conn, err := pgx.Connect(ctx, psqlInfo)
   if err != nil {
     logger.LogError(fmt.Sprintf("pgx.Connect failed: %v", err), correlationId)
