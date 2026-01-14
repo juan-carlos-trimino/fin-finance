@@ -1,0 +1,43 @@
+<!-- The define action for the register page -->
+{{ define "register_page" }}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Register</title>
+    <!-- <script>
+      document.getElementById("un").focus();
+      document.getElementById("un").select();
+    </script> -->
+    <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
+  </head>
+  <body>
+    <main>
+      <h1>Register</h1>
+      <legend>Fields in Red are required</legend>
+      <form class="form-grid" method="post" action="/verify_register" enctype="application/x-www-form-urlencoded" autocomplete="off">
+        <label class="font-red-bold" for="fname">First Name:</label>
+        <input type="text-box" id="fname" name="fname" value="{{ .Fname }}" autofocus required>
+        <label class="font-black-bold" for="mname">Middle Name:</label>
+        <input type="text" id="mname" name="mname" value="{{ .Mname }}" autofocus>
+        <label class="font-red-bold" for="lname">Last Name:</label>
+        <input type="text" id="lname" name="lname" value="{{ .Lname }}" autofocus required>
+        <label class="font-black-bold" for="marketing">Marketing Consent:</label>
+        <input type="text" id="marketing" name="marketing" value="{{ .Marketing }}" autofocus>
+        <label class="font-red-bold" for="uname">Username:</label>
+        <input type="text" id="uname" name="uname" value="{{ .Username }}" autofocus required>
+        <!--
+        The password entry should be obscured on the user's screen.
+        -->
+        <label class="font-red-bold" for="pwd">Password:</label>
+        <input type="password" id="pwd" name="pwd" value="{{ .Password }}" autofocus required>
+        <input type="submit" name="submit" value="Register">
+      </form>
+    </main>
+  </body>
+</html>
+
+{{ end }}
