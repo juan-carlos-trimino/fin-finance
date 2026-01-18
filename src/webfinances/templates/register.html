@@ -7,35 +7,68 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Register</title>
-    <!-- <script>
-      document.getElementById("un").focus();
-      document.getElementById("un").select();
-    </script> -->
+    <title>Registration</title>
     <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
   </head>
   <body>
     <main>
-      <h1>Register</h1>
-      <legend>Fields in Red are required</legend>
-      <form class="form-grid" method="post" action="/verify_register" enctype="application/x-www-form-urlencoded" autocomplete="off">
-        <label class="font-red-bold" for="fname">First Name:</label>
-        <input type="text-box" id="fname" name="fname" value="{{ .Fname }}" autofocus required>
-        <label class="font-black-bold" for="mname">Middle Name:</label>
-        <input type="text" id="mname" name="mname" value="{{ .Mname }}" autofocus>
-        <label class="font-red-bold" for="lname">Last Name:</label>
-        <input type="text" id="lname" name="lname" value="{{ .Lname }}" autofocus required>
-        <label class="font-black-bold" for="marketing">Marketing Consent:</label>
-        <input type="text" id="marketing" name="marketing" value="{{ .Marketing }}" autofocus>
+      <div class="h1-center">
+        <h1>Registration</h1>
+      </div>
+      <div class="font-color">
+        <legend>Fields in Red are required</legend><br>
+      </div>
+      <form class="form-grid" method="post" action="/registration" enctype="application/x-www-form-urlencoded" autocomplete="off">
         <label class="font-red-bold" for="uname">Username:</label>
-        <input type="text" id="uname" name="uname" value="{{ .Username }}" autofocus required>
+        <input type="text" id="uname" name="uname" value="{{ .Username }}" autofocus required maxlength="256">
         <!--
         The password entry should be obscured on the user's screen.
         -->
         <label class="font-red-bold" for="pwd">Password:</label>
-        <input type="password" id="pwd" name="pwd" value="{{ .Password }}" autofocus required>
+        <input type="password" id="pwd" name="pwd" value="{{ .Password }}" autofocus required maxlength="256">
+        <label class="font-red-bold" for="fname">First Name:</label>
+        <input type="text" id="fname" name="fname" value="{{ .Fname }}" autofocus required maxlength="256">
+        <label class="font-black-bold" for="mname">Middle Name:</label>
+        <input type="text" id="mname" name="mname" value="{{ .Mname }}" autofocus maxlength="256">
+        <label class="font-red-bold" for="lname">Last Name:</label>
+        <input type="text" id="lname" name="lname" value="{{ .Lname }}" autofocus required maxlength="256">
+        <label class="font-black-bold" for="marketing">Marketing Consent:</label>
+        <select class="text-combo" id="marketing" name="marketing">
+          <option class="text-combo" value="true"
+          {{ if eq .Marketing "true" }} selected {{ end }}>TRUE</option>
+          <option class="text-combo" value="false"
+          {{ if eq .Marketing "false" }} selected {{ end }}>FALSE</option>
+        </select>
+        <label class="font-red-bold" for="bdate">Birth Date:</label>
+        <input type="date" id="bdate" name="bdate" value="{{ .Bdate }}" min="1899-12-31" max="2050-12-31" required/>
+        <label class="font-black-bold" for="gender">Gender:</label>
+        <select class="text-combo" id="gender" name="gender">
+          <option class="text-combo" value="male"
+          {{ if eq .Gender "male" }} selected {{ end }}>MALE</option>
+          <option class="text-combo" value="female"
+          {{ if eq .Gender "female" }} selected {{ end }}>FEMALE</option>
+        </select>
+        <label class="font-red-bold" for="address1">Address:</label>
+        <input type="text" id="address1" name="address1" value="{{ .Address1 }}" autofocus required maxlength="256">
+        <label class="font-black-bold" for="address2">Address:</label>
+        <input type="text" id="address2" name="address2" value="{{ .Address2 }}" autofocus maxlength="256">
+        <label class="font-red-bold" for="city">City:</label>
+        <input type="text" id="city" name="city" value="{{ .City }}" autofocus required maxlength="256">
+        <label class="font-red-bold" for="state">State:</label>
+        <input type="text" id="state" name="state" value="{{ .State }}" autofocus required maxlength="256">
+        <label class="font-red-bold" for="country">Country:</label>
+        <input type="text" id="country" name="country" value="{{ .Country }}" autofocus required maxlength="128">
+        <label class="font-black-bold" for="zip_code">Zip Code:</label>
+        <input type="text" id="zip_code" name="zip_code" value="{{ .Zip_Code }}" autofocus maxlength="64">
+        <label class="font-red-bold" for="email">Email:</label>
+        <input type="text" id="email" name="email" value="{{ .Email }}" autofocus required maxlength="256">
+        <label class="font-red-bold" for="phone">Phone:</label>
+        <input type="text" id="phone" name="phone" value="{{ .Phone }}" autofocus required maxlength="64">
         <input type="submit" name="submit" value="Register">
       </form>
+      <div>
+        <br><label class="p-result">{{ .ErrMsg }}</label>
+      </div>
     </main>
   </body>
 </html>
