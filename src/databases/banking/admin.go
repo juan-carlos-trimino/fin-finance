@@ -43,10 +43,10 @@ const (
 type AddCustomer struct {
   User_name, Password_hash, First_name, Last_name, Gender, Address1, City, State,
   Country, Email, Phone string
-  //Nullable strings.
+  Marketing bool
+  //Nullable types.
   Address2, Middle_name, Zip_code *string
   Birth_date *time.Time
-  Marketing bool
 }
 
 func DbAddCustomer(c *AddCustomer, ctx context.Context, correlationId string) error {
