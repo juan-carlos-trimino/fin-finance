@@ -47,6 +47,7 @@ src/databases/*
 !src/databases/banking/
 src/databases/banking/*
 !src/databases/banking/init-banking.go
+!src/databases/banking/admin.go
 !src/databases/banking/banking.go
 !src/databases/.gitkeep
 # ... and this directory and its file...
