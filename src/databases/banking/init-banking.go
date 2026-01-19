@@ -121,6 +121,16 @@ func TimePtr(t time.Time) *time.Time {
   return &t
 }
 
+//BoolPtr is a helper function to return a pointer to a bool.
+func BoolPtr(b bool) *bool {
+  return &b
+}
+
+//BytePtr is a helper function to return a pointer to a byte.
+func BytePtr(b byte) *byte {
+  return &b
+}
+
 func (bs *banking) VerifyConnection(ctx context.Context, correlationId string) bool {
   err := bs.bsPool.Ping(ctx)
   if err != nil {
