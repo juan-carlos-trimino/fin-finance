@@ -219,6 +219,14 @@ button[disabled] {
 } */
 /*** Form grid ***/
 
+/*** Headers ***/
+.h1-center {
+  display: flex;
+  justify-content: center; /* Centers horizontally */
+  align-items: center;     /* Centers vertically */
+}
+/*** Headers ***/
+
 /*** Radio ***/
 .radio-fieldset {
   margin-top: 20px;
