@@ -69,7 +69,7 @@ type Customer struct {
 
 
 
-func (bs *banking) CustomerInfo(ctx context.Context, userName, password, customerType,
+func (bs *banking) SaveCustomer(ctx context.Context, userName, password, customerType,
   firstName, middleName, lastName *string, dateOfBirth *time.Time, taxIdentifier, address1,
   address2, cityName, stateName, countryName, zipCode, primaryEmail, secondaryEmail,
   primaryPhone, secondaryPhone *string, correlationId string) bool {
@@ -105,6 +105,8 @@ func (bs *banking) CustomerInfo(ctx context.Context, userName, password, custome
     return true
   }
 }
+
+
 /**
 func (bs *bankingSystem) GetAllCustomer(ctx context.Context, correlationId string) []Customer {
   rows, err := bs.bsPool.Query(ctx, QR_GET_ALL_CUSTOMERS)
