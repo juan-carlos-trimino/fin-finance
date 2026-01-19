@@ -88,7 +88,7 @@ func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, sslmode
   // var connString string = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password,
   //   host, port, dbname)
   // fmt.Println(connString)
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port,
+  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port,
     user, password, dbname, sslmode)
   conn, err := pgx.Connect(ctx, psqlInfo)
   if err != nil {
@@ -113,7 +113,11 @@ func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, sslmode
 
 //StringPtr is a helper function to return a pointer to a string.
 func StringPtr(s string) *string {
-  return &s
+  if s == "" {
+    return nil
+  } else {
+    return &s
+  }
 }
 
 //TimePtr is a helper function to return a pointer to a time.Time.
