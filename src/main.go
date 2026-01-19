@@ -10,6 +10,7 @@
 package main
 
 import (
+  bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
   "context"
   "crypto/tls"
   "errors"
@@ -47,8 +48,6 @@ import (
   "sync"
   "syscall"
   "time"
-
-//bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
 )
 
 var (  //Environment variables.
@@ -67,11 +66,12 @@ const (
 //////////////////////////
   host = "localhost"
   port = 5432
-  user = "postgres"
-  password = "postgres"
+  user = "trimino"
+  password = "trimino"
   dbname = "postgres"
+  dbfin = "finances"
   sslmode = "disable"  //Or "require", "prefer", etc., depending on your setup.
-  pathToScript = "../IaC-app/utilities/postgres/sql/baseline/banking-system.sql"
+  pathToScript = "../IaC-app/utilities/postgres/sql/baseline/admin.sql"
 //////////////////////////
 ////////////////////////////
 ////////////////////////////
@@ -193,38 +193,21 @@ func main() {
   readUsers(dataDir, users)
   webfinances.SetupDirStructure(dataDir)
   //Database
-
-////////////////////////////
-////////////////////////////
-////////////////////////////
-////////////////////////////
-  // dbInsertCustomer()
-  // fmt.Println("....................................................................................................")
-  // dbSelectAllCustomer()
-  // fmt.Println("....................................................................................................")
-  // dbSelectAllCustomerInfo()
-/*
   if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
     if ok := bank.ExecuteSqlScript(context.Background(), host, user, password, dbname, sslmode,
-       port, pathToScript, falseCorrelationId); ok {
-      psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host,
-        port, user, password, "finances", sslmode)
-      //fmt.Println(psqlInfo)
-      bank := bank.InitializeBsPool(context.Background(), psqlInfo, falseCorrelationId)
-      if bank == nil {
-        panic("Call to InitializeBsPool failed.")
-      }
-      defer bank.Close()
-      bank.VerifyConnection(context.Background(), falseCorrelationId)
-    } else {
+       port, pathToScript, falseCorrelationId); !ok {
       panic("Call to ExecuteSqlScript failed.")
     }
   }
-*/
-////////////////////////////
-//////////////////////////
-
-
+  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port,
+    user, password, dbfin, sslmode)
+  //fmt.Println(psqlInfo)
+  dbInstance := bank.InitializeBsPool(context.Background(), psqlInfo, falseCorrelationId)
+  if dbInstance == nil {
+    panic("Call to InitializeBsPool failed.")
+  }
+  defer dbInstance.Close()
+  dbInstance.VerifyConnection(context.Background(), falseCorrelationId)
   /***
   When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return
   ErrServerClosed. Make sure the program doesn't exit and waits instead for Shutdown to return.
@@ -378,6 +361,7 @@ func makeHandlers() *handlers {
   var wfsio = webfinances.WfSiOrdinaryPages{}
   var wfsib = webfinances.WfSiBankersPages{}
   var wfmisc = webfinances.WfMiscellaneousPages{}
+  var wfverify = webfinances.WfVerificationPages{}
   /***
   The Go web server will route requests to different functions depending on the requested URL.
   ***/
@@ -460,7 +444,7 @@ func makeHandlers() *handlers {
   h.mux["/login"] = wfpages.LoginPage
   h.mux["/verify_login"] = wfpages.VerifyLogin
   h.mux["/register"] = wfpages.RegisterPage
-	h.mux["/verify_register"] = wfpages.VerifyRegister
+  h.mux["/registration"] = middlewares.ValidateSessions(wfverify.RegistrationPage)
   h.mux["/logout"] = middlewares.ValidateSessions(wfpages.LogoutPage)
   h.mux["/welcome"] = middlewares.ValidateSessions(wfpages.WelcomePage)
   h.mux["/contact"] = middlewares.ValidateSessions(wfpages.ContactPage)
@@ -743,87 +727,3 @@ func makeServer(port int, h *handlers) *http.Server {
   }
   return server
 }
-
-
-
-/***
-func dbInsertCustomer() {
-  var customers = []struct {
-    username, password_hash, first_name, middle_name, last_name *string
-    birth_date *time.Time
-    gender *byte
-    address_1, address_2, city_name, state_name, country_name,zip_code, primary_email,
-    secondary_email, primary_phone, secondary_phone *string
-  }{
-    {
-      username: bank.StringPtr("dm"),
-      password_hash: bank.StringPtr("dm"),
-      first_name: bank.StringPtr("Dennis"),
-      middle_name: bank.StringPtr("E"),
-      last_name: bank.StringPtr("Menke"),
-      birth_date: bank.TimePtr(time.Date(1943, time.October, 29, 0, 0, 0, 0, time.UTC)),
-      gender: bank.Byte('M'),
-      address_1: bank.StringPtr("893 Street Ave."),
-      address_2: nil,
-      city_name: bank.StringPtr("New Orleans"),
-      state_name: bank.StringPtr("LA"),
-      country_name: bank.StringPtr("USA"),
-      zip_code: bank.StringPtr("88008"),
-      primary_email: nil,
-      secondary_email: nil,
-      primary_phone: bank.StringPtr("234-800-8440"),
-      secondary_phone: nil,
-    }, {
-      username: bs.StringPtr("jfe"),
-      password_hash: bs.StringPtr("jfe"),
-      first_name: bs.StringPtr("Johnny"),
-      middle_name: nil,
-      last_name: bs.StringPtr("Edwards"),
-      birth_date: bs.TimePtr(time.Date(1933, time.April, 19, 0, 0, 0, 0, time.UTC)),
-      gender: bs.Byte('M'),
-      address_1: bs.StringPtr("444 Texas Ave."),
-      address_2: nil,
-      city_name: bs.StringPtr("Santa Fe"),
-      state_name: bs.StringPtr("NM"),
-      country_name: bs.StringPtr("USA"),
-      zip_code: bs.StringPtr("51234"),
-      primary_email: bs.StringPtr("reds.edwards@gmail.com"),
-      secondary_email: nil,
-      primary_phone: bs.StringPtr("898-321-8800"),
-      secondary_phone: nil,
-    },
-  }
-  p := bank.GetBsInstance()
-  for _, c := range customers {
-    p.CustomerInfo(context.Background(), c.username, c.password_hash, c.first_name, c.middle_name, c.last_name,
-     c.birth_date, c.address_1, c.address_2, c.city_name, c.state_name, c.country_name, c.zip_code, c.primary_email,
-     c.secondary_email, c.primary_phone, c.secondary_phone, falseCorrelationId)
-  }
-}
-
-func dbSelectAllCustomer() {
-  p := bank.GetBsInstance()
-  customers := p.GetAllCustomer(context.Background(), falseCorrelationId)
-  if customers == nil {
-    return
-  }
-  fmt.Println("Results from stored function:")
-  for _, c := range customers {
-    fmt.Printf("%d - %s - %s- %s - %s - %s\n", c.CustomerId, c.CustomerType, c.UserName, c.Password, c.CreatedAt, c.UpdatedAt)
-  }
-}
-
-func dbSelectAllCustomerInfo() {
-  p := bank.GetBsInstance()
-  customers := p.GetAllCustomerInfo(context.Background(), falseCorrelationId)
-  if customers == nil {
-    return
-  }
-  fmt.Println("Results from stored function:")
-  for _, c := range customers {
-    fmt.Printf("%d - %d - %s - %s - %s - %s - %s- %s - %s - %s - %s - %s - %s - %s - %s - %s - %s - %s - %s\n", c.CustomerInfoId, c.CustomerId, c.FirstName, c.MiddleName, c.LastName,
-    c.DateOfBirth.Format("2006-01-02"), c.TaxIdentifier, c.Address_1, c.Address_2, c.CityName, c.StateName, c.CountryName, c.ZipCode, c.PrimaryEmail, c.SecondaryEmail, c.PrimaryPhone, c.SecondaryPhone, c.CreatedAt, c.UpdatedAt)
-    //c.CreatedAt.Format("2006-01-02"))
-  }
-}
-***/
