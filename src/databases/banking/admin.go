@@ -8,8 +8,9 @@ package banking
 import (
   "context"
   "fmt"
-  "github.com/juan-carlos-trimino/gplogger"
   "time"
+  "github.com/juan-carlos-trimino/gplogger"
+  "golang.org/x/crypto/bcrypt"
 )
 
 /***
@@ -23,7 +24,8 @@ const (
   //SQL injection.
   SP_ADD_CUSTOMER = "CALL fin.add_customer($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12," +
     " $13, $14, $15, $16)"
-
+  //Pass null for OUT parameter in the call.
+  SP_GET_PASSWORD_HASH = "CALL fin.get_password_hash($1, null)"
   // SP_CUSTOMER_INFO = "CALL bs.sp_customer_info(@userName, @password, @customerType, @firstName, " +
   //  "@middleName, @lastName, @dateOfBirth, @taxIdentifier, @address1, @address2, @cityName, " +
   //  "@stateName, @countryName, @zipCode, @primaryEmail, @secondaryEmail, @primaryPhone, " +
@@ -51,6 +53,7 @@ type AddCustomer struct {
 
 func DbAddCustomer(c *AddCustomer, ctx context.Context, correlationId string) error {
   db := GetBsInstance()
+  c.Password_hash = DbHashAndSaltPassword(c.Password_hash, correlationId)
   //Use Exec when the stored procedure does not return a result set.
   _, err := db.bsPool.Exec(ctx, SP_ADD_CUSTOMER, c.User_name, c.Password_hash, c.First_name,
     c.Middle_name, c.Last_name, c.Marketing, c.Birth_date, c.Gender, c.Address1, c.Address2,
@@ -64,6 +67,47 @@ func DbAddCustomer(c *AddCustomer, ctx context.Context, correlationId string) er
     return nil
   }
 }
+
+// This function should be used during user registration.
+func DbHashAndSaltPassword(password, correlationId string) string {
+  //Use GenerateFromPassword to hash & salt the password.
+  //The cost can be any value you want, but DefaultCost is a good starting point.
+  hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("Error on DbHashAndSaltPassword: %v", err), correlationId)
+    return ""
+  }
+  //The resulting hash string includes the salt and all necessary parameters, which should be
+  //stored in the database. GenerateFromPassword returns a byte slice, so convert it to a string
+  //for storage.
+  return string(hash)
+}
+
+//During login, retrieve the stored hash from the database and use the CompareHashAndPassword
+//function to verify the user-provided password. This function extracts the salt from the stored
+//hash, applies it to the input password, and compares the resulting hashes securely, mitigating
+//timing attacks.
+func DbAuthenticateUser(ctx context.Context, userName, candidatePassword,
+  correlationId string) bool {
+  db := GetBsInstance()
+  var password_hash string
+  err := db.bsPool.QueryRow(ctx, SP_GET_PASSWORD_HASH, userName).Scan(&password_hash)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("Error on DbAuthenticateUser: %v", err), correlationId)
+    return false
+  }
+  //CompareHashAndPassword compares a bcrypt hashed password with its possible plaintext
+  //equivalent. It returns nil on success, or an error on failure.
+  err = bcrypt.CompareHashAndPassword([]byte(password_hash), []byte(candidatePassword))
+  if err != nil {
+    //Log the error but do not reveal specific details to the user for security reasons.
+    logger.LogError(fmt.Sprintf("Error on DbAuthenticateUser: %v", err), correlationId)
+    return false
+  }
+  return true
+}
+
+
 
 
 /***

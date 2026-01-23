@@ -132,14 +132,14 @@ DECLARE
 BEGIN
   -- First, insert into the 'customers' table and return the new id.
   INSERT INTO fin.customers(first_name, middle_name, last_name, marketing_consent)
-    VALUES(p_first_name, p_middle_name, p_last_name, p_marketing)
-    RETURNING id INTO c_id;  -- This makes the new 'id' available to the next statements.
+  VALUES(p_first_name, p_middle_name, p_last_name, p_marketing)
+  RETURNING id INTO c_id;  -- This makes the new 'id' available to the next statements.
   INSERT INTO fin.customer_contact_details(id, birth_date, gender, address1, address2,
     city_name, state_name, country_name, zip_code, email, phone)
-    VALUES(c_id, p_birth_date, p_gender, p_address1, p_address2, p_city,
-      p_state, p_country, p_zip_code, p_email, p_phone);
+  VALUES(c_id, p_birth_date, p_gender, p_address1, p_address2, p_city,
+    p_state, p_country, p_zip_code, p_email, p_phone);
   INSERT INTO fin.credentials(id, user_name, password_hash, is_active)
-    VALUES(c_id, p_user_name, p_password, TRUE);
+  VALUES(c_id, p_user_name, p_password, TRUE);
 EXCEPTION  -- https://www.postgresql.org/docs/current/errcodes-appendix.html
   WHEN unique_violation THEN
     RAISE EXCEPTION 'Username (%) is already taken. Please choose another one.', p_user_name;
@@ -149,6 +149,23 @@ END;
 -- The final semicolon marks the end of the CREATE PROCEDURE statement.
 $$;
 
+CREATE OR REPLACE PROCEDURE fin.get_password_hash(
+  IN p_user_name TEXT,
+  OUT p_password_hash TEXT
+)
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  SELECT password_hash
+  INTO p_password_hash
+  FROM fin.credentials
+  WHERE user_name = p_user_name;
+  --If user not found, return false.
+  IF p_password_hash IS NULL THEN
+    p_password_hash := '';
+  END IF;
+END;
+$$;
 
 /*
 After a COMMIT or ROLLBACK is issued inside a procedure, a new transaction is automatically started, so you do not need a separate START TRANSACTION command.

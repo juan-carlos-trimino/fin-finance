@@ -1,6 +1,7 @@
 package webfinances
 
 import (
+  bank "finance/databases/banking" //Importing a package and assigning it a local alias.
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
@@ -76,7 +77,8 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Verifying login credentials.", correlationId)
   un := req.PostFormValue("username")
   pw := req.PostFormValue("password")
-  if !sessions.ValidateUser(un, pw) {
+  // if !sessions.ValidateUser(un, pw) { //For file.
+	if !bank.DbAuthenticateUser(req.Context(), un, pw, correlationId) {
     invalidSession(res)
   } else {
 		sessionToken, session := sessions.AddEntryToSessions(un)
