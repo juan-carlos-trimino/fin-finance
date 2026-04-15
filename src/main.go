@@ -64,13 +64,14 @@ const (
 ////////////////////////////
 ////////////////////////////
 //////////////////////////
+  //https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
   host = "localhost"
   port = 5432
   user = "trimino"
   password = "trimino"
-  dbname = "postgres"
-  dbfin = "finances"
+  dbname = "finances"
   sslmode = "disable"  //Or "require", "prefer", etc., depending on your setup.
+  connect_timeout = 4  //Maximum time to wait while connecting, in seconds.
   pathToScript = "../IaC-app/utilities/postgres/sql/baseline/admin.sql"
 //////////////////////////
 ////////////////////////////
@@ -194,14 +195,14 @@ func main() {
   webfinances.SetupDirStructure(dataDir)
   //Database
   if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
-    if ok := bank.ExecuteSqlScript(context.Background(), host, user, password, dbname, sslmode,
-       port, pathToScript, falseCorrelationId); !ok {
+    if ok := bank.ExecuteSqlScript(context.Background(), host, user, password, "postgres", sslmode,
+       port, connect_timeout, pathToScript, falseCorrelationId); !ok {
       panic("Call to ExecuteSqlScript failed.")
     }
   }
-  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port,
-    user, password, dbfin, sslmode)
-  //fmt.Println(psqlInfo)
+  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s",
+    host, port, user, password, dbname, connect_timeout, sslmode)
+  // logger.LogInfo(fmt.Sprintf("Connection string: %s", psqlInfo), falseCorrelationId)
   dbInstance := bank.InitializeBsPool(context.Background(), psqlInfo, falseCorrelationId)
   if dbInstance == nil {
     panic("Call to InitializeBsPool failed.")
