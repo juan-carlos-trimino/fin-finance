@@ -9,6 +9,7 @@ import (
   "context"
   "fmt"
   "github.com/jackc/pgx/v5"
+  "github.com/jackc/pgx/v5/pgconn"
   "github.com/jackc/pgx/v5/pgxpool"
   "github.com/juan-carlos-trimino/go-os"
   "github.com/juan-carlos-trimino/gplogger"
@@ -53,7 +54,25 @@ func InitializeBsPool(ctx context.Context, connString, correlationId string) *ba
   ***/
   bsOnce.Do(func() {
     logger.LogInfo("Initializing connection pool...", correlationId)
-    pool, err := pgxpool.New(ctx, connString)
+    config, err := pgxpool.ParseConfig(connString)
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("Unable to create the pgxpool.Config: %v", err), correlationId)
+    }
+    config.MaxConns = 25
+    //Set the notice handler to capture a RAISE NOTICE (or INFO, WARNING, LOG, DEBUG) message.
+    config.ConnConfig.OnNotice = func(c *pgconn.PgConn, n *pgconn.Notice) {
+      logger.LogInfo(n.Message, n.Detail)
+    }
+    // config.AfterConnect = func(ctx context.Context, c *pgx.Conn) error {
+    //   //Modify your pool configuration to register a OnNotice handler for every connection.
+    //   //Since OnNotice is set per connection in the pool, messages are accurately associated with the specific connection active in your goroutine.
+    //   c.Config().OnNotice = func(c *pgconn.PgConn, n *pgconn.Notice) {
+    //   fmt.Printf("%s", n.Message);
+    //   }
+    // return nil
+    // }
+
+    pool, err := pgxpool.NewWithConfig(ctx, config)
     if err != nil {
       logger.LogInfo(fmt.Sprintf("Unable to create connection pool: %v", err), correlationId)
     } else {
@@ -77,8 +96,8 @@ func GetBsInstance() (*banking) {
   }
 }
 
-func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, sslmode string, port int,
-  pathToScript, correlationId string) bool {
+func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, sslmode string, port,
+  connect_timeout int, pathToScript, correlationId string) bool {
   for _, str := range strings.Split(osu.ShowPermissions(pathToScript, false), "\n") {
     if str != "" {
       logger.LogInfo(str, correlationId)
@@ -87,9 +106,9 @@ func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, sslmode
   //postgresql://[user[:password]@][host[:port]]/[dbname][?option1=value1&option2=value2]
   // var connString string = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password,
   //   host, port, dbname)
-  // fmt.Println(connString)
-  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port,
-    user, password, dbname, sslmode)
+  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s",
+    host, port, user, password, dbname, connect_timeout, sslmode)
+  // logger.LogInfo(fmt.Sprintf("Connection string: %s", psqlInfo), correlationId)
   conn, err := pgx.Connect(ctx, psqlInfo)
   if err != nil {
     logger.LogError(fmt.Sprintf("pgx.Connect failed: %v", err), correlationId)
