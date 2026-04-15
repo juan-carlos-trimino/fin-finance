@@ -255,7 +255,6 @@ func main() {
         httpServer.Handler = makeHttpToHttpsRedirectHandler(config.GetHttpsPort(falseCorrelationId))
       }
     }
-    signalChan2 = make(chan os.Signal, 1) //Buffered channel capacity 1; notifier will not block.
     go func() {
       var httpsServer *http.Server = nil
       if config.GetK8s(falseCorrelationId) {
@@ -286,10 +285,10 @@ func main() {
       //keyFile arguments to empty strings.
       err := (*httpsServer).ListenAndServeTLS("", "")
       if errors.Is(err, http.ErrServerClosed) {
-        logger.LogError(fmt.Sprintf("Server has been closed at port %s.", httpsServer.Addr),
+        logger.LogInfo(fmt.Sprintf("Server has been closed at port %s.", httpsServer.Addr),
           falseCorrelationId)
       } else if err != nil {
-        logger.LogInfo(fmt.Sprintf("Server error: %+v", err), falseCorrelationId)
+        logger.LogError(fmt.Sprintf("Server error: %+v", err), falseCorrelationId)
         signalChan2 <- syscall.SIGINT //Let the goroutine finish.
       }
     }()
