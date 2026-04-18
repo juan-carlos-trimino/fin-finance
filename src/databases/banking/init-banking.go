@@ -54,37 +54,48 @@ func InitializeBsPool(ctx context.Context, connString, correlationId string) *ba
   ***/
   bsOnce.Do(func() {
     logger.LogInfo("Initializing connection pool...", correlationId)
+    //The database connection string can be in URL or keyword/value format.
     config, err := pgxpool.ParseConfig(connString)
     if err != nil {
       logger.LogInfo(fmt.Sprintf("Unable to create the pgxpool.Config: %v", err), correlationId)
-    }
-    config.MaxConns = 25
-    //Set the notice handler to capture a RAISE NOTICE (or INFO, WARNING, LOG, DEBUG) message.
-    config.ConnConfig.OnNotice = func(c *pgconn.PgConn, n *pgconn.Notice) {
-      logger.LogInfo(n.Message, n.Detail)
-    }
-    // config.AfterConnect = func(ctx context.Context, c *pgx.Conn) error {
-    //   //Modify your pool configuration to register a OnNotice handler for every connection.
-    //   //Since OnNotice is set per connection in the pool, messages are accurately associated with the specific connection active in your goroutine.
-    //   c.Config().OnNotice = func(c *pgconn.PgConn, n *pgconn.Notice) {
-    //   fmt.Printf("%s", n.Message);
-    //   }
-    // return nil
-    // }
-
-    pool, err := pgxpool.NewWithConfig(ctx, config)
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("Unable to create connection pool: %v", err), correlationId)
     } else {
-      bsInstance = &banking{bsPool: pool}
+      //https://pkg.go.dev/github.com/jackc/pgx/v4/pgxpool#Config
+      config.MaxConns = 25  //The maximum size of the pool.
+      config.MinConns = 5  //The minimum size of the pool.
+      //The duration after which an idle connection will be automatically closed by the health check.
+      config.MaxConnIdleTime = 15 * time.Minute
+      //The duration since creation after which a connection will be automatically closed.
+      config.MaxConnLifetime = 1 * time.Hour
+      //The duration between checks of the health of idle connections.
+      config.HealthCheckPeriod = 1 * time.Minute
+      config.PrepareConn = func(ctx context.Context, conn *pgx.Conn) (bool, error) {
+        logger.LogInfo("Before acquiring the connection pool.", correlationId)
+        return true, nil
+      }
+      config.AfterRelease = func(conn *pgx.Conn) bool {
+        logger.LogInfo("After a connection is released, but before it is returned to the pool.",
+          correlationId)
+        return true
+      }
+      config.BeforeClose = func(conn *pgx.Conn) {
+        logger.LogInfo("Before a connection is closed and removed from the pool.", correlationId)
+      }
+      // Set default query execution timeout
+      // config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+      //Set the notice handler to capture a RAISE NOTICE (or INFO, WARNING, LOG, DEBUG) message.
+      config.ConnConfig.OnNotice = func(conn *pgconn.PgConn, notice *pgconn.Notice) {
+        logger.LogInfo(notice.Message, notice.Detail)
+      }
+      pool, err := pgxpool.NewWithConfig(ctx, config)
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("Unable to create connection pool: %v", err), correlationId)
+      } else {
+        bsInstance = &banking{bsPool: pool}
+      }
     }
   })
-  //Return the single instance of the Singleton.
-  if bsInstance == nil {
-    return nil
-  } else {
-    return bsInstance
-  }
+  //Return the single instance of the Singleton or nil.
+  return bsInstance
 }
 
 func GetBsInstance() (*banking) {
