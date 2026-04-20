@@ -53,7 +53,7 @@ const (
 )
 
 type AddCustomer struct {
-  User_name, Password_hash, First_name, Last_name, Gender, Address1, City, State,
+  User_name, Password, First_name, Last_name, Gender, Address1, City, State,
   Country, Email, Phone string
   Marketing bool
   //Nullable types.
@@ -63,9 +63,9 @@ type AddCustomer struct {
 
 func DbAddCustomer(c *AddCustomer, ctx context.Context, correlationId string) error {
   db := GetBsInstance()
-  c.Password_hash = DbHashAndSaltPassword(c.Password_hash, correlationId)
+  var password_hash string = DbHashAndSaltPassword(c.Password, correlationId)
   //Use Exec when the stored procedure does not return a result set.
-  _, err := db.bsPool.Exec(ctx, SP_ADD_CUSTOMER, c.User_name, c.Password_hash, c.First_name,
+  _, err := db.bsPool.Exec(ctx, SP_ADD_CUSTOMER, c.User_name, password_hash, c.First_name,
     c.Middle_name, c.Last_name, c.Marketing, c.Birth_date, c.Gender, c.Address1, c.Address2,
     c.City, c.State, c.Country, c.Zip_code, c.Email, c.Phone)
   if err != nil {
