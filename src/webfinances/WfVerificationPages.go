@@ -23,7 +23,7 @@ func (s WfVerificationPages) RegistrationPage(res http.ResponseWriter, req *http
   logger.LogInfo("Entering VericationPage.", correlationId)
   c := bank.AddCustomer {
     User_name: req.PostFormValue("uname"),
-    Password_hash: req.PostFormValue("pwd"),
+    Password: req.PostFormValue("pwd"),
     First_name: req.PostFormValue("fname"),
     Last_name: req.PostFormValue("lname"),
     Gender: req.PostFormValue("gender"),
@@ -79,7 +79,7 @@ func (s WfVerificationPages) RegistrationPage(res http.ResponseWriter, req *http
       Email string
       Phone string
       ErrMsg string
-    } { c.User_name, c.Password_hash, c.First_name, middle_name, c.Last_name, marketing,
+    } { c.User_name, c.Password, c.First_name, middle_name, c.Last_name, marketing,
         originalDate, c.Gender, c.Address1, address2, c.City, c.State, c.Country, zip_code,
         c.Email, c.Phone, ok.Error(),
     })
