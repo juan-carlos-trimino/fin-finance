@@ -250,7 +250,7 @@ $$;
 
 /***
 Return values:
-  -2 -- Invalid user.
+  -2 -- Invalid (unknown) user.
   -1 -- Authentication failed.
    0 -- User authenticated.
 ***/
@@ -273,10 +273,8 @@ DECLARE
   vhash TEXT;
 BEGIN
   SELECT
-    failed_attempts,
     password_hash
   INTO
-    vfailed_attempts,
     vhash
   FROM fin.customers_credentials
   WHERE user_name = puser_name;
@@ -303,12 +301,12 @@ BEGIN
     WHERE user_name = puser_name;
   ELSE  -- Authentication failed.
     pout := -1;
-    vfailed_attempts := vfailed_attempts + 1;
-    UPDATE fin.customers.credentials
+    UPDATE fin.customers_credentials
     SET
-      failed_attempts = vfailed_attempts,
+      failed_attempts = failed_attempts + 1,
       last_attempt = CURRENT_TIMESTAMP
-    WHERE user_name = puser_name;
+    WHERE user_name = puser_name
+    RETURNING failed_attempts INTO vfailed_attempts;
     IF vfailed_attempts > vmax_attempts THEN
       /***
       The basic algorithm increases the wait time between each retry attempt, often calculated as
@@ -321,7 +319,7 @@ BEGIN
       a random value within the specified INCLUSIVE range.
       ***/
       vsleep_time := RANDOM(vmin_delay,
-       LEAST(vmax_delay, CAST(vbase_delay * POWER(2, vfailed_attempts) AS NUMERIC)));
+        LEAST(vmax_delay, CAST(vbase_delay * POWER(2, vfailed_attempts) AS NUMERIC)));
       RAISE NOTICE 'Attempt % failed; blocking for % seconds...', vfailed_attempts, vsleep_time
         USING DETAIL = correlation_id;
       PERFORM pg_sleep(vsleep_time);
@@ -336,23 +334,6 @@ $$;
 
 
 
-CREATE OR REPLACE PROCEDURE fin.get_password_hash(
-  IN p_user_name TEXT,
-  OUT p_password_hash TEXT
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  SELECT password_hash
-  INTO p_password_hash
-  FROM fin.credentials
-  WHERE user_name = p_user_name;
-  --If user not found, return false.
-  IF p_password_hash IS NULL THEN
-    p_password_hash := '';
-  END IF;
-END;
-$$;
 
 
 
@@ -374,56 +355,12 @@ $$;
     -- );
 
 
-CREATE OR REPLACE PROCEDURE fin.increment_failed_attempts(
-  IN p_user_name TEXT
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  UPDATE fin.customers_credentials
-  SET failed_attempts = failed_attempts + 1, last_attempt = CURRENT_TIMESTAMP
-  WHERE EXISTS (
-    -- In SQL, SELECT 1 has two primary meanings depending on its context: as a constant value in
-    -- the result set, or, more commonly, as an efficient way to check for the existence of a row
-    -- in a subquery.
-    SELECT 1
-    FROM fin.customers_credentials
-    WHERE user_name = p_user_name
-  );
-END;
-$$;
 
-
-CREATE OR REPLACE PROCEDURE fin.login_successful(
-  IN p_user_name TEXT
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-  UPDATE fin.customers_credentials
-  SET failed_attempts = 0, last_attempt = CURRENT_TIMESTAMP
-  WHERE user_name = p_user_name;
-END;
-$$;
 
 
 /*
 After a COMMIT or ROLLBACK is issued inside a procedure, a new transaction is automatically started, so you do not need a separate START TRANSACTION command.
 In procedures invoked by the CALL command as well as in anonymous code blocks (DO command), it is possible to end transactions using the commands COMMIT and ROLLBACK. A new transaction is started automatically after a transaction is ended using these commands, so there is no separate START TRANSACTION command.
-
-\set PROMPT1 '\t\t\t\t\t\t>>>%`date +%H:%M:%S`<<<\n%/%R%# '
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 */
