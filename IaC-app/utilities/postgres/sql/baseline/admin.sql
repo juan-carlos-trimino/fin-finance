@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS  fin.customers_credentials(
 -- Create functions/stored procedures
 -- ************************************************************************************************
 -- DROP PROCEDURE IF EXISTS fin.add_customer;
-CREATE OR REPLACE PROCEDURE fin.add_customer( --Require transaction########################
+CREATE OR REPLACE PROCEDURE fin.add_customer(
   IN p_user_name TEXT,
   IN p_password TEXT,
   IN p_first_name TEXT,
@@ -191,6 +191,7 @@ single quotes within the code.
 AS $$
 DECLARE
   c_id INT;
+  pwd_hash TEXT;
 --This block encloses the executable logic of the stored procedure's body.
 BEGIN
   -- First, insert into the 'customers' table and return the new id.
@@ -229,6 +230,7 @@ BEGIN
     p_zip_code,
     p_email,
     p_phone);
+  pwd_hash := crypt(p_password, gen_salt('bf', 10));
   INSERT INTO fin.customers_credentials(
     id,
     user_name,
@@ -236,7 +238,7 @@ BEGIN
   VALUES(
     c_id,
     p_user_name,
-    p_password);
+    pwd_hash);
 EXCEPTION  -- https://www.postgresql.org/docs/current/errcodes-appendix.html
   WHEN unique_violation THEN
     -- Re-raise the exception to inform the caller and ensure rollback of the transaction.
