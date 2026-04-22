@@ -8,12 +8,11 @@ package banking
 import (
   "context"
   "fmt"
+  "github.com/juan-carlos-trimino/gplogger"
+  "golang.org/x/crypto/bcrypt"
   "math"
   "math/rand"
   "time"
-
-  "github.com/juan-carlos-trimino/gplogger"
-  "golang.org/x/crypto/bcrypt"
 )
 
 /***
@@ -28,28 +27,7 @@ const (
   SP_ADD_CUSTOMER = "CALL fin.add_customer($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12," +
     " $13, $14, $15, $16)"
   //Pass null for OUT parameter in the call.
-  SP_GET_PASSWORD_HASH = "CALL fin.get_password_hash($1, null)"
-  // SP_IS_ACCOUNT_BLOCKED = "CALL fin.is_account_blocked($1, null)"
-
   SP_AUTHENTICATE_USER = "CALL fin.authenticate_user($1, $2, $3, null)"
-
-
-  SP_INCREMENT_FAILED_ATTEMPTS = "CALL fin.increment_failed_attempts($1)"
-  SP_LOGIN_SUCESSFUL = "CALL fin.login_successful($1)"
-  // SP_CUSTOMER_INFO = "CALL bs.sp_customer_info(@userName, @password, @customerType, @firstName, " +
-  //  "@middleName, @lastName, @dateOfBirth, @taxIdentifier, @address1, @address2, @cityName, " +
-  //  "@stateName, @countryName, @zipCode, @primaryEmail, @secondaryEmail, @primaryPhone, " +
-  //  "@secondaryPhone)"
-  // QR_GET_ALL_CUSTOMERS = "SELECT customer_id, customer_type, username, password_hash, " +
-  //  "created_at, updated_at FROM bs.tbl_customer"
-  // QR_GET_ALL_CUSTOMERS_INFO = "SELECT customer_info_id, customer_id, first_name, COALESCE(middle_name, ''), " +
-  //  "last_name, date_of_birth, tax_identifier, address_1, COALESCE(address_2, ''), city_name, state_name, " +
-  //  "country_name, COALESCE(zip_code, ''), COALESCE(primary_email, ''), COALESCE(secondary_email, ''), primary_phone, COALESCE(secondary_phone, ''), " +
-  //  "created_at, updated_at FROM bs.tbl_customer_info"
-    // fmt.Printf("%s - %s - %s - %s - %s - %s -- %s -- %s - %s - %s - %s - %s - %s - %s - %s- %s - %s - %s\n",
-    //  c.UserName, c.Password, c.CustomerType, c.FirstName, c.MiddleName, c.LastName, c.DateOfBirth,
-    //  c.TaxIdentifier, c.Address1, c.Address2, c.CityName, c.StateName, c.CountryName, c.ZipCode, c.PrimaryEmail,
-    //  c.SecondaryEmail, c.PrimaryPhone, c.SecondaryPhone)
 )
 
 type AddCustomer struct {
@@ -63,19 +41,17 @@ type AddCustomer struct {
 
 func DbAddCustomer(c *AddCustomer, ctx context.Context, correlationId string) error {
   db := GetBsInstance()
-  var password_hash string = DbHashAndSaltPassword(c.Password, correlationId)
   //Use Exec when the stored procedure does not return a result set.
-  _, err := db.bsPool.Exec(ctx, SP_ADD_CUSTOMER, c.User_name, password_hash, c.First_name,
+  _, err := db.bsPool.Exec(ctx, SP_ADD_CUSTOMER, c.User_name, c.Password, c.First_name,
     c.Middle_name, c.Last_name, c.Marketing, c.Birth_date, c.Gender, c.Address1, c.Address2,
     c.City, c.State, c.Country, c.Zip_code, c.Email, c.Phone)
   if err != nil {
     logger.LogError(fmt.Sprintf("SP fin.add_customer: %v", err), correlationId)
-    return err
   } else {
     logger.LogInfo(fmt.Sprintf("SP fin.add_customer succeeded. Username: %s", c.User_name),
       correlationId)
-    return nil
   }
+  return err
 }
 
 /***
@@ -84,7 +60,7 @@ plain-text passwords in query logs. Hashing the password in your application cod
 it to the database is often a safer practice.
 This function should be used during user registration.
 ***/
-func DbHashAndSaltPassword(password, correlationId string) string {
+func HashAndSaltPassword(password, correlationId string) string {
   /***
   Use strong algorithms: Modern algorithms such as Argon2, bcrypt, or PBKDF2 are recommended over
   older ones like MD5 or SHA-1, which are considered broken for password hashing.
@@ -107,68 +83,7 @@ func DbHashAndSaltPassword(password, correlationId string) string {
 
 
 
-
-/***
-During login, retrieve the stored hash from the database and use the CompareHashAndPassword
-function to verify the user-provided password. CompareHashAndPassword extracts the salt from the
-stored hash, applies it to the input password, and compares the resulting hashes securely,
-mitigating timing attacks.
-***/
-func DbAuthenticateUser(ctx context.Context, userName, password, correlationId string) bool {
-  db := GetBsInstance()
-  // var ok bool
-  var sleep int
-//  err := db.bsPool.QueryRow(ctx, SP_IS_ACCOUNT_BLOCKED, userName).Scan(&ok)
-  err := db.bsPool.QueryRow(ctx, SP_AUTHENTICATE_USER, userName, password, correlationId).Scan(&sleep)
-  if err != nil {
-    logger.LogError(fmt.Sprintf("Error on DbAuthenticateUser: %v", err), correlationId)
-    return false
-  } else if sleep < 0 {
-
-
-
-
-    //if !ok {
-    // const baseTime = 1 * time.Second
-    // const maxBackoff = 300 * time.Second  //5 minutes
-    // const randomFactor = 0.5  //50%
-    // retryWithExponentialBackoff(10, randomFactor, baseTime, maxBackoff)
-        // --- DELAY IMPLEMENTATION ---
-    // Sleep for 500ms on failure to slow down brute-force attacks [1]
-//		time.Sleep(500 * time.Millisecond)
-//// Correct: Convert the int variable to time.Duration and multiply
-      // User not found - simulate delay to prevent timing attacks
-//    time.Sleep(time.Duration(sleep) * time.Second)
-    return false
-  }// else if sleep < 0 {
-//    return false
-//  }
-  // var hash string
-  // err = db.bsPool.QueryRow(ctx, SP_GET_PASSWORD_HASH, userName).Scan(&hash)
-  // if err != nil {
-  //   logger.LogError(fmt.Sprintf("Error on DbAuthenticateUser: %v", err), correlationId)
-  //   return false
-  // }
-  /***
-  CompareHashAndPassword compares a bcrypt hashed password with its possible plaintext
-  equivalent. It returns nil on success, or an error on failure.
-  ***/
-  // err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-  // if err != nil {
-  //   //Log the error but do not reveal specific details to the user for security reasons.
-  //   logger.LogError(fmt.Sprintf("Error on DbAuthenticateUser: %v", err), correlationId)
-  //   _, err = db.bsPool.Exec(ctx, SP_INCREMENT_FAILED_ATTEMPTS, userName)
-  //   if err != nil {
-  //     logger.LogError(fmt.Sprintf("Error on DbAuthenticateUser: %v", err), correlationId)
-  //   }
-  //   return false
-  // }
-  // _, err = db.bsPool.Exec(ctx, SP_LOGIN_SUCESSFUL, userName)
-  // if err != nil {
-  //   logger.LogError(fmt.Sprintf("Error on DbAuthenticateUser: %v", err), correlationId)
-  // }
-  return true
-}
+//////////////////////
 
 
 //In this really short post, we will demonstrate how to implement a retry mechanism with exponential
@@ -202,31 +117,3 @@ func retryWithExponentialBackoff(retries int, randomFactor float64, baseTime tim
 //     // Add more password validation rules as needed
 //     return nil
 // }
-
-/***
-func dbSelectAllCustomer() {
-  p := bank.GetBsInstance()
-  customers := p.GetAllCustomer(context.Background(), falseCorrelationId)
-  if customers == nil {
-    return
-  }
-  fmt.Println("Results from stored function:")
-  for _, c := range customers {
-    fmt.Printf("%d - %s - %s- %s - %s - %s\n", c.CustomerId, c.CustomerType, c.UserName, c.Password, c.CreatedAt, c.UpdatedAt)
-  }
-}
-
-func dbSelectAllCustomerInfo() {
-  p := bank.GetBsInstance()
-  customers := p.GetAllCustomerInfo(context.Background(), falseCorrelationId)
-  if customers == nil {
-    return
-  }
-  fmt.Println("Results from stored function:")
-  for _, c := range customers {
-    fmt.Printf("%d - %d - %s - %s - %s - %s - %s- %s - %s - %s - %s - %s - %s - %s - %s - %s - %s - %s - %s\n", c.CustomerInfoId, c.CustomerId, c.FirstName, c.MiddleName, c.LastName,
-    c.DateOfBirth.Format("2006-01-02"), c.TaxIdentifier, c.Address_1, c.Address_2, c.CityName, c.StateName, c.CountryName, c.ZipCode, c.PrimaryEmail, c.SecondaryEmail, c.PrimaryPhone, c.SecondaryPhone, c.CreatedAt, c.UpdatedAt)
-    //c.CreatedAt.Format("2006-01-02"))
-  }
-}
-***/
