@@ -80,6 +80,19 @@ func HashAndSaltPassword(password, correlationId string) string {
   return string(hash)
 }
 
+func DbAuthenticateUser(ctx context.Context, userName, password, correlationId string) bool {
+  db := GetBsInstance()
+  var status int
+  var ok bool = true
+  err := db.bsPool.QueryRow(ctx, SP_AUTHENTICATE_USER, userName, password, correlationId).Scan(&status)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("Error on DbAuthenticateUser: %v", err), correlationId)
+    ok = false
+  } else if status < 0 {
+    ok = false
+  }
+  return ok
+}
 
 
 
