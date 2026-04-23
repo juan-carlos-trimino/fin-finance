@@ -343,6 +343,7 @@ func faviconHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func makeHandlers() *handlers {
+	var wfbankingPages = webfinances.WfBankingPages{}
   var wfpages = webfinances.WfPages{}
   var wfadcp = webfinances.WfAdCpPages{}
   var wfadepp = webfinances.WfAdEppPages{}
@@ -449,6 +450,11 @@ func makeHandlers() *handlers {
   h.mux["/welcome"] = middlewares.ValidateSessions(wfpages.WelcomePage)
   h.mux["/contact"] = middlewares.ValidateSessions(wfpages.ContactPage)
   h.mux["/about"] = middlewares.ValidateSessions(wfpages.AboutPage)
+
+
+  h.mux["/banking"] = middlewares.ValidateSessions(wfbankingPages.BankingPage)
+
+
   h.mux["/finances"] = middlewares.ValidateSessions(wfpages.FinancesPage)
   h.mux["/fin/ordinaryannuity"] = middlewares.ValidateSessions(wfpages.OrdinaryAnnuityPage)
   h.mux["/fin/ordinaryannuity/interestrate"] = middlewares.ValidateSessions(wfoainterest.OaInterestRatePages)
