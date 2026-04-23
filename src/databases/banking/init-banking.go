@@ -150,6 +150,19 @@ func StringPtr(s string) *string {
   }
 }
 
+
+
+func PtrString(s *string) string {
+  if s == nil {
+    return ""
+  } else {
+    return *s
+  }
+}
+
+
+
+
 //TimePtr is a helper function to return a pointer to a time.Time.
 func TimePtr(t time.Time) *time.Time {
   return &t
