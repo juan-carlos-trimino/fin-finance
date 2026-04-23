@@ -10,6 +10,13 @@
 -- * Postgres executes a function atomically and transactionally; i.e, if the function fails at any
 --   step during its execution, all previous changes made within that function are rolled back,
 --   ensuring data integrity and consistency.
+-- Notes (Backup)
+-- To perform a dump.
+-- $ pg_dump finances > /tmp/finances.dump
+-- To restore (first create the database).
+-- psql finances < /tmp/finances.dump
+-- To time how long it takes to restore.
+-- time psql finances < /tmp/finances.dump
 -- Notes (Indexes)
 -- * Postgres defaults to a B-tree index unless another data strcuture is specified. B-tree
 --   supports a wide range of data types and can be used for both equality searches (=) and range
@@ -334,6 +341,41 @@ $$;
 
 
 
+CREATE OR REPLACE FUNCTION fin.get_customers_contact_details()
+RETURNS SETOF fin.customers_contact_details
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  RETURN QUERY SELECT * FROM fin.customers_contact_details;
+END;
+$$;
+
+
+
+CREATE OR REPLACE PROCEDURE fin.customer_contact_details(
+  IN puser_name TEXT
+)
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE fin.customers_credentials()
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE fin.customer_credentials(
+  IN puser_name TEXT
+)
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+END;
+$$;
 
 
 
