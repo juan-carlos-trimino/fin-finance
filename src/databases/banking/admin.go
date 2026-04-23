@@ -13,6 +13,10 @@ import (
   "math"
   "math/rand"
   "time"
+
+  "github.com/jackc/pgx/v5"
+
+
 )
 
 /***
@@ -38,6 +42,27 @@ type AddCustomer struct {
   Address2, Middle_name, Zip_code *string
   Birth_date *time.Time
 }
+
+
+
+type CustomersContactDetails struct {  //Struct tags.
+  Id int32  `db:"id"`
+  Birth_date *time.Time  `db:"birth_date"`
+  Gender string  `db:"gender"`
+  Address1 string  `db:"address1"`
+  Address2 *string  `db:"address2"`
+  City_name string  `db:"city_name"`
+  State_name string  `db:"state_name"`
+  Country_name string  `db:"country_name"`
+  Zip_code *string  `db:"zip_code"`
+  Email string  `db:"email"`
+  Phone string  `db:"phone"`
+  Created_at time.Time  `db:"created_at"`
+  Updated_at time.Time  `db:"updated_at"`
+}
+
+
+
 
 func DbAddCustomer(c *AddCustomer, ctx context.Context, correlationId string) error {
   db := GetBsInstance()
@@ -90,11 +115,37 @@ func DbAuthenticateUser(ctx context.Context, userName, password, correlationId s
     ok = false
   } else if status < 0 {
     ok = false
+  } else {
+    DbGetCustomersContactDetails(ctx, correlationId)
   }
   return ok
 }
 
 
+
+func DbGetCustomersContactDetails(ctx context.Context, correlationId string) bool {
+  db := GetBsInstance()
+  var ok bool = true
+  //Call the function returning SETOF/TABLE.
+  rows, err := db.bsPool.Query(ctx, "SELECT * FROM fin.get_customers_contact_details()")
+  if err != nil {
+    logger.LogError(fmt.Sprintf("Error on DbGetCustomersContactDetails: %v", err), correlationId)
+    ok = false
+  } else {
+    var users []CustomersContactDetails
+    //Automatically scans all rows into a slice of User structs.
+    users, err := pgx.CollectRows(rows, pgx.RowToStructByName[CustomersContactDetails])
+    if err != nil {
+      logger.LogError(fmt.Sprintf("Error on DbGetCustomersContactDetails: %v", err), correlationId)
+      ok = false
+    } else {
+      for _, user := range users {
+        fmt.Printf("Id: %d, Birth_date: %v, Gender: %s, Address1: %s, Address2: %s, City_name: %s, State_name: %s, Country_name: %s, Zip_code: %s, Email: %s, Phone: %s, Created_at: %v, Updated_at: %v\n", user.Id, user.Birth_date.Format("2006-01-02"), user.Gender, user.Address1, PtrString(user.Address2), user.City_name, user.State_name, user.Country_name, PtrString(user.Zip_code), user.Email, user.Phone, user.Created_at, user.Updated_at)
+      }
+    }
+  }
+  return ok
+}
 
 //////////////////////
 
