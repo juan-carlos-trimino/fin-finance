@@ -136,9 +136,9 @@ func (a WfAdFvPages) AdFvPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/fv/fv.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/annuitydue/fv/fv.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/annuitydue/fv/n-i-PMT.html",
+        "webfinances/templates/finances/annuitydue/fv/n-i-PMT.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "adfuturevalue", struct {
         Header string

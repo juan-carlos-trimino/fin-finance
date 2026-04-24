@@ -105,9 +105,9 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/bonds/bonds.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/bonds/taxfree.html",
+        "webfinances/templates/finances/bonds/taxfree.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "bonds", struct {
         Header string
@@ -174,9 +174,9 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/bonds/bonds.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/bonds/currentprice.html",
+        "webfinances/templates/finances/bonds/currentprice.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "bonds", struct {
         Header string
@@ -235,9 +235,9 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/bonds/bonds.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/bonds/yieldtocall.html",
+        "webfinances/templates/finances/bonds/yieldtocall.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "bonds", struct {
         Header string
@@ -332,9 +332,9 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/bonds/bonds.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/bonds/yieldtomaturity.html",
+        "webfinances/templates/finances/bonds/yieldtomaturity.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "bonds", struct {
         Header string
@@ -432,9 +432,9 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/bonds/bonds.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/bonds/bonds.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/bonds/duration.html",
+        "webfinances/templates/finances/bonds/duration.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "bonds", struct {
         Header string

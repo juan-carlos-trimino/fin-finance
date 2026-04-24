@@ -132,9 +132,9 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/cp/cp.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/annuitydue/cp/cp.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/annuitydue/cp/i-PMT-PV.html",
+        "webfinances/templates/finances/annuitydue/cp/i-PMT-PV.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "adcompoundingperiods", struct {
         Header string
@@ -178,9 +178,9 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/annuitydue/cp/cp.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/annuitydue/cp/cp.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/annuitydue/cp/i-PMT-FV.html",
+        "webfinances/templates/finances/annuitydue/cp/i-PMT-FV.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "adcompoundingperiods", struct {
         Header string
