@@ -1,0 +1,29 @@
+{{ define "banking_page" }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Finances</title>
+    <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
+  </head>
+  <body>
+    <main>
+      {{ template "header" . }}
+      <div class="button-style">
+        <a href="/banking/checking" target="_self">
+          <button class="button">Checking</button>
+        </a>
+      </div>
+      <div class="button-back-style">
+        <a href="/welcome" target="_self">
+          <button class="button">Back</button>
+        </a>
+      </div>
+    </main>
+    {{ template "footer" }}
+  </body>
+</html>
+
+{{ end }}
