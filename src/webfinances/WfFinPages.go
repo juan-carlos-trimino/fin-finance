@@ -28,7 +28,10 @@ func init() {
   The Must function wraps around the ParseGlob function that returns a pointer to a template and an
   error, and it panics if the error is not nil.
   ***/
-  tmpl = template.Must(template.ParseGlob("webfinances/templates/*.html"))
+	tmpl = template.New("root")  //Initialize the root template.
+  tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/*.html"))
+  tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/banking/*.html"))
+  tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/finances/*.html"))
 }
 
 /***
