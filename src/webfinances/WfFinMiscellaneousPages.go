@@ -87,9 +87,9 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
-                                             "webfinances/templates/miscellaneous/nominalrate.html",
+                                             "webfinances/templates/finances/miscellaneous/nominalrate.html",
                                              "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
@@ -122,9 +122,9 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
-                                             "webfinances/templates/miscellaneous/effectiveannualrate.html",
+                                             "webfinances/templates/finances/miscellaneous/effectiveannualrate.html",
                                              "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
@@ -160,9 +160,9 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
-                                             "webfinances/templates/miscellaneous/nominalratevs.html",
+                                             "webfinances/templates/finances/miscellaneous/nominalratevs.html",
                                              "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
@@ -224,9 +224,9 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
-                                             "webfinances/templates/miscellaneous/compfrequencyconv.html",
+                                             "webfinances/templates/finances/miscellaneous/compfrequencyconv.html",
                                              "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
@@ -265,9 +265,9 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
-                                             "webfinances/templates/miscellaneous/growthdecay.html",
+                                             "webfinances/templates/finances/miscellaneous/growthdecay.html",
                                              "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
@@ -305,9 +305,9 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
-                                             "webfinances/templates/miscellaneous/averagerate.html",
+                                             "webfinances/templates/finances/miscellaneous/averagerate.html",
                                              "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
@@ -350,9 +350,9 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/miscellaneous/miscellaneous.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
                                              "webfinances/templates/header.html",
-                                             "webfinances/templates/miscellaneous/depreciation.html",
+                                             "webfinances/templates/finances/miscellaneous/depreciation.html",
                                              "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
