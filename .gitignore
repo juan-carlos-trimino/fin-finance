@@ -153,8 +153,8 @@ src/webfinances/templates/bonds/*
 !src/webfinances/templates/bonds/yieldtocall.html
 !src/webfinances/templates/bonds/yieldtomaturity.html
 # ... and this directory and its file...
-!src/webfinances/templates/mortgage/
-src/webfinances/templates/mortgage/*
+!src/webfinances/templates/finances/mortgage/
+src/webfinances/templates/finances/mortgage/*
 !src/webfinances/templates/finances/mortgage/amortizationtable.html
 !src/webfinances/templates/finances/mortgage/costofmortgage.html
 !src/webfinances/templates/finances/mortgage/heloc.html
