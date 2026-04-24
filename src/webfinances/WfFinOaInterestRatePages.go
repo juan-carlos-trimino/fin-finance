@@ -89,9 +89,9 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/interestrate/interestrate.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/ordinaryannuity/interestrate/interestrate.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/ordinaryannuity/interestrate/n-PV-FV.html",
+        "webfinances/templates/finances/ordinaryannuity/interestrate/n-PV-FV.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "oainterestrate", struct {
         Header string

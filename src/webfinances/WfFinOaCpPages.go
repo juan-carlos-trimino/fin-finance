@@ -88,9 +88,9 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/cp/cp.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/ordinaryannuity/cp/cp.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/ordinaryannuity/cp/i-PV-FV.html",
+        "webfinances/templates/finances/ordinaryannuity/cp/i-PV-FV.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "oacompoundingperiods", struct {
         Header string
@@ -134,9 +134,9 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/cp/cp.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/ordinaryannuity/cp/cp.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/ordinaryannuity/cp/i-PMT-PV.html",
+        "webfinances/templates/finances/ordinaryannuity/cp/i-PMT-PV.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "oacompoundingperiods", struct {
         Header string
@@ -181,9 +181,9 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/cp/cp.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/ordinaryannuity/cp/cp.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/ordinaryannuity/cp/i-PMT-FV.html",
+        "webfinances/templates/finances/ordinaryannuity/cp/i-PMT-FV.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "oacompoundingperiods", struct {
         Header string

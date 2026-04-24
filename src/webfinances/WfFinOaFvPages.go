@@ -89,9 +89,9 @@ func (o WfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/fv/fv.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/ordinaryannuity/fv/fv.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/ordinaryannuity/fv/n-i-PV.html",
+        "webfinances/templates/finances/ordinaryannuity/fv/n-i-PV.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "oafuturevalue", struct {
         Header string
@@ -138,9 +138,9 @@ func (o WfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/fv/fv.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/ordinaryannuity/fv/fv.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/ordinaryannuity/fv/n-i-PMT.html",
+        "webfinances/templates/finances/ordinaryannuity/fv/n-i-PMT.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "oafuturevalue", struct {
         Header string
