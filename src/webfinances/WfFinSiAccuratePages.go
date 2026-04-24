@@ -100,9 +100,9 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestaccurate/accurate.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestaccurate/accurate.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/simpleinterestaccurate/amountofinterest.html",
+        "webfinances/templates/finances/simpleinterestaccurate/amountofinterest.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestaccurate", struct {
         Header string
@@ -149,9 +149,9 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestaccurate/accurate.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestaccurate/accurate.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/simpleinterestaccurate/interestrate.html",
+        "webfinances/templates/finances/simpleinterestaccurate/interestrate.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestaccurate", struct {
         Header string
@@ -199,9 +199,9 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestaccurate/accurate.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestaccurate/accurate.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/simpleinterestaccurate/principal.html",
+        "webfinances/templates/finances/simpleinterestaccurate/principal.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestaccurate", struct {
         Header string
@@ -248,9 +248,9 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestaccurate/accurate.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestaccurate/accurate.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/simpleinterestaccurate/time.html",
+        "webfinances/templates/finances/simpleinterestaccurate/time.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestaccurate", struct {
         Header string

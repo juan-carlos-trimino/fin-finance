@@ -155,10 +155,10 @@ src/webfinances/templates/bonds/*
 # ... and this directory and its file...
 !src/webfinances/templates/mortgage/
 src/webfinances/templates/mortgage/*
-!src/webfinances/templates/mortgage/amortizationtable.html
-!src/webfinances/templates/mortgage/costofmortgage.html
-!src/webfinances/templates/mortgage/heloc.html
-!src/webfinances/templates/mortgage/mortgage.html
+!src/webfinances/templates/finances/mortgage/amortizationtable.html
+!src/webfinances/templates/finances/mortgage/costofmortgage.html
+!src/webfinances/templates/finances/mortgage/heloc.html
+!src/webfinances/templates/finances/mortgage/mortgage.html
 # ... and this directory and its file...
 !src/webfinances/templates/ordinaryannuity/
 src/webfinances/templates/ordinaryannuity/*
@@ -222,40 +222,40 @@ src/webfinances/templates/annuitydue/epp/*
 !src/webfinances/templates/annuitydue/epp/n-i-FV.html
 !src/webfinances/templates/annuitydue/epp/n-i-PV.html
 # ... and this directory and its file...
-!src/webfinances/templates/miscellaneous/
-src/webfinances/templates/miscellaneous/*
-!src/webfinances/templates/miscellaneous/averagerate.html
-!src/webfinances/templates/miscellaneous/compfrequencyconv.html
-!src/webfinances/templates/miscellaneous/depreciation.html
-!src/webfinances/templates/miscellaneous/effectiveannualrate.html
-!src/webfinances/templates/miscellaneous/growthdecay.html
-!src/webfinances/templates/miscellaneous/miscellaneous.html
-!src/webfinances/templates/miscellaneous/nominalrate.html
-!src/webfinances/templates/miscellaneous/nominalratevs.html
+!src/webfinances/templates/finances/miscellaneous/
+src/webfinances/templates/finances/miscellaneous/*
+!src/webfinances/templates/finances/miscellaneous/averagerate.html
+!src/webfinances/templates/finances/miscellaneous/compfrequencyconv.html
+!src/webfinances/templates/finances/miscellaneous/depreciation.html
+!src/webfinances/templates/finances/miscellaneous/effectiveannualrate.html
+!src/webfinances/templates/finances/miscellaneous/growthdecay.html
+!src/webfinances/templates/finances/miscellaneous/miscellaneous.html
+!src/webfinances/templates/finances/miscellaneous/nominalrate.html
+!src/webfinances/templates/finances/miscellaneous/nominalratevs.html
 # ... and this directory and its file...
-!src/webfinances/templates/simpleinterestaccurate/
-src/webfinances/templates/simpleinterestaccurate/*
-!src/webfinances/templates/simpleinterestaccurate/accurate.html
-!src/webfinances/templates/simpleinterestaccurate/amountofinterest.html
-!src/webfinances/templates/simpleinterestaccurate/interestrate.html
-!src/webfinances/templates/simpleinterestaccurate/principal.html
-!src/webfinances/templates/simpleinterestaccurate/time.html
+!src/webfinances/templates/finances/simpleinterestaccurate/
+src/webfinances/templates/finances/simpleinterestaccurate/*
+!src/webfinances/templates/finances/simpleinterestaccurate/accurate.html
+!src/webfinances/templates/finances/simpleinterestaccurate/amountofinterest.html
+!src/webfinances/templates/finances/simpleinterestaccurate/interestrate.html
+!src/webfinances/templates/finances/simpleinterestaccurate/principal.html
+!src/webfinances/templates/finances/simpleinterestaccurate/time.html
 # ... and this directory and its file...
-!src/webfinances/templates/simpleinterestbankers/
-src/webfinances/templates/simpleinterestbankers/*
-!src/webfinances/templates/simpleinterestbankers/bankers.html
-!src/webfinances/templates/simpleinterestbankers/amountofinterest.html
-!src/webfinances/templates/simpleinterestbankers/interestrate.html
-!src/webfinances/templates/simpleinterestbankers/principal.html
-!src/webfinances/templates/simpleinterestbankers/time.html
+!src/webfinances/templates/finances/simpleinterestbankers/
+src/webfinances/templates/finances/simpleinterestbankers/*
+!src/webfinances/templates/finances/simpleinterestbankers/bankers.html
+!src/webfinances/templates/finances/simpleinterestbankers/amountofinterest.html
+!src/webfinances/templates/finances/simpleinterestbankers/interestrate.html
+!src/webfinances/templates/finances/simpleinterestbankers/principal.html
+!src/webfinances/templates/finances/simpleinterestbankers/time.html
 # ... and this directory and its file...
-!src/webfinances/templates/simpleinterestordinary/
-src/webfinances/templates/simpleinterestordinary/*
-!src/webfinances/templates/simpleinterestordinary/ordinary.html
-!src/webfinances/templates/simpleinterestordinary/amountofinterest.html
-!src/webfinances/templates/simpleinterestordinary/interestrate.html
-!src/webfinances/templates/simpleinterestordinary/principal.html
-!src/webfinances/templates/simpleinterestordinary/time.html
+!src/webfinances/templates/finances/simpleinterestordinary/
+src/webfinances/templates/finances/simpleinterestordinary/*
+!src/webfinances/templates/finances/simpleinterestordinary/ordinary.html
+!src/webfinances/templates/finances/simpleinterestordinary/amountofinterest.html
+!src/webfinances/templates/finances/simpleinterestordinary/interestrate.html
+!src/webfinances/templates/finances/simpleinterestordinary/principal.html
+!src/webfinances/templates/finances/simpleinterestordinary/time.html
 ################################
 # Infrastructure as Code (IaC) #
 ################################

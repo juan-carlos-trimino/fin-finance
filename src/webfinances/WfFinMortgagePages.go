@@ -104,9 +104,9 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/mortgage/mortgage.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/mortgage/mortgage.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/mortgage/costofmortgage.html",
+        "webfinances/templates/finances/mortgage/costofmortgage.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "mortgage", struct {
         Header string
@@ -184,9 +184,9 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/mortgage/mortgage.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/mortgage/mortgage.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/mortgage/amortizationtable.html",
+        "webfinances/templates/finances/mortgage/amortizationtable.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "mortgage", struct {
         Header string
@@ -237,9 +237,9 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/mortgage/mortgage.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/mortgage/mortgage.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/mortgage/heloc.html",
+        "webfinances/templates/finances/mortgage/heloc.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "mortgage", struct {
         Header string

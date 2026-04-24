@@ -87,9 +87,9 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestbankers/bankers.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestbankers/bankers.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/simpleinterestbankers/amountofinterest.html",
+        "webfinances/templates/finances/simpleinterestbankers/amountofinterest.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestbankers", struct {
         Header string
@@ -135,9 +135,9 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestbankers/bankers.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestbankers/bankers.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/simpleinterestbankers/interestrate.html",
+        "webfinances/templates/finances/simpleinterestbankers/interestrate.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestbankers", struct {
         Header string
@@ -185,9 +185,9 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestbankers/bankers.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestbankers/bankers.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/simpleinterestbankers/principal.html",
+        "webfinances/templates/finances/simpleinterestbankers/principal.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestbankers", struct {
         Header string
@@ -234,9 +234,9 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/simpleinterestbankers/bankers.html",
+      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestbankers/bankers.html",
         "webfinances/templates/header.html",
-        "webfinances/templates/simpleinterestbankers/time.html",
+        "webfinances/templates/finances/simpleinterestbankers/time.html",
         "webfinances/templates/footer.html"))
       t.ExecuteTemplate(res, "simpleinterestbankers", struct {
         Header string
