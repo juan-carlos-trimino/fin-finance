@@ -210,10 +210,19 @@ button[disabled] {
   /* Creates two columns: one for labels (auto-width); one for inputs (takes 50% of remaining space) */
   grid-template-columns: max-content 0.5fr;
   gap: 10px 10px; /* Adds space between rows and columns */
+  row-gap: 15px;
 }
-.form-grid label {
-  /* Align labels to the end of the grid cell (right-align) */
-  justify-self: end;
+
+.form-grid>* {
+  display: flex;
+}
+
+.form-grid>*:nth-child(2n+1) {
+  justify-content: right;
+}
+
+.grform-gridid>*:nth-child(2n) {
+  justify-content: left;
 }
 /*** Form grid ***/
 
@@ -291,10 +300,10 @@ button[disabled] {
 /*** Table ***/
 
 /*** Input Buttons ***/
-/***
+/*
 If the CSS for an <input type="submit"> button isn't applying correctly, perform a hard refresh
 (Ctrl+F5 or Cmd+Shift+R) to clear your browser cache.
-***/
+*/
 input[type="submit"] {
   padding: 10px 20px;  /* Top/Bottom and Left/Right */
   font-size: 18px;  /* Increase text and button size proportionally */
@@ -319,4 +328,58 @@ input[type="date"] {
   padding: 5px 5px;  /* Top/Bottom and Left/Right */
   font-size: 15px;  /* Increase text and button size proportionally */
 }
+
+/***
+By default, CSS Grid treats every direct child of a container -- including <input type="hidden"> --
+as a grid item. Even though it is invisible, it still occupies a cell in the grid flow, which often
+leaves an unwanted empty space at the beginning of your form.
+
+The most effective way to ensure a hidden input doesn't affect the layout is to explicitly set it
+to "display: none". This removes it from the document flow entirely, but the value will still be
+submitted with the form.
+***/
+input[type="hidden"] {
+  display: none;
+}
 /*** Submit Buttons ***/
+
+
+/* input[type="checkbox"] {
+  appearance: none;
+  width: 1.2em;
+  height: 1.2em;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+}
+
+input[type="checkbox"]::before {
+  content: "";
+  width: 0.6em;
+  height: 0.6em;
+  transform: scale(0);
+  background-color: blue;
+  transition: 120ms transform ease-in-out;
+   Use clip-path for a checkmark shape
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+} */
+input[type="checkbox"] {
+  /* appearance: none; */
+    /* border: 2px rgb(0, 0, 0);
+ */
+    /* outline: 2px rgb(2, 71, 31); */
+    /* width: 40px;
+  height: 25px; */
+  transform: scale(2); /* Doubles the size */
+  margin: 10px; /* Add margin to prevent overlapping text */
+}
+
+input[type="checkbox"]:hover {
+    /* outline: 2px rgb(185, 241, 163); */
+     outline: 2px rgb(2, 71, 31);
+   /* color:rgb(2, 71, 31); */
+   /* filter: brightness(1.5); */
+  margin: 10px; /* Add margin to prevent overlapping text */
+}

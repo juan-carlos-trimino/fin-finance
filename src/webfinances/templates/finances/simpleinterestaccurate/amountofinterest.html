@@ -12,20 +12,16 @@
   the body of the request, but the GET method attribute does not have a request body, and the data
   are set in the URL as name-value pairs.
   -->
-  <form action="/fin/simpleinterest/accurate" method="post"
-   enctype="application/x-www-form-urlencoded">
+  <form action="/fin/simpleinterest/accurate" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div class="text-style">
-      <label class="text-box" for="fd1-time">Time (n).........................</label>
+    <div class="form-grid">
+      <label class="text-box" for="fd1-time">Time (n)</label>
       <input class="text-combo" id="fd1-time" name="fd1-time" value="{{ .Fd1Time }}" type="text"
-       inputmode="numeric" step="any" maxlength="7" required/>
-    </div>
-    <div class="text-style">
-      <label class="text-box" for="fd1-leap">Leap year?...................</label>
-      <input type="checkbox" id="fd1-leap" name="fd1-leap">
-    </div>
-    <div class="text-style">
-      <label class="text-box" for="fd1-tp">Time Period..................</label>
+        inputmode="numeric" step="any" maxlength="7" required/>
+      <label class="text-box" for="fd1-leap">Leap year?</label>
+      <!-- By default, only checked checkboxes are sent to the server; unchecked ones are omitted entirely. -->
+      <input type="checkbox" id="fd1-leap" name="fd1-leap" value="checked" {{if .Fd1Leap }} checked {{ end }}/>
+      <label class="text-box" for="fd1-tp">Time Period</label>
       <select class="text-combo" id="fd1-tp" name="fd1-tp">
         <option class="text-combo" value="year"
          {{ if eq .Fd1TimePeriod "year" }} selected {{ end }}>Year(s)</option>
@@ -40,14 +36,10 @@
         <option class="text-combo" value="day"
          {{ if eq .Fd1TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
-    </div>
-    <div class="text-style">
-      <label class="text-box" for="fd1-interest">Interest (i %)................</label>
+      <label class="text-box" for="fd1-interest">Interest (i %)</label>
       <input class="text-combo" id="fd1-interest" name="fd1-interest" value="{{ .Fd1Interest }}"
-       type="number" step="any" maxlength="7" required/>
-    </div>
-    <div class="text-style">
-      <label class="text-box" for="fd1-compound">Compounding Period...</label>
+        type="number" step="any" maxlength="7" required/>
+      <label class="text-box" for="fd1-compound">Compounding Period</label>
       <select class="text-combo" id="fd1-compound" name="fd1-compound">
         <option class="text-combo" value="annually"
          {{ if eq .Fd1Compound "annually" }} selected {{ end }}>Annually</option>
@@ -63,11 +55,9 @@
          {{ if eq .Fd1Compound "daily" }} selected {{ end }}>Daily</option>
         <!-- <option class="text-combo" value="continuously" {{if eq .Fd1Compound "continuously"}} selected {{end}}>Continuously</option> -->
       </select>
-    </div>
-    <div class="text-style">
-      <label class="text-box" for="fd1-pv">Present Value (PV).......</label>
+      <label class="text-box" for="fd1-pv">Present Value (PV)</label>
       <input class="text-combo" id="fd1-pv" name="fd1-pv" value="{{ .Fd1PV }}" type="number"
-       step="any" min="1" maxlength="7"/>
+        step="any" min="1" maxlength="7"/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui1" type="submit">

@@ -15,6 +15,10 @@ import (
 )
 
 var tmpl *template.Template
+var tsia1 *template.Template
+var tsia2 *template.Template
+var tsia3 *template.Template
+var tsia4 *template.Template
 
 /***
 In Go, the predefined init() function sets off a piece of code to run before any other part of the
@@ -28,10 +32,30 @@ func init() {
   The Must function wraps around the ParseGlob function that returns a pointer to a template and an
   error, and it panics if the error is not nil.
   ***/
-	tmpl = template.New("root")  //Initialize the root template.
+  tmpl = template.New("root")  //Initialize the root template.
   tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/*.html"))
   tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/banking/*.html"))
   tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/finances/*.html"))
+  tsia1 = template.Must(template.New("sia1").ParseFiles(
+    "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
+    "webfinances/templates/header.html",
+    "webfinances/templates/finances/simpleinterestaccurate/amountofinterest.html",
+    "webfinances/templates/footer.html"))
+  tsia2 = template.Must(template.New("sia2").ParseFiles(
+    "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
+    "webfinances/templates/header.html",
+    "webfinances/templates/finances/simpleinterestaccurate/interestrate.html",
+    "webfinances/templates/footer.html"))
+  tsia3 = template.Must(template.New("sia3").ParseFiles(
+    "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
+    "webfinances/templates/header.html",
+    "webfinances/templates/finances/simpleinterestaccurate/principal.html",
+    "webfinances/templates/footer.html"))
+  tsia4 = template.Must(template.New("sia4").ParseFiles(
+    "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
+    "webfinances/templates/header.html",
+    "webfinances/templates/finances/simpleinterestaccurate/time.html",
+    "webfinances/templates/footer.html"))
 }
 
 /***
@@ -40,9 +64,13 @@ authentication data was incorrect. Instead of "Invalid username" or "Invalid pas
 "Invalid username and/or password" interchangeably.
 ***/
 func invalidSession(res http.ResponseWriter) {
-  tmpl.ExecuteTemplate(res, "login_page", struct {
-    Error string
+  err := tmpl.ExecuteTemplate(res, "login_page", struct {
+    ErrMsg string
   } { "Invalid username and/or password" })
+  //
+  if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+  }
 }
 
 type WfPages struct{}
@@ -78,13 +106,13 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
     startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Verifying login credentials.", correlationId)
-  un := req.PostFormValue("username")
-  pw := req.PostFormValue("password")
+  un := req.PostFormValue("uname")
+  pw := req.PostFormValue("pwd")
   // if !sessions.ValidateUser(un, pw) { //For file.
-	if !bank.DbAuthenticateUser(req.Context(), un, pw, correlationId) {
+  if !bank.DbAuthenticateUser(req.Context(), un, pw, correlationId) {
     invalidSession(res)
   } else {
-		sessionToken, session := sessions.AddEntryToSessions(un)
+    sessionToken, session := sessions.AddEntryToSessions(un)
     AddSessionDataPerUser(un, correlationId)
     /***
     Once a cookie is set on a client, it is sent along with every subsequent request. Cookies store

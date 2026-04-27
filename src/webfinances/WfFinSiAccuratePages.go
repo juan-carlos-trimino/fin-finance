@@ -9,7 +9,6 @@ import (
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "os"
   "strconv"
@@ -60,9 +59,16 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       if req.Method == http.MethodPost {
         sif.Fd1Time = req.PostFormValue("fd1-time")
         sif.Fd1TimePeriod = req.PostFormValue("fd1-tp")
-        //In HTML whenever a checkbox is checked and is POSTed, it has a value of "on". If the
-        //checkbox is unchecked it has no value ("").
-        sif.Fd1Leap = req.PostFormValue("fd1-leap")
+        /***
+        In HTML whenever a checkbox is checked and is POSTed, it has a value of "on" by default. If
+        the checkbox is unchecked it has no value ("").
+        ***/
+        var daysInYear int = finances.Daily365
+        sif.Fd1Leap = false
+        if req.PostFormValue("fd1-leap") != "" {
+          sif.Fd1Leap = true
+          daysInYear = finances.Daily366
+        }
         sif.Fd1TimePeriod = req.PostFormValue("fd1-tp")
         sif.Fd1Interest = req.PostFormValue("fd1-interest")
         sif.Fd1Compound = req.PostFormValue("fd1-compound")
@@ -80,17 +86,13 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          daysInYear := finances.Daily365
-          if sif.Fd1Leap != "" {
-            daysInYear = finances.Daily366
-          }
           sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.2f",
             si.AccurateInterest(pv, i / 100.0,
             periods.GetCompoundingPeriod(sif.Fd1Compound[0], true), n,
             daysInYear))
         }
         logger.LogInfo(fmt.Sprintf("n = %s, leap = %t, tp = %s, i = %s, cp = %s, pv = %s, %s",
-         sif.Fd1Time, len(sif.Fd1Leap) > 0, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound,
+         sif.Fd1Time, sif.Fd1Leap, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound,
          sif.Fd1PV, sif.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -100,17 +102,13 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-        "webfinances/templates/header.html",
-        "webfinances/templates/finances/simpleinterestaccurate/amountofinterest.html",
-        "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "simpleinterestaccurate", struct {
+      err := tsia1.ExecuteTemplate(res, "simpleinterestaccurate", struct {
         Header string
         Datetime string
         CurrentButton string
         CsrfToken string
         Fd1Time string
-        Fd1Leap string
+        Fd1Leap bool
         Fd1TimePeriod string
         Fd1Interest string
         Fd1Compound string
@@ -119,7 +117,11 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton,
           newSession.CsrfToken, sif.Fd1Time, sif.Fd1Leap, sif.Fd1TimePeriod, sif.Fd1Interest,
           sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui2") {
       sif.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -149,11 +151,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-        "webfinances/templates/header.html",
-        "webfinances/templates/finances/simpleinterestaccurate/interestrate.html",
-        "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "simpleinterestaccurate", struct {
+      err := tsia2.ExecuteTemplate(res, "simpleinterestaccurate", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -166,7 +164,11 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton,
           newSession.CsrfToken, sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV,
           sif.Fd2Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui3") {
       sif.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
@@ -199,11 +201,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-        "webfinances/templates/header.html",
-        "webfinances/templates/finances/simpleinterestaccurate/principal.html",
-        "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "simpleinterestaccurate", struct {
+      err := tsia3.ExecuteTemplate(res, "simpleinterestaccurate", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -217,7 +215,11 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton,
           newSession.CsrfToken, sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound,
           sif.Fd3Amount, sif.Fd3Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui4") {
       sif.CurrentButton = "lhs-button4"
       if req.Method == http.MethodPost {
@@ -248,11 +250,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-        "webfinances/templates/header.html",
-        "webfinances/templates/finances/simpleinterestaccurate/time.html",
-        "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "simpleinterestaccurate", struct {
+      err := tsia4.ExecuteTemplate(res, "simpleinterestaccurate", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -265,15 +263,19 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton,
           newSession.CsrfToken, sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV,
           sif.Fd4Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", sif.CurrentPage)
-      logger.LogInfo(errString, "-1")
+      logger.LogInfo(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
+      logger.LogWarning("*** Request timeout ***", correlationId)
       if strings.EqualFold(sif.CurrentPage, "rhs-ui1") {
         sif.Fd1Result = ""
       } else if strings.EqualFold(sif.CurrentPage, "rhs-ui2") {
@@ -286,17 +288,17 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
     }
     //
     if data, err := json.Marshal(sif); err != nil {
-      logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/siaccurate.txt", mainDir, userName)
       if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
         os.O_TRUNC, 0o600); err != nil {
-        logger.LogError(fmt.Sprintf("%+v", err), "-1")
+        logger.LogError(fmt.Sprintf("%+v", err), correlationId)
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, "-1")
+    logger.LogError(errString, correlationId)
     panic(errString)
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
