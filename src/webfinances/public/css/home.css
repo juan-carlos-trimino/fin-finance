@@ -215,8 +215,6 @@ button[disabled] {
   /* Align labels to the end of the grid cell (right-align) */
   justify-self: end;
 }
-/* .form-grid input {
-} */
 /*** Form grid ***/
 
 /*** Headers ***/
@@ -291,3 +289,34 @@ button[disabled] {
   color: #009879;
 } */
 /*** Table ***/
+
+/*** Input Buttons ***/
+/***
+If the CSS for an <input type="submit"> button isn't applying correctly, perform a hard refresh
+(Ctrl+F5 or Cmd+Shift+R) to clear your browser cache.
+***/
+input[type="submit"] {
+  padding: 10px 20px;  /* Top/Bottom and Left/Right */
+  font-size: 18px;  /* Increase text and button size proportionally */
+	border: 2px solid #0c0c0c;
+	border-radius: 20px;
+	background: rgb(2, 71, 31);
+  color: rgb(185, 241, 163);
+}
+
+input[type="submit"]:hover {
+  background-color: rgb(185, 241, 163);
+  color: rgb(2, 71, 31);
+	border: 2px solid #0c0c0c;
+	border-radius: 20px;
+	box-shadow: 5px 5px 5px #01632d;
+	text-shadow: none;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="date"] {
+  padding: 5px 5px;  /* Top/Bottom and Left/Right */
+  font-size: 15px;  /* Increase text and button size proportionally */
+}
+/*** Submit Buttons ***/

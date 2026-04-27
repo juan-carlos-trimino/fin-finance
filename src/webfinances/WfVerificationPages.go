@@ -6,7 +6,6 @@ import (
   "fmt"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gplogger"
-  "html/template"
   "net/http"
   "strings"
   "time"
@@ -60,8 +59,7 @@ func (s WfVerificationPages) RegistrationPage(res http.ResponseWriter, req *http
   if ok == nil {
     tmpl.ExecuteTemplate(res, "login_page", nil)
   } else {
-    t := template.Must(template.ParseFiles("webfinances/templates/register.html"))
-    t.ExecuteTemplate(res, "register_page", struct {
+    tmpl.ExecuteTemplate(res, "register_page", struct {
       Username string
       Password string
       Fname string
