@@ -33,15 +33,19 @@
           the authentication data was incorrect. Instead of "Invalid username" or "Invalid
           password", just use "Invalid username and/or password" interchangeably.
       -->
-      <form class="form-grid" method="post" action="/verify_login" enctype="application/x-www-form-urlencoded" autocomplete="off">
-        <label class="font-red-bold" for="uname">Username:</label>
-        <input type="text" id="uname" name="uname" autofocus required maxlength="256">
-        <!--
-        The password entry should be obscured on the user's screen.
-        -->
-        <label class="font-red-bold" for="pwd">Password:</label>
-        <input type="password" id="pwd" name="pwd" autofocus required maxlength="256">
-        <input type="submit" name="submit" value="Login">
+      <form method="post" action="/verify_login" enctype="application/x-www-form-urlencoded" autocomplete="off">
+        <div  class="form-grid">
+          <label class="font-red-bold" for="uname">Username</label>
+          <input type="text" id="uname" name="uname" autofocus required maxlength="256">
+          <!--
+          The password entry should be obscured on the user's screen.
+          -->
+          <label class="font-red-bold" for="pwd">Password</label>
+          <input type="password" id="pwd" name="pwd" autofocus required maxlength="256">
+        </div>
+        <div class="button-back-style">
+          <input type="submit" name="submit" value="Login">
+        </div>
       </form>
       <div>
         <br><label class="p-result">{{ .ErrMsg }}</label>
