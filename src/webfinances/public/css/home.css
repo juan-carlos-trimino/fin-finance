@@ -329,6 +329,16 @@ input[type="date"] {
   font-size: 15px;  /* Increase text and button size proportionally */
 }
 
+input[type="checkbox"] {
+  transform: scale(2);  /* Doubles the size */
+  margin: 10px;  /* Add margin to prevent overlapping text */
+}
+
+input[type="checkbox"]:hover {
+  color: solid rgb(2, 71, 31);
+  outline: 2px solid rgb(185, 241, 163);
+}
+
 /***
 By default, CSS Grid treats every direct child of a container -- including <input type="hidden"> --
 as a grid item. Even though it is invisible, it still occupies a cell in the grid flow, which often
@@ -341,45 +351,4 @@ submitted with the form.
 input[type="hidden"] {
   display: none;
 }
-/*** Submit Buttons ***/
-
-
-/* input[type="checkbox"] {
-  appearance: none;
-  width: 1.2em;
-  height: 1.2em;
-  border: 2px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  display: grid;
-  place-content: center;
-}
-
-input[type="checkbox"]::before {
-  content: "";
-  width: 0.6em;
-  height: 0.6em;
-  transform: scale(0);
-  background-color: blue;
-  transition: 120ms transform ease-in-out;
-   Use clip-path for a checkmark shape
-  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-} */
-input[type="checkbox"] {
-  /* appearance: none; */
-    /* border: 2px rgb(0, 0, 0);
- */
-    /* outline: 2px rgb(2, 71, 31); */
-    /* width: 40px;
-  height: 25px; */
-  transform: scale(2); /* Doubles the size */
-  margin: 10px; /* Add margin to prevent overlapping text */
-}
-
-input[type="checkbox"]:hover {
-    /* outline: 2px rgb(185, 241, 163); */
-     outline: 2px rgb(2, 71, 31);
-   /* color:rgb(2, 71, 31); */
-   /* filter: brightness(1.5); */
-  margin: 10px; /* Add margin to prevent overlapping text */
-}
+/*** Input Buttons ***/
