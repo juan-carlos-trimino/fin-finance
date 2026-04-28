@@ -188,9 +188,9 @@ button[disabled] {
 }
 /*** Font ***/
 
-/*** Form grid ***/
+/*** Grid ***/
 /* CSS Grid for aligning form elements. */
-.form-grid {
+.cnt-grid {
   display: grid; /* Declares the element as a grid container */
   /* Creates two columns: one for labels (auto-width); one for inputs (takes 50% of remaining space) */
   grid-template-columns: max-content 0.5fr;
@@ -198,18 +198,18 @@ button[disabled] {
   row-gap: 15px;
 }
 
-.form-grid>* {
+.cnt-grid>* {
   display: flex;
 }
 
-.form-grid>*:nth-child(2n+1) {
+.cnt-grid>*:nth-child(2n+1) {
   justify-content: right;
 }
 
-.grform-gridid>*:nth-child(2n) {
+.cnt-gr-gridid>*:nth-child(2n) {
   justify-content: left;
 }
-/*** Form grid ***/
+/*** Grid ***/
 
 /*** Headers ***/
 .h1-center {

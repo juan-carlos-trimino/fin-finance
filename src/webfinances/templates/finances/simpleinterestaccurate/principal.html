@@ -4,7 +4,7 @@
 <div id="rhs-ui3">
   <form action="/fin/simpleinterest/accurate" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div class="form-grid">
+    <div class="cnt-grid">
       <label class="cnt-textbox" for="fd3-time">Time (n)</label>
       <input class="cnt-textcombo" id="fd3-time" name="fd3-time" value="{{ .Fd3Time }}" type="number"
         step="any" min="1" maxlength="7" required/>
