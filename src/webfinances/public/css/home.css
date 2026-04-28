@@ -392,4 +392,13 @@ input[type="hidden"] {
   font-size: 18px;
   align-items: center;
 }
+
+.cnt-textbox-red {
+  text-align: left;
+  height: 32px;
+  color:red;
+  font-weight: bold;
+  font-size: 18px;
+  align-items: center;
+}
 /*** Textbox ***/
