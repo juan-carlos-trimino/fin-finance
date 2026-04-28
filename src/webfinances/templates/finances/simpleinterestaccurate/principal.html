@@ -5,11 +5,11 @@
   <form action="/fin/simpleinterest/accurate" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="form-grid">
-      <label class="text-box" for="fd3-time">Time (n)</label>
-      <input class="text-combo" id="fd3-time" name="fd3-time" value="{{ .Fd3Time }}" type="text"
+      <label class="cnt-textbox" for="fd3-time">Time (n)</label>
+      <input class="cnt-textcombo" id="fd3-time" name="fd3-time" value="{{ .Fd3Time }}" type="number"
         step="any" min="1" maxlength="7" required/>
-      <label class="text-box" for="fd3-tp">Time Period</label>
-      <select class="select-container" id="fd3-tp" name="fd3-tp">
+      <label class="cnt-textbox" for="fd3-tp">Time Period</label>
+      <select class="cnt-select" id="fd3-tp" name="fd3-tp">
         <option value="year" {{ if eq .Fd3TimePeriod "year" }} selected {{ end }}>Year(s)</option>
         <option value="semiyear" {{ if eq .Fd3TimePeriod "semiyear" }} selected {{ end }}>Semiyear(s)</option>
         <option value="quarter" {{ if eq .Fd3TimePeriod "quarter" }} selected {{ end }}>Quarter(s)</option>
@@ -17,11 +17,11 @@
         <option value="week" {{ if eq .Fd3TimePeriod "week" }} selected {{ end }}>Week(s)</option>
         <option value="day" {{ if eq .Fd3TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
-      <label class="text-box" for="fd3-interest">Interest (i %)</label>
-      <input class="text-combo" id="fd3-interest" name="fd3-interest" value="{{ .Fd3Interest }}"
+      <label class="cnt-textbox" for="fd3-interest">Interest (i %)</label>
+      <input class="cnt-textcombo" id="fd3-interest" name="fd3-interest" value="{{ .Fd3Interest }}"
         type="number" step="any" maxlength="7" required/>
-      <label class="text-box" for="fd3-compound">Compounding Period</label>
-      <select class="select-container" id="fd3-compound" name="fd3-compound">
+      <label class="cnt-textbox" for="fd3-compound">Compounding Period</label>
+      <select class="cnt-select" id="fd3-compound" name="fd3-compound">
         <option value="annually" {{ if eq .Fd3Compound "annually" }} selected {{ end }}>Annually</option>
         <option value="semiannually" {{ if eq .Fd3Compound "semiannually" }} selected {{ end }}>Semiannually</option>
         <option value="quarterly" {{ if eq .Fd3Compound "quarterly" }} selected {{ end }}>Quarterly</option>
@@ -30,8 +30,8 @@
         <option value="daily" {{ if eq .Fd3Compound "daily" }} selected {{ end }}>Daily</option>
         <!-- <option value="continuously" {{if eq .Fd3Compound "continuously"}} selected {{end}}>Continuously</option> -->
       </select>
-      <label class="text-box" for="fd3-amount">Amount of Interest</label>
-      <input class="text-combo" id="fd3-amount" name="fd3-amount" value="{{ .Fd3Amount }}"
+      <label class="cnt-textbox" for="fd3-amount">Amount of Interest</label>
+      <input class="cnt-textcombo" id="fd3-amount" name="fd3-amount" value="{{ .Fd3Amount }}"
         type="number" step="any" min="0" maxlength="7" required/>
     </div>
     <div class="button-back-style">

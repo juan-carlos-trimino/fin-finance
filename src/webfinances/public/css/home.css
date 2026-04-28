@@ -155,14 +155,6 @@ button[disabled] {
   margin-top: 20px;
 }
 
-.text-box {
-  text-align: left;
-  margin-left: 15px;
-  color:rgb(2, 71, 31);
-  font-weight: bold;
-  font-size: 18px;
-}
-
 .p-result {
   color: red;
   font-weight: bold;
@@ -347,7 +339,7 @@ input[type="hidden"] {
 /*** Input Buttons ***/
 
 /*** Select ***/
-.select-container {
+.cnt-select {
   /* Style the 'button' */
   appearance: base-select;  /* Enables modern customization */
   height: 32px;
@@ -366,7 +358,7 @@ input[type="hidden"] {
   }
 }
 
-.select-container:focus {
+.cnt-select:focus {
   outline: none;
   border: 2px solid black;
   /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); */
@@ -374,7 +366,7 @@ input[type="hidden"] {
 /*** Select ***/
 
 /*** Textcombo ***/
-.text-combo {
+.cnt-textcombo {
   /* color: rgb(2, 71, 31); */
   height: 32px;
   background-color: white;
@@ -384,9 +376,20 @@ input[type="hidden"] {
   font-weight: normal;
 }
 
-.text-combo:focus {
+.cnt-textcombo:focus {
   outline: none;
   border: 2px solid black;
   /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); */
 }
 /*** Textcombo ***/
+
+/*** Textbox ***/
+.cnt-textbox {
+  text-align: left;
+  height: 32px;
+  color:rgb(2, 71, 31);
+  font-weight: bold;
+  font-size: 18px;
+  align-items: center;
+}
+/*** Textbox ***/
