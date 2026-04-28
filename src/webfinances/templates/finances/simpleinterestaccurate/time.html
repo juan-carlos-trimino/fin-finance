@@ -2,16 +2,13 @@
 
 <!-- rhs-ui4 -->
 <div id="rhs-ui4">
-  <form action="/fin/simpleinterest/accurate" method="post"
-   enctype="application/x-www-form-urlencoded">
+  <form action="/fin/simpleinterest/accurate" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div class="text-style">
-      <label class="text-box" for="fd4-interest">Interest (i %).................</label>
+    <div class="form-grid">
+      <label class="text-box" for="fd4-interest">Interest (i %)</label>
       <input class="text-combo" id="fd4-interest" name="fd4-interest" value="{{ .Fd4Interest }}"
-       type="text" inputmode="numeric" step="any" maxlength="7" required/>
-    </div>
-    <div class="text-style">
-      <label class="text-box" for="fd4-compound">Compounding Period...</label>
+        type="text" inputmode="numeric" step="any" maxlength="7" required/>
+      <label class="text-box" for="fd4-compound">Compounding Period</label>
       <select class="text-combo" id="fd4-compound" name="fd4-compound">
         <option class="text-combo" value="annually"
          {{ if eq .Fd4Compound "annually" }} selected {{ end }}>Annually</option>
@@ -26,16 +23,12 @@
         <option class="text-combo" value="daily"
          {{ if eq .Fd4Compound "daily" }} selected {{ end }}>Daily</option>
       </select>
-    </div>
-    <div class="text-style">
-      <label class="text-box" for="fd4-amount">Amount of Interest.......</label>
+      <label class="text-box" for="fd4-amount">Amount of Interest</label>
       <input class="text-combo" id="fd4-amount" name="fd4-amount" value="{{ .Fd4Amount }}"
-       type="number" step="any" min="0" maxlength="7" required/>
-    </div>
-    <div class="text-style">
-      <label class="text-box" for="fd4-pv">Present Value (PV).......</label>
+        type="number" step="any" min="0" maxlength="7" required/>
+      <label class="text-box" for="fd4-pv">Present Value (PV)</label>
       <input class="text-combo" id="fd4-pv" name="fd4-pv" value="{{ .Fd4PV }}" type="number"
-       step="any" min="1" maxlength="7" required/>
+        step="any" min="1" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">
