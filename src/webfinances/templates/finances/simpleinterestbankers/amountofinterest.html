@@ -9,7 +9,7 @@
       <input class="cnt-textcombo" id="fd1-time" name="fd1-time" value="{{ .Fd1Time }}" type="number"
        inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-tp">Time Period</label>
-      <select class="cnt-textcombo" id="fd1-tp" name="fd1-tp">
+      <select class="cnt-select" id="fd1-tp" name="fd1-tp">
         <option class="text-combo" value="year"
          {{ if eq .Fd1TimePeriod "year" }} selected {{ end }}>Year(s)</option>
         <option class="text-combo" value="semiyear"
@@ -27,7 +27,7 @@
       <input class="cnt-textcombo" id="fd1-interest" name="fd1-interest" value="{{ .Fd1Interest }}"
        type="number" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-compound">Compounding Period</label>
-      <select class="cnt-textcombo" id="fd1-compound" name="fd1-compound">
+      <select class="cnt-select" id="fd1-compound" name="fd1-compound">
         <option value="annually" {{ if eq .Fd1Compound "annually" }} selected {{ end }}>Annually</option>
         <option value="semiannually" {{if eq .Fd1Compound "semiannually"}} selected {{end}}>Semiannually</option>
         <option value="quarterly" {{ if eq .Fd1Compound "quarterly" }} selected {{ end }}>Quarterly</option>
