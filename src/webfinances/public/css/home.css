@@ -352,3 +352,30 @@ input[type="hidden"] {
   display: none;
 }
 /*** Input Buttons ***/
+
+/*** Select ***/
+.select-container {
+  /* Style the 'button' */
+  appearance: base-select;  /* Enables modern customization */
+  height: 32px;
+  font-size: 18px;
+  font-weight: normal;
+  background-color: white;
+  border-radius: 5px;
+  border: 1px solid black;
+  /* Style the 'listbox' */
+  &::picker(select) {
+    appearance: base-select;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 10px;
+  }
+}
+
+.select-container:focus {
+  outline: none;
+  border: 2px solid black;
+  /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); */
+}
+/*** Select ***/
