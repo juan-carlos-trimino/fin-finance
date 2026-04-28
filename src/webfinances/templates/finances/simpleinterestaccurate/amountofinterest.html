@@ -20,7 +20,9 @@
         inputmode="numeric" step="any" maxlength="7" required/>
       <label class="text-box" for="fd1-leap">Leap year?</label>
       <!-- By default, only checked checkboxes are sent to the server; unchecked ones are omitted entirely. -->
-      <input type="checkbox" id="fd1-leap" name="fd1-leap" value="checked" {{if .Fd1Leap }} checked {{ end }}/>
+      <span>
+        <input type="checkbox" id="fd1-leap" name="fd1-leap" value="checked" {{if .Fd1Leap }} checked {{ end }}/>
+      </span>
       <label class="text-box" for="fd1-tp">Time Period</label>
       <select class="text-combo" id="fd1-tp" name="fd1-tp">
         <option class="text-combo" value="year"
