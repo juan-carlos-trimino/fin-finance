@@ -9,19 +9,13 @@
       <input class="text-combo" id="fd4-interest" name="fd4-interest" value="{{ .Fd4Interest }}"
         type="text" inputmode="numeric" step="any" maxlength="7" required/>
       <label class="text-box" for="fd4-compound">Compounding Period</label>
-      <select class="text-combo" id="fd4-compound" name="fd4-compound">
-        <option class="text-combo" value="annually"
-         {{ if eq .Fd4Compound "annually" }} selected {{ end }}>Annually</option>
-        <option class="text-combo" value="semiannually"
-         {{ if eq .Fd4Compound "semiannually" }} selected {{ end }}>Semiannually</option>
-        <option class="text-combo" value="quarterly"
-         {{ if eq .Fd4Compound "quarterly" }} selected {{ end }}>Quarterly</option>
-        <option class="text-combo" value="monthly"
-         {{ if eq .Fd4Compound "monthly" }} selected {{ end }}>Monthly</option>
-        <option class="text-combo" value="weekly"
-         {{ if eq .Fd4Compound "weekly" }} selected {{ end }}>Weekly</option>
-        <option class="text-combo" value="daily"
-         {{ if eq .Fd4Compound "daily" }} selected {{ end }}>Daily</option>
+      <select class="select-container" id="fd4-compound" name="fd4-compound">
+        <option value="annually" {{ if eq .Fd4Compound "annually" }} selected {{ end }}>Annually</option>
+        <option value="semiannually" {{ if eq .Fd4Compound "semiannually" }} selected {{ end }}>Semiannually</option>
+        <option value="quarterly" {{ if eq .Fd4Compound "quarterly" }} selected {{ end }}>Quarterly</option>
+        <option value="monthly" {{ if eq .Fd4Compound "monthly" }} selected {{ end }}>Monthly</option>
+        <option value="weekly" {{ if eq .Fd4Compound "weekly" }} selected {{ end }}>Weekly</option>
+        <option value="daily" {{ if eq .Fd4Compound "daily" }} selected {{ end }}>Daily</option>
       </select>
       <label class="text-box" for="fd4-amount">Amount of Interest</label>
       <input class="text-combo" id="fd4-amount" name="fd4-amount" value="{{ .Fd4Amount }}"
