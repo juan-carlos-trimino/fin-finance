@@ -163,13 +163,6 @@ button[disabled] {
   font-size: 18px;
 }
 
-.text-combo {
-  color: rgb(2, 71, 31);
-  background-color: rgb(182, 239, 160);
-  font-weight: bold;
-  font-size: 18px;
-}
-
 .p-result {
   color: red;
   font-weight: bold;
@@ -379,3 +372,21 @@ input[type="hidden"] {
   /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); */
 }
 /*** Select ***/
+
+/*** Textcombo ***/
+.text-combo {
+  /* color: rgb(2, 71, 31); */
+  height: 32px;
+  background-color: white;
+  border: 1px solid black;
+  font-weight: bold;
+  font-size: 18px;
+  font-weight: normal;
+}
+
+.text-combo:focus {
+  outline: none;
+  border: 2px solid black;
+  /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); */
+}
+/*** Textcombo ***/
