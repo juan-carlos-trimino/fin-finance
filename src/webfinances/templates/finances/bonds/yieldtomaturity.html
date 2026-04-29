@@ -39,14 +39,16 @@
       <fieldset class="radio-fieldset">
         <legend class="radio-legend">Select Appropriate Choice</legend>
         <div>
-          <input type="radio" id="fd4-curinterest" name="fd4-choice" value="fd4-curinterest" checked>
+          <input type="radio" id="fd4-curinterest" name="fd4-choice" value="fd4-curinterest"
+            {{ if eq .Fd4CurrentRadio "fd4-curinterest" }} checked {{ end }}>
           <label class="radio-label" for="fd4-curinterest">
             Current Interest (%)
           </label><br>
           <label class="cnt-textbox" for="fd4-ci">Current Interest (%)</label>
           <input type="number" class="cnt-textcombo" id="fd4-ci" name="fd4-ci" value="{{ .Fd4CurInterest }}"
             step="any" maxlength="7" required/><br>
-          <input type="radio" id="fd4-bondprice" name="fd4-choice" value="fd4-bondprice">
+          <input type="radio" id="fd4-bondprice" name="fd4-choice" value="fd4-bondprice"
+            {{ if eq .Fd4CurrentRadio "fd4-bondprice" }} checked {{ end }}>
           <label class="radio-label" for="fd4-bondprice">
             Bond Price
           </label><br>
@@ -62,7 +64,6 @@
       </button>
     </div>
   </form>
-  <script type="text/javascript" src="/public/js/bondsYTM.js?radio='{{ .Fd4CurrentRadio }}'&cb='{{ .CurrentButton }}'"></script>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
     <p class="p-result">{{ index .Fd4Result 0 }}</p>

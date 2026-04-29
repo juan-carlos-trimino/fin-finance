@@ -221,6 +221,7 @@ button[disabled] {
 
 /*** Radio ***/
 .radio-fieldset {
+  display: inline-block;  /* Border only wraps around the content */
   margin-top: 20px;
   margin-left: 15px;
   border: 3px solid rgb(2, 71, 31);
