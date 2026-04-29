@@ -19,8 +19,8 @@
         <option value="continuously" {{if eq .Fd5Compound "continuously"}} selected {{ end }}>Continuously</option>
       </select>
       <label class="cnt-textbox" for="fd5-factor">Factor</label>
-      <input class="cnt-textcombo" id="fd5-factor" name="fd5-factor" value="{{ .Fd5Factor }}"
-        type="number" step="1" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd5-factor" name="fd5-factor" value="{{ .Fd5Factor }}"
+        inputmode="numeric" step="1" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui5" type="submit">

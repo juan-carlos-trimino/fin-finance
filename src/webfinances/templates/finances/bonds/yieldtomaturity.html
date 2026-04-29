@@ -7,11 +7,11 @@
     <!-- margin: top, right, bottom, left -->
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd4-facevalue">Face Value</label>
-      <input class="cnt-textcombo" id="fd4-facevalue" name="fd4-facevalue" value="{{ .Fd4FaceValue }}"
-        type="number" inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd4-facevalue" name="fd4-facevalue" value="{{ .Fd4FaceValue }}"
+        inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd4-time">Time (n)</label>
       <input type="number" class="cnt-textcombo" id="fd4-time" name="fd4-time" value="{{ .Fd4Time }}"
-        step="any" maxlength="7" required/>
+        inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd4-tp">Time Period</label>
       <select class="cnt-select" name="fd4-tp" id="fd4-tp">
         <option value="year" {{ if eq .Fd4TimePeriod "year" }} selected {{ end }}>Year(s)</option>
@@ -23,7 +23,7 @@
       </select>
       <label class="cnt-textbox" for="fd4-coupon">Coupon Rate (%)</label>
       <input type="number" class="cnt-textcombo" id="fd4-coupon" name="fd4-coupon" value="{{ .Fd4Coupon }}"
-        step="0.5" maxlength="7" required/>
+        inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd4-compound">Compounding Period</label>
       <select class="cnt-select" id="fd4-compound" name="fd4-compound">
         <option value="annually" {{ if eq .Fd4Compound "annually" }} selected {{ end }}>Annually</option>
@@ -46,7 +46,7 @@
           </label><br>
           <label class="cnt-textbox" for="fd4-ci">Current Interest (%)</label>
           <input type="number" class="cnt-textcombo" id="fd4-ci" name="fd4-ci" value="{{ .Fd4CurInterest }}"
-            step="any" maxlength="7" required/><br>
+            inputmode="numeric" step="any" maxlength="7" required/><br>
           <input type="radio" id="fd4-bondprice" name="fd4-choice" value="fd4-bondprice"
             {{ if eq .Fd4CurrentRadio "fd4-bondprice" }} checked {{ end }}>
           <label class="radio-label" for="fd4-bondprice">
@@ -54,7 +54,7 @@
           </label><br>
           <label class="cnt-textbox" for="fd4-bp">Bond Price</label>
           <input type="number" class="cnt-textcombo" id="fd4-bp" name="fd4-bp" value="{{ .Fd4BondPrice }}"
-            step="any" maxlength="7" required/>
+            inputmode="numeric" step="any" maxlength="7" required/>
         </div>
       </fieldset>
     </div>

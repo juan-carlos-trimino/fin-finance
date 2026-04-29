@@ -6,8 +6,8 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd4-interest">Interest (i %)</label>
-      <input class="cnt-textcombo" id="fd4-interest" name="fd4-interest" value="{{ .Fd4Interest }}"
-        type="number" inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd4-interest" name="fd4-interest" value="{{ .Fd4Interest }}"
+        inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd4-compound">Compounding Period</label>
       <select class="cnt-select" id="fd4-compound" name="fd4-compound">
         <option value="annually" {{ if eq .Fd4Compound "annually" }} selected {{ end }}>Annually</option>
@@ -18,11 +18,11 @@
         <option value="daily" {{ if eq .Fd4Compound "daily" }} selected {{ end }}>Daily</option>
       </select>
       <label class="cnt-textbox" for="fd4-amount">Amount of Interest</label>
-      <input class="cnt-textcombo" id="fd4-amount" name="fd4-amount" value="{{ .Fd4Amount }}"
-        type="number" step="any" min="0" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd4-amount" name="fd4-amount" value="{{ .Fd4Amount }}"
+        inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd4-pv">Present Value (PV)</label>
-      <input class="cnt-textcombo" id="fd4-pv" name="fd4-pv" value="{{ .Fd4PV }}" type="number"
-        step="any" min="1" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd4-pv" name="fd4-pv" value="{{ .Fd4PV }}"
+        inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">

@@ -6,8 +6,8 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd3-time">Time (n)</label>
-      <input class="cnt-textcombo" id="fd3-time" name="fd3-time" value="{{ .Fd3Time }}" type="number"
-        step="any" min="1" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd3-time" name="fd3-time" value="{{ .Fd3Time }}"
+        inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd3-tp">Time Period</label>
       <select class="cnt-select" id="fd3-tp" name="fd3-tp">
         <option value="year" {{ if eq .Fd3TimePeriod "year" }} selected {{ end }}>Year(s)</option>
@@ -18,8 +18,8 @@
         <option value="day" {{ if eq .Fd3TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
       <label class="cnt-textbox" for="fd3-interest">Interest (i %)</label>
-      <input class="cnt-textcombo" id="fd3-interest" name="fd3-interest" value="{{ .Fd3Interest }}"
-        type="number" step="any" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd3-interest" name="fd3-interest" value="{{ .Fd3Interest }}"
+        inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd3-compound">Compounding Period</label>
       <select class="cnt-select" id="fd3-compound" name="fd3-compound">
         <option value="annually" {{ if eq .Fd3Compound "annually" }} selected {{ end }}>Annually</option>
@@ -31,8 +31,8 @@
         <!-- <option value="continuously" {{if eq .Fd3Compound "continuously"}} selected {{end}}>Continuously</option> -->
       </select>
       <label class="cnt-textbox" for="fd3-amount">Amount of Interest</label>
-      <input class="cnt-textcombo" id="fd3-amount" name="fd3-amount" value="{{ .Fd3Amount }}"
-        type="number" step="any" min="0" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd3-amount" name="fd3-amount" value="{{ .Fd3Amount }}"
+        inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui3" type="submit">

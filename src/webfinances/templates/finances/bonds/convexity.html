@@ -6,11 +6,11 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd8-facevalue">Face Value</label>
-      <input class="cnt-textcombo" id="fd8-facevalue" name="fd8-facevalue" value="{{ .Fd8FaceValue }}"
-        type="number" inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd8-facevalue" name="fd8-facevalue" value="{{ .Fd8FaceValue }}"
+        inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd8-time">Time</label>
-      <input class="cnt-textcombo" id="fd8-time" name="fd8-time" value="{{ .Fd8Time }}" type="number"
-        step="any" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd8-time" name="fd8-time" value="{{ .Fd8Time }}"
+        inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd8-tp">Time Period</label>
       <select class="cnt-select" name="fd8-tp" id="fd8-tp">
         <option value="year" {{ if eq .Fd8TimePeriod "year" }} selected {{ end }}>Year(s)</option>
@@ -20,8 +20,8 @@
         <option value="week" {{ if eq .Fd8TimePeriod "week" }} selected {{ end }}>Week(s)</option>
       </select>
       <label class="cnt-textbox" for="fd8-coupon">Coupon Rate (%)</label>
-      <input class="cnt-textcombo" id="fd8-coupon" name="fd8-coupon" value="{{ .Fd8Coupon }}"
-        type="number" step="0.5" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd8-coupon" name="fd8-coupon" value="{{ .Fd8Coupon }}"
+        inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd8-compound-coupon">Compounding Period</label>
       <select class="cnt-select" id="fd8-compound-coupon" name="fd8-compound-coupon">
         <option value="annually" {{ if eq .Fd8CompoundCoupon "annually" }} selected {{ end }}>Annually</option>
@@ -32,8 +32,8 @@
         <!-- <option value="continuously" {{ if eq .Fd8CompoundCoupon "continuously" }} selected {{ end }}>Continuously</option> -->
       </select>
       <label class="cnt-textbox" for="fd8-current">Current Interest (%)</label>
-      <input class="cnt-textcombo" id="fd8-current" name="fd8-current" value="{{ .Fd8CurInterest }}"
-        type="number" step="0.5" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd8-current" name="fd8-current" value="{{ .Fd8CurInterest }}"
+        inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox">Compounding Period or</label><br>
       <label class="cnt-textbox" for="fd8-compound">Coupon Payment Frequency</label>
       <select class="cnt-select" id="fd8-compound" name="fd8-compound">

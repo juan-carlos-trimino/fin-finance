@@ -19,14 +19,14 @@
       <input class="cnt-textcombo" id="fd1-taxfree" name="fd1-taxfree" value="{{ .Fd1TaxFree }}"
         type="0.5" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-citytax">City Tax Rate, if applicable (%)</label>
-      <input class="cnt-textcombo" id="fd1-citytax" name="fd1-citytax" value="{{ .Fd1CityTax }}"
-        type="number" step="0.5" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd1-citytax" name="fd1-citytax" value="{{ .Fd1CityTax }}"
+        inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-statetax">State Tax Rate, if applicable (%)</label>
-      <input class="cnt-textcombo" id="fd1-statetax" name="fd1-statetax" value="{{ .Fd1StateTax }}"
-        type="number" step="0.5" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd1-statetax" name="fd1-statetax" value="{{ .Fd1StateTax }}"
+        inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-federaltax">Federal Tax Rate (%)</label>
-      <input class="cnt-textcombo" id="fd1-federaltax" name="fd1-federaltax" value="{{ .Fd1FederalTax }}"
-        type="number" step="0.5" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd1-federaltax" name="fd1-federaltax" value="{{ .Fd1FederalTax }}"
+        inputmode="numeric" step="0.5" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" value="rhs-ui1" name="compute" type="submit">

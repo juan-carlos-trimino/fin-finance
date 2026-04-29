@@ -19,7 +19,7 @@
       </select>
       <label class="cnt-textbox" for="fd7-rate">Depreciation Rate (%)</label>
       <input type="number" class="cnt-textcombo" id="fd7-rate" name="fd7-rate" value="{{ .Fd7Rate }}"
-        step="any" maxlength="7" required/>
+        inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd7-compound">Compounding Period</label>
       <select class="cnt-select" id="fd7-compound" name="fd7-compound">
         <option value="annually" {{ if eq .Fd7Compound "annually" }} selected {{ end }}>Annually</option>
@@ -31,8 +31,8 @@
         <option value="continuously" {{if eq .Fd7Compound "continuously"}} selected {{ end }}>Continuously</option>
       </select>
       <label class="cnt-textbox" for="fd7-pv">Present Value (PV)</label>
-      <input class="cnt-textcombo" id="fd7-pv" name="fd7-pv" value="{{ .Fd7PV }}" type="number"
-        step="any" maxlength="7" required/>
+      <input type="number" class="cnt-textcombo" id="fd7-pv" name="fd7-pv" value="{{ .Fd7PV }}"
+        inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui7" type="submit">
