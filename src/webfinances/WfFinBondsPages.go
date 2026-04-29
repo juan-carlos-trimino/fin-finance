@@ -322,7 +322,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
             annualRate = a.CompoundingFrequencyConversion(couponRate / 100.0,
               a.GetCompoundingPeriod(bf.Fd4Compound[0], true), a.GetCompoundingPeriod('a', true)) * 100.0
           }
-          bf.Fd4Result[1] = fmt.Sprintf("Current Yield = %.3f%%", b.CurrentYield(annualRate, fv, bondPrice) * 100.0)
+          bf.Fd4Result[1] = fmt.Sprintf("Current Yield: %.3f%%", b.CurrentYield(annualRate, fv, bondPrice) * 100.0)
         }
         logger.LogInfo(fmt.Sprintf(
          "fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur radio = %s, cur interest = %s, bond price = %s, %s",
