@@ -229,14 +229,17 @@ button[disabled] {
 .radio-legend {
   font-weight: bold;
   font-size: 18px;
+  color: rgb(2, 71, 31);
 }
 .radio-label {
   color:rgb(2, 71, 31);
   font-weight: bold;
   font-size: 18px;
+  margin: 10px;
 }
-.radio-text-box {
-  margin-left: 30px;
+input[type='radio'] {
+  transform: scale(2);  /* Doubles the size */
+  margin: 20px;  /* Add margin to prevent overlapping */
 }
 /*** Radio ***/
 
@@ -311,7 +314,7 @@ input[type="text"],
 input[type="password"],
 input[type="date"] {
   padding: 5px 5px;  /* Top/Bottom and Left/Right */
-  font-size: 15px;  /* Increase text and button size proportionally */
+  font-size: 18px;  /* Increase text and button size proportionally */
 }
 
 input[type="checkbox"] {
