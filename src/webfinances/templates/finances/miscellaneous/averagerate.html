@@ -4,10 +4,10 @@
 <div id="rhs-ui6">
   <form action="/fin/miscellaneous" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
-    <div class="text-style">
-      <label class="text-box" for="fd6-values">Values...</label>
-      <input class="text-combo" id="fd6-values" name="fd6-values" value="{{ .Fd6Values }}"
-       type="string" required/>
+    <div class="cnt-grid">
+      <label class="cnt-textbox" for="fd6-values">Values</label>
+      <input class="ct-textcombo" id="fd6-values" name="fd6-values" value="{{ .Fd6Values }}"
+        type="string" required/>
     </div>
     <div>
       <p class="p-note">{{ index .Fd6Result 0 }}</p>

@@ -19,47 +19,47 @@
         <legend>Fields in Red are required</legend><br>
       </div>
       <form method="post" action="/registration" enctype="application/x-www-form-urlencoded" autocomplete="off">
-        <div class="form-grid">
-          <label class="font-red-bold" for="uname">Username</label>
+        <div class="cnt-grid">
+          <label class="cnt-textbox-red" for="uname">Username</label>
           <input type="text" id="uname" name="uname" value="{{ .Username }}" autofocus required maxlength="256">
           <!--
           The password entry should be obscured on the user's screen.
           -->
-          <label class="font-red-bold" for="pwd">Password</label>
+          <label class="cnt-textbox-red" for="pwd">Password</label>
           <input type="password" id="pwd" name="pwd" value="{{ .Password }}" autofocus required maxlength="256">
-          <label class="font-red-bold" for="fname">First Name</label>
+          <label class="cnt-textbox-red" for="fname">First Name</label>
           <input type="text" id="fname" name="fname" value="{{ .Fname }}" autofocus required maxlength="256">
-          <label class="font-black-bold" for="mname">Middle Name</label>
+          <label class="cnt-textbox" for="mname">Middle Name</label>
           <input type="text" id="mname" name="mname" value="{{ .Mname }}" autofocus maxlength="256">
-          <label class="font-red-bold" for="lname">Last Name</label>
+          <label class="cnt-textbox-red" for="lname">Last Name</label>
           <input type="text" id="lname" name="lname" value="{{ .Lname }}" autofocus required maxlength="256">
-          <label class="font-black-bold" for="marketing">Marketing Consent</label>
-          <select class="select-container" id="marketing" name="marketing">
+          <label class="cnt-textbox" for="marketing">Marketing Consent</label>
+          <select class="cnt-select" id="marketing" name="marketing">
             <option value="true" {{ if eq .Marketing "true" }} selected {{ end }}>TRUE</option>
             <option value="false" {{ if eq .Marketing "false" }} selected {{ end }}>FALSE</option>
           </select>
-          <label class="font-red-bold" for="bdate">Birth Date</label>
+          <label class="cnt-textbox-red" for="bdate">Birth Date</label>
           <input type="date" id="bdate" name="bdate" value="{{ .Bdate }}" min="1899-12-31" max="2050-12-31" required/>
-          <label class="font-black-bold" for="gender">Gender</label>
-          <select class="select-container" id="gender" name="gender">
+          <label class="cnt-textbox" for="gender">Gender</label>
+          <select class="cnt-select" id="gender" name="gender">
             <option value="male" {{ if eq .Gender "male" }} selected {{ end }}>MALE</option>
             <option value="female" {{ if eq .Gender "female" }} selected {{ end }}>FEMALE</option>
           </select>
-          <label class="font-red-bold" for="address1">Address</label>
+          <label class="cnt-textbox-red" for="address1">Address</label>
           <input type="text" id="address1" name="address1" value="{{ .Address1 }}" autofocus required maxlength="256">
-          <label class="font-black-bold" for="address2">Address</label>
+          <label class="cnt-textbox" for="address2">Address</label>
           <input type="text" id="address2" name="address2" value="{{ .Address2 }}" autofocus maxlength="256">
-          <label class="font-red-bold" for="city">City</label>
+          <label class="cnt-textbox-red" for="city">City</label>
           <input type="text" id="city" name="city" value="{{ .City }}" autofocus required maxlength="256">
-          <label class="font-red-bold" for="state">State</label>
+          <label class="cnt-textbox-red" for="state">State</label>
           <input type="text" id="state" name="state" value="{{ .State }}" autofocus required maxlength="256">
-          <label class="font-red-bold" for="country">Country</label>
+          <label class="cnt-textbox-red" for="country">Country</label>
           <input type="text" id="country" name="country" value="{{ .Country }}" autofocus required maxlength="128">
-          <label class="font-black-bold" for="zip_code">Zip Code</label>
+          <label class="cnt-textbox" for="zip_code">Zip Code</label>
           <input type="text" id="zip_code" name="zip_code" value="{{ .Zip_Code }}" autofocus maxlength="64">
-          <label class="font-red-bold" for="email">Email</label>
+          <label class="cnt-textbox-red" for="email">Email</label>
           <input type="text" id="email" name="email" value="{{ .Email }}" autofocus required maxlength="256">
-          <label class="font-red-bold" for="phone">Phone</label>
+          <label class="cnt-textbox-red" for="phone">Phone</label>
           <input type="text" id="phone" name="phone" value="{{ .Phone }}" autofocus required maxlength="64">
         </div>
         <div class="button-back-style">

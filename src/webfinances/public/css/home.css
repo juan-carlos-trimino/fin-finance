@@ -164,7 +164,7 @@ button[disabled] {
 .p-note {
   color: rgb(2, 71, 31);
   font-weight: bold;
-  font-size: 14px;
+  font-size: 16px;
   /* margin: top, right, bottom, left */
   margin: 10px 0px 0px 20px;
 }
