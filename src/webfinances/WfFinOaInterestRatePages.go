@@ -89,11 +89,14 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/ordinaryannuity/interestrate/interestrate.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/ordinaryannuity/interestrate/interestrate.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/ordinaryannuity/interestrate/n-PV-FV.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "oainterestrate", struct {
+      err := t.ExecuteTemplate(res, "oainterestrate", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -107,7 +110,11 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
       } { "Ordinary Annuity / Interest Rate", logger.DatetimeFormat(), of.CurrentButton,
           newSession.CsrfToken, of.Fd1N, of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV,
           of.Fd1Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
       logger.LogError(errString, "-1")

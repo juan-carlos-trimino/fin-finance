@@ -12,36 +12,41 @@
     <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
   </head>
   <body>
-    <div>
-      {{ template "header" . }}
-    </div>
-    <div class="split-screen">
-      <div class="left-side">
-        <div class="button-style">
-          <a href="/fin/ordinaryannuity/pv?compute=rhs-ui1" target="_self">
-            <button class="button" id="lhs-button1">
-              n, i, FV
-            </button>
-          </a>
+    <main>
+      <div class="center-title">
+        {{ template "title" . }}
+      </div>
+      <div class="center-datetime">
+        {{ template "datetime" . }}
+      </div>
+      {{ template "navbar" . }}
+      <div class="split-screen">
+        <div class="left-side">
+          <div class="button-style">
+            <a href="/fin/ordinaryannuity/pv?compute=rhs-ui1" target="_self">
+              <button class="button" id="lhs-button1">
+                n, i, FV
+              </button>
+            </a>
+          </div>
+          <div class="button-style">
+            <a href="/fin/ordinaryannuity/pv?compute=rhs-ui2" target="_self">
+              <button class="button" id="lhs-button2">
+                n, i, PMT
+              </button>
+            </a>
+          </div>
+          <div class="button-back-style">
+            <a href="/fin/ordinaryannuity" target="_self">
+              <button class="button">Back</button>
+            </a>
+          </div>
         </div>
-        <div class="button-style">
-          <a href="/fin/ordinaryannuity/pv?compute=rhs-ui2" target="_self">
-            <button class="button" id="lhs-button2">
-              n, i, PMT
-            </button>
-          </a>
-        </div>
-        <div class="button-back-style">
-          <a href="/fin/ordinaryannuity" target="_self">
-            <button class="button">Back</button>
-          </a>
+        <div class="right-side">
+          {{ template "oapresentvalue-layout" . }}
         </div>
       </div>
-      <!---->
-      <div class="right-side">
-        {{ template "oapresentvalue-layout" . }}
-      </div>
-    </div>
+    </main>
     {{ template "footer" }}
   </body>
 </html>

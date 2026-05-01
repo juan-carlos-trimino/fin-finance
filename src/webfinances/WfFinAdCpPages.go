@@ -132,11 +132,14 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/annuitydue/cp/cp.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/annuitydue/cp/cp.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/annuitydue/cp/i-PMT-PV.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "adcompoundingperiods", struct {
+      err := t.ExecuteTemplate(res, "adcompoundingperiods", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -148,7 +151,11 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Fd2Result string
       } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), af.CurrentButton,
           newSession.CsrfToken, af.Fd2Interest, af.Fd2Compound, af.Fd2Payment, af.Fd2PV, af.Fd2Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(af.CurrentPage, "rhs-ui3") {
       af.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
@@ -178,11 +185,14 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/annuitydue/cp/cp.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/annuitydue/cp/cp.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/annuitydue/cp/i-PMT-FV.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "adcompoundingperiods", struct {
+      err := t.ExecuteTemplate(res, "adcompoundingperiods", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -194,7 +204,11 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Fd3Result string
       } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), af.CurrentButton,
           newSession.CsrfToken, af.Fd3Interest, af.Fd3Compound, af.Fd3Payment, af.Fd3FV, af.Fd3Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)
       logger.LogError(errString, "-1")

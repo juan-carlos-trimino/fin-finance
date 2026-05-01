@@ -136,11 +136,14 @@ func (a WfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/annuitydue/pv/pv.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/annuitydue/pv/pv.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/annuitydue/pv/n-i-PMT.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "adpresentvalue", struct {
+      err := t.ExecuteTemplate(res, "adpresentvalue", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -154,7 +157,11 @@ func (a WfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
       } { "Annuity Due / Present Value", logger.DatetimeFormat(), af.CurrentButton,
           newSession.CsrfToken, af.Fd2N, af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound,
           af.Fd2PMT, af.Fd2Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)
       logger.LogError(errString, "-1")

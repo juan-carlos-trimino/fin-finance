@@ -2,7 +2,7 @@ package webfinances
 
 import (
   "context"
-	"encoding/json"
+  "encoding/json"
   "finance/finances"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
@@ -11,7 +11,7 @@ import (
   "github.com/juan-carlos-trimino/gpsessions"
   "html/template"
   "net/http"
-	"os"
+  "os"
   "strconv"
   "strings"
   "time"
@@ -89,11 +89,14 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/annuitydue/epp/epp.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/annuitydue/epp/epp.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/annuitydue/epp/n-i-FV.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "adequalperiodicpayments", struct {
+      err := t.ExecuteTemplate(res, "adequalperiodicpayments", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -107,7 +110,11 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
       } { "Annuity Due / Equal Periodic Payments", logger.DatetimeFormat(), af.CurrentButton,
           newSession.CsrfToken, af.Fd1N, af.Fd1TimePeriod, af.Fd1Interest, af.Fd1Compound,
           af.Fd1FV, af.Fd1Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(af.CurrentPage, "rhs-ui2") {
       af.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -138,11 +145,14 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/annuitydue/epp/epp.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/annuitydue/epp/epp.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/annuitydue/epp/n-i-PV.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "adequalperiodicpayments", struct {
+      err := t.ExecuteTemplate(res, "adequalperiodicpayments", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -156,7 +166,11 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
       } { "Annuity Due / Equal Periodic Payments", logger.DatetimeFormat(), af.CurrentButton,
           newSession.CsrfToken, af.Fd2N, af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound,
           af.Fd2PV, af.Fd2Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)
       logger.LogError(errString, "-1")

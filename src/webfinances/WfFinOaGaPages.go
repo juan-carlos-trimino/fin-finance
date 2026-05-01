@@ -91,11 +91,14 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/ordinaryannuity/ga/ga.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/ordinaryannuity/ga/ga.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/ordinaryannuity/ga/FV.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "oagrowingannuity", struct {
+      err := t.ExecuteTemplate(res, "oagrowingannuity", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -109,7 +112,11 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
       } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), of.CurrentButton,
           newSession.CsrfToken, of.Fd1N, of.Fd1Interest, of.Fd1Compound, of.Fd1Grow,
           of.Fd1Pmt, of.Fd1Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
       of.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -142,11 +149,14 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/ordinaryannuity/ga/ga.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/ordinaryannuity/ga/ga.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/ordinaryannuity/ga/PV.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "oagrowingannuity", struct {
+      err := t.ExecuteTemplate(res, "oagrowingannuity", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -160,7 +170,11 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
       } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), of.CurrentButton,
           newSession.CsrfToken, of.Fd2N, of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt,
           of.Fd2Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
       logger.LogError(errString, "-1")
