@@ -12,8 +12,14 @@
   </head>
   <body>
     <main>
-      <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
-      {{ template "header" . }}
+      <div class="center-title">
+        <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
+        {{ template "title" . }}
+      </div>
+      <div class="center-datetime">
+        {{ template "datetime" . }}
+      </div>
+      {{ template "navbar" . }}
       <div class="button-style">
         <a href="/banking" target="_self">
           <button class="button">Banking</button>

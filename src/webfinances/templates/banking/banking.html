@@ -10,7 +10,13 @@
   </head>
   <body>
     <main>
-      {{ template "header" . }}
+      <div class="center-title">
+        {{ template "title" . }}
+      </div>
+      <div class="center-datetime">
+        {{ template "datetime" . }}
+      </div>
+      {{ template "navbar" . }}
       <div class="button-style">
         <a href="/banking/checking" target="_self">
           <button class="button">Checking</button>

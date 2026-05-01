@@ -31,6 +31,32 @@ body {
   font-size: 15px;
 }
 
+/*** Headers ***/
+.h1-center {
+  display: flex;
+  justify-content: center; /* Centers horizontally */
+  align-items: center;     /* Centers vertically */
+}
+/*** Headers ***/
+
+/*** Headers ***/
+.center-title {
+  display: flex;
+  justify-content: center; /* Centers horizontally */
+  align-items: center;     /* Centers vertically */
+  color:rgb(2, 71, 31);
+  font-size: 30px;
+}
+
+.center-datetime {
+  display: flex;
+  justify-content: center; /* Centers horizontally */
+  align-items: center;     /* Centers vertically */
+  color:rgb(2, 71, 31);
+  font-size: 15px;
+}
+/*** Headers ***/
+
 nav {
   clear: both;
 }
@@ -210,14 +236,6 @@ button[disabled] {
   justify-content: left;
 }
 /*** Grid ***/
-
-/*** Headers ***/
-.h1-center {
-  display: flex;
-  justify-content: center; /* Centers horizontally */
-  align-items: center;     /* Centers vertically */
-}
-/*** Headers ***/
 
 /*** Radio ***/
 .radio-fieldset {
