@@ -87,11 +87,14 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/finances/miscellaneous/nominalrate.html",
-                                             "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "miscellaneous", struct {
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/miscellaneous/miscellaneous.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
+        "webfinances/templates/finances/miscellaneous/nominalrate.html",
+        "webfinances/templates/footer.html"))
+      err := t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -101,7 +104,11 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd1Result [2]string
       } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd1Nominal, mf.Fd1Compound, mf.Fd1Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui2") {
       mf.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -122,11 +129,14 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/finances/miscellaneous/effectiveannualrate.html",
-                                             "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "miscellaneous", struct {
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/miscellaneous/miscellaneous.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
+        "webfinances/templates/finances/miscellaneous/effectiveannualrate.html",
+        "webfinances/templates/footer.html"))
+      err := t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -136,7 +146,11 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd2Result [3]string
       } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd2Effective, mf.Fd2Compound, mf.Fd2Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui3") {
       mf.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
@@ -160,11 +174,14 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/finances/miscellaneous/nominalratevs.html",
-                                             "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "miscellaneous", struct {
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/miscellaneous/miscellaneous.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
+        "webfinances/templates/finances/miscellaneous/nominalratevs.html",
+        "webfinances/templates/footer.html"))
+      err := t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -174,7 +191,11 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd3Result [4]string
       } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd3Nominal, mf.Fd3Inflation, mf.Fd3Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui4") {
       mf.CurrentButton = "lhs-button4"
       if req.Method == http.MethodPost {
@@ -224,11 +245,14 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/finances/miscellaneous/compfrequencyconv.html",
-                                             "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "miscellaneous", struct {
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/miscellaneous/miscellaneous.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
+        "webfinances/templates/finances/miscellaneous/compfrequencyconv.html",
+        "webfinances/templates/footer.html"))
+      err := t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -239,7 +263,11 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd4Result string
       } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd4CurrentRate, mf.Fd4CurrentCompound, mf.Fd4NewCompound, mf.Fd4Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui5") {
       mf.CurrentButton = "lhs-button5"
       if req.Method == http.MethodPost {
@@ -265,11 +293,14 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/finances/miscellaneous/growthdecay.html",
-                                             "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "miscellaneous", struct {
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/miscellaneous/miscellaneous.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
+        "webfinances/templates/finances/miscellaneous/growthdecay.html",
+        "webfinances/templates/footer.html"))
+      err := t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -280,7 +311,11 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd5Result string
       } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd5Interest, mf.Fd5Compound, mf.Fd5Factor, mf.Fd5Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui6") {
       mf.CurrentButton = "lhs-button6"
       if req.Method == http.MethodPost {
@@ -305,11 +340,14 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/finances/miscellaneous/averagerate.html",
-                                             "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "miscellaneous", struct {
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/miscellaneous/miscellaneous.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
+        "webfinances/templates/finances/miscellaneous/averagerate.html",
+        "webfinances/templates/footer.html"))
+      err := t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -318,7 +356,11 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd6Result [2]string
       } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd6Values, mf.Fd6Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui7") {
       mf.CurrentButton = "lhs-button7"
       if req.Method == http.MethodPost {
@@ -350,11 +392,14 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/miscellaneous/miscellaneous.html",
-                                             "webfinances/templates/header.html",
-                                             "webfinances/templates/finances/miscellaneous/depreciation.html",
-                                             "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "miscellaneous", struct {
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/miscellaneous/miscellaneous.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
+        "webfinances/templates/finances/miscellaneous/depreciation.html",
+        "webfinances/templates/footer.html"))
+      err := t.ExecuteTemplate(res, "miscellaneous", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -367,7 +412,11 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Fd7Result string
       } { "Miscellaneous", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd7Time, mf.Fd7TimePeriod, mf.Fd7Rate, mf.Fd7Compound, mf.Fd7PV, mf.Fd7Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", mf.CurrentPage)
       logger.LogError(errString, "-1")

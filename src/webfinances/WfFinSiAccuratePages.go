@@ -98,10 +98,6 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      /***
-      The Must function wraps around the ParseGlob function that returns a pointer to a template
-      and an error, and it panics if the error is not nil.
-      ***/
       err := tsia1.ExecuteTemplate(res, "simpleinterestaccurate", struct {
         Header string
         Datetime string
