@@ -104,11 +104,14 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/mortgage/mortgage.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/mortgage/mortgage.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/mortgage/costofmortgage.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "mortgage", struct {
+      err := t.ExecuteTemplate(res, "mortgage", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -121,7 +124,11 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd1Result [3]string
       } { "Mortgage", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
           mf.Fd1N, mf.Fd1TimePeriod, mf.Fd1Interest, mf.Fd1Compound, mf.Fd1Amount, mf.Fd1Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui2") {
       mf.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -184,11 +191,14 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/mortgage/mortgage.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/mortgage/mortgage.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/mortgage/amortizationtable.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "mortgage", struct {
+      err := t.ExecuteTemplate(res, "mortgage", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -204,7 +214,11 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       } { "Mortgage", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken, mf.Fd2N,
           mf.Fd2TimePeriod, mf.Fd2Interest, mf.Fd2Compound, mf.Fd2Amount, mf.Fd2TotalCost,
           mf.Fd2TotalInterest, mf.Fd2Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui3") {
       mf.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
@@ -237,11 +251,14 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/mortgage/mortgage.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/mortgage/mortgage.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/mortgage/heloc.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "mortgage", struct {
+      err := t.ExecuteTemplate(res, "mortgage", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -253,7 +270,11 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd3Result [3]string
       } { "Mortgage", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken, mf.Fd3Mrate,
           mf.Fd3Mbalance, mf.Fd3Hrate, mf.Fd3Hbalance, mf.Fd3Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", mf.CurrentPage)
       logger.LogError(errString, "-1")

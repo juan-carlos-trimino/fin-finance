@@ -87,11 +87,14 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestordinary/ordinary.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+				"webfinances/templates/finances/simpleinterestordinary/ordinary.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/simpleinterestordinary/amountofinterest.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "simpleinterestordinary", struct {
+      err := t.ExecuteTemplate(res, "simpleinterestordinary", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -105,7 +108,11 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton,
           newSession.CsrfToken, sif.Fd1Time, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound,
           sif.Fd1PV, sif.Fd1Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui2") {
       sif.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -135,11 +142,14 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestordinary/ordinary.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+				"webfinances/templates/finances/simpleinterestordinary/ordinary.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/simpleinterestordinary/interestrate.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "simpleinterestordinary", struct {
+      err := t.ExecuteTemplate(res, "simpleinterestordinary", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -152,7 +162,11 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton,
           newSession.CsrfToken, sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV,
           sif.Fd2Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui3") {
       sif.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
@@ -185,11 +199,14 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestordinary/ordinary.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+				"webfinances/templates/finances/simpleinterestordinary/ordinary.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/simpleinterestordinary/principal.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "simpleinterestordinary", struct {
+      err := t.ExecuteTemplate(res, "simpleinterestordinary", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -203,7 +220,11 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton,
           newSession.CsrfToken, sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound,
           sif.Fd3Amount, sif.Fd3Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui4") {
       sif.CurrentButton = "lhs-button4"
       if req.Method == http.MethodPost {
@@ -234,11 +255,14 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/simpleinterestordinary/ordinary.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+				"webfinances/templates/finances/simpleinterestordinary/ordinary.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/simpleinterestordinary/time.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "simpleinterestordinary", struct {
+      err := t.ExecuteTemplate(res, "simpleinterestordinary", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -251,7 +275,11 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton,
           newSession.CsrfToken, sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV,
           sif.Fd4Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", sif.CurrentPage)
       logger.LogError(errString, "-1")

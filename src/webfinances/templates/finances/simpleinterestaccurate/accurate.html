@@ -13,50 +13,56 @@
     <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
   </head>
   <body>
-    <div>
-      {{ template "header" . }}
-    </div>
-    <div class="split-screen">
-      <div class="left-side">
-        <div class="button-style">
-          <a href="/fin/simpleinterest/accurate?compute=rhs-ui1" target="_self">
-            <button class="button" id="lhs-button1">
-              Amount of Interest
-            </button>
-          </a>
+    <main>
+      <div class="center-title">
+        {{ template "title" . }}
+      </div>
+      <div class="center-datetime">
+        {{ template "datetime" . }}
+      </div>
+      {{ template "navbar" . }}
+      <div class="split-screen">
+        <div class="left-side">
+          <div class="button-style">
+            <a href="/fin/simpleinterest/accurate?compute=rhs-ui1" target="_self">
+              <button class="button" id="lhs-button1">
+                Amount of Interest
+              </button>
+            </a>
+          </div>
+          <div class="button-style">
+            <a href="/fin/simpleinterest/accurate?compute=rhs-ui2" target="_self">
+              <button class="button" id="lhs-button2">
+                Interest Rate
+              </button>
+            </a>
+          </div>
+          <div class="button-style">
+            <a href="/fin/simpleinterest/accurate?compute=rhs-ui3" target="_self">
+              <button class="button" id="lhs-button3">
+                Principal
+              </button>
+            </a>
+          </div>
+          <div class="button-style">
+            <a href="/fin/simpleinterest/accurate?compute=rhs-ui4" target="_self">
+              <button class="button" id="lhs-button4">
+                Time
+              </button>
+            </a>
+          </div>
+          <div class="button-back-style">
+            <a href="/fin/simpleinterest" target="_self">
+              <button class="button">Back</button>
+            </a>
+          </div>
         </div>
-        <div class="button-style">
-          <a href="/fin/simpleinterest/accurate?compute=rhs-ui2" target="_self">
-            <button class="button" id="lhs-button2">
-              Interest Rate
-            </button>
-          </a>
-        </div>
-        <div class="button-style">
-          <a href="/fin/simpleinterest/accurate?compute=rhs-ui3" target="_self">
-            <button class="button" id="lhs-button3">
-              Principal
-            </button>
-          </a>
-        </div>
-        <div class="button-style">
-          <a href="/fin/simpleinterest/accurate?compute=rhs-ui4" target="_self">
-            <button class="button" id="lhs-button4">
-              Time
-            </button>
-          </a>
-        </div>
-        <div class="button-back-style">
-          <a href="/fin/simpleinterest" target="_self">
-            <button class="button">Back</button>
-          </a>
+        <!---->
+        <div class="right-side">
+          {{ template "simpleinterestaccurate-layout" . }}
         </div>
       </div>
-      <!---->
-      <div class="right-side">
-        {{ template "simpleinterestaccurate-layout" . }}
-      </div>
-    </div>
+    </main>
     {{ template "footer" }}
   </body>
 </html>

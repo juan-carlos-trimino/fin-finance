@@ -38,22 +38,30 @@ func init() {
   tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/finances/*.html"))
   tsia1 = template.Must(template.New("sia1").ParseFiles(
     "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-    "webfinances/templates/header.html",
+		"webfinances/templates/title.html",
+		"webfinances/templates/datetime.html",
+		"webfinances/templates/navbar.html",
     "webfinances/templates/finances/simpleinterestaccurate/amountofinterest.html",
     "webfinances/templates/footer.html"))
   tsia2 = template.Must(template.New("sia2").ParseFiles(
     "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-    "webfinances/templates/header.html",
+		"webfinances/templates/title.html",
+		"webfinances/templates/datetime.html",
+		"webfinances/templates/navbar.html",
     "webfinances/templates/finances/simpleinterestaccurate/interestrate.html",
     "webfinances/templates/footer.html"))
   tsia3 = template.Must(template.New("sia3").ParseFiles(
     "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-    "webfinances/templates/header.html",
+		"webfinances/templates/title.html",
+		"webfinances/templates/datetime.html",
+		"webfinances/templates/navbar.html",
     "webfinances/templates/finances/simpleinterestaccurate/principal.html",
     "webfinances/templates/footer.html"))
   tsia4 = template.Must(template.New("sia4").ParseFiles(
     "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-    "webfinances/templates/header.html",
+		"webfinances/templates/title.html",
+		"webfinances/templates/datetime.html",
+		"webfinances/templates/navbar.html",
     "webfinances/templates/finances/simpleinterestaccurate/time.html",
     "webfinances/templates/footer.html"))
 }
