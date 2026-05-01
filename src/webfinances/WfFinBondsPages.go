@@ -105,11 +105,14 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/bonds/bonds.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+				"webfinances/templates/finances/bonds/bonds.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/bonds/taxfree.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "bonds", struct {
+      err := t.ExecuteTemplate(res, "bonds", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -121,7 +124,11 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Fd1Result string
       } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd1TaxFree,
           bf.Fd1CityTax, bf.Fd1StateTax, bf.Fd1FederalTax, bf.Fd1Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui2") {
       bf.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -174,11 +181,14 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/bonds/bonds.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+				"webfinances/templates/finances/bonds/bonds.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/bonds/currentprice.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "bonds", struct {
+      err := t.ExecuteTemplate(res, "bonds", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -194,7 +204,11 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken,
           bf.Fd2FaceValue, bf.Fd2Time, bf.Fd2TimePeriod, bf.Fd2Coupon, bf.Fd2CompoundCoupon,
           bf.Fd2Current, bf.Fd2Compound, bf.Fd2Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui3") {
       bf.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
@@ -235,11 +249,14 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/bonds/bonds.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+				"webfinances/templates/finances/bonds/bonds.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/bonds/yieldtocall.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "bonds", struct {
+      err := t.ExecuteTemplate(res, "bonds", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -255,7 +272,11 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd3FaceValue,
           bf.Fd3TimeCall, bf.Fd3TimePeriod, bf.Fd3Coupon, bf.Fd3Compound, bf.Fd3BondPrice,
           bf.Fd3CallPrice, bf.Fd3Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui4") {
       bf.CurrentButton = "lhs-button4"
       if req.Method == http.MethodPost {
@@ -332,11 +353,14 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/bonds/bonds.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+				"webfinances/templates/finances/bonds/bonds.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/bonds/yieldtomaturity.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "bonds", struct {
+      err := t.ExecuteTemplate(res, "bonds", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -353,7 +377,11 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd4FaceValue,
           bf.Fd4Time, bf.Fd4TimePeriod, bf.Fd4Coupon, bf.Fd4Compound, bf.Fd4CurrentRadio,
           bf.Fd4CurInterest, bf.Fd4BondPrice, bf.Fd4Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui5") {
       bf.CurrentButton = "lhs-button5"
       if req.Method == http.MethodPost {
@@ -432,11 +460,14 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/bonds/bonds.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+				"webfinances/templates/finances/bonds/bonds.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/bonds/duration.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "bonds", struct {
+      err := t.ExecuteTemplate(res, "bonds", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -452,7 +483,11 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd5FaceValue,
           bf.Fd5Time, bf.Fd5TimePeriod, bf.Fd5Coupon, bf.Fd5CompoundCoupon, bf.Fd5CurInterest,
           bf.Fd5Compound, bf.Fd5Result,
-        })
+      })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui6") {
     //   bf.CurrentButton = "lhs-button6"
     //   if req.Method == http.MethodPost {
