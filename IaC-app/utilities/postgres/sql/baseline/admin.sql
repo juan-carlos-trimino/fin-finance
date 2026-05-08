@@ -1,45 +1,45 @@
---*************************************************************************************************
--- Notes
--- * By default, Postgres ignores case and always turns every identifier into lowercase. Postgres
---   preserves case only when the identifier is double quoted (e.g., "id"), and double-quoted
---   identifiers, known as 'delimited identifiers', are case sensitive.
--- * In Postgres, you can CAST between types with the :: shorthand.
--- * In PostgreSQL, stored procedures are not atomic by default but can manage their own
---   transactions explicitly to ensure atomicity. This is a key difference from PostgreSQL
---   functions, which are always atomic and run within a single, implicit transaction.
--- * Postgres executes a function atomically and transactionally; i.e, if the function fails at any
---   step during its execution, all previous changes made within that function are rolled back,
---   ensuring data integrity and consistency.
--- Notes (Backup)
--- To perform a dump.
--- $ pg_dump finances > /tmp/finances.dump
--- To restore (first create the database).
--- psql finances < /tmp/finances.dump
--- To time how long it takes to restore.
--- time psql finances < /tmp/finances.dump
--- Notes (Indexes)
--- * Postgres defaults to a B-tree index unless another data strcuture is specified. B-tree
---   supports a wide range of data types and can be used for both equality searches (=) and range
---   queries using greater than (>, >=), less than (<, <=), and BETWEEN operators.
--- * It's good practice to run the ANALYZE command after creating an index.
---   When a new index is created, the query planner may not take advantage of it immediately and
---   may continue relying on previously collected statistics. Running ANALYZE updates the table
---   statistics, allowing the planner to take full advantage of the new index.
--- * Postgres automatically creates an index for the primary key column.
--- * Indexes can significantly optimize query performance, but they don't come for free. Each time
---   we create a new index, Postgres must maintain it by updating its structure whenever the value
---   of an indexed column changes in the primary table.
---   Apart from the index maintenance aspects, the more indexes Postgres has, the more time it will
---   spend in the planning phase while selecting and generating the most efficient execution plan
---   for a query.
---*************************************************************************************************
+/**************************************************************************************************
+Notes
+ * By default, Postgres ignores case and always turns every identifier into lowercase. Postgres
+   preserves case only when the identifier is double quoted (e.g., "id"), and double-quoted
+   identifiers, known as 'delimited identifiers', are case sensitive.
+ * In Postgres, you can CAST between types with the :: shorthand.
+ * In PostgreSQL, stored procedures are not atomic by default but can manage their own transactions
+   explicitly to ensure atomicity. This is a key difference from PostgreSQL functions, which are
+   always atomic and run within a single, implicit transaction.
+ * Postgres executes a function atomically and transactionally; i.e, if the function fails at any
+   step during its execution, all previous changes made within that function are rolled back,
+   ensuring data integrity and consistency.
+Notes (Backup)
+ To perform a dump.
+ $ pg_dump finances > /tmp/finances.dump
+ To restore (first create the database).
+ $ psql finances < /tmp/finances.dump
+ To time how long it takes to restore.
+ $ time psql finances < /tmp/finances.dump
+Notes (Indexes)
+ * Postgres defaults to a B-tree index unless another data strcuture is specified. B-tree supports
+   a wide range of data types and can be used for both equality searches (=) and range queries
+   using greater than (>, >=), less than (<, <=), and BETWEEN operators.
+ * It's good practice to run the ANALYZE command after creating an index.
+   When a new index is created, the query planner may not take advantage of it immediately and may
+   continue relying on previously collected statistics. Running ANALYZE updates the table
+   statistics, allowing the planner to take full advantage of the new index.
+ * Postgres automatically creates an index for the primary key column.
+ * Indexes can significantly optimize query performance, but they don't come for free. Each time we
+   create a new index, Postgres must maintain it by updating its structure whenever the value of an
+   indexed column changes in the primary table.
+   Apart from the index maintenance aspects, the more indexes Postgres has, the more time it will
+   spend in the planning phase while selecting and generating the most efficient execution plan for
+   a query.
+**************************************************************************************************/
 -- Online Banking System.
 SELECT 'Output from script, run began at: ' AS "Script Information",
   NOW() AS "Date and Time Executed";
 
--- ************************************************************************************************
--- Create the database
--- ************************************************************************************************
+/**************************************************************************************************
+DATABASE
+**************************************************************************************************/
 CREATE DATABASE finances
 WITH
   ALLOW_CONNECTIONS = TRUE
@@ -50,38 +50,38 @@ WITH
   IS_TEMPLATE = FALSE  -- Only superusers or the database owner can clone the database.
   TEMPLATE = 'template0';
 
--- ************************************************************************************************
--- Connect to the database.
--- ************************************************************************************************
+/**************************************************************************************************
+Connect to the database.
+**************************************************************************************************/
 \c finances
 
 \qecho 'Current database version:'
 SELECT version();
 
--- ************************************************************************************************
--- To use bcrypt in Postgres, you can utilize the pgcrypto extension. This extension provides the
--- crypt() and gen_salt() functions necessary for secure password hashing and verification within
--- SQL. Enable the extension in your specific database by running the following SQL command.
--- ************************************************************************************************
+/**************************************************************************************************
+To use bcrypt in Postgres, you can utilize the pgcrypto extension. This extension provides the
+crypt() and gen_salt() functions necessary for secure password hashing and verification within SQL.
+Enable the extension in your specific database by running the following SQL command.
+**************************************************************************************************/
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- ************************************************************************************************
--- Create the schemas
--- ************************************************************************************************
+/**************************************************************************************************
+SCHEMAS
+**************************************************************************************************/
 CREATE SCHEMA IF NOT EXISTS fin;
 
--- ************************************************************************************************
--- Once connected, set the search path to look for objects in your schema first, and if not found,
--- to fall back to the default public schema.
--- ************************************************************************************************
+/**************************************************************************************************
+Once connected, set the search path to look for objects in your schema first, and if not found, to
+fall back to the default public schema.
+**************************************************************************************************/
 SET search_path TO fin, public;
 
--- ************************************************************************************************
--- Create the tables
--- customers-to-customer_contact_details Relationship: One-to-One
--- customers-to-credentials Relationship: One-to-One
--- URL: /register
--- ************************************************************************************************
+/**************************************************************************************************
+TABLES
+customers-to-customer_contact_details Relationship: One-to-One
+customers-to-credentials Relationship: One-to-One
+URL: /register
+**************************************************************************************************/
 CREATE TABLE IF NOT EXISTS fin.customers(
   id                 INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   first_name         TEXT NOT NULL
@@ -168,9 +168,9 @@ CREATE TABLE IF NOT EXISTS  fin.customers_credentials(
   last_attempt     TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
--- ************************************************************************************************
--- Create functions/stored procedures
--- ************************************************************************************************
+/**************************************************************************************************
+FUNCTIONS/STORED PROCEDURES
+**************************************************************************************************/
 -- DROP PROCEDURE IF EXISTS fin.add_customer;
 CREATE OR REPLACE PROCEDURE fin.add_customer(
   IN p_user_name TEXT,
