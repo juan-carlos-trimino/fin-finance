@@ -38,7 +38,7 @@ SELECT 'Output from script, run began at: ' AS "Script Information",
   NOW() AS "Date and Time Executed";
 
 /**************************************************************************************************
-DATABASE
+                                            *** DATABASE ***
 **************************************************************************************************/
 CREATE DATABASE finances
 WITH
@@ -50,40 +50,56 @@ WITH
   IS_TEMPLATE = FALSE  -- Only superusers or the database owner can clone the database.
   TEMPLATE = 'template0';
 
-/**************************************************************************************************
+/***
 Connect to the database.
-**************************************************************************************************/
+***/
 \c finances
 
 \qecho 'Current database version:'
 SELECT version();
 
 /**************************************************************************************************
+                                         *** EXTENSION ***
+***************************************************************************************************
 To use bcrypt in Postgres, you can utilize the pgcrypto extension. This extension provides the
 crypt() and gen_salt() functions necessary for secure password hashing and verification within SQL.
 Enable the extension in your specific database by running the following SQL command.
-**************************************************************************************************/
+***/
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 /**************************************************************************************************
-SCHEMAS
+                                           *** SCHEMAS ***
 **************************************************************************************************/
 CREATE SCHEMA IF NOT EXISTS fin;
 
-/**************************************************************************************************
+/***
 Once connected, set the search path to look for objects in your schema first, and if not found, to
 fall back to the default public schema.
-**************************************************************************************************/
+***/
 SET search_path TO fin, public;
 
 /**************************************************************************************************
-TABLES
+                                           *** TABLES ***
+***************************************************************************************************
 customers-to-customer_contact_details Relationship: One-to-One
 customers-to-credentials Relationship: One-to-One
 URL: /register
-**************************************************************************************************/
+***/
 CREATE TABLE IF NOT EXISTS fin.customers(
   id                 INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  /***
+  A column defined with a DEFAULT value and a CHECK constraint still needs an explicit NOT NULL
+  constraint if you want to prevent NULL values.
+  Here's why:
+  DEFAULT Constraint: This constraint only applies if no value is provided during an INSERT
+  operation. If you explicitly INSERT a NULL value into a column, the default value is bypassed,
+  and the NULL is inserted (unless NOT NULL is present).
+  CHECK Constraint: In SQL, any comparison involving a NULL value evaluates to UNKNOWN, not TRUE
+  or FALSE. A CHECK constraint only fails if the condition evaluates to FALSE. If it evaluates to
+  TRUE or UNKNOWN (due to a NULL value), the constraint is satisfied and the NULL is accepted.
+  NOT NULL Constraint: This is the only constraint specifically designed to enforce the presence of
+  data and prohibit NULL values in a column.
+  ***/
   first_name         TEXT NOT NULL
   -- Block empty strings ('') and strings with only blanks (' ').
                        CONSTRAINT check_first_name
@@ -92,11 +108,14 @@ CREATE TABLE IF NOT EXISTS fin.customers(
   last_name          TEXT NOT NULL
                        CONSTRAINT check_last_name
                          CHECK(TRIM(last_name) <> ''),
+  is_admin           BOOLEAN NOT NULL DEFAULT FALSE,
   marketing_consent  BOOLEAN NOT NULL DEFAULT FALSE,
-  -- https://www.postgresql.org/docs/current/datatype-datetime.html
-  -- This stores date and time along with time zone information. PostgreSQL automatically converts
-  -- the timestamp to UTC for storage and adjusts it back based on the current time zone settings
-  -- when queried. 8 bytes in length.
+  /***
+  https://www.postgresql.org/docs/current/datatype-datetime.html
+  This stores date and time along with time zone information. PostgreSQL automatically converts the
+  timestamp to UTC for storage and adjusts it back based on the current time zone settings when
+  queried. 8 bytes in length.
+  ***/
   created_at         TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at         TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -107,14 +126,24 @@ CREATE INDEX idx_last_name
 ANALYZE fin.customers;
 
 CREATE TABLE IF NOT EXISTS fin.customers_contact_details(
-  -- A column can be both a primary key (PK) and a foreign key (FK) in a database table. This
-  --design is used to represent a one-to-one or one-to-zero relationship between two tables,
-  --ensuring that for every row in the child table there is exactly one corresponding row in the
-  --parent table.
+  /***
+  A column can be both a primary key (PK) and a foreign key (FK) in a database table. This design
+  is used to represent a one-to-one or one-to-zero relationship between two tables, ensuring that
+  for every row in the child table there is exactly one corresponding row in the parent table.
+  ***/
   id            INT PRIMARY KEY,
+                /***
+                A foreign key is a column or a set of columns in a database table (the child table)
+                that refers a unique constraint in another table (the parent table) establishing a
+                link between the two.
+                ***/
                 CONSTRAINT fk_customers_contact_details_to_customers
                   FOREIGN KEY(id)
                   REFERENCES fin.customers(id)
+                  /***
+                  Automatically deletes all the referencing rows in the child table when the
+                  referenced rows in the parent table are deleted.
+                  ***/
                   ON DELETE CASCADE,
   birth_date    DATE NOT NULL  --YYYY-MM-DD
                   CONSTRAINT check_birth_date
@@ -140,10 +169,12 @@ CREATE TABLE IF NOT EXISTS fin.customers_contact_details(
   phone         TEXT NOT NULL
                   CONSTRAINT check_phone
                     CHECK(TRIM(phone) <> ''),
-  -- https://www.postgresql.org/docs/current/datatype-datetime.html
-  -- This stores date and time along with time zone information. PostgreSQL automatically converts
-  -- the timestamp to UTC for storage and adjusts it back based on the current time zone settings
-  -- when queried. 8 bytes in length.
+  /***
+  https://www.postgresql.org/docs/current/datatype-datetime.html
+  This stores date and time along with time zone information. PostgreSQL automatically converts the
+  timestamp to UTC for storage and adjusts it back based on the current time zone settings when
+  queried. 8 bytes in length.
+  ***/
   created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -169,7 +200,7 @@ CREATE TABLE IF NOT EXISTS  fin.customers_credentials(
 );
 
 /**************************************************************************************************
-FUNCTIONS/STORED PROCEDURES
+                                 *** FUNCTIONS/STORED PROCEDURES ***
 **************************************************************************************************/
 -- DROP PROCEDURE IF EXISTS fin.add_customer;
 CREATE OR REPLACE PROCEDURE fin.add_customer(
