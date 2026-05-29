@@ -7,7 +7,7 @@ SELECT 'Output from script, run began at: ' AS "Script Information",
 -- *******************
 -- Important - You should back up the master database each time that you create, modify, or drop a
 -- database.
-CREATE DATABASE db_check_register
+CREATE DATABASE check_register
 WITH
   ALLOW_CONNECTIONS = TRUE
   CONNECTION_LIMIT = -1  -- Unlimited connections.
@@ -53,10 +53,10 @@ END
 $$;
 --CREATE ROLE trimino WITH LOGIN PASSWORD 'trimino';
 -- It allows the role to connect to the specified database.
-GRANT CONNECT ON DATABASE db_check_register TO trimino;
+GRANT CONNECT ON DATABASE check_register TO trimino;
 -- It revokes the connect privilege for all other roles to the database. In Postgres, PUBLIC is a
 -- default role that includes all users.
-REVOKE CONNECT ON DATABASE db_check_register FROM PUBLIC;
+REVOKE CONNECT ON DATABASE check_register FROM PUBLIC;
 --
 GRANT USAGE ON SCHEMA public TO trimino;
 GRANT USAGE ON SCHEMA customers TO trimino;
@@ -126,18 +126,6 @@ CREATE TABLE IF NOT EXISTS accounts.tbl_accounts(
   -- to the same record in the parent table (tbl_customers), thus enforcing the "one-to-one" aspect.
   customer_id  UUID UNIQUE NOT NULL,
   acct_name    VARCHAR(64) UNIQUE NOT NULL,
-  -- A column defined with a DEFAULT value and a CHECK constraint still needs an explicit NOT NULL
-  -- constraint if you want to prevent NULL values.
-  -- Here's why:
-  -- DEFAULT Constraint: This constraint only applies if no value is provided during an INSERT
-  -- operation. If you explicitly INSERT a NULL value into a column, the default value is bypassed,
-  -- and the NULL is inserted (unless NOT NULL is present).
-  -- CHECK Constraint: In SQL, any comparison involving a NULL value evaluates to UNKNOWN, not TRUE
-  -- or FALSE. A CHECK constraint only fails if the condition evaluates to FALSE. If it evaluates
-  -- to TRUE or UNKNOWN (due to a NULL value), the constraint is satisfied and the NULL is
-  -- accepted.
-  -- NOT NULL Constraint: This is the only constraint specifically designed to enforce the presence
-  -- of data and prohibit NULL values in a column.
   acct_type    VARCHAR(16) NOT NULL DEFAULT 'checking'
                  CONSTRAINT check_account_type
                    CHECK(acct_type IN('checking', 'savings')),
