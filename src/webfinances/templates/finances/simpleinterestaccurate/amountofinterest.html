@@ -34,7 +34,7 @@
       </select>
       <label class="cnt-textbox" for="fd1-interest">Interest (i %)</label>
       <input type="number" class="cnt-textcombo" id="fd1-interest" name="fd1-interest" value="{{ .Fd1Interest }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+        inputmode="numeric" step="0.01" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-compound">Compounding Period</label>
       <select class="cnt-select" id="fd1-compound" name="fd1-compound">
         <option value="annually" {{ if eq .Fd1Compound "annually" }} selected {{ end }}>Annually</option>
