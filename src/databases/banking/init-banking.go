@@ -14,6 +14,7 @@ import (
   "github.com/juan-carlos-trimino/go-os"
   "github.com/juan-carlos-trimino/gplogger"
   "os/exec"
+  "regexp"
   "strings"
   "sync"
   "time"
@@ -47,10 +48,10 @@ var (
 func InitializeBsPool(ctx context.Context, connString, correlationId string) *banking {
   /***
   The anonymous function passed to bsOnce.Do will be executed only once across all calls to
-  GetBsInstance(), even if multiple goroutines call it concurrently. This ensures thread-safe
+  InitializeBsPool(), even if multiple goroutines call it concurrently. This ensures thread-safe
   initialization.
-  Lazy initialization: The Singleton instance is created only when GetBsInstance() is first called,
-  not when the program starts.
+  Lazy initialization: The Singleton instance is created only when InitializeBsPool() is first
+  called, not when the program starts.
   ***/
   bsOnce.Do(func() {
     logger.LogInfo("Initializing connection pool...", correlationId)
@@ -107,12 +108,20 @@ func GetBsInstance() (*banking) {
   }
 }
 
-func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, sslmode string, port,
-  connect_timeout int, pathToScript, correlationId string) bool {
+func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, targetDb, sslmode string,
+  port, connect_timeout int, pathToScript, correlationId string) bool {
   for _, str := range strings.Split(osu.ShowPermissions(pathToScript, false), "\n") {
     if str != "" {
       logger.LogInfo(str, correlationId)
     }
+  }
+  //Strict input validation: Allow only letters, numbers, and underscores.
+  //It stops malicious SQL characters (like ';', '--', '"') completely (preventing SQL injection).
+  isValidName := regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
+  if !isValidName(targetDb) {
+    logger.LogError(fmt.Sprintf("Invalid database name %q: Names must only contain alphanumeric" +
+      " characters or underscores", targetDb), correlationId)
+    return false
   }
   //postgresql://[user[:password]@][host[:port]]/[dbname][?option1=value1&option2=value2]
   // var connString string = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password,
@@ -126,6 +135,23 @@ func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, sslmode
     return false
   }
   defer conn.Close(ctx)
+  /***
+  To check if a PostgreSQL database exists, you must connect to a default maintenance database
+  (like 'postgres') first because you cannot query a server's global catalog if you try to connect
+  directly to a database that does not exist. Once connected, execute a query against the
+  pg_catalog.pg_database system catalog table.
+  ***/
+  var exists bool = false
+  //Query the pg_database catalog.
+  query := "SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_database WHERE datname = $1);"
+  err = conn.QueryRow(ctx, query, targetDb).Scan(&exists)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("Unable to determine whether database exists: %v", err), correlationId)
+    return false
+  } else if exists {
+    logger.LogInfo(fmt.Sprintf("Database %q already exists. Skipping creation.", targetDb), correlationId)
+    return true
+  }
   cmd := exec.Command("psql", psqlInfo, "-f", pathToScript)
   out, err := cmd.CombinedOutput()
   if err != nil {
@@ -150,8 +176,6 @@ func StringPtr(s string) *string {
   }
 }
 
-
-
 func PtrString(s *string) string {
   if s == nil {
     return ""
@@ -159,9 +183,6 @@ func PtrString(s *string) string {
     return *s
   }
 }
-
-
-
 
 //TimePtr is a helper function to return a pointer to a time.Time.
 func TimePtr(t time.Time) *time.Time {
