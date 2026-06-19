@@ -10,6 +10,9 @@ Notes
  * Postgres executes a function atomically and transactionally; i.e, if the function fails at any
    step during its execution, all previous changes made within that function are rolled back,
    ensuring data integrity and consistency.
+ * After a COMMIT or ROLLBACK is issued inside a procedure, a new transaction is automatically
+   started; you do not need a separate START TRANSACTION command.
+ * END is a Postgres extension to the SQL language that is equivalent to COMMIT.
 Notes (Backup)
  To perform a dump.
  $ pg_dump finances > /tmp/finances.dump
@@ -38,10 +41,50 @@ SELECT 'Output from script, run began at: ' AS "Script Information",
   NOW() AS "Date and Time Executed";
 
 /**************************************************************************************************
+                                 *** DATABASE ROLES AND PRIVILEGES ***
+**************************************************************************************************/
+DROP ROLE IF EXISTS admin_role;
+/***
+A Postgres cluster refers to the individual server/instance that's running and hosting (a cluster
+of) databases. It does not mean that multiple servers are setup in a multi-node environment.
+
+A ROLE exists at the cluster level. By convention, a ROLE that allows login is considered a user,
+and a role that is not allowed to login is a group.
+
+In highly concurrent environments, checking for a role's existence right before creating it can
+cause a race condition. You can instead try to create the user unconditionally and safely intercept
+the duplicate_object error.
+***/
+DO $$  -- The anonymous block executes procedural logic directly on the server.
+BEGIN
+  -- Since CREATE ROLE defaults to NOLOGIN, this role can't connect to the database, which is
+  -- perfect for a group role.
+  CREATE ROLE admin_role WITH NOLOGIN NOINHERIT NOSUPERUSER CREATEROLE NOCREATEDB
+                              CONNECTION LIMIT 5;
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'Role "admin_role" already exists, skipping...';
+END
+$$;
+
+DROP ROLE IF EXISTS admin_user;
+-- Create individual users.
+DO $$  -- The anonymous block executes procedural logic directly on the server.
+BEGIN
+  CREATE ROLE admin_user WITH LOGIN INHERIT PASSWORD '12345' NOSUPERUSER NOCREATEROLE NOCREATEDB
+                              CONNECTION LIMIT 5 IN ROLE admin_role;
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'Role "admin_user" already exists, skipping...';
+END
+$$;
+
+/**************************************************************************************************
                                             *** DATABASE ***
 **************************************************************************************************/
 CREATE DATABASE finances
 WITH
+  OWNER = admin_role
   ALLOW_CONNECTIONS = TRUE
   CONNECTION_LIMIT = -1  -- Unlimited connections.
   ENCODING = 'UTF8'
@@ -49,6 +92,30 @@ WITH
   LC_CTYPE = 'C.UTF8'  -- Define character classification rules.
   IS_TEMPLATE = FALSE  -- Only superusers or the database owner can clone the database.
   TEMPLATE = 'template0';
+/**************************************************************************************************
+                *** DATABASE ROLES AND PRIVILEGES (Database-level privileges) ***
+**************************************************************************************************/
+-- GRANT CONNECT ON DATABASE finances TO admin_role;
+-- GRANT ALL PRIVILEGES ON DATABASE finances TO admin_role;
+/***
+Every Postgres cluster has an implicit role called 'public' which cannot be deleted. All other
+roles are always granted membership in 'public' by default and inherit whatever privileges are
+currently assigned to it. Unless otherwise modified, the privileges granted to the 'public' role
+are as follows:
+PostgreSQL 14 and below                   PostgreSQL 15 and above
+-----------------------------------------------------------------
+CONNECT                                   CONNECT
+CREATE                                    TEMPORARY
+TEMPORARY                                 EXECUTE (functions and procedures)
+EXECUTE (functions and procedures)        USAGE (domains, languages, and types)
+USAGE (domains, languages, and types)
+
+Notice that the 'public' role always has the CONNECT privilege granted by default, which allows all
+roles to connect to a newly created database. Without the privilege to connect to a database, none
+of the newly created roles would be able to do much.
+***/
+-- Revoke all privileges that are granted by default to the 'public' role.
+REVOKE ALL ON DATABASE finances FROM public;
 
 /***
 Connect to the database.
@@ -57,6 +124,12 @@ Connect to the database.
 
 \qecho 'Current database version:'
 SELECT version();
+
+/***
+Set the session to the new role. The role that is in force at the time of an object creation will
+own the object. Essentially, the owner of an object is analogous to a superuser of that object.
+***/
+SET ROLE admin_role;
 
 /**************************************************************************************************
                                          *** EXTENSION ***
@@ -71,12 +144,31 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
                                            *** SCHEMAS ***
 **************************************************************************************************/
 CREATE SCHEMA IF NOT EXISTS fin;
+/**************************************************************************************************
+                *** DATABASE ROLES AND PRIVILEGES (Schema-level privileges) ***
+**************************************************************************************************/
+GRANT USAGE ON SCHEMA fin TO admin_role;
+/***
+Notice that you removed ALL privileges from 'public' at the database level, but not at the schema
+level of the database. If you remove all privileges from the schema as well, then normal Postgres
+commands would not work for many users without resetting additional privileges.
+Note that starting with Postgres 15 the 'public' role can NO longer create anything by default,
+regardless of the schema.
+***/
+REVOKE CREATE ON SCHEMA public FROM public;
 
 /***
-Once connected, set the search path to look for objects in your schema first, and if not found, to
-fall back to the default public schema.
+Set the search path to look for objects in your schema.
+The role must have been granted USAGE privileges on your schema, otherwise the path will be
+ ignored for your schema.
+Setting the search path at the role level will override the database-wide defaults set by
+ ALTER DATABASE.
+If you need all users in a group to share the same search_path, use the following:
+ Set at the Database Level: Apply the search_path to the database itself, so every new connection
+                            defaults to it.
 ***/
-SET search_path TO fin, public;
+--ALTER ROLE admin_role SET search_path = fin;
+ALTER DATABASE finances SET search_path TO fin, public;
 
 /**************************************************************************************************
                                            *** TABLES ***
@@ -108,7 +200,6 @@ CREATE TABLE IF NOT EXISTS fin.customers(
   last_name          TEXT NOT NULL
                        CONSTRAINT check_last_name
                          CHECK(TRIM(last_name) <> ''),
-  is_admin           BOOLEAN NOT NULL DEFAULT FALSE,
   marketing_consent  BOOLEAN NOT NULL DEFAULT FALSE,
   /***
   https://www.postgresql.org/docs/current/datatype-datetime.html
@@ -120,7 +211,7 @@ CREATE TABLE IF NOT EXISTS fin.customers(
   updated_at         TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_last_name
+CREATE INDEX IF NOT EXISTS idx_last_name
   ON fin.customers
   USING btree(last_name DESC);
 ANALYZE fin.customers;
@@ -191,6 +282,7 @@ CREATE TABLE IF NOT EXISTS  fin.customers_credentials(
   password_hash    TEXT NOT NULL
                      CONSTRAINT check_password_hash
                        CHECK(TRIM(password_hash) <> ''),
+  is_admin         BOOLEAN NOT NULL DEFAULT FALSE,
   -- Store only failed attempts to save space and speed up queries. This is effective for simple
   -- throttling.
   failed_attempts  INT NOT NULL DEFAULT 0,
@@ -198,6 +290,49 @@ CREATE TABLE IF NOT EXISTS  fin.customers_credentials(
   -- NULL to represent that an attempt has not yet occurred.
   last_attempt     TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
+
+/**************************************************************************************************
+               *** DATABASE ROLES AND PRIVILEGES (Table-level privileges) ***
+**************************************************************************************************/
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA fin TO admin_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA fin TO admin_role;
+
+/***
+Privileges are only granted/revoked for objects in existence at the time of the GRANT/REVOKE. ALTER
+DEFAULT PRIVILEGES allows you to set the privileges that will be applied to objects created in the
+future. (It does not affect privileges assigned to already-existing objects.) Privileges can be set
+globally (i.e., for all objects created in the current database), or just for objects created in
+specified schemas.
+***/
+ALTER DEFAULT PRIVILEGES IN SCHEMA fin
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO admin_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA fin
+GRANT USAGE, SELECT ON SEQUENCES TO admin_role;
+
+/***
+Add a row for the default admin account ONLY when the fin.customers table is empty.
+***/
+WITH admin_customer AS (  -- Common Table Expression (CTE).
+  INSERT INTO fin.customers(
+    first_name,
+    last_name)
+  SELECT
+    'n/a',  -- Not applicable.
+    'n/a'
+  WHERE NOT EXISTS(SELECT 1 FROM fin.customers)
+  RETURNING id  -- Capture the auto-generated primary key.
+)
+INSERT INTO fin.customers_credentials(
+  id,
+  user_name,
+  password_hash,
+  is_admin)
+SELECT
+  id,
+  'admin',
+  crypt('admin', gen_salt('bf', 10)),
+  TRUE
+FROM admin_customer;
 
 /**************************************************************************************************
                                  *** FUNCTIONS/STORED PROCEDURES ***
@@ -298,7 +433,8 @@ CREATE OR REPLACE PROCEDURE fin.authenticate_user(
   IN puser_name TEXT,
   IN ppassword TEXT,
   IN correlation_id TEXT,
-  OUT pout INT
+  OUT pout INT,
+  OUT pis_admin BOOL
 )
 LANGUAGE PLPGSQL
 AS $$
@@ -318,6 +454,7 @@ BEGIN
     vhash
   FROM fin.customers_credentials
   WHERE user_name = puser_name;
+  pis_admin := false;
   /***
   The SELECT INTO statement in Postgres (without the STRICT keyword) sets a special variable
   called FOUND to TRUE if a row is returned, and FALSE if no row is found. No exception is raised
@@ -338,7 +475,8 @@ BEGIN
     SET
       failed_attempts = 0,
       last_attempt = CURRENT_TIMESTAMP
-    WHERE user_name = puser_name;
+    WHERE user_name = puser_name
+    RETURNING is_admin INTO pis_admin;
   ELSE  -- Authentication failed.
     pout := -1;
     UPDATE fin.customers_credentials
@@ -368,45 +506,47 @@ BEGIN
 END;
 $$;
 
-
-
-
-
-CREATE OR REPLACE FUNCTION fin.get_customers_contact_details()
-RETURNS SETOF fin.customers_contact_details
+/**************************************************************************************************
+                            *** TRIGGER FUNCTIONS/STORED PROCEDURES ***
+**************************************************************************************************/
+CREATE OR REPLACE FUNCTION fin.customers_block_row_deletion()
+RETURNS TRIGGER
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
-  RETURN QUERY SELECT * FROM fin.customers_contact_details;
+  /***
+  In a DELETE trigger, the special variable NEW is always NULL. You must use OLD.column_name to
+  grab the data from the row being removed.
+  ***/
+  IF OLD.id = 1 THEN
+    RAISE EXCEPTION 'Deletion not allowed: This row is protected.';
+  END IF;
+  -- Crucial: Return OLD so Postgres proceeds with the deletion.
+  RETURN OLD;
 END;
 $$;
 
+CREATE OR REPLACE TRIGGER trg_customers_prevent_delete
+BEFORE DELETE ON fin.customers
+FOR EACH ROW
+EXECUTE FUNCTION fin.customers_block_row_deletion();
 
-
-CREATE OR REPLACE PROCEDURE fin.customer_contact_details(
-  IN puser_name TEXT
-)
+CREATE OR REPLACE FUNCTION fin.customers_credentials_block_row_deletion()
+RETURNS TRIGGER
 LANGUAGE PLPGSQL
 AS $$
 BEGIN
+  IF OLD.is_admin = TRUE THEN
+    RAISE EXCEPTION 'Deletion not allowed: This row is protected.';
+  END IF;
+  RETURN OLD;
 END;
 $$;
 
-CREATE OR REPLACE PROCEDURE fin.customers_credentials()
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-END;
-$$;
-
-CREATE OR REPLACE PROCEDURE fin.customer_credentials(
-  IN puser_name TEXT
-)
-LANGUAGE PLPGSQL
-AS $$
-BEGIN
-END;
-$$;
+CREATE OR REPLACE TRIGGER trg_customers_credentials_prevent_delete
+BEFORE DELETE ON fin.customers_credentials
+FOR EACH ROW
+EXECUTE FUNCTION fin.customers_credentials_block_row_deletion();
 
 
 
@@ -414,28 +554,40 @@ $$;
 
 
 
+/*************************************************************************************************/
+
+-- CREATE OR REPLACE FUNCTION fin.get_customers_contact_details()
+-- RETURNS SETOF fin.customers_contact_details
+-- LANGUAGE PLPGSQL
+-- AS $$
+-- BEGIN
+--   RETURN QUERY SELECT * FROM fin.customers_contact_details;
+-- END;
+-- $$;
 
 
 
+-- CREATE OR REPLACE PROCEDURE fin.customer_contact_details(
+--   IN puser_name TEXT
+-- )
+-- LANGUAGE PLPGSQL
+-- AS $$
+-- BEGIN
+-- END;
+-- $$;
 
-    -- UPDATE fin.credentials
-    -- SET failed_attempts = vfailed_attempts, last_attempt = CURRENT_TIMESTAMP
-    -- WHERE EXISTS (
-    --   -- In SQL, SELECT 1 has two primary meanings depending on its context: as a constant value in
-    --   -- the result set, or, more commonly, as an efficient way to check for the existence of a row
-    --   -- in a subquery.
-    --   SELECT 1
-    --   FROM fin.credentials
-    --   WHERE user_name = puser_name
-    -- );
+-- CREATE OR REPLACE PROCEDURE fin.customers_credentials()
+-- LANGUAGE PLPGSQL
+-- AS $$
+-- BEGIN
+-- END;
+-- $$;
 
-
-
-
-
-/*
-After a COMMIT or ROLLBACK is issued inside a procedure, a new transaction is automatically started, so you do not need a separate START TRANSACTION command.
-In procedures invoked by the CALL command as well as in anonymous code blocks (DO command), it is possible to end transactions using the commands COMMIT and ROLLBACK. A new transaction is started automatically after a transaction is ended using these commands, so there is no separate START TRANSACTION command.
-
-
-*/
+-- CREATE OR REPLACE PROCEDURE fin.customer_credentials(
+--   IN puser_name TEXT
+-- )
+-- LANGUAGE PLPGSQL
+-- AS $$
+-- BEGIN
+-- END;
+-- $$;
