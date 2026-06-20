@@ -8,15 +8,12 @@ package banking
 import (
   "context"
   "fmt"
+  "github.com/jackc/pgx/v5"
   "github.com/juan-carlos-trimino/gplogger"
   "golang.org/x/crypto/bcrypt"
   "math"
   "math/rand"
   "time"
-
-  "github.com/jackc/pgx/v5"
-
-
 )
 
 /***
@@ -28,10 +25,9 @@ automatically rewrite the query to use positional parameters ($1, $2, etc.) befo
 const (
   //Use placeholder syntax (like $1, $2) to safely pass parameters to the function, preventing
   //SQL injection.
-  SP_ADD_CUSTOMER = "CALL fin.add_customer($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12," +
-    " $13, $14, $15, $16)"
+  SP_ADD_CUSTOMER = "CALL fin.add_customer($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)"
   //Pass null for OUT parameter in the call.
-  SP_AUTHENTICATE_USER = "CALL fin.authenticate_user($1, $2, $3, null)"
+  SP_AUTHENTICATE_USER = "CALL fin.authenticate_user($1, $2, $3, null, null)"
 )
 
 type AddCustomer struct {
@@ -42,8 +38,6 @@ type AddCustomer struct {
   Address2, Middle_name, Zip_code *string
   Birth_date *time.Time
 }
-
-
 
 type CustomersContactDetails struct {  //Struct tags.
   Id int32  `db:"id"`
@@ -60,9 +54,6 @@ type CustomersContactDetails struct {  //Struct tags.
   Created_at time.Time  `db:"created_at"`
   Updated_at time.Time  `db:"updated_at"`
 }
-
-
-
 
 func DbAddCustomer(c *AddCustomer, ctx context.Context, correlationId string) error {
   db := GetBsInstance()
@@ -105,11 +96,12 @@ func HashAndSaltPassword(password, correlationId string) string {
   return string(hash)
 }
 
-func DbAuthenticateUser(ctx context.Context, userName, password, correlationId string) bool {
+func DbAuthenticateUser(ctx context.Context, userName, password, correlationId string) (bool, bool) {
   db := GetBsInstance()
   var status int
+  var isAdmin bool = false;
   var ok bool = true
-  err := db.bsPool.QueryRow(ctx, SP_AUTHENTICATE_USER, userName, password, correlationId).Scan(&status)
+  err := db.bsPool.QueryRow(ctx, SP_AUTHENTICATE_USER, userName, password, correlationId).Scan(&status, &isAdmin)
   if err != nil {
     logger.LogError(fmt.Sprintf("Error on DbAuthenticateUser: %v", err), correlationId)
     ok = false
@@ -118,10 +110,8 @@ func DbAuthenticateUser(ctx context.Context, userName, password, correlationId s
   } else {
     DbGetCustomersContactDetails(ctx, correlationId)
   }
-  return ok
+  return ok, isAdmin
 }
-
-
 
 func DbGetCustomersContactDetails(ctx context.Context, correlationId string) bool {
   db := GetBsInstance()
@@ -148,6 +138,7 @@ func DbGetCustomersContactDetails(ctx context.Context, correlationId string) boo
 }
 
 //////////////////////
+
 
 
 //In this really short post, we will demonstrate how to implement a retry mechanism with exponential
