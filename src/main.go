@@ -67,9 +67,12 @@ const (
   //https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
   host = "localhost"
   port = 5432
-  user = "trimino"
-  password = "trimino"
-  dbname = "finances"
+  default_user = "trimino"
+  default_password = "trimino"
+  default_dbname = "postgres"
+  admin_user = "admin_user"
+  admin_password = "12345"
+  admin_dbname = "finances"
   sslmode = "disable"  //Or "require", "prefer", etc., depending on your setup.
   connect_timeout = 4  //Maximum time to wait while connecting, in seconds.
   pathToScript = "../IaC-app/utilities/postgres/sql/baseline/admin.sql"
@@ -193,16 +196,16 @@ func main() {
   }
   readUsers(dataDir, users)
   webfinances.SetupDirStructure(dataDir)
-  //Database
+  //Database.
   if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
-    if ok := bank.ExecuteSqlScript(context.Background(), host, user, password, "postgres", sslmode,
-       port, connect_timeout, pathToScript, falseCorrelationId); !ok {
+    if ok := bank.ExecuteSqlScript(context.Background(), host, default_user, default_password, default_dbname,
+      admin_dbname, sslmode, port, connect_timeout, pathToScript, falseCorrelationId); !ok {
       panic("Call to ExecuteSqlScript failed.")
     }
   }
-  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s",
-    host, port, user, password, dbname, connect_timeout, sslmode)
-  // logger.LogInfo(fmt.Sprintf("Connection string: %s", psqlInfo), falseCorrelationId)
+  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, admin_user,
+    admin_password, admin_dbname, connect_timeout, sslmode)
+  //logger.LogInfo(fmt.Sprintf("Connection string: %s", psqlInfo), falseCorrelationId)
   dbInstance := bank.InitializeBsPool(context.Background(), psqlInfo, falseCorrelationId)
   if dbInstance == nil {
     panic("Call to InitializeBsPool failed.")
@@ -448,6 +451,10 @@ func makeHandlers() *handlers {
   h.mux["/registration"] = middlewares.ValidateSessions(wfverify.RegistrationPage)
   h.mux["/logout"] = middlewares.ValidateSessions(wfpages.LogoutPage)
   h.mux["/welcome"] = middlewares.ValidateSessions(wfpages.WelcomePage)
+
+  h.mux["/admin/welcome"] = middlewares.ValidateSessions(wfpages.AdminWelcomePage) //jct
+
+
   h.mux["/contact"] = middlewares.ValidateSessions(wfpages.ContactPage)
   h.mux["/about"] = middlewares.ValidateSessions(wfpages.AboutPage)
   h.mux["/banking"] = middlewares.ValidateSessions(wfbankPages.BankingPage)
