@@ -124,6 +124,7 @@ src/webfinances/public/js/*
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
+!src/webfinances/templates/admin_register.html
 !src/webfinances/templates/admin_welcome.html
 !src/webfinances/templates/contact.html
 !src/webfinances/templates/datetime.html
@@ -132,7 +133,9 @@ src/webfinances/templates/*
 !src/webfinances/templates/index.html
 !src/webfinances/templates/login.html
 !src/webfinances/templates/navbar.html
+
 !src/webfinances/templates/register.html
+
 !src/webfinances/templates/title.html
 !src/webfinances/templates/welcome.html
 # ... and this directory and its file...
