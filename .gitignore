@@ -124,6 +124,7 @@ src/webfinances/public/js/*
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
+!src/webfinances/templates/admin_welcome.html
 !src/webfinances/templates/contact.html
 !src/webfinances/templates/datetime.html
 !src/webfinances/templates/footer.html
