@@ -448,37 +448,37 @@ func makeHandlers() *handlers {
   h.mux["/login"] = wfpages.LoginPage
   h.mux["/verify_login"] = wfpages.VerifyLogin
   h.mux["/register"] = wfpages.RegisterPage
-  h.mux["/registration"] = middlewares.ValidateSessions(wfverify.RegistrationPage)
-  h.mux["/logout"] = middlewares.ValidateSessions(wfpages.LogoutPage)
-  h.mux["/welcome"] = middlewares.ValidateSessions(wfpages.WelcomePage)
+  h.mux["/registration"] = wfverify.RegistrationPage
+  h.mux["/logout"] = wfpages.LogoutPage
+  h.mux["/welcome"] = wfpages.WelcomePage
 
-  h.mux["/admin/welcome"] = middlewares.ValidateSessions(wfpages.AdminWelcomePage) //jct
+  h.mux["/admin/welcome"] = middlewares.AdminVerification(wfpages.AdminWelcomePage) //jct
 
 
-  h.mux["/contact"] = middlewares.ValidateSessions(wfpages.ContactPage)
-  h.mux["/about"] = middlewares.ValidateSessions(wfpages.AboutPage)
-  h.mux["/banking"] = middlewares.ValidateSessions(wfbankPages.BankingPage)
-  h.mux["/finances"] = middlewares.ValidateSessions(wfpages.FinancesPage)
-  h.mux["/fin/ordinaryannuity"] = middlewares.ValidateSessions(wfpages.OrdinaryAnnuityPage)
-  h.mux["/fin/ordinaryannuity/interestrate"] = middlewares.ValidateSessions(wfoainterest.OaInterestRatePages)
-  h.mux["/fin/ordinaryannuity/fv"] = middlewares.ValidateSessions(wfoafv.OaFvPages)
-  h.mux["/fin/ordinaryannuity/pv"] = middlewares.ValidateSessions(wfoapv.OaPvPages)
-  h.mux["/fin/ordinaryannuity/cp"] = middlewares.ValidateSessions(wfoacp.OaCpPages)
-  h.mux["/fin/ordinaryannuity/epp"] = middlewares.ValidateSessions(wfoaepp.OaEppPages)
-  h.mux["/fin/ordinaryannuity/ga"] = middlewares.ValidateSessions(wfoaga.OaGaPages)
-  h.mux["/fin/ordinaryannuity/perpetuity"] = middlewares.ValidateSessions(wfoaperpetuity.OaPerpetuityPages)
-  h.mux["/fin/annuitydue"] = middlewares.ValidateSessions(wfpages.AnnuityDuePage)
-  h.mux["/fin/annuitydue/cp"] = middlewares.ValidateSessions(wfadcp.AdCpPages)
-  h.mux["/fin/annuitydue/epp"] = middlewares.ValidateSessions(wfadepp.AdEppPages)
-  h.mux["/fin/annuitydue/fv"] = middlewares.ValidateSessions(wfadfv.AdFvPages)
-  h.mux["/fin/annuitydue/pv"] = middlewares.ValidateSessions(wfadpv.AdPvPages)
-  h.mux["/fin/bonds"] = middlewares.ValidateSessions(wfbonds.BondsPages)
-  h.mux["/fin/mortgage"] = middlewares.ValidateSessions(wfmortgage.MortgagePages)
-  h.mux["/fin/simpleinterest"] = middlewares.ValidateSessions(wfpages.SimpleInterestPage)
-  h.mux["/fin/simpleinterest/accurate"] = middlewares.ValidateSessions(wfsia.SimpleInterestAccuratePages)
-  h.mux["/fin/simpleinterest/bankers"] = middlewares.ValidateSessions(wfsib.SimpleInterestBankersPages)
-  h.mux["/fin/simpleinterest/ordinary"] = middlewares.ValidateSessions(wfsio.SimpleInterestOrdinaryPages)
-  h.mux["/fin/miscellaneous"] = middlewares.ValidateSessions(wfmisc.MiscellaneousPages)
+  h.mux["/contact"] = wfpages.ContactPage
+  h.mux["/about"] = wfpages.AboutPage
+  h.mux["/banking"] = wfbankPages.BankingPage
+	h.mux["/finances"] = wfpages.FinancesPage
+  h.mux["/fin/ordinaryannuity"] = wfpages.OrdinaryAnnuityPage
+  h.mux["/fin/ordinaryannuity/interestrate"] = wfoainterest.OaInterestRatePages
+  h.mux["/fin/ordinaryannuity/fv"] = wfoafv.OaFvPages
+  h.mux["/fin/ordinaryannuity/pv"] = wfoapv.OaPvPages
+  h.mux["/fin/ordinaryannuity/cp"] = wfoacp.OaCpPages
+  h.mux["/fin/ordinaryannuity/epp"] = wfoaepp.OaEppPages
+  h.mux["/fin/ordinaryannuity/ga"] = wfoaga.OaGaPages
+  h.mux["/fin/ordinaryannuity/perpetuity"] = wfoaperpetuity.OaPerpetuityPages
+  h.mux["/fin/annuitydue"] = wfpages.AnnuityDuePage
+  h.mux["/fin/annuitydue/cp"] = wfadcp.AdCpPages
+  h.mux["/fin/annuitydue/epp"] = wfadepp.AdEppPages
+  h.mux["/fin/annuitydue/fv"] = wfadfv.AdFvPages
+  h.mux["/fin/annuitydue/pv"] = wfadpv.AdPvPages
+  h.mux["/fin/bonds"] = wfbonds.BondsPages
+  h.mux["/fin/mortgage"] = wfmortgage.MortgagePages
+  h.mux["/fin/simpleinterest"] = wfpages.SimpleInterestPage
+  h.mux["/fin/simpleinterest/accurate"] = wfsia.SimpleInterestAccuratePages
+  h.mux["/fin/simpleinterest/bankers"] = wfsib.SimpleInterestBankersPages
+  h.mux["/fin/simpleinterest/ordinary"] = wfsio.SimpleInterestOrdinaryPages
+  h.mux["/fin/miscellaneous"] = wfmisc.MiscellaneousPages
   if config.GetPprof(falseCorrelationId) {
     h.mux["/debug/pprof/"] = pprof.Index
     h.mux["/debug/pprof/heap"] = pprof.Handler("heap").ServeHTTP
@@ -490,9 +490,10 @@ func makeHandlers() *handlers {
     h.mux["/debug/pprof/trace"] = pprof.Trace
   }
   commonMiddlewares := []middlewares.Middleware{
+		middlewares.ValidateSessions,
     middlewares.SecurityHeaders,
     middlewares.CorrelationId,
-    //middlewares.ValidateSessions,
+//    middlewares.AdminVerification,
   }
   //
   for idx, f := range h.mux{

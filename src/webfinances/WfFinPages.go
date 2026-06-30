@@ -4,9 +4,6 @@ import (
   bank "finance/databases/banking" //Importing a package and assigning it a local alias.
   // "encoding/json"
   "fmt"
-  //Run this command in your terminal to install the standard JWT library for Go:
-  // $ go get -u github.com/golang-jwt/jwt/v5
-  "github.com/golang-jwt/jwt/v5"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gpsessions"
@@ -16,8 +13,6 @@ import (
   "html/template"
   "net/http"
   "time"
-
-  "strings"
 )
 
 var tmpl *template.Template
@@ -87,53 +82,6 @@ func invalidSession(res http.ResponseWriter) {
   }
 }
 
-
-
-// Claims defines the payload structured inside the JWT jct
-type Claims struct {
-  Role bool `json:"role"`  //true for admin; false for user.
-  jwt.RegisteredClaims
-}
-// LoginResponse defines the JSON structure returned on successful login
-type LoginResponse struct {
-  Token string `json:"token"`
-}
-
-func AdminOnlyMiddleware(next http.Handler) http.Handler {
-  return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-    authHeader := req.Header.Get("Authorization")
-    if authHeader == "" {
-      http.Error(res, "Missing authorization header.", http.StatusUnauthorized)
-      return
-    }
-    // Split "Bearer <token>"
-    parts := strings.Split(authHeader, " ")
-    if len(parts) != 2 || parts[0] != "Bearer" {
-      http.Error(res, "Invalid authorization format.", http.StatusUnauthorized)
-      return
-    }
-    tokenString := parts[1]
-    claims := &Claims{}
-    token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-      return "your_ultra_secure_secret_key", nil
-    })
-
-    if err != nil || !token.Valid {
-      http.Error(res, "Unauthorized token.", http.StatusUnauthorized)
-      return
-    }
-    // Enforce admin privileges
-    if !claims.Role {
-      http.Error(res, "Forbidden: Admins only.", http.StatusForbidden)
-      return
-    }
-    next.ServeHTTP(res, req)
-  })
-}
-
-
-
-
 type WfPages struct{}
 
 func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
@@ -198,41 +146,23 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
       Value: sessionToken,
       Expires: session.Expiry,
     })
-
-
-
-
-
-    //Create custom claims including the database Role ('user' or 'admin'). jct
-    // claims := &Claims{
-    //   Role: isAdmin,
-    //   RegisteredClaims: jwt.RegisteredClaims{
-    //     ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-    //     IssuedAt:  jwt.NewNumericDate(time.Now()),
-    //     Issuer:    "your-go-backend-api",
-    //   },
-    // }
-    //Generate and sign the token.
-    // token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    // tokenString, err := token.SignedString([]byte("your_ultra_secure_secret_key"))
-    // if err != nil {
-    //   http.Error(res, "Could not generate token.", http.StatusInternalServerError)
-    //   return
-    // }
-    //Return the token as JSON
-    // res.Header().Set("Content-Type", "application/json")
-    // json.NewEncoder(res).Encode(LoginResponse{Token: tokenString})
-
-
-
-    if isAdmin {
+    tokenString, err := middlewares.GenerateJwtToken(isAdmin)
+    if err != nil {
+      logger.LogError(fmt.Sprintf("Error signing token: %v+", err), correlationId)
+      http.Error(res, "Error signing token: ", http.StatusInternalServerError)
+      return
+    }
+    http.SetCookie(res, &http.Cookie{
+      Name: "admin_token",
+      Value: tokenString,
+    })
+		if isAdmin {
       http.Redirect(res, req, "/admin/welcome", http.StatusSeeOther)
     } else {
       http.Redirect(res, req, "/welcome", http.StatusSeeOther)
     }
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) RegisterPage(res http.ResponseWriter, req *http.Request) {
@@ -271,9 +201,8 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering WelcomePage/webfinances.", correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+	logger.LogInfo("Entering WelcomePage/webfinances.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
@@ -283,8 +212,7 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
       Datetime string
     } { "Investments", logger.DatetimeFormat() })
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {

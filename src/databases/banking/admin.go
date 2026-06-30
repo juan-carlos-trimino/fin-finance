@@ -107,8 +107,6 @@ func DbAuthenticateUser(ctx context.Context, userName, password, correlationId s
     ok = false
   } else if status < 0 {
     ok = false
-  } else {
-    DbGetCustomersContactDetails(ctx, correlationId)
   }
   return ok, isAdmin
 }
