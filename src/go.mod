@@ -36,7 +36,7 @@ go 1.26.4
 require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.10.0
-	github.com/juan-carlos-trimino/go-middlewares v1.1.6
+	github.com/juan-carlos-trimino/go-middlewares v1.1.7
 	github.com/juan-carlos-trimino/go-os v1.1.1
 	github.com/juan-carlos-trimino/gplogger v1.0.7
 	github.com/juan-carlos-trimino/gposu v1.0.1
@@ -79,4 +79,4 @@ require (
 // specified in your replace directive must exactly match the folder path you have open in your IDE.
 //
 // (Note: Remember to remove this line before pushing your go.mod file to production.)
-replace github.com/juan-carlos-trimino/go-middlewares => ../../../go-middlewares/
+// replace github.com/juan-carlos-trimino/go-middlewares => ../../../go-middlewares/
