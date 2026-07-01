@@ -13,13 +13,20 @@ import (
 
 type WfVerificationPages struct {}
 
-func (s WfVerificationPages) RegistrationPage(res http.ResponseWriter, req *http.Request) {
+func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering VericationPage.", correlationId)
+  clickedButton := req.FormValue("button_action")  //Return either "back" or "register".
+  if clickedButton == "back" {
+    tmpl.ExecuteTemplate(res, "admin_welcome_page", struct {
+      Header string
+      Datetime string
+    } { "Investments", logger.DatetimeFormat() })
+    return
+  }
   c := bank.AddCustomer {
     User_name: req.PostFormValue("uname"),
     Password: req.PostFormValue("pwd"),
@@ -46,10 +53,11 @@ func (s WfVerificationPages) RegistrationPage(res http.ResponseWriter, req *http
   zip_code := req.PostFormValue("zip_code")
   c.Zip_code = bank.StringPtr(zip_code)
   originalDate := req.PostFormValue("bdate")
-  //Go's time formatting uses a reference date and time: Mon Jan 2 15:04:05 MST 2006. Each
-  //component of this reference time (e.g., 02 for the day, 01 for the month, 2006 for the year) is
-  //used as a placeholder in the layout string to match the input format; e.g., "dd/mm/yyyy" is
-  //"02/01/2006".
+  /***
+  Go's time formatting uses a reference date and time: Mon Jan 2 15:04:05 MST 2006. Each component of this reference
+  time (e.g., 02 for the day, 01 for the month, 2006 for the year) is used as a placeholder in the layout string to
+  match the input format; e.g., "dd/mm/yyyy" is "02/01/2006".
+  ***/
   if newDate, err := time.Parse("2006-01-02", originalDate); err != nil {
     fmt.Println("Error parsing date: ", err)
   } else {
@@ -57,9 +65,12 @@ func (s WfVerificationPages) RegistrationPage(res http.ResponseWriter, req *http
   }
   ok := bank.DbAddCustomer(&c, context.Background(), correlationId)
   if ok == nil {
-    tmpl.ExecuteTemplate(res, "login_page", nil)
+    tmpl.ExecuteTemplate(res, "admin_welcome_page", struct {
+      Header string
+      Datetime string
+    } { "Investments", logger.DatetimeFormat() })
   } else {
-    tmpl.ExecuteTemplate(res, "register_page", struct {
+    tmpl.ExecuteTemplate(res, "admin_register_page", struct {
       Username string
       Password string
       Fname string

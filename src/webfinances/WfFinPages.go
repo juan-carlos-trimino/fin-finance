@@ -88,32 +88,27 @@ func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering IndexPage/webfinances.", correlationId)
   tmpl.ExecuteTemplate(res, "index_page", nil)
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering LoginPage/webfinances.", correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering LoginPage.", correlationId)
   tmpl.ExecuteTemplate(res, "login_page", nil)
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Verifying login credentials.", correlationId)
   //Only allow POST requests.
   if req.Method != http.MethodPost {
@@ -169,20 +164,17 @@ func (p WfPages) RegisterPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering RegisterPage.", correlationId)
-  tmpl.ExecuteTemplate(res, "register_page", nil)
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()),
-    correlationId)
+  tmpl.ExecuteTemplate(res, "admin_register_page", nil)
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering LogoutPage/webfinances.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
@@ -193,8 +185,7 @@ func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
     http.SetCookie(res, cookie)
     http.Redirect(res, req, "/", http.StatusSeeOther)
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
@@ -202,12 +193,30 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-	logger.LogInfo("Entering WelcomePage/webfinances.", correlationId)
+	logger.LogInfo("Entering WelcomePage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
   } else {
     tmpl.ExecuteTemplate(res, "welcome_page", struct {
+      Header string
+      Datetime string
+    } { "Investments", logger.DatetimeFormat() })
+  }
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
+}
+
+func (p WfPages) AdminWelcomePage(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering AdminWelcomePage.", correlationId)
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
+    invalidSession(res)
+  } else {
+    tmpl.ExecuteTemplate(res, "admin_welcome_page", struct {
       Header string
       Datetime string
     } { "Investments", logger.DatetimeFormat() })
@@ -574,29 +583,6 @@ func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
       Header string
       Datetime string
     } { "Annuity Due", logger.DatetimeFormat() })
-  }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
-}
-
-
-
-
-func (p WfPages) AdminWelcomePage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering AdminWelcomePage.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res)
-  } else {
-    tmpl.ExecuteTemplate(res, "admin_welcome_page", struct {
-      Header string
-      Datetime string
-    } { "Investments", logger.DatetimeFormat() })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
     correlationId)

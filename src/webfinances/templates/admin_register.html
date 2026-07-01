@@ -1,5 +1,5 @@
 <!-- The define action for the register page -->
-{{ define "register_page" }}
+{{ define "admin_register_page" }}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -18,7 +18,7 @@
       <div class="font-color">
         <legend>Fields in Red are required</legend><br>
       </div>
-      <form method="post" action="/registration" enctype="application/x-www-form-urlencoded" autocomplete="off">
+      <form method="post" action="/admin/saveregister" enctype="application/x-www-form-urlencoded" autocomplete="off">
         <div class="cnt-grid">
           <label class="cnt-textbox-red" for="uname">Username</label>
           <input type="text" id="uname" name="uname" value="{{ .Username }}" autofocus required maxlength="256">
@@ -63,7 +63,14 @@
           <input type="text" id="phone" name="phone" value="{{ .Phone }}" autofocus required maxlength="64">
         </div>
         <div class="button-back-style">
-          <button type="submit" class="button">Register</button>
+          <!-- Both buttons have the same name, but unique values. -->
+          <button type="submit" class="button" name="button_action" value="register">Register</button>
+          <!--
+          To bypass HTML5 validation constraints on a specific form button, use the formnovalidate attribute. This native
+          HTML5 attribute tells the browser to skip field validation (such as required or type="email") specifically when
+          that specific button triggers the form submission.
+          -->
+          <button type="submit" class="button" name="button_action" value="back" formnovalidate>Back</button>
         </div>
       </form>
       <div>

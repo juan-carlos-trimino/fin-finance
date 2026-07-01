@@ -447,14 +447,11 @@ func makeHandlers() *handlers {
   h.mux["/"] = wfpages.IndexPage
   h.mux["/login"] = wfpages.LoginPage
   h.mux["/verify_login"] = wfpages.VerifyLogin
-  h.mux["/register"] = wfpages.RegisterPage
-  h.mux["/registration"] = wfverify.RegistrationPage
   h.mux["/logout"] = wfpages.LogoutPage
   h.mux["/welcome"] = wfpages.WelcomePage
-
-  h.mux["/admin/welcome"] = middlewares.AdminVerification(wfpages.AdminWelcomePage) //jct
-
-
+  h.mux["/admin/register"] = middlewares.AdminVerification(wfpages.RegisterPage)
+  h.mux["/admin/saveregister"] = middlewares.AdminVerification(wfverify.AdminSaveRegisterPage)
+  h.mux["/admin/welcome"] = middlewares.AdminVerification(wfpages.AdminWelcomePage)
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
   h.mux["/banking"] = wfbankPages.BankingPage
@@ -493,7 +490,6 @@ func makeHandlers() *handlers {
 		middlewares.ValidateSessions,
     middlewares.SecurityHeaders,
     middlewares.CorrelationId,
-//    middlewares.AdminVerification,
   }
   //
   for idx, f := range h.mux{
