@@ -1,0 +1,43 @@
+<!-- The define action for the home page -->
+{{ define "admin_welcome_page" }}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Welcome to Finances</title>
+    <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
+  </head>
+  <body>
+    <main>
+      <div class="center-title">
+        <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
+        {{ template "title" . }}
+      </div>
+      <div class="center-datetime">
+        {{ template "datetime" . }}
+      </div>
+      <div class="button-style">
+        <a href="/admin/register" target="_self">
+          <button class="button">Register</button>
+        </a>
+      </div>
+      <div class="button-style">
+        <a href="/admin/settings" target="_self">
+          <button class="button">Settings</button>
+        </a>
+      </div>
+      <br>
+      <div class="button-back-style">
+        <a href="/logout" target="_self">
+          <button class="button">Logout</button>
+        </a>
+      </div>
+    </main>
+    {{ template "footer" }}
+  </body>
+</html>
+
+{{ end }}
