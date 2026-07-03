@@ -35,6 +35,7 @@ func init() {
   ***/
   tmpl = template.New("root")  //Initialize the root template.
   tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/*.html"))
+  // tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/admin/*.html"))
   tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/banking/*.html"))
   tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/finances/*.html"))
   tsia1 = template.Must(template.New("sia1").ParseFiles(
@@ -157,16 +158,6 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
       http.Redirect(res, req, "/welcome", http.StatusSeeOther)
     }
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) RegisterPage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering RegisterPage.", correlationId)
-  tmpl.ExecuteTemplate(res, "admin_register_page", nil)
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
@@ -512,20 +503,22 @@ func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering FinancesPage/webfinances.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    tmpl.ExecuteTemplate(res, "finances_page", struct {
+    err := tmpl.ExecuteTemplate(res, "finances_page", struct {
       Header string
       Datetime string
     } { "Finances", logger.DatetimeFormat() })
+    //
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+    }
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) {
