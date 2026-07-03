@@ -15,9 +15,6 @@ import (
 
 type WfVerificationPages struct {}
 
-
-
-
 func (s WfVerificationPages) AdminWelcomePage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
