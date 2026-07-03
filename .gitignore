@@ -124,8 +124,6 @@ src/webfinances/public/js/*
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
-!src/webfinances/templates/admin_register.html
-!src/webfinances/templates/admin_welcome.html
 !src/webfinances/templates/contact.html
 !src/webfinances/templates/datetime.html
 !src/webfinances/templates/footer.html
@@ -135,6 +133,13 @@ src/webfinances/templates/*
 !src/webfinances/templates/navbar.html
 !src/webfinances/templates/title.html
 !src/webfinances/templates/welcome.html
+# ... and this directory and its file...
+!src/webfinances/templates/admin/
+src/webfinances/templates/admin/*
+!src/webfinances/templates/admin/admin_register.html
+!src/webfinances/templates/admin/settings/
+src/webfinances/templates/admin/settigs/*
+!src/webfinances/templates/admin/settings/settings.html
 # ... and this directory and its file...
 !src/webfinances/templates/banking/
 src/webfinances/templates/banking/*
