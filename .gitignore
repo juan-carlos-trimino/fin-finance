@@ -137,6 +137,7 @@ src/webfinances/templates/*
 !src/webfinances/templates/admin/
 src/webfinances/templates/admin/*
 !src/webfinances/templates/admin/admin_register.html
+!src/webfinances/templates/admin/admin_welcome.html
 !src/webfinances/templates/admin/settings/
 src/webfinances/templates/admin/settigs/*
 !src/webfinances/templates/admin/settings/settings.html
