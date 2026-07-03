@@ -197,24 +197,6 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
 
-func (p WfPages) AdminWelcomePage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering AdminWelcomePage.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res)
-  } else {
-    tmpl.ExecuteTemplate(res, "admin_welcome_page", struct {
-      Header string
-      Datetime string
-    } { "Investments", logger.DatetimeFormat() })
-  }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
-}
-
 func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())

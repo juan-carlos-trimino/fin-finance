@@ -15,6 +15,36 @@ import (
 
 type WfVerificationPages struct {}
 
+
+
+
+func (s WfVerificationPages) AdminWelcomePage(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering AdminWelcomePage.", correlationId)
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
+    invalidSession(res)
+  } else {
+    t := template.Must(template.ParseFiles(
+      "webfinances/templates/admin/admin_welcome.html",
+      "webfinances/templates/title.html",
+      "webfinances/templates/datetime.html",
+      "webfinances/templates/footer.html"))
+    err := t.ExecuteTemplate(res, "admin_welcome_page", struct {
+      Header string
+      Datetime string
+    } { "Investments", logger.DatetimeFormat() })
+    //
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+    }
+  }
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
+}
+
 func (s WfVerificationPages) AdminRegisterPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
@@ -62,7 +92,12 @@ func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req 
   } else if req.Method == http.MethodPost || req.Method == http.MethodGet {
     clickedButton := req.FormValue("button_action")  //Return either "back" or "register".
     if clickedButton == "back" {
-      err := tmpl.ExecuteTemplate(res, "admin_welcome_page", struct {
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/admin/admin_welcome.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/footer.html"))
+      err := t.ExecuteTemplate(res, "admin_welcome_page", struct {
         Header string
         Datetime string
       } { "Investments", logger.DatetimeFormat() })
@@ -109,7 +144,12 @@ func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req 
       }
       ok := bank.DbAddCustomer(&c, context.Background(), correlationId)
       if ok == nil {
-        err := tmpl.ExecuteTemplate(res, "admin_welcome_page", struct {
+        t := template.Must(template.ParseFiles(
+          "webfinances/templates/admin/admin_welcome.html",
+          "webfinances/templates/title.html",
+          "webfinances/templates/datetime.html",
+          "webfinances/templates/footer.html"))
+        err := t.ExecuteTemplate(res, "admin_welcome_page", struct {
           Header string
           Datetime string
         } { "Investments", logger.DatetimeFormat() })

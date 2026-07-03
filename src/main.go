@@ -449,7 +449,7 @@ func makeHandlers() *handlers {
   h.mux["/verify_login"] = wfpages.VerifyLogin
   h.mux["/logout"] = wfpages.LogoutPage
   h.mux["/welcome"] = wfpages.WelcomePage
-  h.mux["/admin/welcome"] = middlewares.AdminVerification(wfpages.AdminWelcomePage)
+  h.mux["/admin/welcome"] = middlewares.AdminVerification(wfverify.AdminWelcomePage)
   h.mux["/admin/saveregister"] = middlewares.AdminVerification(wfverify.AdminSaveRegisterPage)
   h.mux["/admin/register"] = middlewares.AdminVerification(wfverify.AdminRegisterPage)
   h.mux["/admin/settings"] = middlewares.AdminVerification(wfverify.AdminSettingsPage)
