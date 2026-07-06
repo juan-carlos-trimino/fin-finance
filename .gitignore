@@ -142,6 +142,11 @@ src/webfinances/templates/admin/*
 src/webfinances/templates/admin/settigs/*
 !src/webfinances/templates/admin/settings/settings.html
 # ... and this directory and its file...
+!src/webfinances/templates/admin/settings/security/
+src/webfinances/templates/admin/settigs/security/*
+!src/webfinances/templates/admin/settings/security/password.html
+!src/webfinances/templates/admin/settings/security/security.html
+# ... and this directory and its file...
 !src/webfinances/templates/banking/
 src/webfinances/templates/banking/*
 !src/webfinances/templates/banking/banking.html
