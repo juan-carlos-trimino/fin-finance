@@ -26,8 +26,7 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd2-n">Time (n)</label>
-      <input type="number" class="cnt-textcombo" id="fd2-n" name="fd2-n" value="{{ .Fd2N }}"
-        inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" id="fd2-n" name="fd2-n" value="{{ .Fd2N }}" inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd2-tp">Time Period</label>
       <select class="cnt-select" id="fd2-tp" name="fd2-tp">
         <option value="year" {{ if eq .Fd2TimePeriod "year" }} selected {{ end }}>Year(s)</option>
@@ -38,8 +37,7 @@
         <option value="day" {{ if eq .Fd2TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
       <label class="cnt-textbox" for="fd2-i">Interest (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd2-i" name="fd2-i" value="{{ .Fd2Interest }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd2-i" name="fd2-i" value="{{ .Fd2Interest }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd2-compound">Compounding Period</label>
       <select class="cnt-select" id="fd2-compound" name="fd2-compound">
         <option value="annually" {{ if eq .Fd2Compound "annually" }} selected {{ end }}>Annually</option>
@@ -51,8 +49,7 @@
         <option value="continuously" {{ if eq .Fd2Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
       <label class="cnt-textbox" for="fd2-amount">Amount</label>
-      <input type="number" class="cnt-textcombo" id="fd2-amount" name="fd2-amount" value="{{ .Fd2Amount }}"
-        inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" id="fd2-amount" name="fd2-amount" value="{{ .Fd2Amount }}" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" value="rhs-ui2" name="compute" type="submit">
