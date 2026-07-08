@@ -21,10 +21,9 @@ import (
 )
 
 /***
-The Singleton pattern in Go ensures that a specific type has only one instance throughout the
-program's lifecycle and provides a global access point to that instance. This pattern is commonly
-used for resources like database connections, loggers, or configuration managers where a single,
-shared instance is desired.
+The Singleton pattern in Go ensures that a specific type has only one instance throughout the program's lifecycle and provides
+a global access point to that instance. This pattern is commonly used for resources like database connections, loggers, or
+configuration managers where a single, shared instance is desired.
 bankingSystem represents the structure of the singleton instance.
 ***/
 type banking struct {
@@ -108,8 +107,8 @@ func GetBsInstance() (*banking) {
   }
 }
 
-func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, targetDb, sslmode string,
-  port, connect_timeout int, pathToScript, correlationId string) bool {
+func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, targetDb, sslmode string, port, connect_timeout int,
+     pathToScript, correlationId string) bool {
   for _, str := range strings.Split(osu.ShowPermissions(pathToScript, false), "\n") {
     if str != "" {
       logger.LogInfo(str, correlationId)
@@ -119,15 +118,15 @@ func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, targetD
   //It stops malicious SQL characters (like ';', '--', '"') completely (preventing SQL injection).
   isValidName := regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
   if !isValidName(targetDb) {
-    logger.LogError(fmt.Sprintf("Invalid database name %q: Names must only contain alphanumeric" +
-      " characters or underscores", targetDb), correlationId)
+    logger.LogError(fmt.Sprintf("Invalid database name %q: Names must only contain alphanumeric characters or underscores", targetDb),
+      correlationId)
     return false
   }
   //postgresql://[user[:password]@][host[:port]]/[dbname][?option1=value1&option2=value2]
   // var connString string = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password,
   //   host, port, dbname)
-  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s",
-    host, port, user, password, dbname, connect_timeout, sslmode)
+  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password, dbname,
+    connect_timeout, sslmode)
   // logger.LogInfo(fmt.Sprintf("Connection string: %s", psqlInfo), correlationId)
   conn, err := pgx.Connect(ctx, psqlInfo)
   if err != nil {
@@ -136,10 +135,9 @@ func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, targetD
   }
   defer conn.Close(ctx)
   /***
-  To check if a PostgreSQL database exists, you must connect to a default maintenance database
-  (like 'postgres') first because you cannot query a server's global catalog if you try to connect
-  directly to a database that does not exist. Once connected, execute a query against the
-  pg_catalog.pg_database system catalog table.
+  To check if a PostgreSQL database exists, you must connect to a default maintenance database (like 'postgres') first because you cannot
+  query a server's global catalog if you try to connect directly to a database that does not exist. Once connected, execute a query against
+  the pg_catalog.pg_database system catalog table.
   ***/
   var exists bool = false
   //Query the pg_database catalog.
