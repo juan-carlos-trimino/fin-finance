@@ -22,17 +22,15 @@ import (
   "net/http"
   "net/http/pprof"
   /***
-  In Go, it is an error to import a package but not refer any of its exported identifiers directly.
-  However, on occasion you must import a package merely for the side effects of doing so; e.g.;
-  evaluation of the initializer expressions of its package-level variables and execution of its
-  init functions. To suppress the "unused import" error you would otherwise encounter, you must use
-  an alias import in which the alternative name is _, the blank identifier. As usual, the blank
-  identifier can never be referenced. This is known as a blank import.
+  In Go, it is an error to import a package but not refer any of its exported identifiers directly. However, on occasion you must import a
+  package merely for the side effects of doing so; e.g.; evaluation of the initializer expressions of its package-level variables and
+  execution of its init functions. To suppress the "unused import" error you would otherwise encounter, you must use an alias import in
+  which the alternative name is _, the blank identifier. As usual, the blank identifier can never be referenced. This is known as a blank
+  import.
   ***/
   /***
-  The package is typically only imported for the side effect of registering its HTTP handlers.
-  However, if you use the `blank import`, the profile package will only register its handlers with
-  the default multiplexer (http.DefaultServeMux).
+  The package is typically only imported for the side effect of registering its HTTP handlers. However, if you use the `blank import`,
+  the profile package will only register its handlers with the default multiplexer (http.DefaultServeMux).
   **/
   // _ "net/http/pprof" //Blank import of pprof.
   "github.com/juan-carlos-trimino/gplogger"
@@ -83,28 +81,23 @@ const (
 )
 
 /***
-In Go, a handler is an interface (type Handler interface) that has a method named ServeHTTP with
-two parameters: an http.ResponseWriter interface and a pointer to an http.Request struct. Hence,
-any type that has a method called ServeHTTP with this method signature is a handler:
-  ServeHTTP(http.ResponseWriter, *http.Request)
+In Go, a handler is an interface (type Handler interface) that has a method named ServeHTTP with two parameters: an http.ResponseWriter
+interface and a pointer to an http.Request struct. Hence, any type that has a method called ServeHTTP with this method signature is a
+handler: ServeHTTP(http.ResponseWriter, *http.Request)
 
-ServeMux is an HTTP request multiplexer; it accepts an HTTP request and redirects it to the
-correct handler according to the URL in the request. ServeMux is a struct with a map of entries
-that maps a URL to a handler, and it is also a handler because it implements the ServeHTTP method.
-The ServeHTTP method finds the URL most closely mathing the requested one and calls the
-corresponding handler.
+ServeMux is an HTTP request multiplexer; it accepts an HTTP request and redirects it to the correct handler according to the URL in the
+request. ServeMux is a struct with a map of entries that maps a URL to a handler, and it is also a handler because it implements the
+ServeHTTP method. The ServeHTTP method finds the URL most closely mathing the requested one and calls the corresponding handler.
 
 Since ServeMux is a struct, DefaultServeMux is an instance of ServeMux.
 
-Go has a function type named HandlerFunc, which will adapt a function f with the appropriate
-signature into a Handler with a method f.
+Go has a function type named HandlerFunc, which will adapt a function f with the appropriate signature into a Handler with a method f.
 ***/
 type handlers struct {
   /***
   The 'type HandlerFunc func(ResponseWriter, *Request)' is a function type that has methods
-  ('func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request)') and satisfies an interface,
-  http.Handler. The behavior of its ServeHTTP method is to call the underlying function.
-  HandlerFunc is thus an adapter that lets a function value satisfy an interface, where the
+  ('func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request)') and satisfies an interface, http.Handler. The behavior of its ServeHTTP
+  method is to call the underlying function. HandlerFunc is thus an adapter that lets a function value satisfy an interface, where the
   function and the interface's sole method have the same signature.
   ***/
   mux map[string]http.HandlerFunc  //Multiplexer.
@@ -114,11 +107,9 @@ type handlers struct {
 A Handler responds to an HTTP request.
 'ServeHTTP' is the only method of the 'type Handler interface'.
 
-The ServeHTTP function takes two parameters -- the ResponseWriter interface and a pointer to a
-Request struct. Since changes to Request by the handler need to be visible to the server, it is
-passed by reference. But why is ResponseWriter passed by value? ResponseWriter is an interface to a
-nonexported struct response; we're passing the struct by reference (we're passing in a pointer to
-response) and not by value.
+The ServeHTTP function takes two parameters -- the ResponseWriter interface and a pointer to a Request struct. Since changes to Request by
+the handler need to be visible to the server, it is passed by reference. But why is ResponseWriter passed by value? ResponseWriter is an
+interface to a nonexported struct response; we're passing the struct by reference (we're passing in a pointer to response) and not by value.
 ***/
 func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
@@ -155,11 +146,9 @@ func main() {
   }
   logger.LogInfo(fmt.Sprintf("Server: %s", config.GetServer()), falseCorrelationId)
   if config.GetHttps(falseCorrelationId) {
-    logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %d", config.GetHttpsPort(falseCorrelationId)),
-     falseCorrelationId)
+    logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %d", config.GetHttpsPort(falseCorrelationId)), falseCorrelationId)
   }
-  logger.LogInfo(fmt.Sprintf("Using SHUTDOWN_TIMEOUT: %d",
-   config.GetShutDownTimeout(falseCorrelationId)), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("Using SHUTDOWN_TIMEOUT: %d", config.GetShutDownTimeout(falseCorrelationId)), falseCorrelationId)
   logger.LogInfo(fmt.Sprintf("OS: %s", osu.GetOS()), falseCorrelationId)
   homeDir, err := os.UserHomeDir()
   if err != nil {
@@ -198,8 +187,8 @@ func main() {
   webfinances.SetupDirStructure(dataDir)
   //Database.
   if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
-    if ok := bank.ExecuteSqlScript(context.Background(), host, default_user, default_password, default_dbname,
-      admin_dbname, sslmode, port, connect_timeout, pathToScript, falseCorrelationId); !ok {
+    if ok := bank.ExecuteSqlScript(context.Background(), host, default_user, default_password, default_dbname, admin_dbname, sslmode,
+       port, connect_timeout, pathToScript, falseCorrelationId); !ok {
       panic("Call to ExecuteSqlScript failed.")
     }
   }
@@ -229,8 +218,7 @@ func main() {
   var certMan autocert.Manager
   if config.GetLetsEncryptCert(falseCorrelationId) {
     certMan = autocert.Manager{
-      //It always returns true to indicate acceptance of the CA's Terms of Service during account
-      //registration.
+      //It always returns true to indicate acceptance of the CA's Terms of Service during account registration.
       Prompt: autocert.AcceptTOS,
       HostPolicy: autocert.HostWhitelist("trimino.xyz", "www.trimino.xyz"), //Domain names.
       Cache: autocert.DirCache(dataDir), //Folder for storing certificates.
@@ -458,7 +446,7 @@ func makeHandlers() *handlers {
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
   h.mux["/banking"] = wfbankPages.BankingPage
-	h.mux["/finances"] = wfpages.FinancesPage
+  h.mux["/finances"] = wfpages.FinancesPage
   h.mux["/fin/ordinaryannuity"] = wfpages.OrdinaryAnnuityPage
   h.mux["/fin/ordinaryannuity/interestrate"] = wfoainterest.OaInterestRatePages
   h.mux["/fin/ordinaryannuity/fv"] = wfoafv.OaFvPages
@@ -490,7 +478,7 @@ func makeHandlers() *handlers {
     h.mux["/debug/pprof/trace"] = pprof.Trace
   }
   commonMiddlewares := []middlewares.Middleware{
-		middlewares.ValidateSessions,
+    middlewares.ValidateSessions,
     middlewares.SecurityHeaders,
     middlewares.CorrelationId,
   }
