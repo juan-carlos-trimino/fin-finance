@@ -462,7 +462,8 @@ BEGIN
   ***/
   IF NOT FOUND THEN  -- User not found; password can't be valid.
     pout := -2;
-    RAISE NOTICE 'Unknown user (%); sleeping for % seconds', puser_name, vunknown_user_delay;
+    RAISE NOTICE 'Unknown user (%); sleeping for % seconds', puser_name, vunknown_user_delay
+      USING DETAIL = correlation_id;
     -- Pause the current session for the specified number of seconds (can be a decimal).
     PERFORM pg_sleep(vunknown_user_delay);
   /***
@@ -510,6 +511,7 @@ CREATE OR REPLACE PROCEDURE fin.change_password(
   IN p_user_name TEXT,
   IN p_old_password TEXT,
   IN p_new_password TEXT,
+  IN correlation_id TEXT,
   OUT ret BOOL
 )
 LANGUAGE PLPGSQL
@@ -529,7 +531,8 @@ BEGIN
   FROM fin.customers_credentials
   WHERE user_name = p_user_name;
   IF NOT FOUND THEN  -- User not found; password can't be valid.
-    RAISE NOTICE 'Unknown user (%); password not changed.', p_user_name;
+    RAISE NOTICE 'Unknown user (%); password not changed.', p_user_name
+      USING DETAIL = correlation_id;
   ELSIF vpwd_hash = crypt(p_old_password, vpwd_hash) THEN  -- User authenticated.
     vpwd_hash := crypt(p_new_password, gen_salt('bf', 10));
     UPDATE fin.customers_credentials
