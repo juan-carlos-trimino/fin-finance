@@ -6,8 +6,7 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd2-interest">Interest (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd2-interest" name="fd2-interest" value="{{ .Fd2Interest }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd2-interest" name="fd2-interest" value="{{ .Fd2Interest }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd2-cp">Compounding Period</label>
       <select class="cnt-select" id="fd2-cp" name="fd2-cp">
         <option value="annually" {{ if eq .Fd2Compound "annually" }} selected {{ end }}>Annually</option>
@@ -19,11 +18,9 @@
         <option value="continuously" {{ if eq .Fd2Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
       <label class="cnt-textbox" for="fd2-grow">Grow (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd2-grow" name="fd2-grow" value="{{ .Fd2Grow }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd2-grow" name="fd2-grow" value="{{ .Fd2Grow }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd2-pmt">Payment (PMT)</label>
-      <input type="number" class="cnt-textcombo" id="fd2-pmt" name="fd2-pmt" value="{{ .Fd2Pmt }}"
-        inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" id="fd2-pmt" name="fd2-pmt" value="{{ .Fd2Pmt }}" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui2" type="submit">

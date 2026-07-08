@@ -6,11 +6,9 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd1-n">Time (n)</label>
-      <input type="text" class="cnt-textcombo" id="fd1-n" name="fd1-n" value="{{ .Fd1N }}"
-        inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="text" id="fd1-n" name="fd1-n" value="{{ .Fd1N }}" inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-interest">Interest (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd1-interest" name="fd1-interest" value="{{ .Fd1Interest }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd1-interest" name="fd1-interest" value="{{ .Fd1Interest }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-cp">Compounding Period</label>
       <select class="cnt-select" id="fd1-cp" name="fd1-cp">
         <option value="annually" {{ if eq .Fd1Compound "annually" }} selected {{ end }}>Annually</option>
@@ -22,11 +20,9 @@
         <option value="continuously" {{ if eq .Fd1Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
       <label class="cnt-textbox" for="fd1-grow">Grow (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd1-grow" name="fd1-grow" value="{{ .Fd1Grow }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd1-grow" name="fd1-grow" value="{{ .Fd1Grow }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-pmt">First Payment (P)</label>
-      <input type="number" class="cnt-textcombo" id="fd1-pmt" name="fd1-pmt" value="{{ .Fd1Pmt }}"
-        inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" id="fd1-pmt" name="fd1-pmt" value="{{ .Fd1Pmt }}" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui1" type="submit">
