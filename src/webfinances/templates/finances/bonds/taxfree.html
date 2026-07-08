@@ -3,30 +3,24 @@
 <!-- rhs-ui1 -->
 <div id="rhs-ui1">
   <!--
-  The HTML form data is always sent as name-value pairs. The format of the name-value pairs sent
-  through a POST request is specified by the content type of the HTML form. This is defined using
-  the enctype attribute. The default value for enctype is application/x-www-form-urlencoded.
-  Browsers are required to support at least application/x-www-form-urlencoded and multipart/form-data.
+  The HTML form data is always sent as name-value pairs. The format of the name-value pairs sent through a POST request is specified by the
+  content type of the HTML form. This is defined using the enctype attribute. The default value for enctype is
+  application/x-www-form-urlencoded. Browsers are required to support at least application/x-www-form-urlencoded and multipart/form-data.
 
-  HTML form allows the method attribute to be either POST or GET. For POST, the data are placed in
-  the body of the request, but the GET method attribute does not have a request body, and the data
-  are set in the URL as name-value pairs.
+  HTML form allows the method attribute to be either POST or GET. For POST, the data are placed in the body of the request, but the GET method
+  attribute does not have a request body, and the data are set in the URL as name-value pairs.
   -->
   <form action="/fin/bonds" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd1-taxfree">Tax-Free Yield (%)</label>
-      <input class="cnt-textcombo" id="fd1-taxfree" name="fd1-taxfree" value="{{ .Fd1TaxFree }}"
-        type="0.5" inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd1-taxfree" name="fd1-taxfree" value="{{ .Fd1TaxFree }}" type="0.5" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-citytax">City Tax Rate, if applicable (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd1-citytax" name="fd1-citytax" value="{{ .Fd1CityTax }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd1-citytax" name="fd1-citytax" value="{{ .Fd1CityTax }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-statetax">State Tax Rate, if applicable (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd1-statetax" name="fd1-statetax" value="{{ .Fd1StateTax }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd1-statetax" name="fd1-statetax" value="{{ .Fd1StateTax }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd1-federaltax">Federal Tax Rate (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd1-federaltax" name="fd1-federaltax" value="{{ .Fd1FederalTax }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd1-federaltax" name="fd1-federaltax" value="{{ .Fd1FederalTax }}" inputmode="numeric" step="0.5" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" value="rhs-ui1" name="compute" type="submit">

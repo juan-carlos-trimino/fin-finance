@@ -7,11 +7,9 @@
     <!-- margin: top, right, bottom, left -->
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd3-facevalue">Face Value</label>
-      <input type="number" class="cnt-textcombo" id="fd3-facevalue" name="fd3-facevalue" value="{{ .Fd3FaceValue }}"
-        inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" id="fd3-facevalue" name="fd3-facevalue" value="{{ .Fd3FaceValue }}" inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd3-timecall">Time to Call</label>
-      <input type="number" class="cnt-textcombo" id="fd3-timecall" name="fd3-timecall" value="{{ .Fd3TimeCall }}"
-        inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" id="fd3-timecall" name="fd3-timecall" value="{{ .Fd3TimeCall }}" inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd3-tp">Time Period</label>
       <select class="cnt-select" name="fd3-tp" id="fd3-tp">
         <option value="year" {{ if eq .Fd3TimePeriod "year" }} selected {{ end }}>Year(s)</option>
@@ -22,8 +20,7 @@
         <option value="day" {{ if eq .Fd3TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
       <label class="cnt-textbox" for="fd3-coupon">Coupon Rate (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd3-coupon" name="fd3-coupon" value="{{ .Fd3Coupon }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd3-coupon" name="fd3-coupon" value="{{ .Fd3Coupon }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd3-compound">Compounding Period</label>
       <select class="cnt-select" id="fd3-compound" name="fd3-compound">
         <option value="annually" {{ if eq .Fd3Compound "annually" }} selected {{ end }}>Annually</option>
@@ -35,11 +32,9 @@
         <option value="continuously" {{ if eq .Fd3Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
       <label class="cnt-textbox" for="fd3-bondprice">Bond Price</label>
-      <input type="number" class="cnt-textcombo" id="fd3-bondprice" name="fd3-bondprice" value="{{ .Fd3BondPrice }}"
-        inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" id="fd3-bondprice" name="fd3-bondprice" value="{{ .Fd3BondPrice }}" inputmode="numeric" step="any" maxlength="7" required/>
       <label class="cnt-textbox" for="fd3-callprice">Call Price</label>
-      <input type="number" class="cnt-textcombo" id="fd3-callprice" name="fd3-callprice" value="{{ .Fd3CallPrice }}"
-        inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" id="fd3-callprice" name="fd3-callprice" value="{{ .Fd3CallPrice }}" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui3" type="submit">
