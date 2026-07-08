@@ -6,8 +6,7 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd2-effective">Effective Annual Rate (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd2-effective" name="fd2-effective" value="{{ .Fd2Effective }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd2-effective" name="fd2-effective" value="{{ .Fd2Effective }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd2-compound">Compounding Period</label>
       <select class="cnt-select" id="fd2-compound" name="fd2-compound">
         <option value="annually" {{ if eq .Fd2Compound "annually" }} selected {{ end }}>Annually</option>

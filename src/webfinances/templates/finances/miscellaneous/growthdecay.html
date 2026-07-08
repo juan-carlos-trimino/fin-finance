@@ -6,8 +6,7 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd5-interest">Interest (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd5-interest" name="fd5-interest" value="{{ .Fd5Interest }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd5-interest" name="fd5-interest" value="{{ .Fd5Interest }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd5-compound">Compounding Period</label>
       <select class="cnt-select" id="fd5-compound" name="fd5-compound">
         <option value="annually" {{ if eq .Fd5Compound "annually" }} selected {{ end }}>Annually</option>
@@ -19,8 +18,7 @@
         <option value="continuously" {{if eq .Fd5Compound "continuously"}} selected {{ end }}>Continuously</option>
       </select>
       <label class="cnt-textbox" for="fd5-factor">Factor</label>
-      <input type="number" class="cnt-textcombo" id="fd5-factor" name="fd5-factor" value="{{ .Fd5Factor }}"
-        inputmode="numeric" step="1" maxlength="7" required/>
+      <input type="number" id="fd5-factor" name="fd5-factor" value="{{ .Fd5Factor }}" inputmode="numeric" step="1" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui5" type="submit">

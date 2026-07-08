@@ -6,8 +6,7 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd4-currentrate">Current Rate (%)</label>
-      <input type="number" class="cnt-textcombo" id="fd4-currentrate" name="fd4-currentrate" value="{{ .Fd4CurrentRate }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd4-currentrate" name="fd4-currentrate" value="{{ .Fd4CurrentRate }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd4-currentcompound">Current Compounding Period</label>
       <select class="cnt-select" id="fd4-currentcompound" name="fd4-currentcompound">
         <option value="annually" {{ if eq .Fd4CurrentCompound "annually" }} selected {{ end }}>Annually</option>
