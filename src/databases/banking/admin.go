@@ -28,6 +28,8 @@ const (
   SP_ADD_CUSTOMER = "CALL fin.add_customer($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)"
   //Pass null for OUT parameter in the call.
   SP_AUTHENTICATE_USER = "CALL fin.authenticate_user($1, $2, $3, null, null)"
+  //Change password.
+  SP_CHANGE_PASSWORD = "CALL fin.change_password($1, $2, $3, $4, null)"
 )
 
 type AddCustomer struct {
@@ -99,7 +101,7 @@ func HashAndSaltPassword(password, correlationId string) string {
 func DbAuthenticateUser(ctx context.Context, userName, password, correlationId string) (bool, bool) {
   db := GetBsInstance()
   var status int
-  var isAdmin bool = false;
+  var isAdmin bool = false
   var ok bool = true
   err := db.bsPool.QueryRow(ctx, SP_AUTHENTICATE_USER, userName, password, correlationId).Scan(&status, &isAdmin)
   if err != nil {
@@ -134,6 +136,19 @@ func DbGetCustomersContactDetails(ctx context.Context, correlationId string) boo
   }
   return ok
 }
+
+func DbChangePassword(ctx context.Context, userName, oldPassword, newPassword, correlationId string) bool {
+  db := GetBsInstance()
+  var ok bool = true
+  err := db.bsPool.QueryRow(ctx, SP_CHANGE_PASSWORD, userName, oldPassword, newPassword, correlationId).Scan(&ok)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("Error on DbGetCustomersContactDetails: %v", err), correlationId)
+    ok = false
+  }
+  return ok
+}
+
+
 
 //////////////////////
 
