@@ -448,13 +448,13 @@ DECLARE
   vfailed_attempts INT;
   vhash TEXT;
 BEGIN
+  pis_admin := false;
   SELECT
     password_hash
   INTO
     vhash
   FROM fin.customers_credentials
   WHERE user_name = puser_name;
-  pis_admin := false;
   /***
   The SELECT INTO statement in Postgres (without the STRICT keyword) sets a special variable
   called FOUND to TRUE if a row is returned, and FALSE if no row is found. No exception is raised
@@ -502,6 +502,41 @@ BEGIN
         USING DETAIL = correlation_id;
       PERFORM pg_sleep(vsleep_time);
     END IF;
+  END IF;
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE fin.change_password(
+  IN p_user_name TEXT,
+  IN p_old_password TEXT,
+  IN p_new_password TEXT,
+  OUT ret BOOL
+)
+LANGUAGE PLPGSQL
+/***
+This delimits the SP body using dollar-quoted string constants, which avoids the need to escape single quotes within the code.
+***/
+AS $$
+DECLARE
+  vpwd_hash TEXT;
+--This block encloses the executable logic of the stored procedure's body.
+BEGIN
+  ret := false;
+  SELECT
+    password_hash
+  INTO
+    vpwd_hash
+  FROM fin.customers_credentials
+  WHERE user_name = p_user_name;
+  IF NOT FOUND THEN  -- User not found; password can't be valid.
+    RAISE NOTICE 'Unknown user (%); password not changed.', p_user_name;
+  ELSIF vpwd_hash = crypt(p_old_password, vpwd_hash) THEN  -- User authenticated.
+    vpwd_hash := crypt(p_new_password, gen_salt('bf', 10));
+    UPDATE fin.customers_credentials
+    SET
+      password_hash = vpwd_hash
+    WHERE user_name = p_user_name;
+    ret := true;
   END IF;
 END;
 $$;
