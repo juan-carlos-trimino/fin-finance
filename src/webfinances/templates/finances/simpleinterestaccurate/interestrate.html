@@ -6,8 +6,7 @@
     <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd2-time">Time (n)</label>
-      <input type="number" class="cnt-textcombo" id="fd2-time" name="fd2-time" value="{{ .Fd2Time }}"
-        inputmode="numeric" step="any" min="1" maxlength="7" required/>
+      <input type="number" id="fd2-time" name="fd2-time" value="{{ .Fd2Time }}" inputmode="numeric" step="any" min="1" maxlength="7" required/>
       <label class="cnt-textbox" for="fd2-tp">Time Period</label>
       <select class="cnt-select" id="fd2-tp" name="fd2-tp">
         <option value="year" {{ if eq .Fd2TimePeriod "year" }} selected {{ end }}>Year(s)</option>
@@ -18,11 +17,9 @@
         <option value="day" {{ if eq .Fd2TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
       <label class="cnt-textbox" for="fd2-amount">Amount of Interest</label>
-      <input type="number" class="cnt-textcombo" id="fd2-amount" name="fd2-amount" value="{{ .Fd2Amount }}"
-        inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd2-amount" name="fd2-amount" value="{{ .Fd2Amount }}" inputmode="numeric" step="0.5" maxlength="7" required/>
       <label class="cnt-textbox" for="fd2-pv">Present Value (PV)</label>
-      <input type="number" class="cnt-textcombo" id="fd2-pv" name="fd2-pv" value="{{ .Fd2PV }}"
-        inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" id="fd2-pv" name="fd2-pv" value="{{ .Fd2PV }}" inputmode="numeric" step="any" maxlength="7" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui2" type="submit">
