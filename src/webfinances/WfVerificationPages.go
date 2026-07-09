@@ -39,7 +39,7 @@ func (s WfVerificationPages) AdminWelcomePage(res http.ResponseWriter, req *http
       logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     }
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (s WfVerificationPages) AdminRegisterPage(res http.ResponseWriter, req *http.Request) {
@@ -203,7 +203,7 @@ func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req 
     logger.LogError(errString, correlationId)
     panic(errString)
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (s WfVerificationPages) AdminSettingsPage(res http.ResponseWriter, req *http.Request) {
@@ -230,5 +230,15 @@ func (s WfVerificationPages) AdminSettingsPage(res http.ResponseWriter, req *htt
       logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
     }
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
+}
+
+func (p WfVerificationPages) PublicSettingsSecurityFile(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering PublicSettingsSecurityFile.", correlationId)
+  http.ServeFile(res, req, "./webfinances/public/js/admin/SettingsSecurity.js")
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
