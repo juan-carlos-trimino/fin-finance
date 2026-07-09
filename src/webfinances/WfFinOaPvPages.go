@@ -29,27 +29,24 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering OaPvPages/webfinances.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     of := getOaPvFields(userName)
     /***
-    The functions in Request that allow to extract data from the URL and/or the body revolve around
-    the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
+    The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and MultipartForm
+    fields; the data are in the form of key-value pairs.
 
-    If the form and the URL have the same key name, both of them will be placed in a slice, with
-    the form value always prioritized before the URL value.
+    If the form and the URL have the same key name, both of them will be placed in a slice, with the form value always prioritized before
+    the URL value.
 
-    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm
-    field provides key-value pairs only for the form and not the URL. The PostForm field supports
-    only application/x-www-form-urlencoded.
+    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm field provides key-value pairs only for
+    the form and not the URL. The PostForm field supports only application/x-www-form-urlencoded.
 
-    The FormValue method lets you access the key-value pairs just like the Form field, except that
-    it's for a specific key and there is no need to call the ParseForm method beforehand -- the
-    FormValue method does it. The PostFormValue method does the same thing, except that it's for
-    the PostForm field instead of the Form field.
+    The FormValue method lets you access the key-value pairs just like the Form field, except that it's for a specific key and there is no
+    need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing, except that
+    it's for the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
       of.CurrentPage = ui
@@ -76,24 +73,26 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
         } else {
           var oa finances.Annuities
           of.Fd1Result = fmt.Sprintf("Present Value: $%.2f", oa.O_PresentValue_FV(fv, i / 100.0,
-            oa.GetCompoundingPeriod(of.Fd1Compound[0], true), n,
-            oa.GetTimePeriod(of.Fd1TimePeriod[0], true)))
+            oa.GetCompoundingPeriod(of.Fd1Compound[0], true), n, oa.GetTimePeriod(of.Fd1TimePeriod[0], true)))
         }
-        logger.LogError(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, fv = %s, %s", of.Fd1N,
-         of.Fd1TimePeriod, of.Fd1Interest, of.Fd1Compound, of.Fd1FV, of.Fd1Result), correlationId)
+        logger.LogError(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, fv = %s, %s", of.Fd1N, of.Fd1TimePeriod, of.Fd1Interest,
+          of.Fd1Compound, of.Fd1FV, of.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       /***
-      The Must function wraps around the ParseGlob function that returns a pointer to a template
-      and an error, and it panics if the error is not nil.
+      The Must function wraps around the ParseGlob function that returns a pointer to a template and an error, and it panics if the error
+      is not nil.
       ***/
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/ordinaryannuity/pv/pv.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/ordinaryannuity/pv/pv.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/ordinaryannuity/pv/n-i-FV.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "oapresentvalue", struct {
+      err := t.ExecuteTemplate(res, "oapresentvalue", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -104,10 +103,13 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
         Fd1Compound string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Present Value", logger.DatetimeFormat(), of.CurrentButton,
-          newSession.CsrfToken, of.Fd1N, of.Fd1TimePeriod, of.Fd1Interest, of.Fd1Compound,
-          of.Fd1FV, of.Fd1Result,
+      } { "Ordinary Annuity / Present Value", logger.DatetimeFormat(), of.CurrentButton, newSession.CsrfToken, of.Fd1N, of.Fd1TimePeriod,
+          of.Fd1Interest, of.Fd1Compound, of.Fd1FV, of.Fd1Result,
         })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
       of.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -129,21 +131,22 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
         } else {
           var oa finances.Annuities
           of.Fd2Result = fmt.Sprintf("Present Value: $%.2f", oa.O_PresentValue_PMT(pmt, i / 100.0,
-            oa.GetCompoundingPeriod(of.Fd2Compound[0], true), n,
-            oa.GetTimePeriod(of.Fd2TimePeriod[0], true)))
+             oa.GetCompoundingPeriod(of.Fd2Compound[0], true), n, oa.GetTimePeriod(of.Fd2TimePeriod[0], true)))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s",
-         of.Fd2N, of.Fd2TimePeriod, of.Fd2Interest, of.Fd2Compound, of.Fd2PMT, of.Fd2Result),
-         correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s", of.Fd2N, of.Fd2TimePeriod,
+          of.Fd2Interest, of.Fd2Compound, of.Fd2PMT, of.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles("webfinances/templates/finances/ordinaryannuity/pv/pv.html",
-        "webfinances/templates/header.html",
+      t := template.Must(template.ParseFiles(
+        "webfinances/templates/finances/ordinaryannuity/pv/pv.html",
+        "webfinances/templates/title.html",
+        "webfinances/templates/datetime.html",
+        "webfinances/templates/navbar.html",
         "webfinances/templates/finances/ordinaryannuity/pv/n-i-PMT.html",
         "webfinances/templates/footer.html"))
-      t.ExecuteTemplate(res, "oapresentvalue", struct {
+      err := t.ExecuteTemplate(res, "oapresentvalue", struct {
         Header string
         Datetime string
         CurrentButton string
@@ -154,10 +157,13 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
         Fd2Compound string
         Fd2PMT string
         Fd2Result string
-      } { "Ordinary Annuity / Present Value", logger.DatetimeFormat(), of.CurrentButton,
-          newSession.CsrfToken, of.Fd2N, of.Fd2TimePeriod, of.Fd2Interest, of.Fd2Compound,
-          of.Fd2PMT, of.Fd2Result,
+      } { "Ordinary Annuity / Present Value", logger.DatetimeFormat(), of.CurrentButton, newSession.CsrfToken, of.Fd2N, of.Fd2TimePeriod,
+          of.Fd2Interest, of.Fd2Compound, of.Fd2PMT, of.Fd2Result,
         })
+      //
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
       logger.LogError(errString, "-1")
@@ -177,8 +183,7 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
       logger.LogError(fmt.Sprintf("%+v", err), "-1")
     } else {
       filePath := fmt.Sprintf("%s/%s/oapv.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
-        os.O_TRUNC, 0o600); err != nil {
+      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
         logger.LogError(fmt.Sprintf("%+v", err), "-1")
       }
     }
@@ -187,6 +192,5 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
     logger.LogError(errString, "-1")
     panic(errString)
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
