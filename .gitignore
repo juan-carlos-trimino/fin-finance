@@ -74,6 +74,7 @@ src/security/*
 !src/webfinances/
 src/webfinances/*
 !src/webfinances/fields.go
+!src/webfinances/WfAdminSecurityPages.go
 !src/webfinances/WfBankPages.go
 !src/webfinances/WfFinBondsPages.go
 !src/webfinances/WfFinMiscellaneousPages.go
