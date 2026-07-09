@@ -412,7 +412,8 @@ func makeHandlers() *handlers {
     }
   }
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
-  h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
+  h.mux["/public/js/admin/SettingsSecurity.js"] = wfverify.PublicSettingsSecurityFile
+	h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/getParams.js"] = wfpages.PublicGetParamsFile
   h.mux["/public/js/mortgage.js"] = wfpages.PublicMortgageFile
   h.mux["/public/js/OaInterestRate.js"] = wfpages.PublicOaInterestRateFile
