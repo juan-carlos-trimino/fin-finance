@@ -122,6 +122,9 @@ src/webfinances/public/js/*
 !src/webfinances/public/js/SimpleInterestAccurate.js
 !src/webfinances/public/js/SimpleInterestBankers.js
 !src/webfinances/public/js/SimpleInterestOrdinary.js
+!src/webfinances/public/js/admin/
+src/webfinances/public/js/admin/*
+!src/webfinances/public/js/admin/SettingsSecurity.js
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
