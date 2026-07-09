@@ -27,6 +27,8 @@ src/*
 !src/go.mod
 !src/go.sum
 !src/main.go
+!src/psql-clean.txt
+!src/psql-list.txt
 # ... and these files under the 'finances' directory...
 !src/concurrency/
 src/concurrency/*
