@@ -1,0 +1,4 @@
+drop database  IF EXISTS finances;
+DROP SCHEMA  IF EXISTS fin CASCADE;
+drop role  IF EXISTS admin_role;
+drop role  IF EXISTS admin_user;
