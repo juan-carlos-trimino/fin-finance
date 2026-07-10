@@ -403,7 +403,7 @@ input[type="hidden"] {
   }
   /* Style the native arrow icon */
   &::picker-icon {
-    color: rgb(178, 4, 4);
+    color: rgb(2, 60, 5);
     font-size: 24px;  /* Resize the icon */
     transition: 0.4s rotate;
   }
