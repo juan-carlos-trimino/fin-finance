@@ -1038,12 +1038,12 @@ $ ./iac.sh -h
 ```
 
 The command below will deploy the application with the following options:<br>
-reverse proxy: `Traefik`<br>
-deployment type: persistent disk<br>
-application version: 1.31.2<br>
-pprof: disable<br>
+reverse proxy: -gw (`Traefik`)<br>
+deployment type: -pd (persistent disk)<br>
+application version: -v 1.31.2<br>
+Image: -nb (Use an image from the repo)<br>
 ```
-$ ./iac.sh deploy -rp "true" -dt "persistent-disk" -av "1.31.2"
+$ ./iac.sh deploy -gw -pd -nb -v 1.31.2
 ```
 
 To deprovision the resources, use the command below.
