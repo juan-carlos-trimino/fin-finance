@@ -200,7 +200,7 @@ variable busybox {
 variable postgres_image_tag {  # https://www.postgresql.org/docs/release/
   description = "PostgreSQL Docker images (https://hub.docker.com/_/postgres)."
   type = string
-  default = "postgres:17.6-alpine3.22"
+  default = "postgres:18.4-alpine3.24"
 }
 
 variable postgres_db_label {
