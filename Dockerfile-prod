@@ -2,7 +2,7 @@
 # Select an image comparable to target architecture.
 # Alpine images provide the Almquist shell (ash or sh) from BusyBox.
 # https://docs.docker.com/build/building/multi-platform/#cross-compilation
-FROM --platform=$BUILDPLATFORM golang:1.24.3-alpine3.21 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26.4-alpine3.24 AS builder
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 ARG TARGETOS
@@ -15,7 +15,9 @@ WORKDIR /goapp/
 COPY ./src/go.* ./
 # Copy the code from the local machine to the container image.
 COPY ./src/main.go ./
+# COPY ./src/concurrency ./concurrency/
 COPY ./src/config ./config/
+COPY ./databases ./databases/
 COPY ./src/finances ./finances/
 COPY ./src/mathutil ./mathutil/
 COPY ./src/security ./security/
@@ -59,7 +61,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a -ldflags="-s
 # Final Stage #
 ###############
 # FROM --platform=$TARGETPLATFORM scratch
-FROM --platform=$TARGETPLATFORM alpine:3.21
+FROM --platform=$TARGETPLATFORM alpine:3.24
 
 WORKDIR /goapp/
 
