@@ -29,7 +29,7 @@ display_help() {
   printf "                            (If not present, reverse proxy is not used)\n"
   printf "    -p, --pprof             If present, pprof is enabled\n"
   printf "                            (If not present, pprof is disabled)\n"
-  printf "    --postgres              Use the postgres database\n"
+  printf "    -pg, --postgres         Use the postgres database\n"
   printf "  destroy                 Destroy the infrastructure.\n\n"
   printf "Examples:\n"
   printf "Deploy app using empty-dir as storage.\n"
@@ -85,7 +85,7 @@ check_options() {
       "-p" | "--pprof")
         pprof="true"
         ;;
-      "--postgres")
+      "-pg" | "--postgres")
         db_postgres="true"
         ;;
       "-ed" | "--empty-dir")
@@ -170,10 +170,10 @@ print_time_elapsed() {
 set -e
 echo
 check_options $@
-echo "****************************"
-echo "Starting deployment..."
+printf "****************************\n"
+printf "Starting deployment...\n"
 start_time=$(date)
-echo "$start_time"
+printf "$start_time\n"
 echo -e "****************************\n"
 if [ "$1" == "destroy" ]
 then
@@ -246,9 +246,9 @@ then
   : "$BUILD_IMAGE"
   : "$DB_POSTGRES"
   # : "
-  echo "*********************"
-  echo "Environment variables"
-  echo "*********************"
+  printf "*********************\n"
+  printf "Environment variables\n"
+  printf "*********************\n"
   echo "APP_VERSION = $(printenv APP_VERSION)"
   echo "REVERSE_PROXY = $(printenv REVERSE_PROXY)"
   echo "K8S_CRDS = $(printenv K8S_CRDS)"
@@ -256,9 +256,9 @@ then
   echo "EMPTY_DIR = $(printenv EMPTY_DIR)"
   echo "PPROF = $(printenv PPROF)"
   printf "BUILD_IMAGE = $(printenv BUILD_IMAGE)\n\n"
-  echo "*****************"
-  echo "Current directory"
-  echo "*****************"
+  printf "*****************\n"
+  printf "Current directory\n"
+  printf "*****************\n"
   echo -e "$(pwd)\n"
   echo "*************************************************************"
   echo "Creating the directory structure for the Terraform state file"
