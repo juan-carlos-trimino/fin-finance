@@ -767,6 +767,168 @@ $ kubectl delete Issuer <issuer-name> -n finances
 $ kubectl delete Certificate <certificate-name> -n finances
 ```
 
+## PostgreSQL (Postgres)
+
+---
+### Useful Commands
+---
+Meta-commands (starting with `\`) are processed by `psql`, not sent to `PostgreSQL`.
+
+Display a complete list of meta-commands supported by `psql`. To close the generated list and return control to the `psql` prompt, press `q` on the keyboard.
+```
+postgres=# \?
+```
+Terminate the `psql` connection to `Postgres`.
+```
+postgres=# \q
+```
+#### Databases
+Switch to a different database.
+```
+postgres=# \c <database-name> <username> <host> <port>
+```
+Switch from the current database to another database using the current user.
+```
+postgres=# \c <database-name>
+```
+Display information about the current database connection.
+```
+postgres=# \conninfo
+```
+List all databases.
+```
+postgres=# \l
+postgres=# \list
+```
+List databases with size, tablespace, and description.
+```
+postgres=# \l+
+```
+#### Shemas
+Display all the database schemas.
+```
+postgres=# \dn
+```
+#### Tables
+List tables, views, and sequences belonging to the database you are currently connected.
+```
+postgres=# \d
+```
+Display all information about a table, including its structure, constraints, and a list of associated indexes under the `Indexes` section.
+```
+postgres=# \d table_name
+```
+Display more information about the given table.
+```
+postgres=# \d+ <table-name>
+```
+List tables in the current schema.
+```
+postgres=# \dt
+```
+List tables in the given schema.
+```
+postgres=# \dt <schema-name>.*
+```
+List tables in all schemas.
+```
+postgres=# \dt *.*
+```
+#### Indexes
+List all indexes in the current database (names, types, tables).
+```
+postgres=# \di
+```
+List all indexes in the current database schema with extra details, including their physical disk size.
+```
+postgres=# \di+
+```
+#### Functions and Procedures
+List functions and procedures.
+```
+postgres=# \df
+```
+Show the source code/definition of a specific function or procedure. If `+` is appended to the command, line numbers are added.
+```
+\sf[+] <procedure-or-function-name>
+```
+#### Views
+List all views.
+```
+postgres=# \dv
+```
+#### Privileges, Users, and Roles
+**Permissions Breakdown**<br>
+**r: SELECT** (Read/View data)<br>
+**w: UPDATE** (Edit data)<br>
+**a: INSERT** (Add new data)<br>
+**d: DELETE** (Remove data)<br>
+**D: TRUNCATE** (Empty the table)<br>
+**x: REFERENCES** (Create foreign keys)<br>
+**t: TRIGGER** (Create a trigger)<br>
+**X: EXECUTE** (Run a function)<br>
+**U: USAGE** (Use a schema or language)<br>
+**C: CREATE** (Create new objects)<br>
+**c: CONNECT** (Connect to a database)<br>
+
+Think of the privilege string as `[Grantee]=[Permissions]/[Grantor]`. If the `[Grantee]` is blank or `PUBLIC` is explicitly written, the privileges apply to `PUBLIC` (everyone). For example, `my_user=arwd/admin` means the user `my_user` can read, write, insert, and delete data on the table, and the `admin` user granted these privileges. For the string `=r/postgres`, `PUBLIC` can read data on the table, and the `postgres` user granted the privilege.
+
+Check default access privileges.
+```
+postgres=# \ddp
+```
+Inspect privileges.
+```
+postgres=# \dp
+```
+List all users and their roles.
+```
+postgres=# \du
+```
+Retrieve information about a specific user.
+```
+postgres=# \du <username>
+```
+Show privileges for all tables, views, and sequences in the database. The `S` flag adds system objects to the list, and the `x` flag changes the view from a wide table to a vertical list, thereby making long rows easier to read. If a pattern is specified, only tables, views, and sequences whose names match the pattern are listed.
+```
+postgres=# \z[Sx] [pattern]
+```
+#### Queries
+Save query results to a file.
+```
+postgres=# \o <file-name>
+
+-- Stop the saving and output the results to the terminal again
+postgres=# \o
+```
+Toggle the display of query execution times (client-side time). The client-side timer calculates the total round-trip in milliseconds; this includes database execution, parsing/planning time, data transmission, and network latency.
+```
+-- Toggle timing on
+postgres=# \timing
+
+-- Run your query
+postgres=# SELECT * FROM users LIMIT 5;
+
+-- Toggle timing off
+postgres=# \timing
+```
+To measure execution performance without including network latency or client rendering overhead, use `EXPLAIN ANALYZE`. This forces the `PostgreSQL` server to run the query internally and output its exact internal planning and execution duration.
+```
+postgres=# EXPLAIN ANALYZE SELECT * FROM users LIMIT 5;
+```
+To bypass the toggle behavior and force a specific state, add an optional `on` or `off` argument.
+```
+-- Enable query timing
+postgres=# \timing on
+-- Disable query timing
+postgres=# \timing off
+```
+Execute the last run query repeatedly every N seconds. To end the `\watch` command, press `Ctrl + C` on the keyboard.
+```
+-- Run every 2 seconds
+postgres=# \watch 2
+```
+
 ## src
 ### Initializing a Go Project
 In version 1.13, `Go` added a new way of managing the libraries a `Go project` depends on, called [Go modules](https://go.dev/ref/mod). A `Go module` has a number of `Go` code files implementing the functionality of a `package`, but it also has two additional and important files in the root: the `go.mod` and `go.sum` files. These files contain information the go tool uses to keep track of the module's configuration and are commonly maintained by the tool.
