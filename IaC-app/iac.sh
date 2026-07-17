@@ -106,7 +106,11 @@ check_options() {
     ndx=$(( ndx + 1 ))
   done
   #
-  if [ ${arr[0]} == "deploy" ]
+  if [[ "$size" -eq 0 ]];  # No flags; arr is emptied.
+  then
+    display_help
+    exit 1
+  elif [ ${arr[0]} == "deploy" ]
   then
     if [ "$build_image" == "" ]
     then
@@ -187,9 +191,9 @@ then
     printf "******************************\n"
     terraform destroy -auto-approve
     # See https://cert-manager.io/docs/installation/helm/
-    printf "\n*****************************"
-    printf "\nDeleting cert-manager's CRDs."
     printf "\n*****************************\n"
+    printf "Deleting cert-manager's CRDs.\n"
+    printf "*****************************\n"
     # kubectl delete crd \
     #   issuers.cert-manager.io \
     #   clusterissuers.cert-manager.io \
@@ -199,9 +203,9 @@ then
     #   challenges.acme.cert-manager.io
     if [ "$REVERSE_PROXY" == "true" ]
     then
-      printf "\n*****************************"
-      printf "\nDeleting traefik's CRDs."
       printf "\n*****************************\n"
+      printf "Deleting traefik's CRDs.\n"
+      printf "*****************************\n"
       kubectl delete crd \
         ingressroutes.traefik.io \
         ingressroutetcps.traefik.io \
@@ -249,20 +253,20 @@ then
   printf "*********************\n"
   printf "Environment variables\n"
   printf "*********************\n"
-  echo "APP_VERSION = $(printenv APP_VERSION)"
-  echo "REVERSE_PROXY = $(printenv REVERSE_PROXY)"
-  echo "K8S_CRDS = $(printenv K8S_CRDS)"
-  echo "PERSISTENT_DISK = $(printenv PERSISTENT_DISK)"
-  echo "EMPTY_DIR = $(printenv EMPTY_DIR)"
-  echo "PPROF = $(printenv PPROF)"
+  printf "APP_VERSION = $(printenv APP_VERSION)\n"
+  printf "REVERSE_PROXY = $(printenv REVERSE_PROXY)\n"
+  printf "K8S_CRDS = $(printenv K8S_CRDS)\n"
+  printf "PERSISTENT_DISK = $(printenv PERSISTENT_DISK)\n"
+  printf "EMPTY_DIR = $(printenv EMPTY_DIR)\n"
+  printf "PPROF = $(printenv PPROF)\n"
   printf "BUILD_IMAGE = $(printenv BUILD_IMAGE)\n\n"
   printf "*****************\n"
   printf "Current directory\n"
   printf "*****************\n"
   echo -e "$(pwd)\n"
-  echo "*************************************************************"
-  echo "Creating the directory structure for the Terraform state file"
-  echo "*************************************************************"
+  printf "*************************************************************\n"
+  printf "Creating the directory structure for the Terraform state file\n"
+  printf "*************************************************************\n"
   # To preserve linebreaks, quote the command or variable.
   # If the directory already exists, mkdir will not create it again and will not produce an error.
   # -v, --verbose => Print a message for each created directory.
@@ -271,9 +275,9 @@ then
   # -v, --verbose => Output a diagnostic for every file processed.
   # -R, --recursive => Change files and directories recursively.
   echo -e "$(chmod -v -R 700 ../../../tf-states/)\n"
-  echo "*********************************"
-  echo "Saving the vars file with secrets"
-  echo "*********************************"
+  printf "*********************************\n"
+  printf "Saving the vars file with secrets\n"
+  printf "*********************************\n"
   echo -n "$(mkdir -v -p ../../../tf-secret-vars/IaC-app/)"
   echo "$(chmod -v -R 700 ../../../tf-secret-vars/)"
   # -v, --verbose => Explain what is being done.
@@ -283,14 +287,14 @@ then
   #   simple, never => Always make simple backups
   # -S, --suffix=SUFFIX => Override the usual backup suffix.
   echo -e "$(cp -v -a --backup="simple" -S=".bak" tf_secrets.auto.tfvars ../../../tf-secret-vars/IaC-app/tf_secrets.auto.tfvars)\n"
-  echo "**********************"
-  echo "Initializing Terraform"
-  echo "**********************"
+  printf "**********************\n"
+  printf "Initializing Terraform\n"
+  printf "**********************\n"
   terraform init
   if [ "$REVERSE_PROXY" == "true" ]
   then
     echo -e "\n*****************************************"
-    echo "Creating CustomResourceDefinitions (CRDs)"
+    printf "Creating CustomResourceDefinitions (CRDs)\n"
     printf "*****************************************\n"
     terraform apply -auto-approve \
       -var "reverse_proxy=$REVERSE_PROXY" \
@@ -310,8 +314,8 @@ then
     -var "build_image=$BUILD_IMAGE" \
     -var "db_postgres=$DB_POSTGRES"
   printf "\n*********************\n"
-  echo "Copying the lock file"
-  echo "*********************"
+  printf "Copying the lock file\n"
+  printf "*********************\n"
   # Copy lock file so that it can be saved in the repo.
   if [ -f ../../../tf-states/IaC-app/.terraform.lock.hcl ]
   then

@@ -351,7 +351,7 @@ It is the backup file of the `terraform.tfstate` file. `Terraform` automatically
 The `terraform.tfstate.backup` file can be used to restore the `Terraform` state to the previous version. To do so, just rename the `terraform.tfstate.backup` file to `terraform.tfstate` and run the command `terraform init`.
 
 #### .terraform.lock.hcl
-`Terraform` automatically creates or updates the [dependency lock](https://developer.hashicorp.com/terraform/language/files/dependency-lock) file each time the command `terraform init` is run. This file tracks the versions of providers and modules used in a configuration thereby ensuring all subsequent runs of `terraform apply` or `terraform plan` use the same provider versions, preventing unexpected changes due to updates or different environments. The file is [typically located](https://developer.hashicorp.com/terraform/language/files/dependency-lock#lock-file-location) in the same directory as the root module and **is recommended to be included in [version control](https://developer.hashicorp.com/terraform/language/files/dependency-lock#lock-file-location)**.
+`Terraform` automatically creates or updates the [dependency lock](https://developer.hashicorp.com/terraform/language/files/dependency-lock) file each time the command `terraform init` is run. This file tracks the versions of providers and modules used in a configuration, thereby ensuring all subsequent runs of `terraform apply` or `terraform plan` use the same provider versions, preventing unexpected changes due to updates or different environments. The file is [typically located](https://developer.hashicorp.com/terraform/language/files/dependency-lock#lock-file-location) in the same directory as the root module and **is recommended to be included in [version control](https://developer.hashicorp.com/terraform/language/files/dependency-lock#lock-file-location)**.
 
 When the backend configuration changes to a different location, the state and lock files will be moved to the new location specified in the backend configuration. These files are managed by the backend and are typically located alongside each other. To prevent the corruption of the state file, the lock file ensures that only one process can modify the state file at a time.
 
@@ -768,10 +768,14 @@ $ kubectl delete Certificate <certificate-name> -n finances
 ```
 
 ## PostgreSQL (Postgres)
+### Postgres
+#### Transaction
+1. By default, `PostgreSQL` operates in `autocommit` mode, where each individual SQL statement is treated as its own transaction, implicitly committed upon success or rolled back upon failure.
+2. To group multiple statements into a single transaction, you use the `BEGIN` or `START TRANSACTION` command to initiate the transaction block. If all operations within the transaction are successful and you want to save the changes permanently, you use the `COMMIT` command. If an error occurs or you decide to discard the changes made within a transaction, you use the `ROLLBACK` command.
 
----
+
+
 ### Useful Commands
----
 Meta-commands (starting with `\`) are processed by `psql`, not sent to `PostgreSQL`.
 
 Display a complete list of meta-commands supported by `psql`. To close the generated list and return control to the `psql` prompt, press `q` on the keyboard.
@@ -1024,7 +1028,7 @@ To remove the repository, use the command below. The command will **not** remove
 $ sudo add-apt-repository -r universe
 $ sudo apt update
 ```
-Again, the second command performs an update to the package list cache thereby ensuring the repository is no longer usable.
+Again, the second command performs an update to the package list cache, thereby ensuring the repository is no longer usable.
 
 ---
 
@@ -1131,11 +1135,11 @@ A short description of the compiler switches being use follows:
 `-s`: This flag strips the symbol table from the executable. The symbol table is used for debugging and contains information about function and variable names. Removing it reduces the binary size but makes debugging more difficult.<br>
 `-w`: This flag strips the DWARF debugging information from the executable. DWARF is a standardized debugging data format. Removing it further reduces the binary size but also hinders debugging capabilities.
 
-`-installsuffix cgo`: The `go build` command uses this flag when the environment variable `CGO_ENABLED=1` thereby building and installing `Go` packages that utilize `cgo`, which enables `Go` code to interface with `C` code. The flag modifies the install path of the compiled package by adding *cgo* as a suffix to the installation directory. This ensures that `cgo-enabled packages` are installed separately from `regular Go packages` preventing potential conflicts between `cgo` and `non-cgo` builds.<br>
+`-installsuffix cgo`: The `go build` command uses this flag when the environment variable `CGO_ENABLED=1`, thereby building and installing `Go` packages that utilize `cgo`, which enables `Go` code to interface with `C` code. The flag modifies the install path of the compiled package by adding *cgo* as a suffix to the installation directory. This ensures that `cgo-enabled packages` are installed separately from `regular Go packages` preventing potential conflicts between `cgo` and `non-cgo` builds.<br>
 `CGO_ENABLED`: It is an environment variable that controls whether the `Go` tool enables the `cgo` tool. `Cgo` enables `Go` programs to call `C` code. `CGO_ENABLED` can have one of two values:<br>
 `0`: Disable `cgo`. `Go` code **cannot call** `C` functions.<br>
 `1`: Enable `cgo`. `Go` code **can call** `C` functions.<br>
-If `cgo` is disabled, `Go` programs cannot use `C` libraries thereby limiting the functionality of some programs, especially those that need to interact with system-level APIs or existing `C` codebases.
+If `cgo` is disabled, `Go` programs cannot use `C` libraries, thereby limiting the functionality of some programs, especially those that need to interact with system-level APIs or existing `C` codebases.
 
 Compile and run the app as a standalone HTTP server (default) on port 8080 (default).
 ```
