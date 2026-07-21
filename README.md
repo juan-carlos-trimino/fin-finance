@@ -769,6 +769,11 @@ $ kubectl delete Certificate <certificate-name> -n finances
 
 ## PostgreSQL (Postgres)
 ### Postgres
+#### SQL
+1. By default, Postgres ignores case and turns every identifier into lowercase. Postgres preserves case only when the identifier is double quoted, and double-quoted identifiers, also known as `delimited identifiers`, are case sensitive.
+2. In Postgres, the statement `TABLE <table-name>;` can be used as a shorthand for the SQL statement `SELECT * FROM <table-name>;`. Other variants are `TABLE <table-name> LIMIT <number-of-rows>;`, `TABLE <table-name> ORDER BY <column-name>;`, etc. The `WHERE` clause cannot be used with the standalone `TABLE` statement.
+3. In Postgres, the operator `::` is a shorthand for the standard SQL `CAST()` function. The function `pg_typeof()` returns the Postgres data type of the provided value.
+
 #### Transaction
 1. By default, `PostgreSQL` operates in `autocommit` mode, where each individual SQL statement is treated as its own transaction, implicitly committed upon success or rolled back upon failure.
 2. To group multiple statements into a single transaction, you use the `BEGIN` or `START TRANSACTION` command to initiate the transaction block. If all operations within the transaction are successful and you want to save the changes permanently, you use the `COMMIT` command. If an error occurs or you decide to discard the changes made within a transaction, you use the `ROLLBACK` command.
