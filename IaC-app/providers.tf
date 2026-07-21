@@ -38,7 +38,8 @@ terraform {
 # Load and connect to Helm.
 provider "helm" {
   kubernetes {
-    config_path = "~/.kube/k8s-config"
+    # Wrap the path in quotation marks and use the pathexpand function if using the tilde (~) shortcut.
+    config_path = pathexpand("~/.kube/k8s-config")
   }
 }
 
@@ -49,7 +50,7 @@ provider "oci" {  # Oracle Cloud Infrastructure (OCI)
 
 # Configure the K8s Provider.
 provider "kubernetes" {
-  config_path = "~/.kube/k8s-config"
+  config_path = pathexpand("~/.kube/k8s-config")
 }
 
 provider "null" {
