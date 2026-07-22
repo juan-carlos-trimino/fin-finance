@@ -37,8 +37,35 @@ Notes (Indexes)
    a query.
 **************************************************************************************************/
 -- Online Banking System.
-SELECT 'Output from script, run began at: ' AS "Script Information",
-  NOW() AS "Date and Time Executed";
+SELECT 'Output from script, run began at: ' AS "Script Information", NOW() AS "Date and Time Executed";
+
+-- Define a temporary function in the pg_temp schema.
+CREATE OR REPLACE FUNCTION pg_temp.does_db_exist(db_name TEXT)
+RETURNS BOOLEAN
+LANGUAGE PLPGSQL
+AS $$
+BEGIN
+  -- Check if the database exists.
+  IF EXISTS (SELECT 1 FROM pg_catalog.pg_database WHERE datname = db_name) THEN
+    RAISE NOTICE 'Database % exists. Halting script execution...', db_name;
+    RETURN true;
+  ELSE
+    RETURN false;
+  END IF;
+END;
+$$;
+
+-- Execute the function and pipe the result to a psql variable.
+-- For numbers, identifiers, and table names do not use single quotes (:var-name); for text strings, wrap the variable in single quotes
+-- (:'var-name') to automatically escape text safely.
+SELECT pg_temp.does_db_exist(:'DB_NAME') AS db_exists \gset
+
+\if :db_exists
+  \q
+\else
+  -- Drop the temporary function; optional, it drops automatically when the session ends.
+  DROP FUNCTION IF EXISTS pg_temp.does_db_exist;
+\endif
 
 /**************************************************************************************************
                                  *** DATABASE ROLES AND PRIVILEGES ***
@@ -59,8 +86,7 @@ DO $$  -- The anonymous block executes procedural logic directly on the server.
 BEGIN
   -- Since CREATE ROLE defaults to NOLOGIN, this role can't connect to the database, which is
   -- perfect for a group role.
-  CREATE ROLE admin_role WITH NOLOGIN NOINHERIT NOSUPERUSER CREATEROLE NOCREATEDB
-                              CONNECTION LIMIT 5;
+  CREATE ROLE admin_role WITH NOLOGIN NOINHERIT NOSUPERUSER CREATEROLE NOCREATEDB CONNECTION LIMIT 5;
 EXCEPTION
   WHEN duplicate_object THEN
     RAISE NOTICE 'Role "admin_role" already exists, skipping...';
@@ -71,8 +97,7 @@ DROP ROLE IF EXISTS admin_user;
 -- Create individual users.
 DO $$  -- The anonymous block executes procedural logic directly on the server.
 BEGIN
-  CREATE ROLE admin_user WITH LOGIN INHERIT PASSWORD '12345' NOSUPERUSER NOCREATEROLE NOCREATEDB
-                              CONNECTION LIMIT 5 IN ROLE admin_role;
+  CREATE ROLE admin_user WITH LOGIN INHERIT PASSWORD '12345' NOSUPERUSER NOCREATEROLE NOCREATEDB CONNECTION LIMIT 5 IN ROLE admin_role;
 EXCEPTION
   WHEN duplicate_object THEN
     RAISE NOTICE 'Role "admin_user" already exists, skipping...';
@@ -462,8 +487,7 @@ BEGIN
   ***/
   IF NOT FOUND THEN  -- User not found; password can't be valid.
     pout := -2;
-    RAISE NOTICE 'Unknown user (%); sleeping for % seconds', puser_name, vunknown_user_delay
-      USING DETAIL = correlation_id;
+    RAISE NOTICE 'Unknown user (%); sleeping for % seconds', puser_name, vunknown_user_delay USING DETAIL = correlation_id;
     -- Pause the current session for the specified number of seconds (can be a decimal).
     PERFORM pg_sleep(vunknown_user_delay);
   /***
@@ -497,10 +521,8 @@ BEGIN
       The random() function supports a (min, max) syntax for integers and numeric types, returning
       a random value within the specified INCLUSIVE range.
       ***/
-      vsleep_time := RANDOM(vmin_delay,
-        LEAST(vmax_delay, CAST(vbase_delay * POWER(2, vfailed_attempts) AS NUMERIC)));
-      RAISE NOTICE 'Attempt % failed; blocking for % seconds...', vfailed_attempts, vsleep_time
-        USING DETAIL = correlation_id;
+      vsleep_time := RANDOM(vmin_delay, LEAST(vmax_delay, CAST(vbase_delay * POWER(2, vfailed_attempts) AS NUMERIC)));
+      RAISE NOTICE 'Attempt % failed; blocking for % seconds...', vfailed_attempts, vsleep_time USING DETAIL = correlation_id;
       PERFORM pg_sleep(vsleep_time);
     END IF;
   END IF;
@@ -531,8 +553,7 @@ BEGIN
   FROM fin.customers_credentials
   WHERE user_name = p_user_name;
   IF NOT FOUND THEN  -- User not found; password can't be valid.
-    RAISE NOTICE 'Unknown user (%); password not changed.', p_user_name
-      USING DETAIL = correlation_id;
+    RAISE NOTICE 'Unknown user (%); password not changed.', p_user_name USING DETAIL = correlation_id;
   ELSIF vpwd_hash = crypt(p_old_password, vpwd_hash) THEN  -- User authenticated.
     vpwd_hash := crypt(p_new_password, gen_salt('bf', 10));
     UPDATE fin.customers_credentials
