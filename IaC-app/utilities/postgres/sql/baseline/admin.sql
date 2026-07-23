@@ -37,7 +37,11 @@ Notes (Indexes)
    a query.
 **************************************************************************************************/
 -- Online Banking System.
-SELECT 'Output from script, run began at: ' AS "Script Information", NOW() AS "Date and Time Executed";
+SELECT CONCAT('*** Output from script, run began at: ', NOW(), ' ***') AS msg \gset
+\qecho :msg
+
+SELECT CONCAT('*** PostgreSQL version: ', (SELECT version()), ' ***') AS msg \gset
+\qecho :msg
 
 -- Define a temporary function in the pg_temp schema.
 CREATE OR REPLACE FUNCTION pg_temp.does_db_exist(db_name TEXT)
@@ -47,7 +51,6 @@ AS $$
 BEGIN
   -- Check if the database exists.
   IF EXISTS (SELECT 1 FROM pg_catalog.pg_database WHERE datname = db_name) THEN
-    RAISE NOTICE 'Database % exists. Halting script execution...', db_name;
     RETURN true;
   ELSE
     RETURN false;
@@ -55,12 +58,25 @@ BEGIN
 END;
 $$;
 
--- Execute the function and pipe the result to a psql variable.
--- For numbers, identifiers, and table names do not use single quotes (:var-name); for text strings, wrap the variable in single quotes
--- (:'var-name') to automatically escape text safely.
-SELECT pg_temp.does_db_exist(:'DB_NAME') AS db_exists \gset
-
-\if :db_exists
+/***
+Execute the function and pipe the result to a psql variable.
+For numbers, identifiers, and table names do not use single quotes (:var-name); for text strings, wrap the variable in single quotes
+(:'var-name') to automatically escape text safely.
+In PostgreSQL, TRUE and FALSE are both keywords and actual literal values of the boolean data type. However, PostgreSQL displays
+boolean values as 't' and 'f' by default in query outputs (such as in the command-line client psql). To assign a proper boolean
+value using \gset, explicitly cast the function call to 'text' or 'varchar' in the SQL statement. This ensures psql stores the
+string "t" or "f" instead of a raw boolean type.
+***/
+SELECT pg_temp.does_db_exist(:'DB_NAME')::TEXT AS db_exists \gset
+/***
+Evaluate complex condition as a boolean result.
+To pass a boolean parameter into a psql script, pass the literal string "true" or "false" using the "-v" or "--variable" flag.
+Because psql substitutes variables as raw text directly into the script, the script must either wrap the variable in single quotes
+or cast it explicitly to a boolean data type.
+**/
+SELECT (:db_exists AND NOT :'ALWAYS_DB_ADMIN') AS run_script \gset
+\if :run_script
+  \qecho Database :'DB_NAME' exists. Halting script execution...
   \q
 \else
   -- Drop the temporary function; optional, it drops automatically when the session ends.
@@ -70,7 +86,11 @@ SELECT pg_temp.does_db_exist(:'DB_NAME') AS db_exists \gset
 /**************************************************************************************************
                                  *** DATABASE ROLES AND PRIVILEGES ***
 **************************************************************************************************/
+-- Suppress notices and errors.
+-- SET client_min_messages = 'warning';
 DROP ROLE IF EXISTS admin_role;
+-- Restore default message logging.
+-- RESET client_min_messages;
 /***
 A Postgres cluster refers to the individual server/instance that's running and hosting (a cluster
 of) databases. It does not mean that multiple servers are setup in a multi-node environment.
@@ -82,10 +102,9 @@ In highly concurrent environments, checking for a role's existence right before 
 cause a race condition. You can instead try to create the user unconditionally and safely intercept
 the duplicate_object error.
 ***/
-DO $$  -- The anonymous block executes procedural logic directly on the server.
+DO $$  -- A DO block executes entirely on the PostgreSQL database server.
 BEGIN
-  -- Since CREATE ROLE defaults to NOLOGIN, this role can't connect to the database, which is
-  -- perfect for a group role.
+  -- Since CREATE ROLE defaults to NOLOGIN, this role can't connect to the database, which is perfect for a group role.
   CREATE ROLE admin_role WITH NOLOGIN NOINHERIT NOSUPERUSER CREATEROLE NOCREATEDB CONNECTION LIMIT 5;
 EXCEPTION
   WHEN duplicate_object THEN
@@ -142,13 +161,8 @@ of the newly created roles would be able to do much.
 -- Revoke all privileges that are granted by default to the 'public' role.
 REVOKE ALL ON DATABASE finances FROM public;
 
-/***
-Connect to the database.
-***/
+-- Connect to the database.
 \c finances
-
-\qecho 'Current database version:'
-SELECT version();
 
 /***
 Set the session to the new role. The role that is in force at the time of an object creation will
