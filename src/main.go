@@ -187,15 +187,15 @@ func main() {
   webfinances.SetupDirStructure(dataDir)
   //Database.
   if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
-    if ok := bank.ExecuteSqlScript(context.Background(), host, default_user, default_password, default_dbname, admin_dbname, sslmode,
+    if ok := bank.ExecuteSqlScript(host, default_user, default_password, default_dbname, admin_dbname, sslmode,
        port, connect_timeout, pathToScript, falseCorrelationId); !ok {
       panic("Call to ExecuteSqlScript failed.")
     }
   }
-  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, admin_user,
+  connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, admin_user,
     admin_password, admin_dbname, connect_timeout, sslmode)
   //logger.LogInfo(fmt.Sprintf("Connection string: %s", psqlInfo), falseCorrelationId)
-  dbInstance := bank.InitializeBsPool(context.Background(), psqlInfo, falseCorrelationId)
+  dbInstance := bank.InitializeBsPool(context.Background(), connString, falseCorrelationId)
   if dbInstance == nil {
     panic("Call to InitializeBsPool failed.")
   }
