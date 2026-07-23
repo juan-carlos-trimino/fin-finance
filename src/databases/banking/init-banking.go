@@ -107,8 +107,8 @@ func GetBsInstance() (*banking) {
   }
 }
 
-func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, targetDb, sslmode string, port, connect_timeout int,
-     pathToScript, correlationId string) bool {
+func ExecuteSqlScript(host, user, password, defaultDb, targetDb, sslmode string, port, connect_timeout int, pathToScript,
+     correlationId string) bool {
   for _, str := range strings.Split(osu.ShowPermissions(pathToScript, false), "\n") {
     if str != "" {
       logger.LogInfo(str, correlationId)
@@ -122,35 +122,17 @@ func ExecuteSqlScript(ctx context.Context, host, user, password, dbname, targetD
       correlationId)
     return false
   }
+  //Using a connection URI (recommended).
   //postgresql://[user[:password]@][host[:port]]/[dbname][?option1=value1&option2=value2]
-  // var connString string = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password,
-  //   host, port, dbname)
-  psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password, dbname,
-    connect_timeout, sslmode)
-  // logger.LogInfo(fmt.Sprintf("Connection string: %s", psqlInfo), correlationId)
-  conn, err := pgx.Connect(ctx, psqlInfo)
-  if err != nil {
-    logger.LogError(fmt.Sprintf("pgx.Connect failed: %v", err), correlationId)
-    return false
-  }
-  defer conn.Close(ctx)
-  /***
-  To check if a PostgreSQL database exists, you must connect to a default maintenance database (like 'postgres') first because you cannot
-  query a server's global catalog if you try to connect directly to a database that does not exist. Once connected, execute a query against
-  the pg_catalog.pg_database system catalog table.
-  ***/
-  var exists bool = false
-  //Query the pg_database catalog.
-  query := "SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_database WHERE datname = $1);"
-  err = conn.QueryRow(ctx, query, targetDb).Scan(&exists)
-  if err != nil {
-    logger.LogError(fmt.Sprintf("Unable to determine whether database exists: %v", err), correlationId)
-    return false
-  } else if exists {
-    logger.LogInfo(fmt.Sprintf("Database %q already exists. Skipping creation.", targetDb), correlationId)
-    return true
-  }
-  cmd := exec.Command("psql", psqlInfo, "-f", pathToScript)
+  // var connString string = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password, host, port, dbname)
+  //Using key-value pairs.
+  connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password,
+    defaultDb, connect_timeout, sslmode)
+  // logger.LogInfo(fmt.Sprintf("Connection string: %s", connString), correlationId)
+  //psql accepts two distinct connection string formats: URIs and Key-Value.
+  cmd := exec.Command("psql", connString, "-f", pathToScript, "-v", fmt.Sprintf("ALWAYS_DB_ADMIN=%s", "false"),
+    "-v", fmt.Sprintf("DB_NAME=%s", targetDb))
+  //Run the command and returns its combined standard output and standard error.
   out, err := cmd.CombinedOutput()
   if err != nil {
     logger.LogError(fmt.Sprintf("SQL script failed: %v", err), correlationId)
