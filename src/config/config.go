@@ -128,3 +128,19 @@ func GetPreventProbesOutput(correlationId string) bool {
   }
   return false
 }
+
+func GetAlwaysDbAdmin(correlationId string) bool {
+  /***
+  When set to true, the script is run whether the admin database exists or not. Otherwise, the script is run only when the
+  database does not exist.
+  ***/
+  if ev, exists := os.LookupEnv("ALWAYS_DB_ADMIN"); exists {
+    v, err := strconv.ParseBool(ev)
+    if err == nil {
+      return v
+    } else {
+      logger.LogInfo(fmt.Sprintf("%s - (Default: false).", err), correlationId)
+    }
+  }
+  return false
+}
