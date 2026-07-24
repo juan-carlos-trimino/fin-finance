@@ -8,6 +8,7 @@ package banking
 import (
   "context"
   "fmt"
+  "finance/config"
   "github.com/jackc/pgx/v5"
   "github.com/jackc/pgx/v5/pgconn"
   "github.com/jackc/pgx/v5/pgxpool"
@@ -15,6 +16,7 @@ import (
   "github.com/juan-carlos-trimino/gplogger"
   "os/exec"
   "regexp"
+  "strconv"
   "strings"
   "sync"
   "time"
@@ -130,7 +132,8 @@ func ExecuteSqlScript(host, user, password, defaultDb, targetDb, sslmode string,
     defaultDb, connect_timeout, sslmode)
   // logger.LogInfo(fmt.Sprintf("Connection string: %s", connString), correlationId)
   //psql accepts two distinct connection string formats: URIs and Key-Value.
-  cmd := exec.Command("psql", connString, "-f", pathToScript, "-v", fmt.Sprintf("ALWAYS_DB_ADMIN=%s", "false"),
+  cmd := exec.Command("psql", connString, "-f", pathToScript,
+    "-v", fmt.Sprintf("ALWAYS_DB_ADMIN=%s", strconv.FormatBool(config.GetAlwaysDbAdmin(correlationId))),
     "-v", fmt.Sprintf("DB_NAME=%s", targetDb))
   //Run the command and returns its combined standard output and standard error.
   out, err := cmd.CombinedOutput()
