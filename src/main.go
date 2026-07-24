@@ -192,8 +192,8 @@ func main() {
       panic("Call to ExecuteSqlScript failed.")
     }
   }
-  connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, admin_user,
-    admin_password, admin_dbname, connect_timeout, sslmode)
+  connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port,
+    admin_user, admin_password, admin_dbname, connect_timeout, sslmode)
   //logger.LogInfo(fmt.Sprintf("Connection string: %s", psqlInfo), falseCorrelationId)
   dbInstance := bank.InitializeBsPool(context.Background(), connString, falseCorrelationId)
   if dbInstance == nil {
@@ -202,8 +202,8 @@ func main() {
   defer dbInstance.Close()
   dbInstance.VerifyConnection(context.Background(), falseCorrelationId)
   /***
-  When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return
-  ErrServerClosed. Make sure the program doesn't exit and waits instead for Shutdown to return.
+  When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return ErrServerClosed.
+  Make sure the program doesn't exit and waits instead for Shutdown to return.
   ***/
   var wg sync.WaitGroup = sync.WaitGroup{}
   var httpServer *http.Server
@@ -228,14 +228,12 @@ func main() {
   if config.GetHttps(falseCorrelationId) {
     wg.Add(1)
     /***
-    A channel is a communication mechanism that lets one goroutine send values to another
-    goroutine. Each channel is a conduit for values of a particular type, called the channel's
-    element type.
+    A channel is a communication mechanism that lets one goroutine send values to another goroutine. Each
+    channel is a conduit for values of a particular type, called the channel's element type.
 
-    As with maps, a channel is a reference to the data structure created by make. When we copy a
-    channel or pass one as an argument to a function, we are copying a reference, so caller and
-    callee refer to the same data structure. As with other reference types, the zero value of a
-    channel is nil.
+    As with maps, a channel is a reference to the data structure created by make. When we copy a channel or
+    pass one as an argument to a function, we are copying a reference, so caller and callee refer to the same
+    data structure. As with other reference types, the zero value of a channel is nil.
     ***/
     //Buffered channel capacity 1; notifier will not block.
     var signalChan2 chan os.Signal = make(chan os.Signal, 1)
@@ -250,8 +248,7 @@ func main() {
     go func() {
       var httpsServer *http.Server = nil
       if config.GetK8s(falseCorrelationId) {
-        httpsServer = makeServer(config.GetHttpsPort(falseCorrelationId),
-         makeHandlersS3(makeHandlers()))
+        httpsServer = makeServer(config.GetHttpsPort(falseCorrelationId), makeHandlersS3(makeHandlers()))
       } else {
         httpsServer = makeServer(config.GetHttpsPort(falseCorrelationId), makeHandlers())
       }
@@ -271,14 +268,12 @@ func main() {
         httpsServer.TLSConfig = makeTlsConfig()
       }
       go waitForServer(httpsServer, signalChan2, &wg)
-      logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpsServer.Addr),
-        falseCorrelationId)
+      logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpsServer.Addr), falseCorrelationId)
       //Because the paths of the key and cert were set in the TLSConfig field, set the certFile and
       //keyFile arguments to empty strings.
       err := (*httpsServer).ListenAndServeTLS("", "")
       if errors.Is(err, http.ErrServerClosed) {
-        logger.LogInfo(fmt.Sprintf("Server has been closed at port %s.", httpsServer.Addr),
-          falseCorrelationId)
+        logger.LogInfo(fmt.Sprintf("Server has been closed at port %s.", httpsServer.Addr), falseCorrelationId)
       } else if err != nil {
         logger.LogError(fmt.Sprintf("Server error: %+v", err), falseCorrelationId)
         signalChan2 <- syscall.SIGINT //Let the goroutine finish.
@@ -290,8 +285,8 @@ func main() {
     wg.Add(1)
     signalChan1 := make(chan os.Signal, 1)
     /***
-    When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return
-    ErrServerClosed. Make sure the program doesn't exit and waits instead for Shutdown to return.
+    When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return ErrServerClosed.
+    Make sure the program doesn't exit and waits instead for Shutdown to return.
     ***/
     go waitForServer(httpServer, signalChan1, &wg)
     /*** env
@@ -303,20 +298,17 @@ func main() {
     }
     fmt.Println("*********** env ***************")
     env ***/
-    logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpServer.Addr),
-      falseCorrelationId)
+    logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpServer.Addr), falseCorrelationId)
     /***
-    ListenAndServe runs forever, or until the server fails (or fails to start) with an error,
-    always non-nil, which it returns.
+    ListenAndServe runs forever, or until the server fails (or fails to start) with an error, always non-nil,
+    which it returns.
 
-    The web server invokes each handler in a new goroutine, so handlers must take precautions such
-    as locking when accessing variables that other goroutines, including other requests to the same
-    handler, may be accessing.
+    The web server invokes each handler in a new goroutine, so handlers must take precautions such as locking
+    when accessing variables that other goroutines, including other requests to the same handler, may be accessing.
     ***/
     err := (*httpServer).ListenAndServe()
     if errors.Is(err, http.ErrServerClosed) {
-      logger.LogInfo(fmt.Sprintf("Server has been closed at port %s.", httpServer.Addr),
-        falseCorrelationId)
+      logger.LogInfo(fmt.Sprintf("Server has been closed at port %s.", httpServer.Addr), falseCorrelationId)
     } else if err != nil {
       logger.LogError(fmt.Sprintf("Server error: %+v", err), falseCorrelationId)
       signalChan1 <- syscall.SIGINT //Let the goroutine finish.
@@ -391,8 +383,8 @@ func makeHandlers() *handlers {
     correlationId, _ := ctxKey.GetCorrelationId(req.Context())
     if !config.GetPreventProbesOutput(correlationId) {
       startTime, _ := ctxKey.GetStartTime(req.Context())
-      logger.LogInfo(fmt.Sprintf("Readiness probe. Request took %vms\n",
-       time.Since(startTime).Microseconds()), correlationId)
+      logger.LogInfo(fmt.Sprintf("Readiness probe. Request took %vms\n", time.Since(startTime).Microseconds()),
+        correlationId)
     }
   }
   h.mux["/liveness"] = func (res http.ResponseWriter, req *http.Request) {
@@ -401,19 +393,19 @@ func makeHandlers() *handlers {
     prevent_probes := !config.GetPreventProbesOutput(correlationId)
     if prevent_probes {
       startTime, _ := ctxKey.GetStartTime(req.Context())
-      logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-       startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+      logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)),
+        correlationId)
     }
     res.WriteHeader(http.StatusOK)
     if prevent_probes {
       startTime, _ := ctxKey.GetStartTime(req.Context())
-      logger.LogInfo(fmt.Sprintf("Liveness probe. Request took %vms\n",
-       time.Since(startTime).Microseconds()), correlationId)
+      logger.LogInfo(fmt.Sprintf("Liveness probe. Request took %vms\n", time.Since(startTime).Microseconds()),
+        correlationId)
     }
   }
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/js/admin/SettingsSecurity.js"] = wfverify.PublicSettingsSecurityFile
-	h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
+  h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/getParams.js"] = wfpages.PublicGetParamsFile
   h.mux["/public/js/mortgage.js"] = wfpages.PublicMortgageFile
   h.mux["/public/js/OaInterestRate.js"] = wfpages.PublicOaInterestRateFile
