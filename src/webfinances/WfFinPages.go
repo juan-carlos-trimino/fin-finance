@@ -1,8 +1,12 @@
 package webfinances
 
 import (
-  bank "finance/databases/banking" //Importing a package and assigning it a local alias.
+  bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
   // "encoding/json"
+
+  wfBanking "finance/webfinances/WfBanking"  //Importing a package and assigning it a local alias.
+
+
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
@@ -126,6 +130,7 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   } else {
     sessionToken, session := sessions.AddEntryToSessions(un)
     AddSessionDataPerUser(un, correlationId)
+    wfBanking.AddSessionDataPerUser(un, correlationId)
     /***
     Once a cookie is set on a client, it is sent along with every subsequent request. Cookies store
     historical information (including user login information) on the client's computer. The
@@ -152,7 +157,7 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
       Name: "admin_token",
       Value: tokenString,
     })
-		if isAdmin {
+    if isAdmin {
       http.Redirect(res, req, "/admin/welcome", http.StatusSeeOther)
     } else {
       http.Redirect(res, req, "/welcome", http.StatusSeeOther)
@@ -184,7 +189,7 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-	logger.LogInfo("Entering WelcomePage.", correlationId)
+  logger.LogInfo("Entering WelcomePage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
