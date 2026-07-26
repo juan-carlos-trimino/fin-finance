@@ -78,7 +78,6 @@ src/webfinances/*
 !src/webfinances/fields.go
 !src/webfinances/WfAdminPages.go
 !src/webfinances/WfAdminSecurityPages.go
-!src/webfinances/WfBankPages.go
 !src/webfinances/WfFinBondsPages.go
 !src/webfinances/WfFinMiscellaneousPages.go
 !src/webfinances/WfFinMortgagePages.go
@@ -147,6 +146,15 @@ src/webfinances/templates/admin/*
 !src/webfinances/templates/admin/settings/
 src/webfinances/templates/admin/settigs/*
 !src/webfinances/templates/admin/settings/settings.html
+# ... and this directory and its file...
+!src/webfinances/templates/banking/
+src/webfinances/templates/banking/*
+!src/webfinances/templates/banking/banking.html
+!src/webfinances/templates/banking/manageaccounts/
+src/webfinances/templates/banking/manageaccounts/*
+!src/webfinances/templates/banking/manageaccounts/createaccount.html
+!src/webfinances/templates/banking/manageaccounts/deleteaccount.html
+!src/webfinances/templates/banking/manageaccounts/manageaccounts.html
 # ... and this directory and its file...
 !src/webfinances/templates/admin/settings/security/
 src/webfinances/templates/admin/settigs/security/*
@@ -279,6 +287,12 @@ src/webfinances/templates/finances/simpleinterestordinary/*
 !src/webfinances/templates/finances/simpleinterestordinary/interestrate.html
 !src/webfinances/templates/finances/simpleinterestordinary/principal.html
 !src/webfinances/templates/finances/simpleinterestordinary/time.html
+# ... and this directory and its file...
+!src/webfinances/wfbanking/
+src/webfinances/wfbanking/*
+!src/webfinances/wfbanking/fields.go
+!src/webfinances/wfbanking/WfBankingManageAccountsPages.go
+!src/webfinances/wfbanking/WfBankingPages.go
 ################################
 # Infrastructure as Code (IaC) #
 ################################
