@@ -126,6 +126,9 @@ src/webfinances/public/js/*
 !src/webfinances/public/js/admin/
 src/webfinances/public/js/admin/*
 !src/webfinances/public/js/admin/SettingsSecurity.js
+!src/webfinances/public/js/banking/
+src/webfinances/public/js/banking/*
+!src/webfinances/public/js/banking/manageAccounts.js
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
@@ -146,6 +149,10 @@ src/webfinances/templates/admin/*
 !src/webfinances/templates/admin/settings/
 src/webfinances/templates/admin/settigs/*
 !src/webfinances/templates/admin/settings/settings.html
+!src/webfinances/templates/admin/settings/security/
+src/webfinances/templates/admin/settigs/security/*
+!src/webfinances/templates/admin/settings/security/password.html
+!src/webfinances/templates/admin/settings/security/security.html
 # ... and this directory and its file...
 !src/webfinances/templates/banking/
 src/webfinances/templates/banking/*
@@ -155,15 +162,6 @@ src/webfinances/templates/banking/manageaccounts/*
 !src/webfinances/templates/banking/manageaccounts/createaccount.html
 !src/webfinances/templates/banking/manageaccounts/deleteaccount.html
 !src/webfinances/templates/banking/manageaccounts/manageaccounts.html
-# ... and this directory and its file...
-!src/webfinances/templates/admin/settings/security/
-src/webfinances/templates/admin/settigs/security/*
-!src/webfinances/templates/admin/settings/security/password.html
-!src/webfinances/templates/admin/settings/security/security.html
-# ... and this directory and its file...
-!src/webfinances/templates/banking/
-src/webfinances/templates/banking/*
-!src/webfinances/templates/banking/banking.html
 # ... and this directory and its file...
 !src/webfinances/templates/finances/
 src/webfinances/templates/finances/*
