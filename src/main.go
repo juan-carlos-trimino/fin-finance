@@ -17,6 +17,7 @@ import (
   "finance/config"
   "finance/security"
   "finance/webfinances"
+  wfBanking "finance/webfinances/WfBanking"  //Importing a package and assigning it a local alias.
   "fmt"
   "net"
   "net/http"
@@ -27,8 +28,7 @@ import (
   execution of its init functions. To suppress the "unused import" error you would otherwise encounter, you must use an alias import in
   which the alternative name is _, the blank identifier. As usual, the blank identifier can never be referenced. This is known as a blank
   import.
-  ***/
-  /***
+
   The package is typically only imported for the side effect of registering its HTTP handlers. However, if you use the `blank import`,
   the profile package will only register its handlers with the default multiplexer (http.DefaultServeMux).
   **/
@@ -185,6 +185,7 @@ func main() {
   }
   readUsers(dataDir, users)
   webfinances.SetupDirStructure(dataDir)
+  wfBanking.SetupDirStructure(dataDir)
   //Database.
   if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
     if ok := bank.ExecuteSqlScript(host, default_user, default_password, default_dbname, admin_dbname, sslmode,
@@ -326,8 +327,9 @@ func faviconHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func makeHandlers() *handlers {
-  var wfbankPages = webfinances.WfBankingPages{}
-  var wfpages = webfinances.WfPages{}
+  var wfbankPages = wfBanking.WfBankingPages{}
+	var wfbankMngAcctsPages = wfBanking.WfBankingManageAccountsPages{}
+	var wfpages = webfinances.WfPages{}
   var wfadcp = webfinances.WfAdCpPages{}
   var wfadepp = webfinances.WfAdEppPages{}
   var wfadfv = webfinances.WfAdFvPages{}
@@ -405,6 +407,7 @@ func makeHandlers() *handlers {
   }
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/js/admin/SettingsSecurity.js"] = wfverify.PublicSettingsSecurityFile
+  h.mux["/public/js/banking/bankingManageAccounts.js"] = wfbankPages.PublicManageAccountsFile
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/getParams.js"] = wfpages.PublicGetParamsFile
   h.mux["/public/js/mortgage.js"] = wfpages.PublicMortgageFile
@@ -439,7 +442,9 @@ func makeHandlers() *handlers {
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
   h.mux["/banking"] = wfbankPages.BankingPage
-  h.mux["/finances"] = wfpages.FinancesPage
+  // h.mux["/banking/manageaccounts"] = wfbankPages.BankingManageAccountsPages
+  h.mux["/banking/manageaccounts"] = wfbankMngAcctsPages.ManageAccountsPages
+	h.mux["/finances"] = wfpages.FinancesPage
   h.mux["/fin/ordinaryannuity"] = wfpages.OrdinaryAnnuityPage
   h.mux["/fin/ordinaryannuity/interestrate"] = wfoainterest.OaInterestRatePages
   h.mux["/fin/ordinaryannuity/fv"] = wfoafv.OaFvPages
