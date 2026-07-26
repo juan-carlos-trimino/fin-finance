@@ -1,0 +1,35 @@
+{{ define "manage_accounts-layout" }}
+
+<!-- rhs-ui1 -->
+<div id="rhs-ui1">
+  <form action="/banking/manageaccounts" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
+    <div class="cnt-grid">
+      <label class="cnt-textbox" for="fd1-bankname">Financial Institution</label>
+      <input type="text" id="fd1-bankname" name="fd1-bankname" value="{{ .Fd1BankName }}" inputmode="text" maxlength="32" required/>
+      <label class="cnt-textbox" for="fd1-accounttype">Account Type</label>
+      <select class="cnt-select" id="fd1-accounttype" name="fd1-accounttype">
+        <option value="checking" {{ if eq .Fd1AccountType "checking" }} selected {{ end }}>Checking Accounts</option>
+        <option value="savings" {{ if eq .Fd1AccountType "savings" }} selected {{ end }}>Savings Accounts</option>
+        <option value="mma" {{ if eq .Fd1AccountType "mma" }} selected {{ end }}>Money Market Accounts</option>
+        <option value="cd" {{ if eq .Fd1AccountType "cd" }} selected {{ end }}>Certificates of Deposit (CDs)</option>
+      </select>
+      <label class="cnt-textbox" for="fd1-accountname">Account Name</label>
+      <input type="text" id="fd1-accountname" name="fd1-accountname" value="{{ .Fd1AccountName }}" inputmode="text" maxlength="32" required/>
+      <label class="cnt-textbox" for="fd1-accountnumber">Account Number</label>
+      <input type="text" id="fd1-accountnumber" name="fd1-accountnumber" value="{{ .Fd1AccountNumber }}" inputmode="text" maxlength="32" required/>
+      <label class="cnt-textbox" for="fd1-routingnumber">Routing Number</label>
+      <input type="text" id="fd1-routingnumber" name="fd1-routingnumber" value="{{ .Fd1RoutingNumber }}" inputmode="text" maxlength="32" required/>
+    </div>
+    <div class="button-back-style">
+      <button class="button" id="btcompute" name="compute" value="rhs-ui1" type="submit">Save</button>
+    </div>
+  </form>
+  <div>
+    <hr size="4" width="50%" color="darkgreen"/>
+    <p class="p-note">{{ index .Fd8Result 0 }}</p>
+    <p class="p-result">{{ index .Fd8Result 1 }}</p>
+  </div>
+</div>
+
+{{ end }}

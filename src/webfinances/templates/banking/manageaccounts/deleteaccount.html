@@ -1,0 +1,41 @@
+{{ define "manage_accounts-layout" }}
+
+<!-- rhs-ui1 -->
+<div id="rhs-ui2">
+  <form action="/banking/manageaccounts" method="post" enctype="application/x-www-form-urlencoded">
+    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
+    <table class="custom-table-style" float="center">
+      <caption>Accounts</caption>
+      <thead>
+        <tr>
+          <th>Account Name</th>
+          <th>Account Type</th>
+        </tr>
+      </thead>
+      <tfoot>
+        <tr>
+          <th>Account Name</th>
+          <th>Account Type</th>
+        </tr>
+      </tfoot>
+      <tbody>
+        {{ range .Fd2Result }}
+        <tr> <!-- Row -->
+          <td>{{ .AccountName }}</td> <!-- Data -->
+          <td>{{ .AccountType }}</td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+    <div class="button-back-style">
+      <button class="button" id="btcompute" name="compute" value="rhs-ui1" type="submit">Save</button>
+    </div>
+  </form>
+  <div>
+    <hr size="4" width="50%" color="darkgreen"/>
+    <p class="p-note">{{ index .Fd8Result 0 }}</p>
+    <p class="p-result">{{ index .Fd8Result 1 }}</p>
+  </div>
+</div>
+
+{{ end }}
