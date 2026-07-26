@@ -1,5 +1,11 @@
 package webfinances
 
+//
+//To fold all block comments:
+//  Ctrl+K and Ctrl+/
+//To unfold all block comments:
+//  Ctrl+K and Ctrl+J
+
 import (
   "encoding/json"
   "errors"
