@@ -1,5 +1,9 @@
 /***
 A dot (.) is used in CSS to designate class names.
+
+Ctrl+F5 and Cmd+Shift+R are keyboard shortcuts used to perform a "hard refresh" on a web browser. Unlike a standard reload, a hard
+refresh forces the browser to bypass its local cache and re-download the newest version of all scripts, images, and styles directly from
+the website server.
 ***/
 
 body {
@@ -314,10 +318,6 @@ input[type='radio'] {
 /*** Table ***/
 
 /*** Input Buttons ***/
-/*
-If the CSS for an <input type="submit"> button isn't applying correctly, perform a hard refresh
-(Ctrl+F5 or Cmd+Shift+R) to clear your browser cache.
-*/
 input[type="submit"] {
   padding: 10px 20px;  /* Top/Bottom and Left/Right */
   font-size: 18px;  /* Increase text and button size proportionally */

@@ -1,3 +1,11 @@
+###
+# How to Debug
+# If you are unsure which rule is blocking your subdirectory, you can ask Git exactly which line of which .gitignore file is responsible
+# by running this command in your terminal:
+# $ git check-ignore -v path/to/subdirectory/filename.txt
+# This will display the exact path and line number causing the issue.
+###
+#
 # Ignore everything.
 **
 
