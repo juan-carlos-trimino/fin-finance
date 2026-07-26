@@ -263,12 +263,12 @@ input[type='radio'] {
 /*** Radio ***/
 
 /*** Table ***/
-.amortization-table-style {
-  font-size: 1.0em;
-  font-weight: bold;
-  font-family: sans-serif;
-  border-collapse: collapse;
+.custom-table-style {
   color: rgb(2, 71, 31);
+  font-size: 28px;
+  font-style: normal;
+  font-weight: bold;
+  border-collapse: collapse;
   margin: 25px auto;
   width: 90%;
   border-radius: 5px;
@@ -276,34 +276,41 @@ input[type='radio'] {
   box-shadow: 0px 10px 30px 5px rgba(0, 0, 0, 0.15);
 }
 /* Header */
-.amortization-table-style thead tr {
+.custom-table-style thead tr {
   background-color: rgb(2, 71, 31);
   color: rgb(185, 241, 163);
-  text-align: center;
+  font-size: 18px;
   font-weight: bold;
+  text-align: center;
 }
 /* Cells */
-.amortization-table-style th,
-.amortization-table-style td {
-  /* border: 2px solid #037a13; */
+.custom-table-style th,  /* tabular headers */
+.custom-table-style td  /* tabular data */ {
+  font-size: 18px;
+  font-weight: bold;
   text-align: center;
   padding: 12px 15px;
 }
 /* Rows */
-.amortization-table-style tbody tr {
+.custom-table-style tbody tr {
   border-bottom: 1px solid rgb(2, 71, 31);
 }
-.amortization-table-style tbody tr:nth-of-type(even) {
+.custom-table-style tbody tr:nth-of-type(even) {
   background-color: rgb(185, 243, 163);
 }
-.amortization-table-style tbody tr:last-of-type {
+.custom-table-style tbody tr:last-of-type {
   border-bottom: 2px solid rgb(2, 71, 31);
 }
 /*Active row */
-/* .amortization-table-style tbody tr.active-row {
+
+.custom-table-style tr.row-item {
+  cursor: pointer;
+}
+
+.custom-table-style  tr.active-row {
   font-weight: bold;
   color: #009879;
-} */
+}
 /*** Table ***/
 
 /*** Input Buttons ***/
