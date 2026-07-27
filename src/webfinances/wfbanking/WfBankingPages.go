@@ -1,11 +1,6 @@
-package WfBanking
+package wfbanking
 
 import (
-  //bank "finance/databases/banking" //Importing a package and assigning it a local alias.
-
-  // _ "finance/webfinances"
-
-
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
@@ -17,6 +12,21 @@ import (
   "time"
 )
 
+/***
+When handling authentication errors, the application should not disclose which part of the
+authentication data was incorrect. Instead of "Invalid username" or "Invalid password", just use
+"Invalid username and/or password" interchangeably.
+***/
+func invalidSession(res http.ResponseWriter) {
+  err := tmpl.ExecuteTemplate(res, "login_page", struct {
+    ErrMsg string
+  } { "Invalid username and/or password" })
+  //
+  if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+  }
+}
+
 var tmpl *template.Template
 
 /***
@@ -25,7 +35,7 @@ init() function tells the compiler that when the package is imported, it should 
 function that can only be declared once, the init() function can be declared multiple times throughout a package.
 ***/
 func init() {
-  logger.LogInfo("Entering init/WfBanking.", "-1")
+  logger.LogInfo("Entering wfbanking.init.", "-1")
   /***
   The Must function wraps around the ParseGlob function that returns a pointer to a template and an error, and it panics
   if the error is not nil.
@@ -42,10 +52,10 @@ func (p WfBankingPages) BankingPage(res http.ResponseWriter, req *http.Request) 
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering BankingPage/WfBanking.", correlationId)
+  logger.LogInfo("Entering wfbanking.BankingPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    // invalidSession(res)
+    invalidSession(res)
   } else {
     err := tmpl.ExecuteTemplate(res, "banking_page", struct {
       Header string
@@ -59,34 +69,12 @@ func (p WfBankingPages) BankingPage(res http.ResponseWriter, req *http.Request) 
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
 
-// func (p WfBankingPages) BankingManageAccountsPages(res http.ResponseWriter, req *http.Request) {
-//   ctxKey := middlewares.MwContextKey{}
-//   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-//   startTime, _ := ctxKey.GetStartTime(req.Context())
-//   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-//   logger.LogInfo("Entering BankingManageAccountsPage/webfinances.", correlationId)
-//   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-//   if sessionToken == "" {
-//     invalidSession(res)
-//   } else {
-//     err := tmpl.ExecuteTemplate(res, "manage_accounts", struct {
-//       Header string
-//       Datetime string
-//     } { "Manage Accounts", logger.DatetimeFormat() })
-// 		//
-// 		if err != nil {
-// 			logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-// 		}
-//   }
-//   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-// }
-
 func (p WfBankingPages) PublicManageAccountsFile(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicManageAccountsFile/WfBanking.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/banking/bankingManageAccounts.js")
+  logger.LogInfo("Entering wfbanking.PublicManageAccountsFile.", correlationId)
+  http.ServeFile(res, req, "./webfinances/public/js/banking/manageAccounts.js")
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
