@@ -328,7 +328,7 @@ func faviconHandler(res http.ResponseWriter, req *http.Request) {
 
 func makeHandlers() *handlers {
   var wfbankPages = banking.WfBankingPages{}
-	var wfbankMngAcctsPages = banking.WfBankingManageAccountsPages{}
+	var wfbankMngAcctsPages = banking.WfBankingMngAcctsPages{}
 	var wfpages = webfinances.WfPages{}
   var wfadcp = webfinances.WfAdCpPages{}
   var wfadepp = webfinances.WfAdEppPages{}
