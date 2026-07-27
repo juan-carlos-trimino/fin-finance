@@ -1,4 +1,4 @@
-package WfBanking
+package wfbanking
 
 import (
   "context"
@@ -15,32 +15,25 @@ import (
   "time"
 )
 
-type WfBankingManageAccountsPages struct {
+type WfBankingMngAcctsPages struct {
 }
 
-
-
-
-type Row struct { //Rows for the amortization table.
+type Row struct {  //Rows for the accounts.
   AccountName string
   AccountType string
 }
 
-
-
-
-
-func (b WfBankingManageAccountsPages) ManageAccountsPages(res http.ResponseWriter, req *http.Request) {
+func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    // invalidSession(res)
+    invalidSession(res)
     return
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering BankingManageAccountsPages/WfBanking.", correlationId)
+  logger.LogInfo("Entering wfbanking.ManageAccountsPages.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     maf := getManageAccountsFields(userName)
@@ -72,13 +65,9 @@ func (b WfBankingManageAccountsPages) ManageAccountsPages(res http.ResponseWrite
         maf.Fd1AccountName = req.PostFormValue("fd1-accountname")
         maf.Fd1AccountNumber = req.PostFormValue("fd1-accountnumber")
         maf.Fd1RoutingNumber = req.PostFormValue("fd1-routingnumber")
-
         //save to db
-
-        logger.LogInfo(fmt.Sprintf(
-         "bankname = %s, accounttype = %s, accountname = %s, accountnumber = %s, routingnumber = %s", maf.Fd1BankName,
-         maf.Fd1AccountType, maf.Fd1AccountName, maf.Fd1AccountNumber, maf.Fd1RoutingNumber), correlationId)
-
+        logger.LogInfo(fmt.Sprintf("bankname = %s, accounttype = %s, accountname = %s, accountnumber = %s, routingnumber = %s",
+          maf.Fd1BankName, maf.Fd1AccountType, maf.Fd1AccountName, maf.Fd1AccountNumber, maf.Fd1RoutingNumber), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -114,7 +103,6 @@ func (b WfBankingManageAccountsPages) ManageAccountsPages(res http.ResponseWrite
       maf.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
 
-
           numberOfRows := 12
           maf.Fd2Result = make([]Row, 0, numberOfRows + 1)
           maf.Fd2Result = append(maf.Fd2Result,
@@ -129,7 +117,6 @@ func (b WfBankingManageAccountsPages) ManageAccountsPages(res http.ResponseWrite
                 AccountType: "checking",
               })
           }
-
 
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
@@ -155,13 +142,13 @@ func (b WfBankingManageAccountsPages) ManageAccountsPages(res http.ResponseWrite
       }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", maf.CurrentPage)
-      logger.LogError(errString, "-1")
+      logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
-      if strings.EqualFold(maf.CurrentPage, "rhs-ui1") {
+      logger.LogWarning("*** Request timeout ***", correlationId)
+      // if strings.EqualFold(maf.CurrentPage, "rhs-ui1") {
       //   bf.Fd1Result = ""
       // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui2") {
       //   bf.Fd2Result = ""
@@ -184,15 +171,14 @@ func (b WfBankingManageAccountsPages) ManageAccountsPages(res http.ResponseWrite
       // //   bf.Fd7Result[1] = ""
       // // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui8") {
       // //   bf.Fd8Result[1] = ""
-      }
+      // }
     }
     //
     if data, err := json.Marshal(maf); err != nil {
       logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
-      filePath := fmt.Sprintf("%s/%s/bonds.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
-        os.O_TRUNC, 0o600); err != nil {
+      filePath := fmt.Sprintf("%s/%s/manageaccounts.txt", mainDir, userName)
+      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
         logger.LogError(fmt.Sprintf("%+v", err), correlationId)
       }
     }
