@@ -28,9 +28,8 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering SimpleInterestAccuratePages/webfinances.", correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.SimpleInterestAccuratePages.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     sif := getSiAccurateFields(userName)
@@ -86,14 +85,11 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.2f",
-            si.AccurateInterest(pv, i / 100.0,
-            periods.GetCompoundingPeriod(sif.Fd1Compound[0], true), n,
-            daysInYear))
+          sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.4f",
+            si.AccurateInterest(pv, i / 100.0, periods.GetCompoundingPeriod(sif.Fd1Compound[0], true), n, daysInYear))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, leap = %t, tp = %s, i = %s, cp = %s, pv = %s, %s",
-         sif.Fd1Time, sif.Fd1Leap, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound,
-         sif.Fd1PV, sif.Fd1Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, leap = %t, tp = %s, i = %s, cp = %s, pv = %s, %s", sif.Fd1Time, sif.Fd1Leap,
+          sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -110,10 +106,8 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         Fd1Compound string
         Fd1PV string
         Fd1Result string
-      } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton,
-          newSession.CsrfToken, sif.Fd1Time, sif.Fd1Leap, sif.Fd1TimePeriod, sif.Fd1Interest,
-          sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result,
-      })
+      } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
+          sif.Fd1Time, sif.Fd1Leap, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result })
       //
       if err != nil {
         logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -138,11 +132,11 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd2Result = fmt.Sprintf("Interest Rate: %.3f%%",
+          sif.Fd2Result = fmt.Sprintf("Interest Rate: %.4f%%",
             si.AccurateRate(pv, a, n, periods.GetTimePeriod(sif.Fd2TimePeriod[0], true)) * 100.0)
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, a = %s, pv = %s, %s", sif.Fd2Time,
-         sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, a = %s, pv = %s, %s", sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount,
+          sif.Fd2PV, sif.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -157,10 +151,8 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         Fd2Amount string
         Fd2PV string
         Fd2Result string
-      } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton,
-          newSession.CsrfToken, sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV,
-          sif.Fd2Result,
-      })
+      } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
+          sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result })
       //
       if err != nil {
         logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -186,13 +178,11 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd3Result = fmt.Sprintf("Principal: $%.2f", si.AccuratePrincipal(a, i / 100.0,
-            periods.GetCompoundingPeriod(sif.Fd3Compound[0], true), n,
-            periods.GetTimePeriod(sif.Fd3TimePeriod[0], true)))
+          sif.Fd3Result = fmt.Sprintf("Principal: $%.4f", si.AccuratePrincipal(a, i / 100.0,
+            periods.GetCompoundingPeriod(sif.Fd3Compound[0], true), n, periods.GetTimePeriod(sif.Fd3TimePeriod[0], true)))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s", sif.Fd3Time,
-         sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result),
-         correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s", sif.Fd3Time, sif.Fd3TimePeriod,
+          sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -208,10 +198,8 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         Fd3Compound string
         Fd3Amount string
         Fd3Result string
-      } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton,
-          newSession.CsrfToken, sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound,
-          sif.Fd3Amount, sif.Fd3Result,
-      })
+      } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
+          sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result })
       //
       if err != nil {
         logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -236,12 +224,12 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd4Result = fmt.Sprintf("Time: %.3f %s", si.AccurateTime(pv, a, i / 100.0,
-            periods.GetCompoundingPeriod(sif.Fd4Compound[0], true)),
+          sif.Fd4Result = fmt.Sprintf("Time: %.4f %s",
+            si.AccurateTime(pv, a, i / 100.0, periods.GetCompoundingPeriod(sif.Fd4Compound[0], true)),
             periods.TimePeriods(sif.Fd4Compound))
         }
-        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, a = %s, pv = %s, %s", sif.Fd4Interest,
-         sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, a = %s, pv = %s, %s", sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount,
+          sif.Fd4PV, sif.Fd4Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -256,10 +244,8 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         Fd4Amount string
         Fd4PV string
         Fd4Result string
-      } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton,
-          newSession.CsrfToken, sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV,
-          sif.Fd4Result,
-      })
+      } { "Simple Interest / Accurate (Exact) Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
+          sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result })
       //
       if err != nil {
         logger.LogError(fmt.Sprintf("%+v", err), correlationId)
@@ -287,8 +273,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/siaccurate.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
-        os.O_TRUNC, 0o600); err != nil {
+      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
         logger.LogError(fmt.Sprintf("%+v", err), correlationId)
       }
     }
@@ -297,6 +282,5 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
     logger.LogError(errString, correlationId)
     panic(errString)
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

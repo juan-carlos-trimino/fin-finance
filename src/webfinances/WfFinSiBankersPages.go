@@ -29,9 +29,8 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering SimpleInterestBankersPages/webfinances.", correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.SimpleInterestBankersPages.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     sif := getSiBankersFields(userName)
@@ -76,19 +75,17 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.2f", si.BankersInterest(pv,
-            i / 100.0, periods.GetCompoundingPeriod(sif.Fd1Compound[0], false), n,
-            periods.GetTimePeriod(sif.Fd1TimePeriod[0], false)))
+          sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.4f", si.BankersInterest(pv, i / 100.0,
+            periods.GetCompoundingPeriod(sif.Fd1Compound[0], false), n, periods.GetTimePeriod(sif.Fd1TimePeriod[0], false)))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", sif.Fd1Time,
-         sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result),
-         correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", sif.Fd1Time, sif.Fd1TimePeriod,
+          sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles(
-				"webfinances/templates/finances/simpleinterestbankers/bankers.html",
+        "webfinances/templates/finances/simpleinterestbankers/bankers.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
@@ -105,10 +102,8 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
         Fd1Compound string
         Fd1PV string
         Fd1Result string
-      } { "Simple Interest / Banker's Interest", logger.DatetimeFormat(), sif.CurrentButton,
-          newSession.CsrfToken, sif.Fd1Time, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound,
-          sif.Fd1PV, sif.Fd1Result,
-      })
+      } { "Simple Interest / Banker's Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken, sif.Fd1Time,
+          sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result })
       //
       if err != nil {
         logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -133,17 +128,17 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd2Result = fmt.Sprintf("Interest Rate: %.3f%%", si.BankersRate(pv, a, n,
+          sif.Fd2Result = fmt.Sprintf("Interest Rate: %.4f%%", si.BankersRate(pv, a, n,
            periods.GetTimePeriod(sif.Fd2TimePeriod[0], false)) * 100.0)
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, a = %s, pv = %s, %s", sif.Fd2Time,
-         sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, a = %s, pv = %s, %s", sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount,
+          sif.Fd2PV, sif.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles(
-				"webfinances/templates/finances/simpleinterestbankers/bankers.html",
+        "webfinances/templates/finances/simpleinterestbankers/bankers.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
@@ -159,10 +154,8 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
         Fd2Amount string
         Fd2PV string
         Fd2Result string
-      } { "Simple Interest / Banker's Interest", logger.DatetimeFormat(), sif.CurrentButton,
-          newSession.CsrfToken, sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV,
-          sif.Fd2Result,
-      })
+      } { "Simple Interest / Banker's Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken, sif.Fd2Time,
+          sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result })
       //
       if err != nil {
         logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -188,19 +181,17 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd3Result = fmt.Sprintf("Principal: $%.2f", si.BankersPrincipal(a, i / 100.0,
-            periods.GetCompoundingPeriod(sif.Fd3Compound[0], false), n,
-            periods.GetTimePeriod(sif.Fd3TimePeriod[0], false)))
+          sif.Fd3Result = fmt.Sprintf("Principal: $%.4f", si.BankersPrincipal(a, i / 100.0,
+            periods.GetCompoundingPeriod(sif.Fd3Compound[0], false), n, periods.GetTimePeriod(sif.Fd3TimePeriod[0], false)))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s", sif.Fd3Time,
-         sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result),
-         correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s", sif.Fd3Time, sif.Fd3TimePeriod,
+          sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles(
-				"webfinances/templates/finances/simpleinterestbankers/bankers.html",
+        "webfinances/templates/finances/simpleinterestbankers/bankers.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
@@ -217,10 +208,8 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
         Fd3Compound string
         Fd3Amount string
         Fd3Result string
-      } { "Simple Interest / Banker's Interest", logger.DatetimeFormat(), sif.CurrentButton,
-          newSession.CsrfToken, sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound,
-          sif.Fd3Amount, sif.Fd3Result,
-      })
+      } { "Simple Interest / Banker's Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
+          sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result })
       //
       if err != nil {
         logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -245,18 +234,17 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd4Result = fmt.Sprintf("Time: %.3f %s", si.BankersTime(pv, a, i / 100.0,
-            periods.GetCompoundingPeriod(sif.Fd4Compound[0], false)),
-            periods.TimePeriods(sif.Fd4Compound))
+          sif.Fd4Result = fmt.Sprintf("Time: %.4f %s", si.BankersTime(pv, a, i / 100.0,
+            periods.GetCompoundingPeriod(sif.Fd4Compound[0], false)), periods.TimePeriods(sif.Fd4Compound))
         }
-        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, a = %s, pv = %s, %s", sif.Fd4Interest,
-         sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, a = %s, pv = %s, %s", sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount,
+          sif.Fd4PV, sif.Fd4Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles(
-				"webfinances/templates/finances/simpleinterestbankers/bankers.html",
+        "webfinances/templates/finances/simpleinterestbankers/bankers.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
@@ -272,17 +260,15 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
         Fd4Amount string
         Fd4PV string
         Fd4Result string
-      } { "Simple Interest / Banker's Interest", logger.DatetimeFormat(), sif.CurrentButton,
-          newSession.CsrfToken, sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV,
-          sif.Fd4Result,
-      })
+      } { "Simple Interest / Banker's Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
+          sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result })
       //
       if err != nil {
         logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
       }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", sif.CurrentPage)
-      logger.LogError(errString, "-1")
+      logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
@@ -300,19 +286,17 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
     }
     //
     if data, err := json.Marshal(sif); err != nil {
-      logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/sibankers.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
-        os.O_TRUNC, 0o600); err != nil {
-        logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
+        logger.LogError(fmt.Sprintf("%+v", err), correlationId)
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, "-1")
+    logger.LogError(errString, correlationId)
     panic(errString)
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
