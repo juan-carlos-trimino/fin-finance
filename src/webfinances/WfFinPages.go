@@ -2,11 +2,7 @@ package webfinances
 
 import (
   bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
-  // "encoding/json"
-
-  wfBanking "finance/webfinances/WfBanking"  //Importing a package and assigning it a local alias.
-
-
+  banking "finance/webfinances/wfbanking"  //Importing a package and assigning it a local alias.
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
@@ -39,8 +35,6 @@ func init() {
   ***/
   tmpl = template.New("root")  //Initialize the root template.
   tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/*.html"))
-  // tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/admin/*.html"))
-  tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/banking/*.html"))
   tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/finances/*.html"))
   tsia1 = template.Must(template.New("sia1").ParseFiles(
     "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
@@ -130,7 +124,7 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   } else {
     sessionToken, session := sessions.AddEntryToSessions(un)
     AddSessionDataPerUser(un, correlationId)
-    wfBanking.AddSessionDataPerUser(un, correlationId)
+    banking.AddSessionDataPerUser(un, correlationId)
     /***
     Once a cookie is set on a client, it is sent along with every subsequent request. Cookies store
     historical information (including user login information) on the client's computer. The
