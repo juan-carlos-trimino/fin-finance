@@ -29,9 +29,8 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering OaInterestRatePages/webfinances.", correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.OaInterestRatePages.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     of := getOaInterestRateFields(userName)
@@ -75,12 +74,11 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
           of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1FV, err)
         } else {
           var oa finances.Annuities
-          of.Fd1Result = fmt.Sprintf("Interest: %.3f%% %s", oa.O_Interest_PV_FV(pv, fv, n,
-            oa.GetTimePeriod(of.Fd1TimePeriod[0], true),
-            oa.GetCompoundingPeriod(of.Fd1Compound[0], true)) * 100.0, of.Fd1Compound)
+          of.Fd1Result = fmt.Sprintf("Interest: %.4f%% %s", oa.O_Interest_PV_FV(pv, fv, n, oa.GetTimePeriod(of.Fd1TimePeriod[0],
+            true), oa.GetCompoundingPeriod(of.Fd1Compound[0], true)) * 100.0, of.Fd1Compound)
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, cp = %s, pv = %s, fv = %s, %s", of.Fd1N,
-         of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, cp = %s, pv = %s, fv = %s, %s", of.Fd1N, of.Fd1TimePeriod, of.Fd1Compound,
+          of.Fd1PV, of.Fd1FV, of.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -107,41 +105,37 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
         Fd1PV string
         Fd1FV string
         Fd1Result string
-      } { "Ordinary Annuity / Interest Rate", logger.DatetimeFormat(), of.CurrentButton,
-          newSession.CsrfToken, of.Fd1N, of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV,
-          of.Fd1Result,
-      })
+      } { "Ordinary Annuity / Interest Rate", logger.DatetimeFormat(), of.CurrentButton, newSession.CsrfToken, of.Fd1N,
+          of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result })
       //
       if err != nil {
         logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
       }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
-      logger.LogError(errString, "-1")
+      logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
+      logger.LogWarning("*** Request timeout ***", correlationId)
       if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
         of.Fd1Result = ""
       }
     }
     //
     if data, err := json.Marshal(of); err != nil {
-      logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/oainterestrate.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
-        os.O_TRUNC, 0o600); err != nil {
-        logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
+        logger.LogError(fmt.Sprintf("%+v", err), correlationId)
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, "-1")
+    logger.LogError(errString, correlationId)
     panic(errString)
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

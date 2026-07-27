@@ -29,9 +29,8 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
   }
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering OaGaPages/webfinances.", correlationId)
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.OaGaPages.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     of := getOaGaFields(userName)
@@ -78,11 +77,11 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
           of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1Pmt, err)
         } else {
           var oa finances.Annuities
-          of.Fd1Result = fmt.Sprintf("Future Value: $%.2f", oa.O_GrowingAnnuityFutureValue(pmt, n,
-            grow, i / 100.0, oa.GetCompoundingPeriod(of.Fd1Compound[0], true)))
+          of.Fd1Result = fmt.Sprintf("Future Value: $%.4f", oa.O_GrowingAnnuityFutureValue(pmt, n, grow, i / 100.0,
+            oa.GetCompoundingPeriod(of.Fd1Compound[0], true)))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s", of.Fd1N,
-         of.Fd1Interest, of.Fd1Compound, of.Fd1Grow, of.Fd1Pmt, of.Fd1Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s", of.Fd1N, of.Fd1Interest, of.Fd1Compound,
+          of.Fd1Grow, of.Fd1Pmt, of.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -109,10 +108,8 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
         Fd1Grow string
         Fd1Pmt string
         Fd1Result string
-      } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), of.CurrentButton,
-          newSession.CsrfToken, of.Fd1N, of.Fd1Interest, of.Fd1Compound, of.Fd1Grow,
-          of.Fd1Pmt, of.Fd1Result,
-      })
+      } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), of.CurrentButton, newSession.CsrfToken, of.Fd1N,
+          of.Fd1Interest, of.Fd1Compound, of.Fd1Grow, of.Fd1Pmt, of.Fd1Result })
       //
       if err != nil {
         logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -140,11 +137,11 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
           of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2Pmt, err)
         } else {
           var oa finances.Annuities
-          of.Fd2Result = fmt.Sprintf("Present Value: $%.2f", oa.O_GrowingAnnuityPresentValue(pmt,
-            n, grow, i / 100.0, oa.GetCompoundingPeriod(of.Fd2Compound[0], true)))
+          of.Fd2Result = fmt.Sprintf("Present Value: $%.4f", oa.O_GrowingAnnuityPresentValue(pmt, n, grow, i / 100.0,
+            oa.GetCompoundingPeriod(of.Fd2Compound[0], true)))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s", of.Fd2N,
-         of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s", of.Fd2N, of.Fd2Interest, of.Fd2Compound,
+          of.Fd2Grow, of.Fd2Pmt, of.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -167,22 +164,20 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
         Fd2Grow string
         Fd2Pmt string
         Fd2Result string
-      } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), of.CurrentButton,
-          newSession.CsrfToken, of.Fd2N, of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt,
-          of.Fd2Result,
-      })
+      } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), of.CurrentButton, newSession.CsrfToken, of.Fd2N,
+          of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result })
       //
       if err != nil {
         logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
       }
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
-      logger.LogError(errString, "-1")
+      logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
+      logger.LogWarning("*** Request timeout ***", correlationId)
       if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
         of.Fd1Result = ""
       } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
@@ -191,19 +186,17 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
     }
     //
     if data, err := json.Marshal(of); err != nil {
-      logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/oaga.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
-        os.O_TRUNC, 0o600); err != nil {
-        logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
+        logger.LogError(fmt.Sprintf("%+v", err), correlationId)
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, "-1")
+    logger.LogError(errString, correlationId)
     panic(errString)
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
