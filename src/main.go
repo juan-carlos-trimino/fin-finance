@@ -17,7 +17,7 @@ import (
   "finance/config"
   "finance/security"
   "finance/webfinances"
-  wfBanking "finance/webfinances/WfBanking"  //Importing a package and assigning it a local alias.
+  banking "finance/webfinances/wfbanking"  //Importing a package and assigning it a local alias.
   "fmt"
   "net"
   "net/http"
@@ -185,7 +185,7 @@ func main() {
   }
   readUsers(dataDir, users)
   webfinances.SetupDirStructure(dataDir)
-  wfBanking.SetupDirStructure(dataDir)
+  banking.SetupDirStructure(dataDir)
   //Database.
   if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
     if ok := bank.ExecuteSqlScript(host, default_user, default_password, default_dbname, admin_dbname, sslmode,
@@ -327,8 +327,8 @@ func faviconHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func makeHandlers() *handlers {
-  var wfbankPages = wfBanking.WfBankingPages{}
-	var wfbankMngAcctsPages = wfBanking.WfBankingManageAccountsPages{}
+  var wfbankPages = banking.WfBankingPages{}
+	var wfbankMngAcctsPages = banking.WfBankingManageAccountsPages{}
 	var wfpages = webfinances.WfPages{}
   var wfadcp = webfinances.WfAdCpPages{}
   var wfadepp = webfinances.WfAdEppPages{}
@@ -407,7 +407,7 @@ func makeHandlers() *handlers {
   }
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/js/admin/SettingsSecurity.js"] = wfverify.PublicSettingsSecurityFile
-  h.mux["/public/js/banking/bankingManageAccounts.js"] = wfbankPages.PublicManageAccountsFile
+  h.mux["/public/js/banking/manageAccounts.js"] = wfbankPages.PublicManageAccountsFile
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/getParams.js"] = wfpages.PublicGetParamsFile
   h.mux["/public/js/mortgage.js"] = wfpages.PublicMortgageFile
