@@ -1,15 +1,12 @@
-package WfBanking
+package wfbanking
 
 import (
   "encoding/json"
+  "errors"
   "fmt"
-  // "finance/webfinances"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/gposu"
-
-    "os"
-  "errors"
-
+  "os"
 )
 
 var mainDir string = "/fields/manageaccounts"
