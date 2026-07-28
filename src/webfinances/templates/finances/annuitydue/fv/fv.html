@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>OA Future Value</title>
     <script type="text/javascript" src="/public/js/getParams.js"></script>
-    <script type="text/javascript" src="/public/js/AdFutureValue.js?cb='{{ .CurrentButton }}'"></script>
+    <script type="text/javascript" src="/public/js/setPageUI.js?cb='{{ .CurrentButton }}'"></script>
     <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
   </head>
   <body>
@@ -24,16 +24,12 @@
         <div class="left-side">
           <div class="button-style">
             <a href="/fin/annuitydue/fv?compute=rhs-ui1" target="_self">
-              <button class="button" id="lhs-button1" disabled>
-                n, i, PV
-              </button>
+              <button class="button" id="lhs-button1" disabled>n, i, PV</button>
             </a>
           </div>
           <div class="button-style">
             <a href="/fin/annuitydue/fv?compute=rhs-ui2" target="_self">
-              <button class="button" id="lhs-button2">
-                n, i, PMT
-              </button>
+              <button class="button" id="lhs-button2">n, i, PMT</button>
             </a>
           </div>
           <div class="button-back-style">

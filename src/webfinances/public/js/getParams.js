@@ -1,5 +1,6 @@
 
 function getParams() {
+  console.log("Entering getParams...");
   let scripts = document.getElementsByTagName('script');
   let script = scripts[scripts.length - 1];
   let queryString = script.src.replace(/^[^\?]+\??/, '');
@@ -19,5 +20,6 @@ function getParams() {
     //Change 'my-string' to my-string.
     Params[key] = val.substring(1, val.length - 1);
   }
+  console.log("Exiting getParams...");
   return Params;
 }

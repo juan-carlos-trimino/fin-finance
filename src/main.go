@@ -408,9 +408,14 @@ func makeHandlers() *handlers {
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/js/admin/SettingsSecurity.js"] = wfverify.PublicSettingsSecurityFile
   h.mux["/public/js/banking/manageAccounts.js"] = wfbankPages.PublicManageAccountsFile
-  h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
+
+  h.mux["/public/js/tableSelectRow.js"] = wfbankPages.PublicTableSelectRowFile
+
+  h.mux["/public/js/setPageUI.js"] = wfpages.PublicSetPageUIFile
+
+
+	h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/getParams.js"] = wfpages.PublicGetParamsFile
-  h.mux["/public/js/mortgage.js"] = wfpages.PublicMortgageFile
   h.mux["/public/js/OaInterestRate.js"] = wfpages.PublicOaInterestRateFile
   h.mux["/public/js/OaPresentValue.js"] = wfpages.PublicOaPresentValueFile
   h.mux["/public/js/OaFutureValue.js"] = wfpages.PublicOaFutureValueFile
@@ -418,10 +423,6 @@ func makeHandlers() *handlers {
   h.mux["/public/js/OaEqualPeriodicPayments.js"] = wfpages.PublicOaEqualPeriodicPaymentsFile
   h.mux["/public/js/OaGrowingAnnuity.js"] = wfpages.PublicOaGrowingAnnuityFile
   h.mux["/public/js/OaPerpetuity.js"] = wfpages.PublicOaPerpetuityFile
-  h.mux["/public/js/AdCompoundingPeriods.js"] = wfpages.PublicAdCompoundingPeriodsFile
-  h.mux["/public/js/AdEqualPeriodicPayments.js"] = wfpages.PublicAdEqualPeriodicPaymentsFile
-  h.mux["/public/js/AdFutureValue.js"] = wfpages.PublicAdFutureValueFile
-  h.mux["/public/js/AdPresentValue.js"] = wfpages.PublicAdPresentValueFile
   h.mux["/public/js/bonds.js"] = wfpages.PublicBondsFile
   h.mux["/public/js/bondsYTM.js"] = wfpages.PublicBondsYTMFile
   h.mux["/public/js/miscellaneous.js"] = wfpages.PublicMiscellaneousFile

@@ -13,7 +13,7 @@ function setFocus(eid) {
     tb = document.getElementById("fd1-bankname");
   }
   //
-  if (tb === null) {
+  if (tb !== null) {
     tb.focus();
     /***
     input type="number" doesn't support setSelectionRange.

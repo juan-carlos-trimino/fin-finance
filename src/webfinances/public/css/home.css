@@ -306,13 +306,11 @@ input[type='radio'] {
   border-bottom: 2px solid rgb(2, 71, 31);
 }
 /*Active row */
-
-.custom-table-style tr.row-item {
+.custom-table-style tr {
   cursor: pointer;
 }
-
-.custom-table-style  tr.active-row {
-  font-weight: bold;
+.custom-table-style tr.active-row {
+  background-color: aliceblue;
   color: #009879;
 }
 /*** Table ***/
@@ -339,7 +337,8 @@ input[type="submit"]:hover {
 input[type="text"],
 input[type="password"],
 input[type="date"],
-input[type="number"] {
+input[type="number"],
+input[type="decimal"] {
   width: 100%;  /* Full width */
   height: 32px;
   padding: 5px 5px;  /* Top/Bottom and Left/Right - inside spacing */
@@ -354,7 +353,8 @@ input[type="number"] {
 input[type="text"]:focus,
 input[type="password"]:focus,
 input[type="date"]:focus,
-input[type="number"]:focus {
+input[type="number"]:focus,
+input[type="decimal"]:focus {
   border: 2px solid #808080;
   border-radius: 3px;
   outline: none;  /* Remove default browser outline */

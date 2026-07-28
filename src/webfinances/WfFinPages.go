@@ -256,13 +256,13 @@ func (p WfPages) PublicGetParamsFile(res http.ResponseWriter, req *http.Request)
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
-func (p WfPages) PublicMortgageFile(res http.ResponseWriter, req *http.Request) {
+func (p WfPages) PublicSetPageUIFile(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicMortgageFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/mortgage.js")
+  logger.LogInfo("Entering webfinances.PublicSetPageUIFile.", correlationId)
+  http.ServeFile(res, req, "./webfinances/public/js/setPageUI.js")
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
@@ -333,46 +333,6 @@ func (p WfPages) PublicOaPerpetuityFile(res http.ResponseWriter, req *http.Reque
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering PublicOaPerpetuityFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/OaPerpetuity.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicAdCompoundingPeriodsFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicAdCompoundingPeriodsFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/AdCompoundingPeriods.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicAdEqualPeriodicPaymentsFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicAdEqualPeriodicPaymentsFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/AdEqualPeriodicPayments.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicAdFutureValueFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicAdFutureValueFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/AdFutureValue.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicAdPresentValueFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicAdPresentValueFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/AdPresentValue.js")
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 

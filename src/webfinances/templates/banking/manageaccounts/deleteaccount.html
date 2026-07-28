@@ -20,7 +20,7 @@
       </tfoot>
       <tbody>
         {{ range .Fd2Result }}
-        <tr> <!-- Row -->
+        <tr class="clickable-row" data-id="{{ .AccountName }}"> <!-- Row -->
           <td>{{ .AccountName }}</td> <!-- Data -->
           <td>{{ .AccountType }}</td>
         </tr>
