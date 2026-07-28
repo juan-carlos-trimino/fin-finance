@@ -1,5 +1,6 @@
 
 document.addEventListener('DOMContentLoaded', (event) => {
+  console.log("Entering document.addEventListener...");
   let params = getParams();
   if (params.hasOwnProperty('radio')) {
     disableElements(params.cb);
@@ -9,13 +10,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
     disableElements(params.cb);
     setFocus(params.cb);
   }
+  console.log("Exiting document.addEventListener...");
 });
 
 function setFocus(eid) {
+  console.log("Entering setFocus...");
   // var audio = new Audio('https://media.geeksforgeeks.org/wp-content/uploads/20190531135120/beep.mp3');
-  let tb;
+  let tb = null;
   if (eid === "lhs-button1") {
-    // audio.play();
     tb = document.getElementById("fd1-taxfree");
   } else if (eid === "lhs-button2") {
     tb = document.getElementById("fd2-facevalue");
@@ -32,20 +34,25 @@ function setFocus(eid) {
   // } else if (eid === "lhs-button8") {
   //   tb = document.getElementById("fd8-facevalue");
   }
-  tb.focus();
-  /***
-  input type="number" doesn't support setSelectionRange.
-  You can use type="text" and inputmode="numeric". This will show a numeric keyboard for
-  mobile users and supports setSelectionRange.
-  ***/
-  // tb.type = "text";
-  tb.setSelectionRange(0, tb.value.length);
-  // tb.type = "number";
-  // console.log(`Position start: ${tb.selectionStart}`);
-  // console.log(`Position end: ${tb.selectionEnd}`);
+  //Only call .focus() if the element was actually found.
+  if (tb) {
+    tb.focus();
+    /***
+    input type="number" doesn't support setSelectionRange.
+    You can use type="text" and inputmode="numeric". This will show a numeric keyboard for mobile users and supports setSelectionRange.
+    Add a type check: Wrap the JavaScript code in a condition so it only runs on valid input types.
+    ***/
+    if (tb.type !== 'number' && typeof tb.setSelectionRange === 'function') {
+      tb.setSelectionRange(0, tb.value.length);
+    }
+  } else {
+    console.warn("No matching element found for ID:", eid);
+  }
+  console.log("Exiting setFocus...");
 }
 
 function disableElements(eid) {
+  console.log("Entering disableElements...");
   // var audio = new Audio('https://media.geeksforgeeks.org/wp-content/uploads/20190531135120/beep.mp3');
   if (eid === "lhs-button1") {
     // audio.play();
@@ -128,4 +135,5 @@ function disableElements(eid) {
   //   document.getElementById("lhs-button7").disabled = false;
   //   document.getElementById("lhs-button8").disabled = true;
   }
+  console.log("Exiting disableElements...");
 }

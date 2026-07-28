@@ -7,9 +7,9 @@
     <!-- margin: top, right, bottom, left -->
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd4-facevalue">Face Value</label>
-      <input type="number" id="fd4-facevalue" name="fd4-facevalue" value="{{ .Fd4FaceValue }}" inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" id="fd4-facevalue" name="fd4-facevalue" value="{{ .Fd4FaceValue }}" inputmode="decimal" step="any" max="9999999" required/>
       <label class="cnt-textbox" for="fd4-time">Time (n)</label>
-      <input type="number" id="fd4-time" name="fd4-time" value="{{ .Fd4Time }}" inputmode="numeric" step="any" maxlength="7" required/>
+      <input type="number" id="fd4-time" name="fd4-time" value="{{ .Fd4Time }}" inputmode="decimal" step="any" max="9999999" required/>
       <label class="cnt-textbox" for="fd4-tp">Time Period</label>
       <select class="cnt-select" name="fd4-tp" id="fd4-tp">
         <option value="year" {{ if eq .Fd4TimePeriod "year" }} selected {{ end }}>Year(s)</option>
@@ -20,7 +20,7 @@
         <option value="day" {{ if eq .Fd4TimePeriod "day" }} selected {{ end }}>Day(s)</option>
       </select>
       <label class="cnt-textbox" for="fd4-coupon">Coupon Rate (%)</label>
-      <input type="number" id="fd4-coupon" name="fd4-coupon" value="{{ .Fd4Coupon }}" inputmode="numeric" step="0.5" maxlength="7" required/>
+      <input type="number" id="fd4-coupon" name="fd4-coupon" value="{{ .Fd4Coupon }}" inputmode="decimal" step="any" max="9999999" required/>
       <label class="cnt-textbox" for="fd4-compound">Compounding Period</label>
       <select class="cnt-select" id="fd4-compound" name="fd4-compound">
         <option value="annually" {{ if eq .Fd4Compound "annually" }} selected {{ end }}>Annually</option>
@@ -36,29 +36,19 @@
       <fieldset class="radio-fieldset">
         <legend class="radio-legend">Select Appropriate Choice</legend>
         <div>
-          <input type="radio" id="fd4-curinterest" name="fd4-choice" value="fd4-curinterest"
-            {{ if eq .Fd4CurrentRadio "fd4-curinterest" }} checked {{ end }}>
-          <label class="radio-label" for="fd4-curinterest">
-            Current Interest (%)
-          </label><br>
+          <input type="radio" id="fd4-curinterest" name="fd4-choice" value="fd4-curinterest" {{ if eq .Fd4CurrentRadio "fd4-curinterest" }} checked {{ end }}>
+          <label class="radio-label" for="fd4-curinterest">Current Interest (%)</label><br>
           <label class="cnt-textbox" for="fd4-ci">Current Interest (%)</label>
-          <input type="number" class="cnt-textcombo" id="fd4-ci" name="fd4-ci" value="{{ .Fd4CurInterest }}"
-            inputmode="numeric" step="any" maxlength="7" required/><br>
-          <input type="radio" id="fd4-bondprice" name="fd4-choice" value="fd4-bondprice"
-            {{ if eq .Fd4CurrentRadio "fd4-bondprice" }} checked {{ end }}>
-          <label class="radio-label" for="fd4-bondprice">
-            Bond Price
-          </label><br>
+          <input type="number" class="cnt-textcombo" id="fd4-ci" name="fd4-ci" value="{{ .Fd4CurInterest }}" inputmode="decimal" step="any" max="9999999" required/><br>
+          <input type="radio" id="fd4-bondprice" name="fd4-choice" value="fd4-bondprice" {{ if eq .Fd4CurrentRadio "fd4-bondprice" }} checked {{ end }}>
+          <label class="radio-label" for="fd4-bondprice">Bond Price</label><br>
           <label class="cnt-textbox" for="fd4-bp">Bond Price</label>
-          <input type="number" class="cnt-textcombo" id="fd4-bp" name="fd4-bp" value="{{ .Fd4BondPrice }}"
-            inputmode="numeric" step="any" maxlength="7" required/>
+          <input type="number" class="cnt-textcombo" id="fd4-bp" name="fd4-bp" value="{{ .Fd4BondPrice }}" inputmode="decimal" step="any" max="9999999" required/>
         </div>
       </fieldset>
     </div>
     <div class="button-back-style">
-      <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">
-        Compute
-      </button>
+      <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">Compute</button>
     </div>
   </form>
   <div>
