@@ -336,16 +336,6 @@ func (p WfPages) PublicOaPerpetuityFile(res http.ResponseWriter, req *http.Reque
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
-func (p WfPages) PublicBondsFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicBondsFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/bonds.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
 func (p WfPages) PublicBondsYTMFile(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
@@ -353,16 +343,6 @@ func (p WfPages) PublicBondsYTMFile(res http.ResponseWriter, req *http.Request) 
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering PublicBondsYTMFile/webfinances.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/bondsYTM.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicMiscellaneousFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicMiscellaneousFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/miscellaneous.js")
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
