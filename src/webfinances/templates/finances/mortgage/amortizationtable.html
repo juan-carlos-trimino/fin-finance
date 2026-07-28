@@ -29,7 +29,7 @@
         <option value="continuously" {{ if eq .Fd2Compound "continuously" }} selected {{ end }}>Continuously</option>
       </select>
       <label class="cnt-textbox" for="fd2-amount">Amount</label>
-      <input type="number" id="fd2-amount" name="fd2-amount" value="{{ .Fd2Amount }}" inputmode="decimal" step="any" maxlength="9999999" required/>
+      <input type="number" id="fd2-amount" name="fd2-amount" value="{{ .Fd2Amount }}" inputmode="decimal" step="any" max="9999999" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" value="rhs-ui2" name="compute" type="submit">Compute</button>
