@@ -1,9 +1,9 @@
-{{ define "manage_accounts-layout" }}
+{{define "manage_accounts-layout"}}
 
 <!-- rhs-ui1 -->
 <div id="rhs-ui2">
   <form action="/banking/manageaccounts" method="post" enctype="application/x-www-form-urlencoded">
-    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
+    <input type="hidden" name="csrf_token" value="{{.CsrfToken}}"/>
     <table class="custom-table-style" float="center">
       <caption>Accounts</caption>
       <thead>
@@ -19,12 +19,12 @@
         </tr>
       </tfoot>
       <tbody>
-        {{ range .Fd2Result }}
-        <tr class="clickable-row" data-id="{{ .AccountName }}"> <!-- Row -->
-          <td>{{ .AccountName }}</td> <!-- Data -->
-          <td>{{ .AccountType }}</td>
+        {{range .Fd2Result}}
+        <tr class="clickable-row" data-id="{{.AccountName}}"> <!-- Row -->
+          <td>{{.AccountName}}</td> <!-- Data -->
+          <td>{{.AccountType}}</td>
         </tr>
-        {{ end }}
+        {{end}}
       </tbody>
     </table>
     <div class="button-back-style">
@@ -33,4 +33,4 @@
   </form>
 </div>
 
-{{ end }}
+{{end}}

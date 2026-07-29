@@ -1,4 +1,4 @@
-{{ define "banking_page" }}
+{{define "banking_page"}}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -11,12 +11,12 @@
   <body>
     <main>
       <div class="center-title">
-        {{ template "title" . }}
+        {{template "title" .}}
       </div>
       <div class="center-datetime">
-        {{ template "datetime" . }}
+        {{template "datetime" .}}
       </div>
-      {{ template "navbar" . }}
+      {{template "navbar" .}}
       <div class="button-style">
         <a href="/banking/accounts" target="_self">
           <button class="button">Accounts</button>
@@ -33,8 +33,8 @@
         </a>
       </div>
     </main>
-    {{ template "footer" }}
+    {{template "footer"}}
   </body>
 </html>
 
-{{ end }}
+{{end}}

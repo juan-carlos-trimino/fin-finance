@@ -1,4 +1,4 @@
-{{ define "manage_accounts" }}
+{{define "manage_accounts"}}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -7,20 +7,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Manage Accounts</title>
-    <script type="text/javascript" src="/public/js/getParams.js"></script>
-    <script type="text/javascript" src="/public/js/banking/manageAccounts.js?cb='{{ .CurrentButton }}'"></script>
+    <script type="text/javascript" src="/public/js/setPageUI.js" id="page-ui-script" data-cb="{{.CurrentButton}}"></script>
     <script type="text/javascript" src="/public/js/tableSelectRow.js"></script>
     <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
   </head>
   <body>
     <main>
       <div class="center-title">
-        {{ template "title" . }}
+        {{template "title" .}}
       </div>
       <div class="center-datetime">
-        {{ template "datetime" . }}
+        {{template "datetime" .}}
       </div>
-      {{ template "navbar" . }}
+      {{template "navbar" .}}
       <div class="split-screen">
         <div class="left-side">
           <div class="button-style">
@@ -40,12 +39,12 @@
           </div>
         </div>
         <div class="right-side">
-          {{ template "manage_accounts-layout" . }}
+          {{template "manage_accounts-layout" .}}
         </div>
       </div>
     </main>
-    {{ template "footer" }}
+    {{template "footer"}}
   </body>
 </html>
 
-{{ end }}
+{{end}}
