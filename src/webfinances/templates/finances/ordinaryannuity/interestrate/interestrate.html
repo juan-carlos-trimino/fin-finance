@@ -1,4 +1,4 @@
-{{ define "oainterestrate" }}
+{{define "oainterestrate"}}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -8,25 +8,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>OA Interest Rate</title>
     <script type="text/javascript" src="/public/js/getParams.js"></script>
-    <script type="text/javascript" src="/public/js/OaInterestRate.js?cb='{{ .CurrentButton }}'"></script>
+    <script type="text/javascript" src="/public/js/setPageUI.js?cb='{{.CurrentButton}}'"></script>
     <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
   </head>
   <body>
     <main>
       <div class="center-title">
-        {{ template "title" . }}
+        {{template "title" .}}
       </div>
       <div class="center-datetime">
-        {{ template "datetime" . }}
+        {{template "datetime" .}}
       </div>
-      {{ template "navbar" . }}
+      {{template "navbar" .}}
       <div class="split-screen">
         <div class="left-side">
           <div class="button-style">
             <a href="/fin/ordinaryannuity/interestrate?compute=rhs-ui1" target="_self">
-              <button class="button" id="lhs-button1">
-                n, PV, FV
-              </button>
+              <button class="button" id="lhs-button1">n, PV, FV</button>
             </a>
           </div>
           <div class="button-back-style">
@@ -36,12 +34,12 @@
           </div>
         </div>
         <div class="right-side">
-          {{ template "oainterestrate-layout" . }}
+          {{template "oainterestrate-layout" .}}
         </div>
       </div>
     </main>
-    {{ template "footer" }}
+    {{template "footer"}}
   </body>
 </html>
 
-{{ end }}
+{{end}}
