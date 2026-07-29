@@ -1,4 +1,4 @@
-{{ define "finances_page" }}
+{{define "finances_page"}}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -12,12 +12,12 @@
     <main>
       <div class="center-title">
         <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
-        {{ template "title" . }}
+        {{template "title" .}}
       </div>
       <div class="center-datetime">
-        {{ template "datetime" . }}
+        {{template "datetime" .}}
       </div>
-      {{ template "navbar" . }}
+      {{template "navbar" .}}
       <div class="button-style">
         <a href="/fin/mortgage" target="_self">
           <button class="button">Mortgage</button>
@@ -54,8 +54,8 @@
         </a>
       </div>
     </main>
-    {{ template "footer" }}
+    {{template "footer"}}
   </body>
 </html>
 
-{{ end }}
+{{end}}
