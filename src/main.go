@@ -411,19 +411,10 @@ func makeHandlers() *handlers {
 
   h.mux["/public/js/tableSelectRow.js"] = wfbankPages.PublicTableSelectRowFile
 
-  h.mux["/public/js/setPageUI.js"] = wfpages.PublicSetPageUIFile
-
 
 	h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/getParams.js"] = wfpages.PublicGetParamsFile
-  h.mux["/public/js/OaInterestRate.js"] = wfpages.PublicOaInterestRateFile
-  h.mux["/public/js/OaPresentValue.js"] = wfpages.PublicOaPresentValueFile
-  h.mux["/public/js/OaFutureValue.js"] = wfpages.PublicOaFutureValueFile
-  h.mux["/public/js/OaCompoundingPeriods.js"] = wfpages.PublicOaCompoundingPeriodsFile
-  h.mux["/public/js/OaEqualPeriodicPayments.js"] = wfpages.PublicOaEqualPeriodicPaymentsFile
-  h.mux["/public/js/OaGrowingAnnuity.js"] = wfpages.PublicOaGrowingAnnuityFile
-  h.mux["/public/js/OaPerpetuity.js"] = wfpages.PublicOaPerpetuityFile
-  h.mux["/public/js/bondsYTM.js"] = wfpages.PublicBondsYTMFile
+  h.mux["/public/js/setPageUI.js"] = wfpages.PublicSetPageUIFile
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
   h.mux["/login"] = wfpages.LoginPage

@@ -1,35 +1,35 @@
-{{ define "adpresentvalue-layout" }}
+{{define "adpresentvalue-layout"}}
 
 <!-- rhs-ui1 -->
 <div id="rhs-ui1">
   <form action="/fin/annuitydue/pv" method="post" enctype="application/x-www-form-urlencoded">
-    <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}"/>
+    <input type="hidden" name="csrf_token" value="{{.CsrfToken}}"/>
     <div class="cnt-grid">
       <label class="cnt-textbox" for="fd1-n">Time (n)</label>
-      <input type="number" id="fd1-n" name="fd1-n" value="{{ .Fd1N }}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd1-n" name="fd1-n" value="{{.Fd1N}}" inputmode="decimal" step="any" max="9999999" required/>
       <label class="cnt-textbox" for="fd1-tp">Time Period</label>
       <select class="cnt-select" id="fd1-tp" name="fd1-tp">
-        <option value="year" {{ if eq .Fd1TimePeriod "year" }} selected {{ end }}>Year(s)</option>
-        <option value="semiyear" {{ if eq .Fd1TimePeriod "semiyear" }} selected {{ end }}>Semiyear(s)</option>
-        <option value="quarter" {{ if eq .Fd1TimePeriod "quarter" }} selected {{ end }}>Quarter(s)</option>
-        <option value="month" {{ if eq .Fd1TimePeriod "month" }} selected {{ end }}>Month(s)</option>
-        <option value="week" {{ if eq .Fd1TimePeriod "week" }} selected {{ end }}>Week(s)</option>
-        <option value="day" {{ if eq .Fd1TimePeriod "day" }} selected {{ end }}>Day(s)</option>
+        <option value="year" {{if eq .Fd1TimePeriod "year"}} selected {{end}}>Year(s)</option>
+        <option value="semiyear" {{if eq .Fd1TimePeriod "semiyear"}} selected {{end}}>Semiyear(s)</option>
+        <option value="quarter" {{if eq .Fd1TimePeriod "quarter"}} selected {{end}}>Quarter(s)</option>
+        <option value="month" {{if eq .Fd1TimePeriod "month"}} selected {{end}}>Month(s)</option>
+        <option value="week" {{if eq .Fd1TimePeriod "week"}} selected {{end}}>Week(s)</option>
+        <option value="day" {{if eq .Fd1TimePeriod "day"}} selected {{end}}>Day(s)</option>
       </select>
       <label class="cnt-textbox" for="fd1-interest">Interest (%)</label>
-      <input type="number" id="fd1-interest" name="fd1-interest" value="{{ .Fd1Interest }}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd1-interest" name="fd1-interest" value="{{.Fd1Interest}}" inputmode="decimal" step="any" max="9999999" required/>
       <label class="cnt-textbox" for="fd1-cp">Compounding Period</label>
       <select class="cnt-select" id="fd1-cp" name="fd1-cp">
-        <option value="annually" {{ if eq .Fd1Compound "annually" }} selected {{ end }}>Annually</option>
-        <option value="semiannually" {{ if eq .Fd1Compound "semiannually" }} selected {{ end }}>Semiannually</option>
-        <option value="quarterly" {{ if eq .Fd1Compound "quarterly" }} selected {{ end }}>Quarterly</option>
-        <option value="monthly" {{ if eq .Fd1Compound "monthly" }} selected {{ end }}>Monthly</option>
-        <option value="weekly" {{ if eq .Fd1Compound "weekly" }} selected {{ end }}>Weekly</option>
-        <option value="daily" {{ if eq .Fd1Compound "daily" }} selected {{ end }}>Daily</option>
+        <option value="annually" {{if eq .Fd1Compound "annually"}} selected {{end}}>Annually</option>
+        <option value="semiannually" {{if eq .Fd1Compound "semiannually"}} selected {{end}}>Semiannually</option>
+        <option value="quarterly" {{if eq .Fd1Compound "quarterly"}} selected {{end}}>Quarterly</option>
+        <option value="monthly" {{if eq .Fd1Compound "monthly"}} selected {{end}}>Monthly</option>
+        <option value="weekly" {{if eq .Fd1Compound "weekly"}} selected {{end}}>Weekly</option>
+        <option value="daily" {{if eq .Fd1Compound "daily"}} selected {{end}}>Daily</option>
         <option value="continuously" {{if eq .Fd1Compound "continuously"}} selected {{end}}>Continuously</option>
       </select>
       <label class="cnt-textbox" for="fd1-fv">Future Value (FV)</label>
-      <input type="number" id="fd1-fv" name="fd1-fv" value="{{ .Fd1FV }}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd1-fv" name="fd1-fv" value="{{.Fd1FV}}" inputmode="decimal" step="any" max="9999999" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui1" type="submit">Compute</button>
@@ -37,8 +37,8 @@
   </form>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
-    <p class="p-result">{{ .Fd1Result }}</p>
+    <p class="p-result">{{.Fd1Result}}</p>
   </div>
 </div>
 
-{{ end }}
+{{end}}

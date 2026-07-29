@@ -88,7 +88,7 @@ func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering IndexPage/webfinances.", correlationId)
+  logger.LogInfo("Entering webfinances.IndexPage.", correlationId)
   tmpl.ExecuteTemplate(res, "index_page", nil)
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -108,7 +108,7 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Verifying login credentials.", correlationId)
+  logger.LogInfo("Entering VerifyLogin.", correlationId)
   //Only allow POST requests.
   if req.Method != http.MethodPost {
     logger.LogInfo("Method not allowed.", correlationId)
@@ -117,7 +117,6 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   }
   un := req.PostFormValue("uname")
   pw := req.PostFormValue("pwd")
-  // if !sessions.ValidateUser(un, pw) { //For file.
   ok, isAdmin := bank.DbAuthenticateUser(req.Context(), un, pw, correlationId)
   if !ok {
     invalidSession(res)
@@ -165,7 +164,7 @@ func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering LogoutPage/webfinances.", correlationId)
+  logger.LogInfo("Entering webfinances.LogoutPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
@@ -183,15 +182,19 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering WelcomePage.", correlationId)
+  logger.LogInfo("Entering webfinances.WelcomePage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    tmpl.ExecuteTemplate(res, "welcome_page", struct {
+    err := tmpl.ExecuteTemplate(res, "welcome_page", struct {
       Header string
       Datetime string
     } { "Investments", logger.DatetimeFormat() })
+    //
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+    }
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -201,15 +204,19 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering ContactPage/webfinances.", correlationId)
+  logger.LogInfo("Entering webfinances.ContactPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    tmpl.ExecuteTemplate(res, "contact_page", struct {
+    err := tmpl.ExecuteTemplate(res, "contact_page", struct {
       Header string
       Datetime string
     } { "Investments", logger.DatetimeFormat() })
+    //
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+    }
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -219,7 +226,7 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering AboutPage/webfinances.", correlationId)
+  logger.LogInfo("Entering webfinances.AboutPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
@@ -228,10 +235,102 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
     Executing the template means that we take the content from the template files, combine it with
     data from another source, and generate the final HTML content.
     ***/
-    tmpl.ExecuteTemplate(res, "about_page", struct {
+    err := tmpl.ExecuteTemplate(res, "about_page", struct {
       Header string
       Datetime string
     } { "Investments", logger.DatetimeFormat() })
+    //
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+    }
+  }
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
+}
+
+func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.FinancesPage.", correlationId)
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
+    invalidSession(res)
+  } else {
+    err := tmpl.ExecuteTemplate(res, "finances_page", struct {
+      Header string
+      Datetime string
+    } { "Finances", logger.DatetimeFormat() })
+    //
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+    }
+  }
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
+}
+
+func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering SimpleInterestPage/webfinances.", correlationId)
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
+    invalidSession(res)
+  } else {
+    err := tmpl.ExecuteTemplate(res, "simple_interest_page", struct {
+      Header string
+      Datetime string
+    } { "Simple Interest", logger.DatetimeFormat() })
+    //
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+    }
+  }
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
+}
+
+func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering OrdinaryAnnuityPage/webfinances.", correlationId)
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
+    invalidSession(res)
+  } else {
+    err := tmpl.ExecuteTemplate(res, "ordinary_annuity_page", struct {
+      Header string
+      Datetime string
+    } { "Ordinary Annuity", logger.DatetimeFormat() })
+    //
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+    }
+  }
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
+}
+
+func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering AnnuityDuePage/webfinances.", correlationId)
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
+    invalidSession(res)
+  } else {
+    err := tmpl.ExecuteTemplate(res, "annuity_due_page", struct {
+      Header string
+      Datetime string
+    } { "Annuity Due", logger.DatetimeFormat() })
+    //
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+    }
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -263,161 +362,5 @@ func (p WfPages) PublicSetPageUIFile(res http.ResponseWriter, req *http.Request)
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.PublicSetPageUIFile.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/setPageUI.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicOaInterestRateFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicOaInterestRateFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/OaInterestRate.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicOaPresentValueFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicOaPresentValueFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/OaPresentValue.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicOaFutureValueFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicOaFutureValueFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/OaFutureValue.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicOaCompoundingPeriodsFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicOaCompoundingPeriodsFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/OaCompoundingPeriods.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicOaEqualPeriodicPaymentsFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicOaEqualPeriodicPaymentsFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/OaEqualPeriodicPayments.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicOaGrowingAnnuityFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicOaGrowingAnnuityFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/OaGrowingAnnuity.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicOaPerpetuityFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicOaPerpetuityFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/OaPerpetuity.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicBondsYTMFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicBondsYTMFile/webfinances.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/bondsYTM.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering FinancesPage/webfinances.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res)
-  } else {
-    err := tmpl.ExecuteTemplate(res, "finances_page", struct {
-      Header string
-      Datetime string
-    } { "Finances", logger.DatetimeFormat() })
-    //
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-    }
-  }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering SimpleInterestPage/webfinances.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res)
-  } else {
-    tmpl.ExecuteTemplate(res, "simple_interest_page", struct {
-      Header string
-      Datetime string
-    } { "Simple Interest", logger.DatetimeFormat() })
-  }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering OrdinaryAnnuityPage/webfinances.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res)
-  } else {
-    tmpl.ExecuteTemplate(res, "ordinary_annuity_page", struct {
-      Header string
-      Datetime string
-    } { "Ordinary Annuity", logger.DatetimeFormat() })
-  }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering AnnuityDuePage/webfinances.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res)
-  } else {
-    tmpl.ExecuteTemplate(res, "annuity_due_page", struct {
-      Header string
-      Datetime string
-    } { "Annuity Due", logger.DatetimeFormat() })
-  }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
