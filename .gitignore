@@ -112,6 +112,7 @@ src/webfinances/public/css/*
 !src/webfinances/public/js/
 src/webfinances/public/js/*
 !src/webfinances/public/js/setPageUI.js
+!src/webfinances/public/js/tableStylesheet.js
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
