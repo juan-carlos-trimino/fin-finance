@@ -1,34 +1,42 @@
 {{define "manage_accounts-layout"}}
 
-<!-- rhs-ui1 -->
+<!-- rhs-ui2 -->
 <div id="rhs-ui2">
-  <form action="/banking/manageaccounts" method="post" enctype="application/x-www-form-urlencoded">
+  <form id="table_id_form" action="/banking/manageaccounts" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{.CsrfToken}}"/>
-    <table class="custom-table-style" float="center">
-      <caption>Accounts</caption>
-      <thead>
-        <tr>
-          <th>Account Name</th>
-          <th>Account Type</th>
-        </tr>
-      </thead>
-      <tfoot>
-        <tr>
-          <th>Account Name</th>
-          <th>Account Type</th>
-        </tr>
-      </tfoot>
-      <tbody>
-        {{range .Fd2Result}}
-        <tr class="clickable-row" data-id="{{.AccountName}}"> <!-- Row -->
-          <td>{{.AccountName}}</td> <!-- Data -->
-          <td>{{.AccountType}}</td>
-        </tr>
-        {{end}}
-      </tbody>
-    </table>
+    <!-- Hold the selected table row ID value for the POST body. -->
+    <input type="hidden" id="table_row_id" name="selected_id" value=""/>
+    <input type="hidden" id="btdelete" name="manageaccounts" value="rhs-ui2"/>
+    <div class="custom-table-scrollable">
+      <table class="custom-table" id="custom-table" float="center">
+        <caption class="custom-table-caption">Accounts</caption>
+        <thead>
+          <tr>
+            <th>Account Name</th>
+            <th>Account Type</th>
+          </tr>
+        </thead>
+        <tfoot>
+          <tr>
+            <th>Account Name</th>
+            <th>Account Type</th>
+          </tr>
+        </tfoot>
+        <tbody id="tbody">
+          {{range .Fd2Result}}
+          <tr class="clickable-row" data-id="{{.AccountName}}"> <!-- Row -->
+            <td>{{.AccountName}}</td> <!-- Data -->
+            <td>{{.AccountType}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
     <div class="button-back-style">
-      <button class="button" id="btcompute" name="compute" value="rhs-ui1" type="submit">Save</button>
+      <!--
+      Because the button is configured as type="button", it will never submit the form on its own.
+      -->
+      <button class="button" id="btdelete" name="delete" type="button">Delete</button>
     </div>
   </form>
 </div>
