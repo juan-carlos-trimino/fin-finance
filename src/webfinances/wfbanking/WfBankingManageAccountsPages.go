@@ -53,7 +53,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
     FormValue method does it. The PostFormValue method does the same thing, except that it's for
     the PostForm field instead of the Form field.
     ***/
-    if ui := req.FormValue("save"); ui != "" {  //Values from form and URL.
+    if ui := req.FormValue("manageaccounts"); ui != "" {  //Values from form and URL.
       maf.CurrentPage = ui
     }
     //
@@ -103,7 +103,9 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
       maf.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
 
-          numberOfRows := 12
+          rowId := req.PostFormValue("selected_id")
+
+          numberOfRows := 80
           maf.Fd2Result = make([]Row, 0, numberOfRows + 1)
           maf.Fd2Result = append(maf.Fd2Result,
             Row {
@@ -117,6 +119,20 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
                 AccountType: "checking",
               })
           }
+
+
+          if rowId != "" {
+            logger.LogInfo(fmt.Sprintf("Account ID = %s", rowId), correlationId);
+            for i, r := range maf.Fd2Result {
+                if r.AccountName == rowId {
+                    // Remove the element and maintain order
+                    maf.Fd2Result = append(maf.Fd2Result[:i], maf.Fd2Result[i+1:]...)
+                    break // Stop searching after the first match
+                }
+            }
+          }
+
+
 
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
