@@ -1,9 +1,16 @@
 /***
-A dot (.) is used in CSS to designate class names.
-
 Ctrl+F5 and Cmd+Shift+R are keyboard shortcuts used to perform a "hard refresh" on a web browser. Unlike a standard reload, a hard
 refresh forces the browser to bypass its local cache and re-download the newest version of all scripts, images, and styles directly from
 the website server.
+
+A dot (.) is used in CSS to designate class names.
+
+In a CSS file, .classname targets an HTML class attribute while #classname targets a unique HTML id attribute.
+The dot (.) syntax targets a class. You can apply the same class to as many HTML elements as you want. An element can also have multiple
+classes separated by spaces.
+The hash (#) syntax targets an ID. An ID must be unique across the entire HTML page. An element can only have one ID, and that ID should
+not be repeated on other elements.
+If both selectors try to style the same property on the same element, the ID selector #classname has higher precedence than the class selector.
 ***/
 
 body {
@@ -266,54 +273,6 @@ input[type='radio'] {
 }
 /*** Radio ***/
 
-/*** Table ***/
-.custom-table-style {
-  color: rgb(2, 71, 31);
-  font-size: 28px;
-  font-style: normal;
-  font-weight: bold;
-  border-collapse: collapse;
-  margin: 25px auto;
-  width: 90%;
-  border-radius: 5px;
-  /* overflow: hidden; */
-  box-shadow: 0px 10px 30px 5px rgba(0, 0, 0, 0.15);
-}
-/* Header */
-.custom-table-style thead tr {
-  background-color: rgb(2, 71, 31);
-  color: rgb(185, 241, 163);
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-}
-/* Cells */
-.custom-table-style th,  /* tabular headers */
-.custom-table-style td  /* tabular data */ {
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-  padding: 12px 15px;
-}
-/* Rows */
-.custom-table-style tbody tr {
-  border-bottom: 1px solid rgb(2, 71, 31);
-}
-.custom-table-style tbody tr:nth-of-type(even) {
-  background-color: rgb(185, 243, 163);
-}
-.custom-table-style tbody tr:last-of-type {
-  border-bottom: 2px solid rgb(2, 71, 31);
-}
-/*Active row */
-.custom-table-style tr {
-  cursor: pointer;
-}
-.custom-table-style tr.active-row {
-  background-color: aliceblue;
-  color: #009879;
-}
-/*** Table ***/
 
 /*** Input Buttons ***/
 input[type="submit"] {
@@ -464,3 +423,79 @@ input[type="hidden"] {
   align-items: center;
 }
 /*** Textbox ***/
+
+/*-------------------------------------------------*/
+/*** Table ***/
+caption.custom-table-caption {
+  position: sticky;
+  top: 0;
+  z-index: 3;  /* Must be higher than <th> z-index so it sits above <th> */
+  background-color: rgb(2, 71, 31);  /* Give it a solid background so rows don't bleed through */
+  color: rgb(185, 241, 163);
+  padding: 10px 0;
+  font-weight: bold;
+}
+.custom-table-scrollable {
+  max-height: 85vh;  /* Wrapper takes up exactly 85% of the screen height */
+  overflow-y: auto;  /* Spill long content into an isolated scrollbar */
+  width: 90%;
+  margin: 25px auto;
+  border-radius: 5px;
+  box-shadow: 0px 10px 30px 5px rgba(0, 0, 0, 0.15);
+}
+.custom-table {
+  color: rgb(2, 71, 31);
+  font-size: 28px;
+  font-style: normal;
+  font-weight: bold;
+  border-collapse: separate;  /* CRITICAL: collapse prevents sticky headers from working */
+  border-spacing: 0;  /* Restore the tight appearance of collapsed borders */
+  margin: 25px auto;
+  height: 100%;  /* Perfectly fills the 85vh space */
+  width: 100%;  /* Spans full width of container */
+  margin: 0;  /* Margin is now handled by the parent container */
+}
+/* CRITICAL ADJUSTMENT: Push the table headers down below the sticky caption */
+th {  /* headers */
+  /* Typography */
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  color: rgb(185, 241, 163);
+  /* Spacing & Layout */
+  padding: 12px 15px;
+  /* Sticky Header Behavior */
+  position: sticky;
+  top: 52px;  /* Adjust this value to match the exact height of the caption */
+  z-index: 2;  /* Keep headers above scrolling body rows */
+  background-color: rgb(2, 71, 31);
+}
+td {  /* tabular data */
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  padding: 12px 15px;
+}
+tbody tr:nth-of-type(even) {
+  background-color: rgb(185, 243, 163);
+}
+tbody tr:nth-of-type(odd) {
+  background-color: rgb(160, 239, 129);
+}
+tbody tr:not(.active-row):hover {  /* Hover Effect (Optional: skip if row is already active) */
+  background-color: rgb(111, 230, 64);
+}
+tr.clickable-row {
+  cursor: pointer;
+}
+.clickable.active-row,
+tbody tr.clickable-row.active-row {
+  background-color: rgb(95, 197, 54);
+}
+tfoot th {  /* Keep your footer pinned to the bottom during scrolls */
+  position: sticky;
+  bottom: 0;
+  top: auto;
+  z-index: 2;
+}
+/*** Table ***/
