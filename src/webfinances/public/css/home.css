@@ -443,6 +443,10 @@ caption.custom-table-caption {
   border-radius: 5px;
   box-shadow: 0px 10px 30px 5px rgba(0, 0, 0, 0.15);
 }
+/* This overrides the base max-height safely because it uses two classes */
+.custom-table-scrollable.smaller-table {
+  max-height: 55vh;
+}
 .custom-table {
   color: rgb(2, 71, 31);
   font-size: 28px;
@@ -451,7 +455,7 @@ caption.custom-table-caption {
   border-collapse: separate;  /* CRITICAL: collapse prevents sticky headers from working */
   border-spacing: 0;  /* Restore the tight appearance of collapsed borders */
   margin: 25px auto;
-  height: 100%;  /* Perfectly fills the 85vh space */
+  height: auto;  /* Perfectly fills the 85vh space */
   width: 100%;  /* Spans full width of container */
   margin: 0;  /* Margin is now handled by the parent container */
 }
