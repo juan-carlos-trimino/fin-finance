@@ -37,40 +37,42 @@
   </form>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
-    <p class="p-result">{{.Fd2TotalCost}}</p>
-    <p class="p-result">{{.Fd2TotalInterest}}</p>
-    <table class="custom-table-style" float="center">
-      <caption>Amortization Table</caption>
-      <thead>
-        <tr>
-          <th>Payment No.</th>
-          <th>Payment</th>
-          <th>Principal</th>
-          <th>Interest</th>
-          <th>Declining Balance</th>
-        </tr>
-      </thead>
-      <tfoot>
-        <tr>
-          <th>Payment No.</th>
-          <th>Payment</th>
-          <th>Principal</th>
-          <th>Interest</th>
-          <th>Declining Balance</th>
-        </tr>
-      </tfoot>
-      <tbody>
-        {{range .Fd2Result}}
-        <tr> <!-- Row -->
-          <td>{{.PaymentNo}}</td> <!-- Data -->
-          <td>{{.Payment}}</td>
-          <td>{{.PmtPrincipal}}</td>
-          <td>{{.PmtInterest}}</td>
-          <td>{{.Balance}}</td>
-        </tr>
-        {{end}}
-      </tbody>
-    </table>
+    <p class="p-result">{{.Fd2TotalCost}} with {{.Fd2TotalInterest}}</p>
+    <!-- Add a second class called "smaller-table" to this specific page -->
+    <div class="custom-table-scrollable smaller-table">
+      <table class="custom-table" id="custom-table" float="center">
+        <caption class="custom-table-caption">Amortization Table</caption>
+        <thead>
+          <tr>
+            <th>Payment No.</th>
+            <th>Payment</th>
+            <th>Principal</th>
+            <th>Interest</th>
+            <th>Declining Balance</th>
+          </tr>
+        </thead>
+        <tfoot>
+          <tr>
+            <th>Payment No.</th>
+            <th>Payment</th>
+            <th>Principal</th>
+            <th>Interest</th>
+            <th>Declining Balance</th>
+          </tr>
+        </tfoot>
+        <tbody id="tbody">
+          {{range .Fd2Result}}
+          <tr class="clickable-row"> <!-- Row -->
+            <td>{{.PaymentNo}}</td> <!-- Data -->
+            <td>{{.Payment}}</td>
+            <td>{{.PmtPrincipal}}</td>
+            <td>{{.PmtInterest}}</td>
+            <td>{{.Balance}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
