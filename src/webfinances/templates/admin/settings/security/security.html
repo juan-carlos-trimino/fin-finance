@@ -1,4 +1,4 @@
-{{ define "admin_security" }}
+{{define "admin_security"}}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -13,10 +13,10 @@
   <body>
     <main>
       <div class="center-title">
-        {{ template "title" . }}
+        {{template "title" .}}
       </div>
       <div class="center-datetime">
-        {{ template "datetime" . }}
+        {{template "datetime" .}}
       </div>
       <div class="split-screen">
         <div class="left-side">
@@ -32,12 +32,12 @@
           </div>
         </div>
         <div class="right-side">
-          {{ template "admin-security-layout" . }}
+          {{template "admin-security-layout" .}}
         </div>
       </div>
     </main>
-    {{ template "footer" }}
+    {{template "footer"}}
   </body>
 </html>
 
-{{ end }}
+{{end}}

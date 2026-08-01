@@ -1,5 +1,5 @@
 <!-- The define action for the home page -->
-{{ define "admin_settings" }}
+{{define "admin_settings"}}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -14,10 +14,10 @@
     <main>
       <div class="center-title">
         <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
-        {{ template "title" . }}
+        {{template "title" .}}
       </div>
       <div class="center-datetime">
-        {{ template "datetime" . }}
+        {{template "datetime" .}}
       </div>
       <div class="button-style">
         <a href="/admin/settings/security" target="_self">
@@ -31,8 +31,8 @@
         </a>
       </div>
     </main>
-    {{ template "footer" }}
+    {{template "footer"}}
   </body>
 </html>
 
-{{ end }}
+{{end}}
