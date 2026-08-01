@@ -511,7 +511,18 @@ input[type="hidden"] {
 /*** Grid ***/
 .cnt-grid {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  /* STEP 1: Set the column widths (4 columns).
+  Change the first columns to whatever you need (e.g., max-content, 1fr, 1fr).
+  Keep the last column as a percentage; e.g.,
+  grid-template-columns: max-content 1fr 1fr 60%;
+  */
+  grid-template-columns: max-content 80%;
+  /* STEP 2: The Magic Formula.
+  Multiply the column gap (10px - see gap attribute) by the number of gaps (3 gaps for 4 columns = 30px).
+  Subtract that from 100%, then multiply by (100% - your last column's percentage); e.g.,
+  width: calc((100% - 30px) * 0.60);
+  */
+  width: calc((100% - 10px) * 0.80);
   gap: 15px 10px;  /* 15px Row spacing, 10px Column spacing */
 }
 /* --- Direct Children (Grid Items) --- */
@@ -519,19 +530,18 @@ input[type="hidden"] {
   display: flex;
   align-items: center;  /* Vertically centers labels perfectly with 32px textboxes */
 }
-/* --- Even Items: Inputs (Column 2) --- */
+/* STEP 3: Dynamic Item Alignment
+   We target elements based on their specific column position using grid-column; e.g.
+   .cnt-grid > *:nth-child(4n) {  -- for 4 columns
+
+   Target all elements sitting in the last column */
 .cnt-grid > *:nth-child(2n) {
-  justify-content: flex-start;  /* Align input wrappers cleanly to the left */
-}
-/* --- Odd Items: Labels (Column 1) --- */
-.cnt-grid > *:nth-child(2n+1) {
-  justify-content: flex-end;  /* Clean, modern right-aligned labels */
-  text-align: right;
-  padding-right: 5px;  /* Prevent text from jamming against the inputs */
+  justify-content: flex-start;
 }
 /* --- Style Label --- */
 .cnt-grid > label {
-  grid-column: 1;
+  display: flex;  /* Ensure flex properties apply */
+  justify-content: flex-end;  /* Physically pushes the text content to the right edge */
   text-align: right;
   padding-right: 10px;
   margin: 0;
