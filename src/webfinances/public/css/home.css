@@ -225,28 +225,6 @@ button[disabled] {
 }
 /*** Font ***/
 
-/*** Grid ***/
-/* CSS Grid for aligning form elements. */
-.cnt-grid {
-  display: grid; /* Declares the element as a grid container */
-  /* Creates two columns: one for labels (auto-width); one for inputs (takes 50% of remaining space) */
-  grid-template-columns: max-content 0.5fr;
-  gap: 10px 10px; /* Adds space between rows and columns */
-  row-gap: 15px;
-}
-
-.cnt-grid>* {
-  display: flex;
-}
-
-.cnt-grid>*:nth-child(2n+1) {
-  justify-content: right;
-}
-
-.cnt-gr-gridid>*:nth-child(2n) {
-  justify-content: left;
-}
-/*** Grid ***/
 
 /*** Radio ***/
 .radio-fieldset {
@@ -316,22 +294,6 @@ button[disabled] {
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.35);  /* Accessible focus ring */
 }
 /*** Select ***/
-
-/*** Textcombo ***/
-.cnt-textcombo {
-  /* color: rgb(2, 71, 31); */
-  height: 32px;
-  background-color: white;
-  border: 1px solid black;
-  font-weight: normal;
-}
-
-.cnt-textcombo:focus {
-  outline: none;
-  border: 2px solid black;
-  /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); */
-}
-/*** Textcombo ***/
 
 
 /*-------------------------------------------------*/
@@ -527,3 +489,65 @@ input[type="hidden"] {
   border-color: red;
 }
 /*** Textbox ***/
+/*** Textcombo ***/
+.cnt-textcombo {
+  width: 100%;  /* Force the textboxes to fill their containers */
+  height: 32px;
+  padding: 5px 8px;  /* Add crucial inside spacing so text isn't pressed against edges */
+  text-align: right;
+  font-weight: normal;
+  font-size: 18px;
+  border-radius: 3px;
+  background-color: white;
+  border: 2px solid #ccc;
+  color: #333333;
+  transition: border-color 0.2s ease;
+}
+.cnt-textcombo:focus {
+  outline: none;
+  border: black;
+}
+/*** Textcombo ***/
+
+
+/*** Grid ***/
+.cnt-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 15px 10px;  /* 15px Row spacing, 10px Column spacing */
+}
+
+/* --- Direct Children (Grid Items) --- */
+.cnt-grid > * {
+  display: flex;
+  align-items: center;  /* Vertically centers labels perfectly with 32px textboxes */
+}
+
+/* --- Odd Items: Labels (Column 1) --- */
+.cnt-grid > *:nth-child(2n+1) {
+  justify-content: flex-end;  /* Clean, modern right-aligned labels */
+  text-align: right;
+  padding-right: 5px;  /* Prevent text from jamming against the inputs */
+}
+
+/* --- Even Items: Inputs (Column 2) --- */
+.cnt-grid > *:nth-child(2n) {
+  justify-content: flex-start;  /* Align input wrappers cleanly to the left */
+}
+
+
+/* --- Column 1: Beautiful, Styled Label --- */
+.cnt-grid > label {
+  grid-column: 1;
+  text-align: left;
+  padding-right: 10px;
+  margin: 0;
+
+  /* --- ADDED/RESTORED STYLES --- */
+  font-family: inherit;            /* Uses the same font as the rest of your app */
+  font-size: 18px;                /* Matches your textbox text size */
+  font-weight: bold;              /* Makes it clean and highly readable */
+  color: rgb(2, 71, 31);          /* Your custom green theme color */
+}
+
+/*** Grid ***/
