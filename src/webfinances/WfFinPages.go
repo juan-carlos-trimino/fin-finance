@@ -187,10 +187,18 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    err := tmpl.ExecuteTemplate(res, "welcome_page", struct {
+    t := template.Must(template.ParseFiles(
+      "webfinances/templates/layout.html",
+      "webfinances/templates/welcome.html",
+      "webfinances/templates/title.html",
+      "webfinances/templates/datetime.html",
+      "webfinances/templates/navbar.html",
+      "webfinances/templates/footer.html"))
+    err := t.ExecuteTemplate(res, "layout", struct {
       Header string
       Datetime string
-    } { "Investments", logger.DatetimeFormat() })
+			CurrentPage string
+    } { "Investments", logger.DatetimeFormat(), "welcome" })
     //
     if err != nil {
       logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -209,10 +217,18 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    err := tmpl.ExecuteTemplate(res, "contact_page", struct {
+    t := template.Must(template.ParseFiles(
+      "webfinances/templates/layout.html",
+      "webfinances/templates/contact.html",
+      "webfinances/templates/title.html",
+      "webfinances/templates/datetime.html",
+      "webfinances/templates/navbar.html",
+      "webfinances/templates/footer.html"))
+    err := t.ExecuteTemplate(res, "layout", struct {
       Header string
       Datetime string
-    } { "Investments", logger.DatetimeFormat() })
+			CurrentPage string
+    } { "Investments", logger.DatetimeFormat(), "contact" })
     //
     if err != nil {
       logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -231,14 +247,22 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    /***
-    Executing the template means that we take the content from the template files, combine it with
-    data from another source, and generate the final HTML content.
-    ***/
-    err := tmpl.ExecuteTemplate(res, "about_page", struct {
+    t := template.Must(template.ParseFiles(
+      "webfinances/templates/layout.html",
+      "webfinances/templates/about.html",
+      "webfinances/templates/title.html",
+      "webfinances/templates/datetime.html",
+      "webfinances/templates/navbar.html",
+      "webfinances/templates/footer.html"))
+		/***
+		Executing the template means that we take the content from the template files, combine it with
+		data from another source, and generate the final HTML content.
+		***/
+    err := t.ExecuteTemplate(res, "layout", struct {
       Header string
       Datetime string
-    } { "Investments", logger.DatetimeFormat() })
+			CurrentPage string
+    } { "Investments", logger.DatetimeFormat(), "about" })
     //
     if err != nil {
       logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -340,7 +364,7 @@ func (p WfPages) PublicHomeFile(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicHomeFile/webfinances.", correlationId)
+  logger.LogInfo("Entering webfinances.PublicHomeFile.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/css/home.css")
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }

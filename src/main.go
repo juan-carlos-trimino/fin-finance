@@ -407,10 +407,7 @@ func makeHandlers() *handlers {
   }
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/js/admin/SettingsSecurity.js"] = wfverify.PublicSettingsSecurityFile
-
   h.mux["/public/js/tableSelectRow.js"] = wfbankPages.PublicTableSelectRowFile
-
-
 	h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/setPageUI.js"] = wfpages.PublicSetPageUIFile
   h.mux["/favicon.ico"] = faviconHandler
@@ -419,13 +416,13 @@ func makeHandlers() *handlers {
   h.mux["/verify_login"] = wfpages.VerifyLogin
   h.mux["/logout"] = wfpages.LogoutPage
   h.mux["/welcome"] = wfpages.WelcomePage
+  h.mux["/contact"] = wfpages.ContactPage
+  h.mux["/about"] = wfpages.AboutPage
   h.mux["/admin/welcome"] = middlewares.AdminVerification(wfverify.AdminWelcomePage)
-  h.mux["/admin/saveregister"] = middlewares.AdminVerification(wfverify.AdminSaveRegisterPage)
+	h.mux["/admin/saveregister"] = middlewares.AdminVerification(wfverify.AdminSaveRegisterPage)
   h.mux["/admin/register"] = middlewares.AdminVerification(wfverify.AdminRegisterPage)
   h.mux["/admin/settings"] = middlewares.AdminVerification(wfverify.AdminSettingsPage)
   h.mux["/admin/settings/security"] = middlewares.AdminVerification(wfsecurity.AdminSecurityPages)
-  h.mux["/contact"] = wfpages.ContactPage
-  h.mux["/about"] = wfpages.AboutPage
   h.mux["/banking"] = wfbankPages.BankingPage
   // h.mux["/banking/manageaccounts"] = wfbankPages.BankingManageAccountsPages
   h.mux["/banking/manageaccounts"] = wfbankMngAcctsPages.ManageAccountsPages
