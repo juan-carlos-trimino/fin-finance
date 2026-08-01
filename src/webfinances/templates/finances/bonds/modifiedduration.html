@@ -5,11 +5,11 @@
   <form action="/fin/bonds" method="post" enctype="application/x-www-form-urlencoded">
     <input type="hidden" name="csrf_token" value="{{.CsrfToken}}"/>
     <div class="cnt-grid">
-      <label class="cnt-textbox" for="fd7-facevalue">Face Value</label>
+      <label for="fd7-facevalue">Face Value</label>
       <input type="number" id="fd7-facevalue" name="fd7-facevalue" value="{{.Fd7FaceValue}}" inputmode="decimal" step="any" max="9999999" required/>
-      <label class="cnt-textbox" for="fd7-time">Time</label>
+      <label for="fd7-time">Time</label>
       <input type="number" id="fd7-time" name="fd7-time" value="{{.Fd7Time}}" inputmode="decimal" step="any" max="9999999" required/>
-      <label class="cnt-textbox" for="fd7-tp">Time Period</label>
+      <label for="fd7-tp">Time Period</label>
       <select class="cnt-select" name="fd7-tp" id="fd7-tp">
         <option value="year" {{if eq .Fd7TimePeriod "year"}} selected {{end}}>Year(s)</option>
         <option value="semiyear" {{if eq .Fd7TimePeriod "semiyear"}} selected {{end}}>Semiyear(s)</option>
@@ -17,9 +17,9 @@
         <option value="month" {{if eq .Fd7TimePeriod "month"}} selected {{end}}>Month(s)</option>
         <option value="week" {{if eq .Fd7TimePeriod "week"}} selected {{end}}>Week(s)</option>
       </select>
-      <label class="cnt-textbox" for="fd7-coupon">Coupon Rate (%)</label>
+      <label for="fd7-coupon">Coupon Rate (%)</label>
       <input type="number" id="fd7-coupon" name="fd7-coupon" value="{{.Fd7Coupon}}" inputmode="decimal" step="any" max="9999999" required/>
-      <label class="cnt-textbox" for="fd7-compound-coupon">Compounding Period</label>
+      <label for="fd7-compound-coupon">Compounding Period</label>
       <select class="cnt-textcombo" id="fd7-compound-coupon" name="fd7-compound-coupon">
         <option value="annually" {{if eq .Fd7CompoundCoupon "annually"}} selected {{end}}>Annually</option>
         <option value="semiannually" {{if eq .Fd7CompoundCoupon "semiannually"}} selected {{end}}>Semiannually</option>
@@ -28,10 +28,10 @@
         <option value="weekly" {{if eq .Fd7CompoundCoupon "weekly"}} selected {{end}}>Weekly</option>
         <!-- <option value="continuously" {{if eq .Fd7CompoundCoupon "continuously"}} selected {{end}}>Continuously</option> -->
       </select>
-      <label class="cnt-textbox" for="fd7-current">Current Interest (%)</label>
+      <label for="fd7-current">Current Interest (%)</label>
       <input type="number" id="fd7-current" name="fd7-current" value="{{.Fd7CurInterest}}" inputmode="decimal" step="any" max="9999999" required/>
-      <label class="cnt-textbox">Compounding Period or</label><br>
-      <label class="cnt-textbox" for="fd7-compound">Coupon Payment Frequency</label>
+      <label>Compounding Period or</label><br>
+      <label for="fd7-compound">Coupon Payment Frequency</label>
       <select class="cnt-select" id="fd7-compound" name="fd7-compound">
         <option value="annually" {{if eq .Fd7Compound "annually"}} selected {{end}}>Annually</option>
         <option value="semiannually" {{if eq .Fd7Compound "semiannually"}} selected {{end}}>Semiannually</option>
