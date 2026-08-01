@@ -508,46 +508,39 @@ input[type="hidden"] {
   border: black;
 }
 /*** Textcombo ***/
-
-
 /*** Grid ***/
 .cnt-grid {
   display: grid;
   grid-template-columns: max-content 1fr;
   gap: 15px 10px;  /* 15px Row spacing, 10px Column spacing */
 }
-
 /* --- Direct Children (Grid Items) --- */
 .cnt-grid > * {
   display: flex;
   align-items: center;  /* Vertically centers labels perfectly with 32px textboxes */
 }
-
+/* --- Even Items: Inputs (Column 2) --- */
+.cnt-grid > *:nth-child(2n) {
+  justify-content: flex-start;  /* Align input wrappers cleanly to the left */
+}
 /* --- Odd Items: Labels (Column 1) --- */
 .cnt-grid > *:nth-child(2n+1) {
   justify-content: flex-end;  /* Clean, modern right-aligned labels */
   text-align: right;
   padding-right: 5px;  /* Prevent text from jamming against the inputs */
 }
-
-/* --- Even Items: Inputs (Column 2) --- */
-.cnt-grid > *:nth-child(2n) {
-  justify-content: flex-start;  /* Align input wrappers cleanly to the left */
-}
-
-
-/* --- Column 1: Beautiful, Styled Label --- */
+/* --- Style Label --- */
 .cnt-grid > label {
   grid-column: 1;
-  text-align: left;
+  text-align: right;
   padding-right: 10px;
   margin: 0;
-
-  /* --- ADDED/RESTORED STYLES --- */
-  font-family: inherit;            /* Uses the same font as the rest of your app */
-  font-size: 18px;                /* Matches your textbox text size */
-  font-weight: bold;              /* Makes it clean and highly readable */
-  color: rgb(2, 71, 31);          /* Your custom green theme color */
+  font-family: inherit;  /* Use the same font as the rest of the app */
+  font-size: 18px;  /* Match the textbox text size */
+  font-weight: bold;
+  color: rgb(2, 71, 31);
 }
-
+.cnt-grid > label.label-red {
+  color: red;  /* Overwrite only the color property */
+}
 /*** Grid ***/

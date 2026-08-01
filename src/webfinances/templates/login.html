@@ -34,14 +34,14 @@
           password", just use "Invalid username and/or password" interchangeably.
       -->
       <form method="post" action="/verify_login" enctype="application/x-www-form-urlencoded" autocomplete="off">
-        <div  class="cnt-grid">
-          <label class="cnt-textbox error" for="uname">Username</label>
+        <div class="cnt-grid">
+          <label class="label-red" for="uname">Username</label>
           <input type="text" id="uname" name="uname" autofocus required maxlength="256">
           <!--
           The password entry should be obscured on the user's screen.
           -->
-          <label class="cnt-textbox error" for="pwd">Password</label>
-          <input type="password" id="pwd" name="pwd" autofocus required maxlength="256">
+          <label class="label-red" for="pwd">Password</label>
+          <input type="password" id="pwd" name="pwd" required maxlength="256">
         </div>
         <div class="button-back-style">
           <button type="submit" class="button">Login</button>
