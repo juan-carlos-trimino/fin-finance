@@ -23,63 +23,21 @@ var tsia3 *template.Template
 var tsia4 *template.Template
 
 /***
-In Go, the predefined init() function sets off a piece of code to run before any other part of the
-package; i.e., adding the init() function tells the compiler that when the package is imported, it
-should run the init() function once. Unlike the main() function that can only be declared once, the
-init() function can be declared multiple times throughout a package.
-***/
-func init() {
-  logger.LogInfo("Entering init/webfinances.", "-1")
-  /***
-  The Must function wraps around the ParseGlob function that returns a pointer to a template and an
-  error, and it panics if the error is not nil.
-  ***/
-  tmpl = template.New("root")  //Initialize the root template.
-  tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/*.html"))
-  tmpl = template.Must(tmpl.ParseGlob("webfinances/templates/finances/*.html"))
-  tsia1 = template.Must(template.New("sia1").ParseFiles(
-    "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-    "webfinances/templates/title.html",
-    "webfinances/templates/datetime.html",
-    "webfinances/templates/navbar.html",
-    "webfinances/templates/finances/simpleinterestaccurate/amountofinterest.html",
-    "webfinances/templates/footer.html"))
-  tsia2 = template.Must(template.New("sia2").ParseFiles(
-    "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-    "webfinances/templates/title.html",
-    "webfinances/templates/datetime.html",
-    "webfinances/templates/navbar.html",
-    "webfinances/templates/finances/simpleinterestaccurate/interestrate.html",
-    "webfinances/templates/footer.html"))
-  tsia3 = template.Must(template.New("sia3").ParseFiles(
-    "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-    "webfinances/templates/title.html",
-    "webfinances/templates/datetime.html",
-    "webfinances/templates/navbar.html",
-    "webfinances/templates/finances/simpleinterestaccurate/principal.html",
-    "webfinances/templates/footer.html"))
-  tsia4 = template.Must(template.New("sia4").ParseFiles(
-    "webfinances/templates/finances/simpleinterestaccurate/accurate.html",
-    "webfinances/templates/title.html",
-    "webfinances/templates/datetime.html",
-    "webfinances/templates/navbar.html",
-    "webfinances/templates/finances/simpleinterestaccurate/time.html",
-    "webfinances/templates/footer.html"))
-}
-
-/***
 When handling authentication errors, the application should not disclose which part of the
 authentication data was incorrect. Instead of "Invalid username" or "Invalid password", just use
 "Invalid username and/or password" interchangeably.
 ***/
 func invalidSession(res http.ResponseWriter) {
-  err := tmpl.ExecuteTemplate(res, "login_page", struct {
-    ErrMsg string
-  } { "Invalid username and/or password" })
-  //
-  if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), "-1")
+  templatesNeeded := []string{
+    "webfinances/templates/layout-simple.html",
+    "webfinances/templates/login.html",
   }
+  renderer.Render(res, "layout-simple", templatesNeeded, renderer.PageData{
+    Data: struct{
+      Header string
+      ErrMsg string
+    } { "Login", "Invalid username and/or password" },
+  })
 }
 
 type WfPages struct{}
@@ -90,7 +48,15 @@ func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.IndexPage.", correlationId)
-  tmpl.ExecuteTemplate(res, "index_page", nil)
+  templatesNeeded := []string{
+    "webfinances/templates/layout-simple.html",
+    "webfinances/templates/index.html",
+  }
+  renderer.Render(res, "layout-simple", templatesNeeded, renderer.PageData{
+    Data: struct{
+      Header string
+    } { "Welcome to Investments" },
+  })
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
@@ -100,7 +66,16 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering LoginPage.", correlationId)
-  tmpl.ExecuteTemplate(res, "login_page", nil)
+  templatesNeeded := []string{
+    "webfinances/templates/layout-simple.html",
+    "webfinances/templates/login.html",
+  }
+  renderer.Render(res, "layout-simple", templatesNeeded, renderer.PageData{
+    Data: struct{
+      Header string
+      ErrMsg string
+    } { "Login", "" },
+  })
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 

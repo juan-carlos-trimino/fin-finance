@@ -1,57 +1,39 @@
 <!-- The define action for the login page -->
-{{define "login_page"}}
+{{define "content"}}
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Login for Finances</title>
-    <!-- <script>
-      document.getElementById("un").focus();
-      document.getElementById("un").select();
-    </script> -->
-    <link rel="stylesheet" type="text/css" href="/public/css/home.css"/>
-  </head>
-  <body>
-    <main>
-      <div class="center-title">
-        <h1>Login</h1>
-      </div>
-      <!--
-      (1) Authentication credentials should be sent only through encrypted connections (HTTPS). An
-          exception to the encrypted connection may be the temporary passwords associated with
-          email resets.
-      (2) Remember that requested URLs are usually logged by the HTTP server (access_log), which
-          include the query string. To prevent authentication credentials leakage to HTTP server
-          logs, data should be sent to the server using the HTTP POST method.
-      (3) The "remember me" functionality should be disabled.
-      (4) After a successful login, the user should be informed about the last successful or
-          unsuccessful access date/time so that he can detect and report suspicious activity.
-      (5) When handling authentication errors, the application should not disclose which part of
-          the authentication data was incorrect. Instead of "Invalid username" or "Invalid
-          password", just use "Invalid username and/or password" interchangeably.
-      -->
-      <form method="post" action="/verify_login" enctype="application/x-www-form-urlencoded" autocomplete="off">
-        <div class="cnt-grid">
-          <label class="label-red" for="uname">Username</label>
-          <input type="text" id="uname" name="uname" autofocus required maxlength="256">
-          <!--
-          The password entry should be obscured on the user's screen.
-          -->
-          <label class="label-red" for="pwd">Password</label>
-          <input type="password" id="pwd" name="pwd" required maxlength="256">
-        </div>
-        <div class="button-back-style">
-          <button type="submit" class="button">Login</button>
-        </div>
-      </form>
-      <div>
-        <br><label class="p-result">{{.ErrMsg}}</label>
-      </div>
-    </main>
-  </body>
-</html>
+<div class="center-title">
+  <h1>{{.Data.Header}}</h1>
+</div>
+<!--
+(1) Authentication credentials should be sent only through encrypted connections (HTTPS). An
+    exception to the encrypted connection may be the temporary passwords associated with
+    email resets.
+(2) Remember that requested URLs are usually logged by the HTTP server (access_log), which
+    include the query string. To prevent authentication credentials leakage to HTTP server
+    logs, data should be sent to the server using the HTTP POST method.
+(3) The "remember me" functionality should be disabled.
+(4) After a successful login, the user should be informed about the last successful or
+    unsuccessful access date/time so that he can detect and report suspicious activity.
+(5) When handling authentication errors, the application should not disclose which part of
+    the authentication data was incorrect. Instead of "Invalid username" or "Invalid
+    password", just use "Invalid username and/or password" interchangeably.
+-->
+<form method="post" action="/verify_login" enctype="application/x-www-form-urlencoded" autocomplete="off">
+  <div class="cnt-grid">
+    <label class="label-red" for="uname">Username</label>
+    <input type="text" id="uname" name="uname" autofocus required maxlength="256">
+    <!--
+    The password entry should be obscured on the user's screen.
+    -->
+    <label class="label-red" for="pwd">Password</label>
+    <input type="password" id="pwd" name="pwd" required maxlength="256">
+  </div>
+  <div class="button-back-style">
+    <button type="submit" class="button">Login</button>
+  </div>
+</form>
+<div>
+  <br><label class="p-result">{{.Data.ErrMsg}}</label>
+</div>
 
 {{end}}
