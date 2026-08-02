@@ -4,12 +4,12 @@ import (
   "context"
   "encoding/json"
   "finance/finances"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "os"
   "strconv"
@@ -70,7 +70,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
           of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1Pmt, err)
         } else {
           var oa finances.Annuities
-          of.Fd1Result = fmt.Sprintf("Present Value of Perpetuity: $%.2f",
+          of.Fd1Result = fmt.Sprintf("Present Value of Perpetuity: $%.5f",
             oa.O_Perpetuity(i / 100.0, pmt, oa.GetCompoundingPeriod(of.Fd1Compound[0], true)))
         }
         logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, %s", of.Fd1Interest, of.Fd1Compound,
@@ -79,33 +79,29 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      /***
-      The Must function wraps around the ParseGlob function that returns a pointer to a template
-      and an error, and it panics if the error is not nil.
-      ***/
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/ordinaryannuity/perpetuity/perpetuity.html",
+        "webfinances/templates/finances/ordinaryannuity/perpetuity/p.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/ordinaryannuity/perpetuity/p.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "oaperpetuity", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd1Interest string
-        Fd1Compound string
-        Fd1Pmt string
-        Fd1Result string
-      } { "Ordinary Annuity / Perpetuities", logger.DatetimeFormat(), of.CurrentButton,
-          newSession.CsrfToken, of.Fd1Interest, of.Fd1Compound, of.Fd1Pmt, of.Fd1Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd1Interest string
+          Fd1Compound string
+          Fd1Pmt string
+          Fd1Result string
+        } { "Ordinary Annuity / Perpetuities", logger.DatetimeFormat(), "welcome", of.CurrentButton,
+            newSession.CsrfToken, of.Fd1Interest, of.Fd1Compound, of.Fd1Pmt, of.Fd1Result },
+      })
     } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
       of.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -125,7 +121,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
           of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2Pmt, err)
         } else {
           var oa finances.Annuities
-          of.Fd2Result = fmt.Sprintf("Present Value of Perpetuity: $%.2f",
+          of.Fd2Result = fmt.Sprintf("Present Value of Perpetuity: $%.5f",
             oa.O_GrowingPerpetuity(i / 100.0, grow, pmt,
             oa.GetCompoundingPeriod(of.Fd2Compound[0], true)))
         }
@@ -135,30 +131,30 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/ordinaryannuity/perpetuity/perpetuity.html",
+        "webfinances/templates/finances/ordinaryannuity/perpetuity/gp.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/ordinaryannuity/perpetuity/gp.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "oaperpetuity", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd2Interest string
-        Fd2Compound string
-        Fd2Grow string
-        Fd2Pmt string
-        Fd2Result string
-      } { "Ordinary Annuity / Perpetuities", logger.DatetimeFormat(), of.CurrentButton,
-          newSession.CsrfToken, of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd2Interest string
+          Fd2Compound string
+          Fd2Grow string
+          Fd2Pmt string
+          Fd2Result string
+        } { "Ordinary Annuity / Perpetuities", logger.DatetimeFormat(), "welcome", of.CurrentButton,
+            newSession.CsrfToken, of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result },
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
       logger.LogError(errString, "-1")

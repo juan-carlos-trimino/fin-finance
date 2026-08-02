@@ -4,12 +4,12 @@ import (
   "context"
   "encoding/json"
   "finance/finances"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "os"
   "strconv"
@@ -74,7 +74,7 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
           of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1FV, err)
         } else {
           var oa finances.Annuities
-          of.Fd1Result = fmt.Sprintf("Interest: %.4f%% %s", oa.O_Interest_PV_FV(pv, fv, n, oa.GetTimePeriod(of.Fd1TimePeriod[0],
+          of.Fd1Result = fmt.Sprintf("Interest: %.5f%% %s", oa.O_Interest_PV_FV(pv, fv, n, oa.GetTimePeriod(of.Fd1TimePeriod[0],
             true), oa.GetCompoundingPeriod(of.Fd1Compound[0], true)) * 100.0, of.Fd1Compound)
         }
         logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, cp = %s, pv = %s, fv = %s, %s", of.Fd1N, of.Fd1TimePeriod, of.Fd1Compound,
@@ -83,34 +83,31 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      /***
-      The Must function wraps around the ParseGlob function that returns a pointer to a template
-      and an error, and it panics if the error is not nil.
-      ***/
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/ordinaryannuity/interestrate/interestrate.html",
+        "webfinances/templates/finances/ordinaryannuity/interestrate/n-PV-FV.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/ordinaryannuity/interestrate/n-PV-FV.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "oainterestrate", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd1N string
-        Fd1TimePeriod string
-        Fd1Compound string
-        Fd1PV string
-        Fd1FV string
-        Fd1Result string
-      } { "Ordinary Annuity / Interest Rate", logger.DatetimeFormat(), of.CurrentButton, newSession.CsrfToken, of.Fd1N,
-          of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd1N string
+          Fd1TimePeriod string
+          Fd1Compound string
+          Fd1PV string
+          Fd1FV string
+          Fd1Result string
+        } { "Ordinary Annuity / Interest Rate", logger.DatetimeFormat(), "welcome", of.CurrentButton, newSession.CsrfToken,
+            of.Fd1N, of.Fd1TimePeriod, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result },
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
       logger.LogError(errString, correlationId)
