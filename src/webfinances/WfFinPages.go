@@ -3,6 +3,7 @@ package webfinances
 import (
   bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
   banking "finance/webfinances/wfbanking"  //Importing a package and assigning it a local alias.
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
@@ -187,22 +188,21 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    t := template.Must(template.ParseFiles(
+    templatesNeeded := []string{
       "webfinances/templates/layout.html",
       "webfinances/templates/welcome.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
       "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html"))
-    err := t.ExecuteTemplate(res, "layout", struct {
-      Header string
-      Datetime string
-      CurrentPage string
-    } { "Investments", logger.DatetimeFormat(), "welcome" })
-    //
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      "webfinances/templates/footer.html",
     }
+    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+      Data: struct{
+        Header string
+        Datetime string
+        CurrentPage string
+      } { "Investments", logger.DatetimeFormat(), "welcome" },
+    })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -217,22 +217,21 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    t := template.Must(template.ParseFiles(
+    templatesNeeded := []string{
       "webfinances/templates/layout.html",
       "webfinances/templates/contact.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
       "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html"))
-    err := t.ExecuteTemplate(res, "layout", struct {
-      Header string
-      Datetime string
-      CurrentPage string
-    } { "Investments", logger.DatetimeFormat(), "contact" })
-    //
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      "webfinances/templates/footer.html",
     }
+    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+      Data: struct{
+        Header string
+        Datetime string
+        CurrentPage string
+      } { "Contact Us", logger.DatetimeFormat(), "contact" },
+    })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -247,26 +246,22 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    t := template.Must(template.ParseFiles(
+    //Explicitly map out the entire structural block stack for this page.
+    templatesNeeded := []string{
       "webfinances/templates/layout.html",
       "webfinances/templates/about.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
       "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html"))
-    /***
-    Executing the template means that we take the content from the template files, combine it with
-    data from another source, and generate the final HTML content.
-    ***/
-    err := t.ExecuteTemplate(res, "layout", struct {
-      Header string
-      Datetime string
-      CurrentPage string
-    } { "Investments", logger.DatetimeFormat(), "about" })
-    //
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      "webfinances/templates/footer.html",
     }
+    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+      Data: struct{
+        Header string
+        Datetime string
+        CurrentPage string
+      } { "About Us", logger.DatetimeFormat(), "about" },
+    })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -281,22 +276,21 @@ func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    t := template.Must(template.ParseFiles(
+    templatesNeeded := []string{
       "webfinances/templates/layout.html",
       "webfinances/templates/finances/finances.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
       "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html"))
-    err := t.ExecuteTemplate(res, "layout", struct {
-      Header string
-      Datetime string
-      CurrentPage string
-    } { "Finances", logger.DatetimeFormat(), "welcome" })
-    //
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      "webfinances/templates/footer.html",
     }
+    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+      Data: struct{
+        Header string
+        Datetime string
+        CurrentPage string
+      } { "Finances", logger.DatetimeFormat(), "welcome" },
+    })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -311,22 +305,21 @@ func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) 
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    t := template.Must(template.ParseFiles(
+    templatesNeeded := []string{
       "webfinances/templates/layout.html",
       "webfinances/templates/finances/simpleinterest.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
       "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html"))
-    err := t.ExecuteTemplate(res, "layout", struct {
-      Header string
-      Datetime string
-      CurrentPage string
-    } { "Simple Interest", logger.DatetimeFormat(), "welcome" })
-    //
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      "webfinances/templates/footer.html",
     }
+    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+      Data: struct{
+        Header string
+        Datetime string
+        CurrentPage string
+      } { "Simple Interest", logger.DatetimeFormat(), "welcome" },
+    })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -341,22 +334,21 @@ func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request)
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    t := template.Must(template.ParseFiles(
+    templatesNeeded := []string{
       "webfinances/templates/layout.html",
       "webfinances/templates/finances/ordinaryannuity.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
       "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html"))
-    err := t.ExecuteTemplate(res, "layout", struct {
-      Header string
-      Datetime string
-      CurrentPage string
-    } { "Ordinary Annuity", logger.DatetimeFormat(), "welcome" })
-    //
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      "webfinances/templates/footer.html",
     }
+    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+      Data: struct{
+        Header string
+        Datetime string
+        CurrentPage string
+      } { "Ordinary Annuity", logger.DatetimeFormat(), "welcome" },
+    })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -371,22 +363,21 @@ func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    t := template.Must(template.ParseFiles(
+    templatesNeeded := []string{
       "webfinances/templates/layout.html",
       "webfinances/templates/finances/annuitydue.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
       "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html"))
-    err := t.ExecuteTemplate(res, "layout", struct {
-      Header string
-      Datetime string
-      CurrentPage string
-    } { "Annuity Due", logger.DatetimeFormat(), "welcome" })
-    //
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      "webfinances/templates/footer.html",
     }
+    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+      Data: struct{
+        Header string
+        Datetime string
+        CurrentPage string
+      } { "Annuity Due", logger.DatetimeFormat(), "welcome" },
+    })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }

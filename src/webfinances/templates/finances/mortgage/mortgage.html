@@ -29,3 +29,9 @@
 </div>
 
 {{end}}
+
+{{define "scripts"}}
+<!-- This will automatically insert itself at the bottom of the master layout -->
+<script type="text/javascript" src="/public/js/setPageUI.js" id="page-ui-script" data-cb="{{.Data.CurrentButton}}"></script>
+
+{{end}}

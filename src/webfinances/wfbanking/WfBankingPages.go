@@ -57,10 +57,18 @@ func (p WfBankingPages) BankingPage(res http.ResponseWriter, req *http.Request) 
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    err := tmpl.ExecuteTemplate(res, "banking_page", struct {
+    t := template.Must(template.ParseFiles(
+      "webfinances/templates/layout.html",
+      "webfinances/templates/banking/banking.html",
+      "webfinances/templates/title.html",
+      "webfinances/templates/datetime.html",
+      "webfinances/templates/navbar.html",
+      "webfinances/templates/footer.html"))
+    err := t.ExecuteTemplate(res, "layout", struct {
       Header string
       Datetime string
-    } { "Banking", logger.DatetimeFormat() })
+      CurrentPage string
+    } { "Banking", logger.DatetimeFormat(), "welcome" })
     //
     if err != nil {
       logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)

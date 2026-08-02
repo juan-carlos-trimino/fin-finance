@@ -4,12 +4,12 @@ import (
   "context"
   "encoding/json"
   "finance/finances"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "os"
   "strconv"
@@ -89,9 +89,9 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
           var m finances.Mortgage
           payment, totalCost, totalInterest := m.CostOfMortgage(amount, i / 100.0,
             mf.Fd1Compound[0], n, mf.Fd1TimePeriod[0])
-          mf.Fd1Result[0] = fmt.Sprintf("Payment: $%.2f", payment)
-          mf.Fd1Result[1] = fmt.Sprintf("Total Interest: $%.2f", totalInterest)
-          mf.Fd1Result[2] = fmt.Sprintf("Total Cost: $%.2f", totalCost)
+          mf.Fd1Result[0] = fmt.Sprintf("Payment: $%.5f", payment)
+          mf.Fd1Result[1] = fmt.Sprintf("Total Interest: $%.5f", totalInterest)
+          mf.Fd1Result[2] = fmt.Sprintf("Total Cost: $%.5f", totalCost)
         }
         logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, amount = %s, %s",
          mf.Fd1N, mf.Fd1TimePeriod, mf.Fd1Interest, mf.Fd1Compound, mf.Fd1Amount, mf.Fd1Result[0]),
@@ -104,15 +104,17 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       The Must function wraps around the ParseGlob function that returns a pointer to a template
       and an error, and it panics if the error is not nil.
       ***/
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
         "webfinances/templates/layout.html",
         "webfinances/templates/finances/mortgage/mortgage.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
         "webfinances/templates/finances/mortgage/costofmortgage.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "layout", struct {
+        "webfinances/templates/footer.html",
+      }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct {
         Header string
         Datetime string
         CurrentPage string
@@ -124,13 +126,9 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd1Compound string
         Fd1Amount string
         Fd1Result [3]string
-      } { "Mortgage", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken,
-          mf.Fd1N, mf.Fd1TimePeriod, mf.Fd1Interest, mf.Fd1Compound, mf.Fd1Amount, mf.Fd1Result,
+        } { "Mortgage", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken,
+            mf.Fd1N, mf.Fd1TimePeriod, mf.Fd1Interest, mf.Fd1Compound, mf.Fd1Amount, mf.Fd1Result, },
       })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-      }
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui2") {
       mf.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -170,20 +168,20 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
               Payment: "--",
               PmtPrincipal: "--",
               PmtInterest: "--",
-              Balance: fmt.Sprintf("%.2f", amount),
+              Balance: fmt.Sprintf("%.5f", amount),
             })
           for idx := 0; idx < numberOfRows; idx++ {
             mf.Fd2Result = append(mf.Fd2Result,
               Row {
-                PaymentNo: fmt.Sprintf("%v", idx + 1),
-                Payment: fmt.Sprintf("%.2f", at.Rows[idx].Payment),
-                PmtPrincipal: fmt.Sprintf("%.2f", at.Rows[idx].PmtPrincipal),
-                PmtInterest: fmt.Sprintf("%.2f", at.Rows[idx].PmtInterest),
-                Balance: fmt.Sprintf("%.2f", at.Rows[idx].Balance),
+                PaymentNo: fmt.Sprintf("%d", idx + 1),
+                Payment: fmt.Sprintf("%.5f", at.Rows[idx].Payment),
+                PmtPrincipal: fmt.Sprintf("%.5f", at.Rows[idx].PmtPrincipal),
+                PmtInterest: fmt.Sprintf("%.5f", at.Rows[idx].PmtInterest),
+                Balance: fmt.Sprintf("%.5f", at.Rows[idx].Balance),
               })
           }
-          mf.Fd2TotalCost = fmt.Sprintf("Total Cost: $%.2f", at.TotalCost)
-          mf.Fd2TotalInterest = fmt.Sprintf("Total Interest: $%.2f", at.TotalInterest)
+          mf.Fd2TotalCost = fmt.Sprintf("Total Cost: $%.5f", at.TotalCost)
+          mf.Fd2TotalInterest = fmt.Sprintf("Total Interest: $%.5f", at.TotalInterest)
         }
         logger.LogInfo(fmt.Sprintf(
          "n = %s, tp = %s, interest = %s, cp = %s, amount = %s, total cost = %s, total interest = %s",
@@ -193,36 +191,33 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
         "webfinances/templates/layout.html",
         "webfinances/templates/finances/mortgage/mortgage.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
         "webfinances/templates/finances/mortgage/amortizationtable.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "layout", struct {
-        Header string
-        Datetime string
-        CurrentPage string
-        CurrentButton string
-        CsrfToken string
-        Fd2N string
-        Fd2TimePeriod string
-        Fd2Interest string
-        Fd2Compound string
-        Fd2Amount string
-        Fd2TotalCost string
-        Fd2TotalInterest string
-        Fd2Result []Row
-      } { "Mortgage", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken, mf.Fd2N,
-          mf.Fd2TimePeriod, mf.Fd2Interest, mf.Fd2Compound, mf.Fd2Amount, mf.Fd2TotalCost,
-          mf.Fd2TotalInterest, mf.Fd2Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct {
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd2N string
+          Fd2TimePeriod string
+          Fd2Interest string
+          Fd2Compound string
+          Fd2Amount string
+          Fd2TotalCost string
+          Fd2TotalInterest string
+          Fd2Result []Row
+        } { "Mortgage", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken, mf.Fd2N,
+            mf.Fd2TimePeriod, mf.Fd2Interest, mf.Fd2Compound, mf.Fd2Amount, mf.Fd2TotalCost,  mf.Fd2TotalInterest, mf.Fd2Result },
+      })
     } else if strings.EqualFold(mf.CurrentPage, "rhs-ui3") {
       mf.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
@@ -245,7 +240,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
           mf.Fd3Result[2] = fmt.Sprintf("Error: %s -- %+v", mf.Fd3Hbalance, err)
         } else {
           var m finances.Mortgage
-          mf.Fd3Result[2] = fmt.Sprintf("Blended Interest Rate: %.3f%%",
+          mf.Fd3Result[2] = fmt.Sprintf("Blended Interest Rate: %.5f%%",
             m.BlendedInterestRate(mBalance, mRate, hBalance, hRate))
         }
         logger.LogInfo(fmt.Sprintf(
@@ -255,32 +250,30 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
         "webfinances/templates/layout.html",
         "webfinances/templates/finances/mortgage/mortgage.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
         "webfinances/templates/finances/mortgage/heloc.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "layout", struct {
-        Header string
-        Datetime string
-  			CurrentPage string
-        CurrentButton string
-        CsrfToken string
-        Fd3Mrate string
-        Fd3Mbalance string
-        Fd3Hrate string
-        Fd3Hbalance string
-        Fd3Result [3]string
-      } { "Mortgage", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken, mf.Fd3Mrate,
-          mf.Fd3Mbalance, mf.Fd3Hrate, mf.Fd3Hbalance, mf.Fd3Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct {
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd3Mrate string
+          Fd3Mbalance string
+          Fd3Hrate string
+          Fd3Hbalance string
+          Fd3Result [3]string
+        } { "Mortgage", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken, mf.Fd3Mrate,
+            mf.Fd3Mbalance, mf.Fd3Hrate, mf.Fd3Hbalance, mf.Fd3Result, },
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", mf.CurrentPage)
       logger.LogError(errString, "-1")

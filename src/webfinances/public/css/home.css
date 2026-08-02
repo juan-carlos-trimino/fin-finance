@@ -68,38 +68,6 @@ body {
 }
 /*** Headers ***/
 
-nav {
-  clear: both;
-}
-
-nav ul {
-  background-color: rgb(2, 71, 31);
-  height: 80px;
-}
-
-nav ul li {
-  display: inline-block;
-  text-decoration: none;
-  color: rgb(185, 241, 163);
-  padding: 20px;
-}
-
-nav ul li a {
-  color: rgb(185, 241, 163);
-  text-decoration: none;
-  font-size: 30px;
-}
-
-nav ul li a:hover {
-  background-color: rgb(185, 241, 163);
-  color: rgb(2, 71, 31)
-}
-
-nav ul li:hover {
-  background-color: rgb(185, 241, 163);
-  color: rgb(2, 71, 31)
-}
-
 .footer-style {
   color: rgb(2, 71, 31);
   margin-top: auto;
@@ -554,3 +522,86 @@ input[type="hidden"] {
   color: red;  /* Overwrite only the color property */
 }
 /*** Grid ***/
+
+
+
+
+
+
+/* ==========================================================================
+DESKTOP STYLES
+========================================================================== */
+nav {
+  position: relative;
+  background-color: rgb(2, 71, 31);
+}
+nav ul.nav-menu {
+  list-style: none;
+  margin: 0;
+  padding: 15px 0;  /* Add 15px of padding to the top and bottom inside the bar */
+  /* background-color: rgb(2, 71, 31); */
+  /* Flexbox centers items horizontally */
+  display: flex !important; /* Force explicit flex layout on desktop */
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap; /* Allow items to wrap nicely if screen is too small */
+/*  overflow: visible;*/  /* Ensure the hover lift effect isn't clipped out of sight */
+}
+nav ul.nav-menu li {  /* Style the list items (no color or text styles here) */
+  display: inline-block;
+  transition: transform 0.2s ease;  /* Put the transition on the parent */
+}
+/* 4. The lift effect happens on the LI element when the link is hovered */
+nav ul.nav-menu li:has(a:hover) {
+  transform: translateY(-3px); /* Lifts the whole item cleanly */
+}
+nav ul.nav-menu li a {  /* Apply all text, spacing, and block settings to the links */
+  display: block;
+  padding: 12px 24px;  /* Vertical padding (12px) and Horizontal padding (24px) */
+  margin: 0 8px;  /* Spacing between the buttons */
+  font-size: 24px;
+  text-decoration: none;
+  color: rgb(185, 241, 163);
+  border-radius: 30px; /* This makes the buttons perfectly rounded */
+  transition: background-color 0.2s, color 0.2s; /* Smooth hover effect */
+
+  overflow: hidden; /* Prevents background bleeding or clipping sub-pixels */
+
+}
+
+
+
+
+nav ul.nav-menu li a:focus {
+  outline: none;
+}
+
+nav ul.nav-menu li a:focus,
+nav ul.nav-menu li a:visited,
+nav ul.nav-menu li a.active {
+  text-decoration: none !important;
+}
+
+
+
+
+nav ul.nav-menu li a:hover {  /* Style the general hover state for unselected links */
+  background-color: rgb(185, 241, 163);
+  color: rgb(2, 71, 31)
+}
+nav ul.nav-menu li a.active {  /* Style the active page so the user knows where he is */
+  background-color: rgb(126, 233, 84);
+  color: rgb(245, 5, 5)
+}
+nav ul.nav-menu li a.active:hover {  /* Differentiate when a user hovers over the already active link */
+  background-color: rgb(106, 213, 64); /* Slightly darker green */
+  color: rgb(2, 71, 31);
+  cursor: default; /* Changes pointer to show it is already selected */
+}
+
+ @media (max-width: 600px) {  /* Shrink font size on mobile screens so it doesn't break */
+  nav ul.nav-menu li a {
+    font-size: 18px;
+    padding: 15px;
+  }
+}

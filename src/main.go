@@ -13,8 +13,10 @@ import (
   bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
   "context"
   "crypto/tls"
+  "embed"
   "errors"
   "finance/config"
+  "finance/renderer"
   "finance/security"
   "finance/webfinances"
   banking "finance/webfinances/wfbanking"  //Importing a package and assigning it a local alias.
@@ -79,6 +81,14 @@ const (
 ////////////////////////////
 //////////////////////////
 )
+
+/***
+Embed the folder safely from the project root where main.go lives.
+Because you are using //go:embed, Go isn't reading files off a slow hard drive or SSD. It is reading strings directly from your
+computer's RAM.
+***/
+//go:embed all:webfinances/templates
+var GlobalTemplateFS embed.FS
 
 /***
 In Go, a handler is an interface (type Handler interface) that has a method named ServeHTTP with two parameters: an http.ResponseWriter
@@ -202,6 +212,11 @@ func main() {
   }
   defer dbInstance.Close()
   dbInstance.VerifyConnection(context.Background(), falseCorrelationId)
+  /***
+  Compile all templates from all sub-directories into memory.
+  Pass the root virtual filesystem into te renderer initialization function.
+  ***/
+  renderer.InitTemplates(GlobalTemplateFS)
   /***
   When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return ErrServerClosed.
   Make sure the program doesn't exit and waits instead for Shutdown to return.
@@ -328,8 +343,8 @@ func faviconHandler(res http.ResponseWriter, req *http.Request) {
 
 func makeHandlers() *handlers {
   var wfbankPages = banking.WfBankingPages{}
-	var wfbankMngAcctsPages = banking.WfBankingMngAcctsPages{}
-	var wfpages = webfinances.WfPages{}
+  var wfbankMngAcctsPages = banking.WfBankingMngAcctsPages{}
+  var wfpages = webfinances.WfPages{}
   var wfadcp = webfinances.WfAdCpPages{}
   var wfadepp = webfinances.WfAdEppPages{}
   var wfadfv = webfinances.WfAdFvPages{}
@@ -408,7 +423,7 @@ func makeHandlers() *handlers {
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/js/admin/SettingsSecurity.js"] = wfverify.PublicSettingsSecurityFile
   h.mux["/public/js/tableSelectRow.js"] = wfbankPages.PublicTableSelectRowFile
-	h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
+  h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/setPageUI.js"] = wfpages.PublicSetPageUIFile
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
@@ -419,14 +434,14 @@ func makeHandlers() *handlers {
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
   h.mux["/admin/welcome"] = middlewares.AdminVerification(wfverify.AdminWelcomePage)
-	h.mux["/admin/saveregister"] = middlewares.AdminVerification(wfverify.AdminSaveRegisterPage)
+  h.mux["/admin/saveregister"] = middlewares.AdminVerification(wfverify.AdminSaveRegisterPage)
   h.mux["/admin/register"] = middlewares.AdminVerification(wfverify.AdminRegisterPage)
   h.mux["/admin/settings"] = middlewares.AdminVerification(wfverify.AdminSettingsPage)
   h.mux["/admin/settings/security"] = middlewares.AdminVerification(wfsecurity.AdminSecurityPages)
   h.mux["/banking"] = wfbankPages.BankingPage
   // h.mux["/banking/manageaccounts"] = wfbankPages.BankingManageAccountsPages
   h.mux["/banking/manageaccounts"] = wfbankMngAcctsPages.ManageAccountsPages
-	h.mux["/finances"] = wfpages.FinancesPage
+  h.mux["/finances"] = wfpages.FinancesPage
   h.mux["/fin/ordinaryannuity"] = wfpages.OrdinaryAnnuityPage
   h.mux["/fin/ordinaryannuity/interestrate"] = wfoainterest.OaInterestRatePages
   h.mux["/fin/ordinaryannuity/fv"] = wfoafv.OaFvPages
