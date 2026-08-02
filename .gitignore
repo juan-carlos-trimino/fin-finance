@@ -77,6 +77,10 @@ src/mathutil/*
 !src/mathutil/mathutil_test.go
 !src/mathutil/mathutil.go
 # ... and this directory and its file...
+!src/renderer/
+src/renderer/*
+!src/renderer/render.go
+# ... and this directory and its file...
 !src/security/
 src/security/*
 !src/security/security.go
