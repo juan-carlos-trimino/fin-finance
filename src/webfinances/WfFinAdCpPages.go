@@ -4,8 +4,8 @@ import (
   "context"
   "encoding/json"
   "finance/finances"
+  "finance/renderer"
   "fmt"
-  "html/template"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
@@ -132,30 +132,30 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/annuitydue/cp/cp.html",
+        "webfinances/templates/finances/annuitydue/cp/i-PMT-PV.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/annuitydue/cp/i-PMT-PV.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "adcompoundingperiods", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd2Interest string
-        Fd2Compound string
-        Fd2Payment string
-        Fd2PV string
-        Fd2Result string
-      } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), af.CurrentButton,
-          newSession.CsrfToken, af.Fd2Interest, af.Fd2Compound, af.Fd2Payment, af.Fd2PV, af.Fd2Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd2Interest string
+          Fd2Compound string
+          Fd2Payment string
+          Fd2PV string
+          Fd2Result string
+        } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), "welcome", af.CurrentButton,
+            newSession.CsrfToken, af.Fd2Interest, af.Fd2Compound, af.Fd2Payment, af.Fd2PV, af.Fd2Result },
+      })
     } else if strings.EqualFold(af.CurrentPage, "rhs-ui3") {
       af.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
@@ -185,30 +185,30 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/annuitydue/cp/cp.html",
+        "webfinances/templates/finances/annuitydue/cp/i-PMT-FV.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/annuitydue/cp/i-PMT-FV.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "adcompoundingperiods", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd3Interest string
-        Fd3Compound string
-        Fd3Payment string
-        Fd3FV string
-        Fd3Result string
-      } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), af.CurrentButton,
-          newSession.CsrfToken, af.Fd3Interest, af.Fd3Compound, af.Fd3Payment, af.Fd3FV, af.Fd3Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd3Interest string
+          Fd3Compound string
+          Fd3Payment string
+          Fd3FV string
+          Fd3Result string
+        } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), "welcome", af.CurrentButton,
+            newSession.CsrfToken, af.Fd3Interest, af.Fd3Compound, af.Fd3Payment, af.Fd3FV, af.Fd3Result },
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)
       logger.LogError(errString, "-1")

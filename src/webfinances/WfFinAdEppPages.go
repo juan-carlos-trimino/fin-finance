@@ -4,12 +4,12 @@ import (
   "context"
   "encoding/json"
   "finance/finances"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "os"
   "strconv"
@@ -75,7 +75,7 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
           af.Fd1Result = fmt.Sprintf("Error: %s -- %+v", af.Fd1FV, err)
         } else {
           var oa finances.Annuities
-          af.Fd1Result = fmt.Sprintf("Payment: $%.2f", oa.D_Payment_FV(fv, i / 100.0,
+          af.Fd1Result = fmt.Sprintf("Payment: $%.5f", oa.D_Payment_FV(fv, i / 100.0,
             oa.GetCompoundingPeriod(af.Fd1Compound[0], true), n,
             oa.GetTimePeriod(af.Fd1TimePeriod[0], true)))
         }
@@ -85,36 +85,31 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      /***
-      The Must function wraps around the ParseGlob function that returns a pointer to a template
-      and an error, and it panics if the error is not nil.
-      ***/
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/annuitydue/epp/epp.html",
+        "webfinances/templates/finances/annuitydue/epp/n-i-FV.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/annuitydue/epp/n-i-FV.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "adequalperiodicpayments", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd1N string
-        Fd1TimePeriod string
-        Fd1Interest string
-        Fd1Compound string
-        Fd1FV string
-        Fd1Result string
-      } { "Annuity Due / Equal Periodic Payments", logger.DatetimeFormat(), af.CurrentButton,
-          newSession.CsrfToken, af.Fd1N, af.Fd1TimePeriod, af.Fd1Interest, af.Fd1Compound,
-          af.Fd1FV, af.Fd1Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd1N string
+          Fd1TimePeriod string
+          Fd1Interest string
+          Fd1Compound string
+          Fd1FV string
+          Fd1Result string
+        } { "Annuity Due / Equal Periodic Payments", logger.DatetimeFormat(), "welcome", af.CurrentButton,
+            newSession.CsrfToken, af.Fd1N, af.Fd1TimePeriod, af.Fd1Interest, af.Fd1Compound, af.Fd1FV, af.Fd1Result },
+      })
     } else if strings.EqualFold(af.CurrentPage, "rhs-ui2") {
       af.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -135,7 +130,7 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
           af.Fd2Result = fmt.Sprintf("Error: %s -- %+v", af.Fd2PV, err)
         } else {
           var oa finances.Annuities
-          af.Fd2Result = fmt.Sprintf("Payment: $%.2f", oa.D_Payment_PV(pv, i / 100.0,
+          af.Fd2Result = fmt.Sprintf("Payment: $%.5f", oa.D_Payment_PV(pv, i / 100.0,
             oa.GetCompoundingPeriod(af.Fd2Compound[0], true), n,
             oa.GetTimePeriod(af.Fd2TimePeriod[0], true)))
         }
@@ -145,32 +140,31 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/annuitydue/epp/epp.html",
+        "webfinances/templates/finances/annuitydue/epp/n-i-PV.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/annuitydue/epp/n-i-PV.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "adequalperiodicpayments", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd2N string
-        Fd2TimePeriod string
-        Fd2Interest string
-        Fd2Compound string
-        Fd2PV string
-        Fd2Result string
-      } { "Annuity Due / Equal Periodic Payments", logger.DatetimeFormat(), af.CurrentButton,
-          newSession.CsrfToken, af.Fd2N, af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound,
-          af.Fd2PV, af.Fd2Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd2N string
+          Fd2TimePeriod string
+          Fd2Interest string
+          Fd2Compound string
+          Fd2PV string
+          Fd2Result string
+        } { "Annuity Due / Equal Periodic Payments", logger.DatetimeFormat(), "welcome", af.CurrentButton,
+            newSession.CsrfToken, af.Fd2N, af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound, af.Fd2PV, af.Fd2Result },
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)
       logger.LogError(errString, "-1")

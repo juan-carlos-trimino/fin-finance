@@ -4,12 +4,12 @@ import (
   "context"
   "encoding/json"
   "finance/finances"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "os"
   "strconv"
@@ -125,7 +125,7 @@ func (a WfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
           af.Fd2Result = fmt.Sprintf("Error: %s -- %+v", af.Fd2PMT, err)
         } else {
           var oa finances.Annuities
-          af.Fd2Result = fmt.Sprintf("Present Value: $%.2f", oa.D_PresentValue_PMT(pmt, i / 100.0,
+          af.Fd2Result = fmt.Sprintf("Present Value: $%.5f", oa.D_PresentValue_PMT(pmt, i / 100.0,
             oa.GetCompoundingPeriod(af.Fd2Compound[0], true),
             n, oa.GetTimePeriod(af.Fd2TimePeriod[0], true)))
         }
@@ -136,32 +136,31 @@ func (a WfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/annuitydue/pv/pv.html",
+        "webfinances/templates/finances/annuitydue/pv/n-i-PMT.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/annuitydue/pv/n-i-PMT.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "adpresentvalue", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd2N string
-        Fd2TimePeriod string
-        Fd2Interest string
-        Fd2Compound string
-        Fd2PMT string
-        Fd2Result string
-      } { "Annuity Due / Present Value", logger.DatetimeFormat(), af.CurrentButton,
-          newSession.CsrfToken, af.Fd2N, af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound,
-          af.Fd2PMT, af.Fd2Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd2N string
+          Fd2TimePeriod string
+          Fd2Interest string
+          Fd2Compound string
+          Fd2PMT string
+          Fd2Result string
+        } { "Annuity Due / Present Value", logger.DatetimeFormat(), "welcome", af.CurrentButton, newSession.CsrfToken,
+            af.Fd2N, af.Fd2TimePeriod, af.Fd2Interest, af.Fd2Compound, af.Fd2PMT, af.Fd2Result },
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)
       logger.LogError(errString, "-1")
