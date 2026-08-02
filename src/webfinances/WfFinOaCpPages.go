@@ -4,12 +4,12 @@ import (
   "context"
   "encoding/json"
   "finance/finances"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "os"
   "strconv"
@@ -84,34 +84,30 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      /***
-      The Must function wraps around the ParseGlob function that returns a pointer to a template
-      and an error, and it panics if the error is not nil.
-      ***/
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/ordinaryannuity/cp/cp.html",
+        "webfinances/templates/finances/ordinaryannuity/cp/i-PV-FV.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/ordinaryannuity/cp/i-PV-FV.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "oacompoundingperiods", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd1Interest string
-        Fd1Compound string
-        Fd1PV string
-        Fd1FV string
-        Fd1Result string
-      } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), of.CurrentButton,
-          newSession.CsrfToken, of.Fd1Interest, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd1Interest string
+          Fd1Compound string
+          Fd1PV string
+          Fd1FV string
+          Fd1Result string
+        } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), "welcome", of.CurrentButton,
+            newSession.CsrfToken, of.Fd1Interest, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result },
+      })
     } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
       of.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -141,31 +137,30 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/ordinaryannuity/cp/cp.html",
+        "webfinances/templates/finances/ordinaryannuity/cp/i-PMT-PV.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/ordinaryannuity/cp/i-PMT-PV.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "oacompoundingperiods", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd2Interest string
-        Fd2Compound string
-        Fd2Payment string
-        Fd2PV string
-        Fd2Result string
-      } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), of.CurrentButton,
-          newSession.CsrfToken, of.Fd2Interest, of.Fd2Compound, of.Fd2Payment, of.Fd2PV,
-          of.Fd2Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd2Interest string
+          Fd2Compound string
+          Fd2Payment string
+          Fd2PV string
+          Fd2Result string
+        } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), "welcome", of.CurrentButton, newSession.CsrfToken,
+            of.Fd2Interest, of.Fd2Compound, of.Fd2Payment, of.Fd2PV, of.Fd2Result },
+      })
     } else if strings.EqualFold(of.CurrentPage, "rhs-ui3") {
       of.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
@@ -195,31 +190,30 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/ordinaryannuity/cp/cp.html",
+        "webfinances/templates/finances/ordinaryannuity/cp/i-PMT-FV.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/ordinaryannuity/cp/i-PMT-FV.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "oacompoundingperiods", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd3Interest string
-        Fd3Compound string
-        Fd3Payment string
-        Fd3FV string
-        Fd3Result string
-      } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), of.CurrentButton,
-          newSession.CsrfToken, of.Fd3Interest, of.Fd3Compound, of.Fd3Payment, of.Fd3FV,
-          of.Fd3Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd3Interest string
+          Fd3Compound string
+          Fd3Payment string
+          Fd3FV string
+          Fd3Result string
+        } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), "welcome", of.CurrentButton, newSession.CsrfToken,
+            of.Fd3Interest, of.Fd3Compound, of.Fd3Payment, of.Fd3FV, of.Fd3Result },
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
       logger.LogInfo(errString, "-1")
