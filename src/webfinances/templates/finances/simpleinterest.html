@@ -1,47 +1,24 @@
-{{define "simple_interest_page"}}
+{{define "content"}}
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Simple Interest</title>
-    <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
-  </head>
-  <body>
-    <main>
-      <div class="center-title">
-        <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
-        {{template "title" .}}
-      </div>
-      <div class="center-datetime">
-        {{template "datetime" .}}
-      </div>
-      {{template "navbar" .}}
-      <div class="button-style">
-        <a href="/fin/simpleinterest/ordinary" target="_self">
-          <button class="button">Ordinary Interest</button>
-        </a>
-      </div>
-      <div class="button-style">
-        <a href="/fin/simpleinterest/bankers" target="_self">
-          <button class="button">Banker's (Commercial) Interest</button>
-        </a>
-      </div>
-      <div class="button-style">
-        <a href="/fin/simpleinterest/accurate" target="_self">
-          <button class="button">Accurate (Exact) Interest</button>
-        </a>
-      </div>
-      <div class="button-back-style">
-        <a href="/finances" target="_self">
-          <button class="button">Back</button>
-        </a>
-      </div>
-    </main>
-    {{template "footer"}}
-  </body>
-</html>
+<div class="button-style">
+  <a href="/fin/simpleinterest/ordinary" target="_self">
+    <button class="button">Ordinary Interest</button>
+  </a>
+</div>
+<div class="button-style">
+  <a href="/fin/simpleinterest/bankers" target="_self">
+    <button class="button">Banker's (Commercial) Interest</button>
+  </a>
+</div>
+<div class="button-style">
+  <a href="/fin/simpleinterest/accurate" target="_self">
+    <button class="button">Accurate (Exact) Interest</button>
+  </a>
+</div>
+<div class="button-back-style">
+  <a href="/finances" target="_self">
+    <button class="button">Back</button>
+  </a>
+</div>
 
 {{end}}

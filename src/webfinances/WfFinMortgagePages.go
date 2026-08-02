@@ -105,15 +105,17 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       and an error, and it panics if the error is not nil.
       ***/
       t := template.Must(template.ParseFiles(
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/mortgage/mortgage.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
         "webfinances/templates/finances/mortgage/costofmortgage.html",
         "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "mortgage", struct {
+      err := t.ExecuteTemplate(res, "layout", struct {
         Header string
         Datetime string
+        CurrentPage string
         CurrentButton string
         CsrfToken string
         Fd1N string
@@ -122,7 +124,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd1Compound string
         Fd1Amount string
         Fd1Result [3]string
-      } { "Mortgage", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken,
+      } { "Mortgage", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken,
           mf.Fd1N, mf.Fd1TimePeriod, mf.Fd1Interest, mf.Fd1Compound, mf.Fd1Amount, mf.Fd1Result,
       })
       //
@@ -192,15 +194,17 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles(
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/mortgage/mortgage.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
         "webfinances/templates/finances/mortgage/amortizationtable.html",
         "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "mortgage", struct {
+      err := t.ExecuteTemplate(res, "layout", struct {
         Header string
         Datetime string
+        CurrentPage string
         CurrentButton string
         CsrfToken string
         Fd2N string
@@ -211,7 +215,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd2TotalCost string
         Fd2TotalInterest string
         Fd2Result []Row
-      } { "Mortgage", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken, mf.Fd2N,
+      } { "Mortgage", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken, mf.Fd2N,
           mf.Fd2TimePeriod, mf.Fd2Interest, mf.Fd2Compound, mf.Fd2Amount, mf.Fd2TotalCost,
           mf.Fd2TotalInterest, mf.Fd2Result,
       })
@@ -252,15 +256,17 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       t := template.Must(template.ParseFiles(
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/mortgage/mortgage.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
         "webfinances/templates/finances/mortgage/heloc.html",
         "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "mortgage", struct {
+      err := t.ExecuteTemplate(res, "layout", struct {
         Header string
         Datetime string
+  			CurrentPage string
         CurrentButton string
         CsrfToken string
         Fd3Mrate string
@@ -268,7 +274,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         Fd3Hrate string
         Fd3Hbalance string
         Fd3Result [3]string
-      } { "Mortgage", logger.DatetimeFormat(), mf.CurrentButton, newSession.CsrfToken, mf.Fd3Mrate,
+      } { "Mortgage", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken, mf.Fd3Mrate,
           mf.Fd3Mbalance, mf.Fd3Hrate, mf.Fd3Hbalance, mf.Fd3Result,
       })
       //

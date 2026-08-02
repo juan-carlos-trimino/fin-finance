@@ -197,7 +197,7 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
     err := t.ExecuteTemplate(res, "layout", struct {
       Header string
       Datetime string
-			CurrentPage string
+      CurrentPage string
     } { "Investments", logger.DatetimeFormat(), "welcome" })
     //
     if err != nil {
@@ -227,7 +227,7 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
     err := t.ExecuteTemplate(res, "layout", struct {
       Header string
       Datetime string
-			CurrentPage string
+      CurrentPage string
     } { "Investments", logger.DatetimeFormat(), "contact" })
     //
     if err != nil {
@@ -254,14 +254,14 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
       "webfinances/templates/datetime.html",
       "webfinances/templates/navbar.html",
       "webfinances/templates/footer.html"))
-		/***
-		Executing the template means that we take the content from the template files, combine it with
-		data from another source, and generate the final HTML content.
-		***/
+    /***
+    Executing the template means that we take the content from the template files, combine it with
+    data from another source, and generate the final HTML content.
+    ***/
     err := t.ExecuteTemplate(res, "layout", struct {
       Header string
       Datetime string
-			CurrentPage string
+      CurrentPage string
     } { "Investments", logger.DatetimeFormat(), "about" })
     //
     if err != nil {
@@ -281,10 +281,18 @@ func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    err := tmpl.ExecuteTemplate(res, "finances_page", struct {
+    t := template.Must(template.ParseFiles(
+      "webfinances/templates/layout.html",
+      "webfinances/templates/finances/finances.html",
+      "webfinances/templates/title.html",
+      "webfinances/templates/datetime.html",
+      "webfinances/templates/navbar.html",
+      "webfinances/templates/footer.html"))
+    err := t.ExecuteTemplate(res, "layout", struct {
       Header string
       Datetime string
-    } { "Finances", logger.DatetimeFormat() })
+      CurrentPage string
+    } { "Finances", logger.DatetimeFormat(), "welcome" })
     //
     if err != nil {
       logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -298,15 +306,23 @@ func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) 
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering SimpleInterestPage/webfinances.", correlationId)
+  logger.LogInfo("Entering webfinances.SimpleInterestPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    err := tmpl.ExecuteTemplate(res, "simple_interest_page", struct {
+    t := template.Must(template.ParseFiles(
+      "webfinances/templates/layout.html",
+      "webfinances/templates/finances/simpleinterest.html",
+      "webfinances/templates/title.html",
+      "webfinances/templates/datetime.html",
+      "webfinances/templates/navbar.html",
+      "webfinances/templates/footer.html"))
+    err := t.ExecuteTemplate(res, "layout", struct {
       Header string
       Datetime string
-    } { "Simple Interest", logger.DatetimeFormat() })
+      CurrentPage string
+    } { "Simple Interest", logger.DatetimeFormat(), "welcome" })
     //
     if err != nil {
       logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -320,15 +336,23 @@ func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request)
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering OrdinaryAnnuityPage/webfinances.", correlationId)
+  logger.LogInfo("Entering webfinances.OrdinaryAnnuityPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    err := tmpl.ExecuteTemplate(res, "ordinary_annuity_page", struct {
+    t := template.Must(template.ParseFiles(
+      "webfinances/templates/layout.html",
+      "webfinances/templates/finances/ordinaryannuity.html",
+      "webfinances/templates/title.html",
+      "webfinances/templates/datetime.html",
+      "webfinances/templates/navbar.html",
+      "webfinances/templates/footer.html"))
+    err := t.ExecuteTemplate(res, "layout", struct {
       Header string
       Datetime string
-    } { "Ordinary Annuity", logger.DatetimeFormat() })
+      CurrentPage string
+    } { "Ordinary Annuity", logger.DatetimeFormat(), "welcome" })
     //
     if err != nil {
       logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
@@ -342,15 +366,23 @@ func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering AnnuityDuePage/webfinances.", correlationId)
+  logger.LogInfo("Entering webfinances.AnnuityDuePage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    err := tmpl.ExecuteTemplate(res, "annuity_due_page", struct {
+    t := template.Must(template.ParseFiles(
+      "webfinances/templates/layout.html",
+      "webfinances/templates/finances/annuitydue.html",
+      "webfinances/templates/title.html",
+      "webfinances/templates/datetime.html",
+      "webfinances/templates/navbar.html",
+      "webfinances/templates/footer.html"))
+    err := t.ExecuteTemplate(res, "layout", struct {
       Header string
       Datetime string
-    } { "Annuity Due", logger.DatetimeFormat() })
+      CurrentPage string
+    } { "Annuity Due", logger.DatetimeFormat(), "welcome" })
     //
     if err != nil {
       logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
