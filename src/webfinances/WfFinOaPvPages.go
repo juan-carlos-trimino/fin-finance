@@ -4,12 +4,12 @@ import (
   "context"
   "encoding/json"
   "finance/finances"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "os"
   "strconv"
@@ -72,7 +72,7 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
           of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1FV, err)
         } else {
           var oa finances.Annuities
-          of.Fd1Result = fmt.Sprintf("Present Value: $%.2f", oa.O_PresentValue_FV(fv, i / 100.0,
+          of.Fd1Result = fmt.Sprintf("Present Value: $%.5f", oa.O_PresentValue_FV(fv, i / 100.0,
             oa.GetCompoundingPeriod(of.Fd1Compound[0], true), n, oa.GetTimePeriod(of.Fd1TimePeriod[0], true)))
         }
         logger.LogError(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, fv = %s, %s", of.Fd1N, of.Fd1TimePeriod, of.Fd1Interest,
@@ -81,35 +81,31 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      /***
-      The Must function wraps around the ParseGlob function that returns a pointer to a template and an error, and it panics if the error
-      is not nil.
-      ***/
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/ordinaryannuity/pv/pv.html",
+        "webfinances/templates/finances/ordinaryannuity/pv/n-i-FV.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/ordinaryannuity/pv/n-i-FV.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "oapresentvalue", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd1N string
-        Fd1TimePeriod string
-        Fd1Interest string
-        Fd1Compound string
-        Fd1FV string
-        Fd1Result string
-      } { "Ordinary Annuity / Present Value", logger.DatetimeFormat(), of.CurrentButton, newSession.CsrfToken, of.Fd1N, of.Fd1TimePeriod,
-          of.Fd1Interest, of.Fd1Compound, of.Fd1FV, of.Fd1Result,
-        })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd1N string
+          Fd1TimePeriod string
+          Fd1Interest string
+          Fd1Compound string
+          Fd1FV string
+          Fd1Result string
+        } { "Ordinary Annuity / Present Value", logger.DatetimeFormat(), "welcome", of.CurrentButton, newSession.CsrfToken,
+            of.Fd1N, of.Fd1TimePeriod, of.Fd1Interest, of.Fd1Compound, of.Fd1FV, of.Fd1Result },
+      })
     } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
       of.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -130,7 +126,7 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
           of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2PMT, err)
         } else {
           var oa finances.Annuities
-          of.Fd2Result = fmt.Sprintf("Present Value: $%.2f", oa.O_PresentValue_PMT(pmt, i / 100.0,
+          of.Fd2Result = fmt.Sprintf("Present Value: $%.5f", oa.O_PresentValue_PMT(pmt, i / 100.0,
              oa.GetCompoundingPeriod(of.Fd2Compound[0], true), n, oa.GetTimePeriod(of.Fd2TimePeriod[0], true)))
         }
         logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, pmt = %s, %s", of.Fd2N, of.Fd2TimePeriod,
@@ -139,31 +135,31 @@ func (o WfOaPvPages) OaPvPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/ordinaryannuity/pv/pv.html",
+        "webfinances/templates/finances/ordinaryannuity/pv/n-i-PMT.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/ordinaryannuity/pv/n-i-PMT.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "oapresentvalue", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd2N string
-        Fd2TimePeriod string
-        Fd2Interest string
-        Fd2Compound string
-        Fd2PMT string
-        Fd2Result string
-      } { "Ordinary Annuity / Present Value", logger.DatetimeFormat(), of.CurrentButton, newSession.CsrfToken, of.Fd2N, of.Fd2TimePeriod,
-          of.Fd2Interest, of.Fd2Compound, of.Fd2PMT, of.Fd2Result,
-        })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd2N string
+          Fd2TimePeriod string
+          Fd2Interest string
+          Fd2Compound string
+          Fd2PMT string
+          Fd2Result string
+        } { "Ordinary Annuity / Present Value", logger.DatetimeFormat(), "welcome", of.CurrentButton, newSession.CsrfToken,
+            of.Fd2N, of.Fd2TimePeriod, of.Fd2Interest, of.Fd2Compound, of.Fd2PMT, of.Fd2Result },
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
       logger.LogError(errString, "-1")

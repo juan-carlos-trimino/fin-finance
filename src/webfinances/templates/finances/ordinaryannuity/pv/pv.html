@@ -1,49 +1,31 @@
-{{define "oapresentvalue"}}
+{{define "content"}}
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>OA Present Value</title>
-    <script type="text/javascript" src="/public/js/setPageUI.js" id="page-ui-script" data-cb="{{.CurrentButton}}"></script>
-    <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
-  </head>
-  <body>
-    <main>
-      <div class="center-title">
-        {{template "title" .}}
-      </div>
-      <div class="center-datetime">
-        {{template "datetime" .}}
-      </div>
-      {{template "navbar" .}}
-      <div class="split-screen">
-        <div class="left-side">
-          <div class="button-style">
-            <a href="/fin/ordinaryannuity/pv?compute=rhs-ui1" target="_self">
-              <button class="button" id="lhs-button1">n, i, FV</button>
-            </a>
-          </div>
-          <div class="button-style">
-            <a href="/fin/ordinaryannuity/pv?compute=rhs-ui2" target="_self">
-              <button class="button" id="lhs-button2">n, i, PMT</button>
-            </a>
-          </div>
-          <div class="button-back-style">
-            <a href="/fin/ordinaryannuity" target="_self">
-              <button class="button">Back</button>
-            </a>
-          </div>
-        </div>
-        <div class="right-side">
-          {{template "oapresentvalue-layout" .}}
-        </div>
-      </div>
-    </main>
-    {{template "footer"}}
-  </body>
-</html>
+<div class="split-screen">
+  <div class="left-side">
+    <div class="button-style">
+      <a href="/fin/ordinaryannuity/pv?compute=rhs-ui1" target="_self">
+        <button class="button" id="lhs-button1">n, i, FV</button>
+      </a>
+    </div>
+    <div class="button-style">
+      <a href="/fin/ordinaryannuity/pv?compute=rhs-ui2" target="_self">
+        <button class="button" id="lhs-button2">n, i, PMT</button>
+      </a>
+    </div>
+    <div class="button-back-style">
+      <a href="/fin/ordinaryannuity" target="_self">
+        <button class="button">Back</button>
+      </a>
+    </div>
+  </div>
+  <div class="right-side">
+    {{template "oapresentvalue-layout" .}}
+  </div>
+</div>
 
+{{end}}
+
+{{define "scripts"}}
+  <!-- This will automatically insert itself at the bottom of the master layout -->
+  <script type="text/javascript" src="/public/js/setPageUI.js" id="page-ui-script" data-cb="{{.Data.CurrentButton}}"></script>
 {{end}}
