@@ -1,0 +1,49 @@
+<!--
+Since you have many pages, copying and pasting the CSS link into every single file is going to become a maintenance nightmare.
+
+
+The professional and efficient way to handle this in Go is to use a Base Layout pattern. You define your HTML header, head tags, CSS links, and navbar once in a layout file, and then dynamically inject your many different page contents into it.
+
+When you execute your templates in your Go code, you must execute the "layout" template instead of the specific page template name. Go will parse everything together automatically.
+
+
+-->
+
+
+{{define "layout"}}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Finances App</title>
+
+<!-- This absolute path will now work across all your many pages -->
+
+
+    <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
+  </head>
+  <body>
+    <main>
+      <div class="center-title">
+        <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
+        {{template "title" .}}
+      </div>
+      <div class="center-datetime">
+        {{template "datetime" .}}
+      </div>
+      <!-- This dynamically injects the unique content of whatever page you are on -->
+      {{template "content" .}}
+    </main>
+    {{template "footer"}}
+    <!-- This placeholder dynamically injects scripts for pages that need them -->
+    {{template "scripts" .}}
+  </body>
+</html>
+
+{{end}}
+
+<!-- Fallback empty definition so Go won't error out on scriptless pages -->
+{{define "scripts"}}{{end}}
