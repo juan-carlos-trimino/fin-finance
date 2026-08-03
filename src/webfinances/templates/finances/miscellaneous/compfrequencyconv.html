@@ -3,31 +3,31 @@
 <!-- rhs-ui4 -->
 <div id="rhs-ui4">
   <form action="/fin/miscellaneous" method="post" enctype="application/x-www-form-urlencoded">
-    <input type="hidden" name="csrf_token" value="{{.CsrfToken}}"/>
+    <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
     <div class="cnt-grid">
       <label for="fd4-currentrate">Current Rate (%)</label>
-      <input type="number" id="fd4-currentrate" name="fd4-currentrate" value="{{.Fd4CurrentRate}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd4-currentrate" name="fd4-currentrate" value="{{.Data.Fd4CurrentRate}}" inputmode="decimal" step="any" max="9999999" required/>
       <label for="fd4-currentcompound">Current Compounding Period</label>
       <select class="cnt-select" id="fd4-currentcompound" name="fd4-currentcompound">
-        <option value="annually" {{if eq .Fd4CurrentCompound "annually"}} selected {{end}}>Annually</option>
-        <option value="semiannually" {{if eq .Fd4CurrentCompound "semiannually"}} selected {{end}}>Semiannually</option>
-        <option value="quarterly" {{if eq .Fd4CurrentCompound "quarterly"}} selected {{end}}>Quarterly</option>
-        <option value="monthly" {{if eq .Fd4CurrentCompound "monthly"}} selected {{end}}>Monthly</option>
-        <option value="weekly" {{if eq .Fd4CurrentCompound "weekly"}} selected {{end}}>Weekly</option>
-        <option value="daily360" {{if eq .Fd4CurrentCompound "daily360"}} selected {{end}}>Daily - 360</option>
-        <option value="daily365" {{if eq .Fd4CurrentCompound "daily365"}} selected {{end}}>Daily - 365</option>
-        <option value="continuously" {{if eq .Fd4CurrentCompound "continuously"}} selected {{end}}>Continuously</option>
+        <option value="annually" {{if eq .Data.Fd4CurrentCompound "annually"}} selected {{end}}>Annually</option>
+        <option value="semiannually" {{if eq .Data.Fd4CurrentCompound "semiannually"}} selected {{end}}>Semiannually</option>
+        <option value="quarterly" {{if eq .Data.Fd4CurrentCompound "quarterly"}} selected {{end}}>Quarterly</option>
+        <option value="monthly" {{if eq .Data.Fd4CurrentCompound "monthly"}} selected {{end}}>Monthly</option>
+        <option value="weekly" {{if eq .Data.Fd4CurrentCompound "weekly"}} selected {{end}}>Weekly</option>
+        <option value="daily360" {{if eq .Data.Fd4CurrentCompound "daily360"}} selected {{end}}>Daily - 360</option>
+        <option value="daily365" {{if eq .Data.Fd4CurrentCompound "daily365"}} selected {{end}}>Daily - 365</option>
+        <option value="continuously" {{if eq .Data.Fd4CurrentCompound "continuously"}} selected {{end}}>Continuously</option>
       </select>
       <label for="fd4-newcompound">New Compounding Period</label>
       <select class="cnt-select" id="fd4-newcompound" name="fd4-newcompound">
-        <option value="annually" {{if eq .Fd4NewCompound "annually"}} selected {{end}}>Annually</option>
-        <option value="semiannually" {{if eq .Fd4NewCompound "semiannually"}} selected {{end}}>Semiannually</option>
-        <option value="quarterly" {{if eq .Fd4NewCompound "quarterly"}} selected {{end}}>Quarterly</option>
-        <option value="monthly" {{if eq .Fd4NewCompound "monthly"}} selected {{end}}>Monthly</option>
-        <option value="weekly" {{if eq .Fd4NewCompound "weekly"}} selected {{end}}>Weekly</option>
-        <option value="daily360" {{if eq .Fd4NewCompound "daily360"}} selected {{end}}>Daily - 360</option>
-        <option value="daily365" {{if eq .Fd4NewCompound "daily365"}} selected {{end}}>Daily - 365</option>
-        <option value="continuously" {{if eq .Fd4NewCompound "continuously"}} selected {{end}}>Continuously</option>
+        <option value="annually" {{if eq .Data.Fd4NewCompound "annually"}} selected {{end}}>Annually</option>
+        <option value="semiannually" {{if eq .Data.Fd4NewCompound "semiannually"}} selected {{end}}>Semiannually</option>
+        <option value="quarterly" {{if eq .Data.Fd4NewCompound "quarterly"}} selected {{end}}>Quarterly</option>
+        <option value="monthly" {{if eq .Data.Fd4NewCompound "monthly"}} selected {{end}}>Monthly</option>
+        <option value="weekly" {{if eq .Data.Fd4NewCompound "weekly"}} selected {{end}}>Weekly</option>
+        <option value="daily360" {{if eq .Data.Fd4NewCompound "daily360"}} selected {{end}}>Daily - 360</option>
+        <option value="daily365" {{if eq .Data.Fd4NewCompound "daily365"}} selected {{end}}>Daily - 365</option>
+        <option value="continuously" {{if eq .Data.Fd4NewCompound "continuously"}} selected {{end}}>Continuously</option>
       </select>
     </div>
     <div class="button-back-style">
@@ -36,7 +36,7 @@
   </form>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
-    <p class="p-result">{{.Fd4Result}}</p>
+    <p class="p-result">{{.Data.Fd4Result}}</p>
   </div>
 </div>
 

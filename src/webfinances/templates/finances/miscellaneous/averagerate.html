@@ -3,13 +3,13 @@
 <!-- rhs-ui6 -->
 <div id="rhs-ui6">
   <form action="/fin/miscellaneous" method="post" enctype="application/x-www-form-urlencoded">
-    <input type="hidden" name="csrf_token" value="{{.CsrfToken}}"/>
+    <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
     <div class="cnt-grid">
       <label for="fd6-values">Values</label>
-      <input type="text" id="fd6-values" name="fd6-values" value="{{.Fd6Values}}" type="string" required/>
+      <input type="text" id="fd6-values" name="fd6-values" value="{{.Data.Fd6Values}}" type="string" required/>
     </div>
     <div>
-      <p class="p-note">{{index .Fd6Result 0}}</p>
+      <p class="p-note">{{index .Data.Fd6Result 0}}</p>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui6" type="submit">Compute</button>
@@ -17,7 +17,7 @@
   </form>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
-    <p class="p-result">{{index .Fd6Result 1}}</p>
+    <p class="p-result">{{index .Data.Fd6Result 1}}</p>
   </div>
 </div>
 
