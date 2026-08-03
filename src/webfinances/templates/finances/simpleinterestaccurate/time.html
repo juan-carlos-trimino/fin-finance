@@ -3,23 +3,23 @@
 <!-- rhs-ui4 -->
 <div id="rhs-ui4">
   <form action="/fin/simpleinterest/accurate" method="post" enctype="application/x-www-form-urlencoded">
-    <input type="hidden" name="csrf_token" value="{{.CsrfToken}}"/>
+    <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
     <div class="cnt-grid">
       <label for="fd4-interest">Interest (i %)</label>
-      <input type="number" id="fd4-interest" name="fd4-interest" value="{{.Fd4Interest}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd4-interest" name="fd4-interest" value="{{.Data.Fd4Interest}}" inputmode="decimal" step="any" max="9999999" required/>
       <label for="fd4-compound">Compounding Period</label>
       <select class="cnt-select" id="fd4-compound" name="fd4-compound">
-        <option value="annually" {{if eq .Fd4Compound "annually"}} selected {{end}}>Annually</option>
-        <option value="semiannually" {{if eq .Fd4Compound "semiannually"}} selected {{end}}>Semiannually</option>
-        <option value="quarterly" {{if eq .Fd4Compound "quarterly"}} selected {{end}}>Quarterly</option>
-        <option value="monthly" {{if eq .Fd4Compound "monthly"}} selected {{end}}>Monthly</option>
-        <option value="weekly" {{if eq .Fd4Compound "weekly"}} selected {{end}}>Weekly</option>
-        <option value="daily" {{if eq .Fd4Compound "daily"}} selected {{end}}>Daily</option>
+        <option value="annually" {{if eq .Data.Fd4Compound "annually"}} selected {{end}}>Annually</option>
+        <option value="semiannually" {{if eq .Data.Fd4Compound "semiannually"}} selected {{end}}>Semiannually</option>
+        <option value="quarterly" {{if eq .Data.Fd4Compound "quarterly"}} selected {{end}}>Quarterly</option>
+        <option value="monthly" {{if eq .Data.Fd4Compound "monthly"}} selected {{end}}>Monthly</option>
+        <option value="weekly" {{if eq .Data.Fd4Compound "weekly"}} selected {{end}}>Weekly</option>
+        <option value="daily" {{if eq .Data.Fd4Compound "daily"}} selected {{end}}>Daily</option>
       </select>
       <label for="fd4-amount">Amount of Interest</label>
-      <input type="number" id="fd4-amount" name="fd4-amount" value="{{.Fd4Amount}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd4-amount" name="fd4-amount" value="{{.Data.Fd4Amount}}" inputmode="decimal" step="any" max="9999999" required/>
       <label for="fd4-pv">Present Value (PV)</label>
-      <input type="number" id="fd4-pv" name="fd4-pv" value="{{.Fd4PV}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd4-pv" name="fd4-pv" value="{{.Data.Fd4PV}}" inputmode="decimal" step="any" max="9999999" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui4" type="submit">Compute</button>
@@ -27,7 +27,7 @@
   </form>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
-    <p class="p-result">{{.Fd4Result}}</p>
+    <p class="p-result">{{.Data.Fd4Result}}</p>
   </div>
 </div>
 
