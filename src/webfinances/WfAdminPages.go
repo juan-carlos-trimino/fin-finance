@@ -3,17 +3,21 @@ package webfinances
 import (
   bank "finance/databases/banking" //Importing a package and assigning it a local alias.
   "context"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "strings"
   "time"
 )
 
 type WfVerificationPages struct {}
+
+
+
+
 
 func (s WfVerificationPages) AdminWelcomePage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
@@ -25,19 +29,19 @@ func (s WfVerificationPages) AdminWelcomePage(res http.ResponseWriter, req *http
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    t := template.Must(template.ParseFiles(
+    templatesNeeded := []string{
+      "webfinances/templates/layout-no-navbar.html",
       "webfinances/templates/admin/admin_welcome.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
-      "webfinances/templates/footer.html"))
-    err := t.ExecuteTemplate(res, "admin_welcome_page", struct {
-      Header string
-      Datetime string
-    } { "Investments", logger.DatetimeFormat() })
-    //
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      "webfinances/templates/footer.html",
     }
+    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+      Data: struct{
+        Header string
+        Datetime string
+      } { "Investments - Admin", logger.DatetimeFormat() },
+    })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -55,20 +59,39 @@ func (s WfVerificationPages) AdminRegisterPage(res http.ResponseWriter, req *htt
     newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
     cookie := sessions.CreateCookie(newSessionToken)
     http.SetCookie(res, cookie)
-    t := template.Must(template.ParseFiles(
+    templatesNeeded := []string{
+      "webfinances/templates/layout-no-navbar.html",
       "webfinances/templates/admin/admin_register.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
-      "webfinances/templates/footer.html"))
-    err := t.ExecuteTemplate(res, "admin_register_page", map[string]string {
-      "Header": "Register User",
-      "Datetime": logger.DatetimeFormat(),
-      "CsrfToken": newSession.CsrfToken,
-    })
-    //
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      "webfinances/templates/footer.html",
     }
+    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+      Data: struct{
+        Header string
+        Datetime string
+        CsrfToken string
+        Username string
+        Password string
+        Fname string
+        Mname string
+        Lname string
+        Marketing string
+        Bdate string
+        Gender string
+        Address1 string
+        Address2 string
+        City string
+        State string
+        Country string
+        Zip_Code string
+        Email string
+        Phone string
+        ErrMsg string
+      } { "Register User - Admin", logger.DatetimeFormat(), newSession.CsrfToken, "", "", "", "",
+          "", "false", time.Now().Format("2006-01-02"), "male", "", "", "", "", "", "", "",
+          "", "" },
+    })
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
     logger.LogError(errString, correlationId)
@@ -89,19 +112,19 @@ func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req 
   } else if req.Method == http.MethodPost || req.Method == http.MethodGet {
     clickedButton := req.FormValue("button_action")  //Return either "back" or "register".
     if clickedButton == "back" {
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout-no-navbar.html",
         "webfinances/templates/admin/admin_welcome.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "admin_welcome_page", struct {
-        Header string
-        Datetime string
-      } { "Investments", logger.DatetimeFormat() })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+        } { "Investments - Admin", logger.DatetimeFormat() },
+      })
     } else {
       c := bank.AddCustomer {
         User_name: req.PostFormValue("uname"),
@@ -141,61 +164,56 @@ func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req 
       }
       ok := bank.DbAddCustomer(&c, context.Background(), correlationId)
       if ok == nil {
-        t := template.Must(template.ParseFiles(
+        templatesNeeded := []string{
+          "webfinances/templates/layout-no-navbar.html",
           "webfinances/templates/admin/admin_welcome.html",
           "webfinances/templates/title.html",
           "webfinances/templates/datetime.html",
-          "webfinances/templates/footer.html"))
-        err := t.ExecuteTemplate(res, "admin_welcome_page", struct {
-          Header string
-          Datetime string
-        } { "Investments", logger.DatetimeFormat() })
-        //
-        if err != nil {
-          logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+          "webfinances/templates/footer.html",
         }
+        renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+          Data: struct{
+            Header string
+            Datetime string
+          } { "Investments - Admin", logger.DatetimeFormat() },
+        })
       } else {
         newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
         cookie := sessions.CreateCookie(newSessionToken)
         http.SetCookie(res, cookie)
-        /***
-        The Must function wraps around the ParseGlob function that returns a pointer to a template
-        and an error, and it panics if the error is not nil.
-        ***/
-        t := template.Must(template.ParseFiles(
+        templatesNeeded := []string{
+          "webfinances/templates/layout-no-navbar.html",
           "webfinances/templates/admin/admin_register.html",
           "webfinances/templates/title.html",
           "webfinances/templates/datetime.html",
-          "webfinances/templates/footer.html"))
-        err := t.ExecuteTemplate(res, "admin_register_page", struct {
-          Header string
-          Datetime string
-          CsrfToken string
-          Username string
-          Password string
-          Fname string
-          Mname string
-          Lname string
-          Marketing string
-          Bdate string
-          Gender string
-          Address1 string
-          Address2 string
-          City string
-          State string
-          Country string
-          Zip_Code string
-          Email string
-          Phone string
-          ErrMsg string
-        } { "Register User", logger.DatetimeFormat(), newSession.CsrfToken, c.User_name, c.Password, c.First_name, middle_name,
-            c.Last_name, marketing, originalDate, c.Gender, c.Address1, address2, c.City, c.State, c.Country, zip_code, c.Email,
-            c.Phone, ok.Error(),
-        })
-        //
-        if err != nil {
-          logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+          "webfinances/templates/footer.html",
         }
+        renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+          Data: struct{
+            Header string
+            Datetime string
+            CsrfToken string
+            Username string
+            Password string
+            Fname string
+            Mname string
+            Lname string
+            Marketing string
+            Bdate string
+            Gender string
+            Address1 string
+            Address2 string
+            City string
+            State string
+            Country string
+            Zip_Code string
+            Email string
+            Phone string
+            ErrMsg string
+          } { "Register User - Admin", logger.DatetimeFormat(), newSession.CsrfToken, c.User_name, c.Password, c.First_name, middle_name,
+              c.Last_name, marketing, originalDate, c.Gender, c.Address1, address2, c.City, c.State, c.Country, zip_code, c.Email,
+              c.Phone, ok.Error() },
+        })
       }
     }
   } else {
@@ -216,29 +234,32 @@ func (s WfVerificationPages) AdminSettingsPage(res http.ResponseWriter, req *htt
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    t := template.Must(template.ParseFiles(
+    templatesNeeded := []string{
+      "webfinances/templates/layout-no-navbar.html",
       "webfinances/templates/admin/settings/settings.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
-      "webfinances/templates/footer.html"))
-    err := t.ExecuteTemplate(res, "admin_settings", struct {
-      Header string
-      Datetime string
-    } { "Settings", logger.DatetimeFormat() })
-    //
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      "webfinances/templates/footer.html",
     }
+    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+      Data: struct{
+        Header string
+        Datetime string
+      } { "Investments - Admin", logger.DatetimeFormat() },
+    })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
+
+
+
 
 func (p WfVerificationPages) PublicSettingsSecurityFile(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering PublicSettingsSecurityFile.", correlationId)
+  logger.LogInfo("Entering webfinances.PublicSettingsSecurityFile.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/admin/SettingsSecurity.js")
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }

@@ -4,12 +4,12 @@ import (
   "context"
   "encoding/json"
   "finance/databases/banking"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "os"
   "strings"
@@ -93,34 +93,29 @@ func (s WfSecurityPages) AdminSecurityPages(res http.ResponseWriter, req *http.R
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      /***
-      The Must function wraps around the ParseGlob function that returns a pointer to a template and an error, and it panics if the
-      error is not nil.
-      ***/
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout-no-navbar.html",
         "webfinances/templates/admin/settings/security/security.html",
+        "webfinances/templates/admin/settings/security/password.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
-        "webfinances/templates/admin/settings/security/password.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "admin_security", struct {
-        Header string
-        Datetime string
-        CurrentPage string
-        CurrentButton string
-        CsrfToken string
-        Username string
-        Old string
-        New string
-        Confirm string
-        ErrMsg string
-      } { "Change Password", logger.DatetimeFormat(), fields.CurrentPage, fields.CurrentButton, newSession.CsrfToken, fields.Username,
-          fields.Old, fields.New, fields.Confirm, errorMsg,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Username string
+          Old string
+          New string
+          Confirm string
+          ErrMsg string
+        } { "Change Password - Admin", logger.DatetimeFormat(), fields.CurrentPage, fields.CurrentButton, newSession.CsrfToken, fields.Username,
+            fields.Old, fields.New, fields.Confirm, errorMsg },
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
       logger.LogError(errString, "-1")
