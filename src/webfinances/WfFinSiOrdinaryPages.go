@@ -4,12 +4,12 @@ import (
   "context"
   "encoding/json"
   "finance/finances"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "os"
   "strconv"
@@ -75,7 +75,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.4f", si.OrdinaryInterest(pv, i / 100.0,
+          sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.5f", si.OrdinaryInterest(pv, i / 100.0,
             periods.GetCompoundingPeriod(sif.Fd1Compound[0], false), n, periods.GetTimePeriod(sif.Fd1TimePeriod[0], false)))
         }
         logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", sif.Fd1Time, sif.Fd1TimePeriod,
@@ -84,30 +84,31 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/simpleinterestordinary/ordinary.html",
+        "webfinances/templates/finances/simpleinterestordinary/amountofinterest.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/simpleinterestordinary/amountofinterest.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "simpleinterestordinary", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd1Time string
-        Fd1TimePeriod string
-        Fd1Interest string
-        Fd1Compound string
-        Fd1PV string
-        Fd1Result string
-      } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
-          sif.Fd1Time, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd1Time string
+          Fd1TimePeriod string
+          Fd1Interest string
+          Fd1Compound string
+          Fd1PV string
+          Fd1Result string
+        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), "welcome", sif.CurrentButton, newSession.CsrfToken,
+            sif.Fd1Time, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result },
+      })
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui2") {
       sif.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -128,7 +129,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd2Result = fmt.Sprintf("Interest Rate: %.4f%%",
+          sif.Fd2Result = fmt.Sprintf("Interest Rate: %.5f%%",
             si.OrdinaryRate(pv, a, n, periods.GetTimePeriod(sif.Fd2TimePeriod[0], false)) * 100.0)
         }
         logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, a = %s, pv = %s, %s", sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount,
@@ -137,29 +138,30 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/simpleinterestordinary/ordinary.html",
+        "webfinances/templates/finances/simpleinterestordinary/interestrate.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/simpleinterestordinary/interestrate.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "simpleinterestordinary", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd2Time string
-        Fd2TimePeriod string
-        Fd2Amount string
-        Fd2PV string
-        Fd2Result string
-      } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
-          sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd2Time string
+          Fd2TimePeriod string
+          Fd2Amount string
+          Fd2PV string
+          Fd2Result string
+        } { "Simple Interest / Ordinary Interest", "welcome", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
+            sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result },
+      })
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui3") {
       sif.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
@@ -181,7 +183,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd3Result = fmt.Sprintf("Principal: $%.4f", si.OrdinaryPrincipal(a, i / 100.0,
+          sif.Fd3Result = fmt.Sprintf("Principal: $%.5f", si.OrdinaryPrincipal(a, i / 100.0,
             periods.GetCompoundingPeriod(sif.Fd3Compound[0], false), n, periods.GetTimePeriod(sif.Fd3TimePeriod[0], false)))
         }
         logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s", sif.Fd3Time, sif.Fd3TimePeriod,
@@ -190,30 +192,31 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/simpleinterestordinary/ordinary.html",
+        "webfinances/templates/finances/simpleinterestordinary/principal.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/simpleinterestordinary/principal.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "simpleinterestordinary", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd3Time string
-        Fd3TimePeriod string
-        Fd3Interest string
-        Fd3Compound string
-        Fd3Amount string
-        Fd3Result string
-      } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
-          sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd3Time string
+          Fd3TimePeriod string
+          Fd3Interest string
+          Fd3Compound string
+          Fd3Amount string
+          Fd3Result string
+        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), "welcome", sif.CurrentButton, newSession.CsrfToken,
+            sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result },
+      })
     } else if strings.EqualFold(sif.CurrentPage, "rhs-ui4") {
       sif.CurrentButton = "lhs-button4"
       if req.Method == http.MethodPost {
@@ -234,7 +237,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd4Result = fmt.Sprintf("Time: %.4f %s", si.OrdinaryTime(pv, a, i / 100.0,
+          sif.Fd4Result = fmt.Sprintf("Time: %.5f %s", si.OrdinaryTime(pv, a, i / 100.0,
              periods.GetCompoundingPeriod(sif.Fd4Compound[0], false)), periods.TimePeriods(sif.Fd4Compound))
         }
         logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, a = %s, pv = %s, %s", sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount,
@@ -243,29 +246,30 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/finances/simpleinterestordinary/ordinary.html",
+        "webfinances/templates/finances/simpleinterestordinary/time.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/simpleinterestordinary/time.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "simpleinterestordinary", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd4Interest string
-        Fd4Compound string
-        Fd4Amount string
-        Fd4PV string
-        Fd4Result string
-      } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
-          sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd4Interest string
+          Fd4Compound string
+          Fd4Amount string
+          Fd4PV string
+          Fd4Result string
+        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), "welcome", sif.CurrentButton, newSession.CsrfToken,
+            sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result },
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", sif.CurrentPage)
       logger.LogError(errString, correlationId)
