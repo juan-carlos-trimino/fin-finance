@@ -422,9 +422,9 @@ func makeHandlers() *handlers {
   }
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
   h.mux["/public/js/admin/SettingsSecurity.js"] = wfverify.PublicSettingsSecurityFile
-  h.mux["/public/js/tableSelectRow.js"] = wfbankPages.PublicTableSelectRowFile
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/setPageUI.js"] = wfpages.PublicSetPageUIFile
+  h.mux["/public/js/tableStylesheet.js"] = wfpages.PublicTableStylesheetFile
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
   h.mux["/login"] = wfpages.LoginPage

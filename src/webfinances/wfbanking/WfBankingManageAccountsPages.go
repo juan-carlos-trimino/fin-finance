@@ -3,12 +3,12 @@ package wfbanking
 import (
   "context"
   "encoding/json"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "net/http"
   "os"
   "strings"
@@ -72,33 +72,30 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      /***
-      The Must function wraps around the ParseGlob function that returns a pointer to a template
-      and an error, and it panics if the error is not nil.
-      ***/
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/banking/manageaccounts/manageaccounts.html",
+        "webfinances/templates/banking/manageaccounts/createaccount.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/banking/manageaccounts/createaccount.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "manage_accounts", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd1BankName string
-        Fd1AccountType string
-        Fd1AccountName string
-        Fd1AccountNumber string
-        Fd1RoutingNumber string
-      } { "Manage Accounts", logger.DatetimeFormat(), maf.CurrentButton, newSession.CsrfToken, maf.Fd1BankName,
-          maf.Fd1AccountType, maf.Fd1AccountName, maf.Fd1AccountNumber, maf.Fd1RoutingNumber })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct {
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd1BankName string
+          Fd1AccountType string
+          Fd1AccountName string
+          Fd1AccountNumber string
+          Fd1RoutingNumber string
+        } { "Manage Accounts", logger.DatetimeFormat(), "welcome", maf.CurrentButton, newSession.CsrfToken, maf.Fd1BankName,
+            maf.Fd1AccountType, maf.Fd1AccountName, maf.Fd1AccountNumber, maf.Fd1RoutingNumber },
+      })
     } else if strings.EqualFold(maf.CurrentPage, "rhs-ui2") {
       maf.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -138,24 +135,25 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
         "webfinances/templates/banking/manageaccounts/manageaccounts.html",
+        "webfinances/templates/banking/manageaccounts/deleteaccount.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/banking/manageaccounts/deleteaccount.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "manage_accounts", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd2Result []Row
-      } { "Manage Accounts", logger.DatetimeFormat(), maf.CurrentButton, newSession.CsrfToken, maf.Fd2Result })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct {
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd2Result []Row
+        } { "Manage Accounts", logger.DatetimeFormat(), "welcome", maf.CurrentButton, newSession.CsrfToken, maf.Fd2Result },
+      })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", maf.CurrentPage)
       logger.LogError(errString, correlationId)

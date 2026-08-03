@@ -3,7 +3,7 @@
 <!-- rhs-ui2 -->
 <div id="rhs-ui2">
   <form id="table_id_form" action="/banking/manageaccounts" method="post" enctype="application/x-www-form-urlencoded">
-    <input type="hidden" name="csrf_token" value="{{.CsrfToken}}"/>
+    <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
     <!-- Hold the selected table row ID value for the POST body. -->
     <input type="hidden" id="table_row_id" name="selected_id" value=""/>
     <input type="hidden" id="btdelete" name="manageaccounts" value="rhs-ui2"/>
@@ -23,7 +23,7 @@
           </tr>
         </tfoot>
         <tbody id="tbody">
-          {{range .Fd2Result}}
+          {{range .Data.Fd2Result}}
           <tr class="clickable-row" data-id="{{.AccountName}}"> <!-- Row -->
             <td>{{.AccountName}}</td> <!-- Data -->
             <td>{{.AccountType}}</td>

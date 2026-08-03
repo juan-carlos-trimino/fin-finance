@@ -87,30 +87,24 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
           mf.Fd1Result[0] = fmt.Sprintf("Error: %s -- %+v", mf.Fd1Amount, err)
         } else {
           var m finances.Mortgage
-          payment, totalCost, totalInterest := m.CostOfMortgage(amount, i / 100.0,
-            mf.Fd1Compound[0], n, mf.Fd1TimePeriod[0])
+          payment, totalCost, totalInterest := m.CostOfMortgage(amount, i / 100.0, mf.Fd1Compound[0], n, mf.Fd1TimePeriod[0])
           mf.Fd1Result[0] = fmt.Sprintf("Payment: $%.5f", payment)
           mf.Fd1Result[1] = fmt.Sprintf("Total Interest: $%.5f", totalInterest)
           mf.Fd1Result[2] = fmt.Sprintf("Total Cost: $%.5f", totalCost)
         }
         logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, interest = %s, cp = %s, amount = %s, %s",
-         mf.Fd1N, mf.Fd1TimePeriod, mf.Fd1Interest, mf.Fd1Compound, mf.Fd1Amount, mf.Fd1Result[0]),
-         correlationId)
+         mf.Fd1N, mf.Fd1TimePeriod, mf.Fd1Interest, mf.Fd1Compound, mf.Fd1Amount, mf.Fd1Result[0]), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      /***
-      The Must function wraps around the ParseGlob function that returns a pointer to a template
-      and an error, and it panics if the error is not nil.
-      ***/
       templatesNeeded := []string{
         "webfinances/templates/layout.html",
         "webfinances/templates/finances/mortgage/mortgage.html",
+        "webfinances/templates/finances/mortgage/costofmortgage.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/mortgage/costofmortgage.html",
         "webfinances/templates/footer.html",
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
@@ -158,8 +152,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
             })
         } else {
           var m finances.Mortgage
-          var at = m.AmortizationTable(amount, i / 100.0, mf.Fd1Compound[0], n,
-            mf.Fd1TimePeriod[0])
+          var at = m.AmortizationTable(amount, i / 100.0, mf.Fd1Compound[0], n, mf.Fd1TimePeriod[0])
           var numberOfRows = len(at.Rows)
           mf.Fd2Result = make([]Row, 0, numberOfRows + 1)
           mf.Fd2Result = append(mf.Fd2Result,
@@ -185,8 +178,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         }
         logger.LogInfo(fmt.Sprintf(
          "n = %s, tp = %s, interest = %s, cp = %s, amount = %s, total cost = %s, total interest = %s",
-         mf.Fd2N, mf.Fd2TimePeriod, mf.Fd2Interest, mf.Fd2Compound, mf.Fd2Amount, mf.Fd2TotalCost,
-         mf.Fd2TotalInterest), correlationId)
+         mf.Fd2N, mf.Fd2TimePeriod, mf.Fd2Interest, mf.Fd2Compound, mf.Fd2Amount, mf.Fd2TotalCost, mf.Fd2TotalInterest), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -194,10 +186,10 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       templatesNeeded := []string{
         "webfinances/templates/layout.html",
         "webfinances/templates/finances/mortgage/mortgage.html",
+        "webfinances/templates/finances/mortgage/amortizationtable.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/mortgage/amortizationtable.html",
         "webfinances/templates/footer.html",
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
@@ -245,7 +237,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
         }
         logger.LogInfo(fmt.Sprintf(
          "mortgage balance = %s, mortgage rate = %s, HELOC balance = %s, HELOC rate = %s, %s",
-         mf.Fd3Mbalance, mf.Fd3Mrate, mf.Fd3Hbalance, mf.Fd3Hrate, mf.Fd3Result[2]), correlationId)
+           mf.Fd3Mbalance, mf.Fd3Mrate, mf.Fd3Hbalance, mf.Fd3Hrate, mf.Fd3Result[2]), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -253,10 +245,10 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
       templatesNeeded := []string{
         "webfinances/templates/layout.html",
         "webfinances/templates/finances/mortgage/mortgage.html",
+        "webfinances/templates/finances/mortgage/heloc.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/mortgage/heloc.html",
         "webfinances/templates/footer.html",
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
