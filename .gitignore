@@ -281,6 +281,11 @@ src/webfinances/wfbanking/*
 !src/webfinances/wfbanking/fields.go
 !src/webfinances/wfbanking/WfBankingManageAccountsPages.go
 !src/webfinances/wfbanking/WfBankingPages.go
+# ... and this directory and its file...
+!src/webfinances/wfadmin/
+src/webfinances/wfadmin/*
+!src/webfinances/wfadmin/WfAdminPages.go
+!src/webfinances/wfadmin/WfAdminSecurityPages.go
 ################################
 # Infrastructure as Code (IaC) #
 ################################
