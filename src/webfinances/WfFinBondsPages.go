@@ -4,12 +4,12 @@ import (
   "context"
   "encoding/json"
   "finance/finances"
+  "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gposu"
   "github.com/juan-carlos-trimino/gpsessions"
-  "html/template"
   "math"
   "net/http"
   "os"
@@ -91,7 +91,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           bf.Fd1Result = fmt.Sprintf("Error: %s -- %+v", bf.Fd1FederalTax, err)
         } else {
           var b finances.Bonds
-          bf.Fd1Result = fmt.Sprintf("Taxable-Equivalent Yield: %.3f%%",
+          bf.Fd1Result = fmt.Sprintf("Taxable-Equivalent Yield: %.5f%%",
             b.TaxableVsTaxFreeYields(taxFree, cityTax, stateTax, federalTax) * 100.0)
         }
         logger.LogInfo(fmt.Sprintf(
@@ -101,34 +101,30 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      /***
-      The Must function wraps around the ParseGlob function that returns a pointer to a template
-      and an error, and it panics if the error is not nil.
-      ***/
-      t := template.Must(template.ParseFiles(
-				"webfinances/templates/finances/bonds/bonds.html",
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
+        "webfinances/templates/finances/bonds/bonds.html",
+        "webfinances/templates/finances/bonds/taxfree.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/bonds/taxfree.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "bonds", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd1TaxFree string
-        Fd1CityTax string
-        Fd1StateTax string
-        Fd1FederalTax string
-        Fd1Result string
-      } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd1TaxFree,
-          bf.Fd1CityTax, bf.Fd1StateTax, bf.Fd1FederalTax, bf.Fd1Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd1TaxFree string
+          Fd1CityTax string
+          Fd1StateTax string
+          Fd1FederalTax string
+          Fd1Result string
+        } { "Bonds", logger.DatetimeFormat(), "welcome", bf.CurrentButton, newSession.CsrfToken, bf.Fd1TaxFree,
+            bf.Fd1CityTax, bf.Fd1StateTax, bf.Fd1FederalTax, bf.Fd1Result },
+      })
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui2") {
       bf.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
@@ -166,11 +162,11 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           }
           //
           if math.Abs(fv - currentPrice) < finances.Accuracy {
-            bf.Fd2Result = fmt.Sprintf("Current Price: $%.2f (par)", currentPrice)
+            bf.Fd2Result = fmt.Sprintf("Current Price: $%.5f (par)", currentPrice)
           } else if fv < currentPrice {
-            bf.Fd2Result = fmt.Sprintf("Current Price: $%.2f (premium)", currentPrice)
+            bf.Fd2Result = fmt.Sprintf("Current Price: $%.5f (premium)", currentPrice)
           } else {
-            bf.Fd2Result = fmt.Sprintf("Current Price: $%.2f (discount)", currentPrice)
+            bf.Fd2Result = fmt.Sprintf("Current Price: $%.5f (discount)", currentPrice)
           }
         }
         logger.LogInfo(fmt.Sprintf(
@@ -181,34 +177,34 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
-				"webfinances/templates/finances/bonds/bonds.html",
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
+        "webfinances/templates/finances/bonds/bonds.html",
+        "webfinances/templates/finances/bonds/currentprice.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/bonds/currentprice.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "bonds", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd2FaceValue string
-        Fd2Time string
-        Fd2TimePeriod string
-        Fd2Coupon string
-        Fd2CompoundCoupon string
-        Fd2Current string
-        Fd2Compound string
-        Fd2Result string
-      } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken,
-          bf.Fd2FaceValue, bf.Fd2Time, bf.Fd2TimePeriod, bf.Fd2Coupon, bf.Fd2CompoundCoupon,
-          bf.Fd2Current, bf.Fd2Compound, bf.Fd2Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd2FaceValue string
+          Fd2Time string
+          Fd2TimePeriod string
+          Fd2Coupon string
+          Fd2CompoundCoupon string
+          Fd2Current string
+          Fd2Compound string
+          Fd2Result string
+        } { "Bonds", logger.DatetimeFormat(), "welcome", bf.CurrentButton, newSession.CsrfToken, bf.Fd2FaceValue,
+            bf.Fd2Time, bf.Fd2TimePeriod, bf.Fd2Coupon, bf.Fd2CompoundCoupon, bf.Fd2Current, bf.Fd2Compound,
+            bf.Fd2Result },
+      })
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui3") {
       bf.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
@@ -237,7 +233,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           bf.Fd3Result = fmt.Sprintf("Error: %s -- %+v", bf.Fd3CallPrice, err)
         } else {
           var b finances.Bonds
-          bf.Fd3Result = fmt.Sprintf("Yield to Call: %.3f%%", b.YieldToCall(fv, couponRate,
+          bf.Fd3Result = fmt.Sprintf("Yield to Call: %.5f%%", b.YieldToCall(fv, couponRate,
             b.GetCompoundingPeriod(bf.Fd3Compound[0], true), timeToCall,
             b.GetTimePeriod(bf.Fd3TimePeriod[0], true), bondPrice, callPrice))
         }
@@ -249,34 +245,33 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
-				"webfinances/templates/finances/bonds/bonds.html",
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
+        "webfinances/templates/finances/bonds/bonds.html",
+        "webfinances/templates/finances/bonds/yieldtocall.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/bonds/yieldtocall.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "bonds", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd3FaceValue string
-        Fd3TimeCall string
-        Fd3TimePeriod string
-        Fd3Coupon string
-        Fd3Compound string
-        Fd3BondPrice string
-        Fd3CallPrice string
-        Fd3Result string
-      } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd3FaceValue,
-          bf.Fd3TimeCall, bf.Fd3TimePeriod, bf.Fd3Coupon, bf.Fd3Compound, bf.Fd3BondPrice,
-          bf.Fd3CallPrice, bf.Fd3Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd3FaceValue string
+          Fd3TimeCall string
+          Fd3TimePeriod string
+          Fd3Coupon string
+          Fd3Compound string
+          Fd3BondPrice string
+          Fd3CallPrice string
+          Fd3Result string
+        } { "Bonds", logger.DatetimeFormat(), "welcome", bf.CurrentButton, newSession.CsrfToken, bf.Fd3FaceValue,
+            bf.Fd3TimeCall, bf.Fd3TimePeriod, bf.Fd3Coupon, bf.Fd3Compound, bf.Fd3BondPrice, bf.Fd3CallPrice, bf.Fd3Result },
+      })
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui4") {
       bf.CurrentButton = "lhs-button4"
       if req.Method == http.MethodPost {
@@ -317,19 +312,19 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           if currentInterest {
             if cp != finances.Continuously {
               bondPrice = b.CurrentPrice(cf, curInterest, cp)
-              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.3f%%",
+              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.5f%%",
                 b.YieldToMaturity(cf, bondPrice, tp))
             } else {
               bondPrice = b.CurrentPriceContinuous(cf, curInterest)
-              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.3f%%",
+              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.5f%%",
                 b.YieldToMaturityContinuous(cf, bondPrice))
             }
           } else {  //Bond price.
             if cp != finances.Continuously {
-              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.3f%%",
+              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.5f%%",
                 b.YieldToMaturity(cf, bondPrice, cp))
             } else {
-              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.3f%%",
+              bf.Fd4Result[0] = fmt.Sprintf("Yield to Maturity: %.5f%%",
                 b.YieldToMaturityContinuous(cf, bondPrice))
             }
           }
@@ -343,7 +338,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
             annualRate = a.CompoundingFrequencyConversion(couponRate / 100.0,
               a.GetCompoundingPeriod(bf.Fd4Compound[0], true), a.GetCompoundingPeriod('a', true)) * 100.0
           }
-          bf.Fd4Result[1] = fmt.Sprintf("Current Yield: %.3f%%", b.CurrentYield(annualRate, fv, bondPrice) * 100.0)
+          bf.Fd4Result[1] = fmt.Sprintf("Current Yield: %.5f%%", b.CurrentYield(annualRate, fv, bondPrice) * 100.0)
         }
         logger.LogInfo(fmt.Sprintf(
          "fv = %s, time = %s, tp = %s, coupon = %s, cp = %s, cur radio = %s, cur interest = %s, bond price = %s, %s",
@@ -353,35 +348,35 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
-				"webfinances/templates/finances/bonds/bonds.html",
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
+        "webfinances/templates/finances/bonds/bonds.html",
+        "webfinances/templates/finances/bonds/yieldtomaturity.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/bonds/yieldtomaturity.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "bonds", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd4FaceValue string
-        Fd4Time string
-        Fd4TimePeriod string
-        Fd4Coupon string
-        Fd4Compound string
-        Fd4CurrentRadio string
-        Fd4CurInterest string
-        Fd4BondPrice string
-        Fd4Result [2]string
-      } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd4FaceValue,
-          bf.Fd4Time, bf.Fd4TimePeriod, bf.Fd4Coupon, bf.Fd4Compound, bf.Fd4CurrentRadio,
-          bf.Fd4CurInterest, bf.Fd4BondPrice, bf.Fd4Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd4FaceValue string
+          Fd4Time string
+          Fd4TimePeriod string
+          Fd4Coupon string
+          Fd4Compound string
+          Fd4CurrentRadio string
+          Fd4CurInterest string
+          Fd4BondPrice string
+          Fd4Result [2]string
+        } { "Bonds", logger.DatetimeFormat(), "welcome", bf.CurrentButton, newSession.CsrfToken, bf.Fd4FaceValue, bf.Fd4Time,
+            bf.Fd4TimePeriod, bf.Fd4Coupon, bf.Fd4Compound, bf.Fd4CurrentRadio, bf.Fd4CurInterest, bf.Fd4BondPrice,
+            bf.Fd4Result },
+      })
     } else if strings.EqualFold(bf.CurrentPage, "rhs-ui5") {
       bf.CurrentButton = "lhs-button5"
       if req.Method == http.MethodPost {
@@ -413,10 +408,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           //Duration.
           switch bf.Fd5Compound[0] {
           case 'c', 'C':
-            bf.Fd5Result[0] = fmt.Sprintf("Duration: %.3f",
+            bf.Fd5Result[0] = fmt.Sprintf("Duration: %.5f",
               b.DurationContinuous(cf, current, b.CurrentPriceContinuous(cf, current)))
           default:
-            bf.Fd5Result[0] = fmt.Sprintf("Duration: %.3f",
+            bf.Fd5Result[0] = fmt.Sprintf("Duration: %.5f",
               b.Duration(cf, cp, current, b.CurrentPrice(cf, current, cp)))
           }
           //Macaulay Duration.
@@ -425,10 +420,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           }
           switch bf.Fd5Compound[0] {
           case 'c', 'C':
-            bf.Fd5Result[2] = fmt.Sprintf("Macaulay Duration: %.3f year(s)",
+            bf.Fd5Result[2] = fmt.Sprintf("Macaulay Duration: %.5f year(s)",
               b.MacaulayDurationContinuous(cf, b.CurrentPriceContinuous(cf, current)))
           default:
-            bf.Fd5Result[2] = fmt.Sprintf("Macaulay Duration: %.3f year(s)",
+            bf.Fd5Result[2] = fmt.Sprintf("Macaulay Duration: %.5f year(s)",
               b.MacaulayDuration(cf, b.GetCompoundingPeriod(bf.Fd5CompoundCoupon[0], true),
                 b.CurrentPrice(cf, current, b.GetCompoundingPeriod(bf.Fd5Compound[0], true))))
           }
@@ -436,7 +431,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           if len(bf.Fd5Result[4]) == 0 {
             bf.Fd5Result[3] = bond_notes[1]
           }
-          bf.Fd5Result[4] = fmt.Sprintf("Modified Duration: %.3f%%",
+          bf.Fd5Result[4] = fmt.Sprintf("Modified Duration: %.5f%%",
             b.ModifiedDuration(cf, b.GetCompoundingPeriod(bf.Fd5CompoundCoupon[0], true),
             b.CurrentPrice(cf, current, b.GetCompoundingPeriod(bf.Fd5Compound[0], true))))
           //Convexity.
@@ -445,10 +440,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           }
           switch bf.Fd5Compound[0] {
           case 'c', 'C':
-            bf.Fd5Result[6] = fmt.Sprintf("Convexity: %.3f", b.ConvexityContinuous(cf, current,
+            bf.Fd5Result[6] = fmt.Sprintf("Convexity: %.5f", b.ConvexityContinuous(cf, current,
               b.CurrentPriceContinuous(cf, current)))
           default:
-            bf.Fd5Result[6] = fmt.Sprintf("Convexity: %.3f", b.Convexity(cf, current,
+            bf.Fd5Result[6] = fmt.Sprintf("Convexity: %.5f", b.Convexity(cf, current,
               b.GetCompoundingPeriod(bf.Fd5Compound[0], true)))
           }
         }
@@ -460,34 +455,33 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
-      t := template.Must(template.ParseFiles(
-				"webfinances/templates/finances/bonds/bonds.html",
+      templatesNeeded := []string{
+        "webfinances/templates/layout.html",
+        "webfinances/templates/finances/bonds/bonds.html",
+        "webfinances/templates/finances/bonds/duration.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
-        "webfinances/templates/finances/bonds/duration.html",
-        "webfinances/templates/footer.html"))
-      err := t.ExecuteTemplate(res, "bonds", struct {
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Fd5FaceValue string
-        Fd5Time string
-        Fd5TimePeriod string
-        Fd5Coupon string
-        Fd5CompoundCoupon string
-        Fd5CurInterest string
-        Fd5Compound string
-        Fd5Result [7]string
-      } { "Bonds", logger.DatetimeFormat(), bf.CurrentButton, newSession.CsrfToken, bf.Fd5FaceValue,
-          bf.Fd5Time, bf.Fd5TimePeriod, bf.Fd5Coupon, bf.Fd5CompoundCoupon, bf.Fd5CurInterest,
-          bf.Fd5Compound, bf.Fd5Result,
-      })
-      //
-      if err != nil {
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+        "webfinances/templates/footer.html",
       }
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+        Data: struct{
+          Header string
+          Datetime string
+          CurrentPage string
+          CurrentButton string
+          CsrfToken string
+          Fd5FaceValue string
+          Fd5Time string
+          Fd5TimePeriod string
+          Fd5Coupon string
+          Fd5CompoundCoupon string
+          Fd5CurInterest string
+          Fd5Compound string
+          Fd5Result [7]string
+        } { "Bonds", logger.DatetimeFormat(), "welcome", bf.CurrentButton, newSession.CsrfToken, bf.Fd5FaceValue,
+            bf.Fd5Time, bf.Fd5TimePeriod, bf.Fd5Coupon, bf.Fd5CompoundCoupon, bf.Fd5CurInterest, bf.Fd5Compound, bf.Fd5Result },
+      })
     // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui6") {
     //   bf.CurrentButton = "lhs-button6"
     //   if req.Method == http.MethodPost {

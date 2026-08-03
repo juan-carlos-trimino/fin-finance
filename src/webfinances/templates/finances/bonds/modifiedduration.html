@@ -3,42 +3,42 @@
 <!-- rhs-ui7 -->
 <div id="rhs-ui7">
   <form action="/fin/bonds" method="post" enctype="application/x-www-form-urlencoded">
-    <input type="hidden" name="csrf_token" value="{{.CsrfToken}}"/>
+    <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
     <div class="cnt-grid">
       <label for="fd7-facevalue">Face Value</label>
-      <input type="number" id="fd7-facevalue" name="fd7-facevalue" value="{{.Fd7FaceValue}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd7-facevalue" name="fd7-facevalue" value="{{.Data.Fd7FaceValue}}" inputmode="decimal" step="any" max="9999999" required/>
       <label for="fd7-time">Time</label>
-      <input type="number" id="fd7-time" name="fd7-time" value="{{.Fd7Time}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd7-time" name="fd7-time" value="{{.Data.Fd7Time}}" inputmode="decimal" step="any" max="9999999" required/>
       <label for="fd7-tp">Time Period</label>
       <select class="cnt-select" name="fd7-tp" id="fd7-tp">
-        <option value="year" {{if eq .Fd7TimePeriod "year"}} selected {{end}}>Year(s)</option>
-        <option value="semiyear" {{if eq .Fd7TimePeriod "semiyear"}} selected {{end}}>Semiyear(s)</option>
-        <option value="quarter" {{if eq .Fd7TimePeriod "quarter"}} selected {{end}}>Quarter(s)</option>
-        <option value="month" {{if eq .Fd7TimePeriod "month"}} selected {{end}}>Month(s)</option>
-        <option value="week" {{if eq .Fd7TimePeriod "week"}} selected {{end}}>Week(s)</option>
+        <option value="year" {{if eq .Data.Fd7TimePeriod "year"}} selected {{end}}>Year(s)</option>
+        <option value="semiyear" {{if eq .Data.Fd7TimePeriod "semiyear"}} selected {{end}}>Semiyear(s)</option>
+        <option value="quarter" {{if eq .Data.Fd7TimePeriod "quarter"}} selected {{end}}>Quarter(s)</option>
+        <option value="month" {{if eq .Data.Fd7TimePeriod "month"}} selected {{end}}>Month(s)</option>
+        <option value="week" {{if eq .Data.Fd7TimePeriod "week"}} selected {{end}}>Week(s)</option>
       </select>
       <label for="fd7-coupon">Coupon Rate (%)</label>
-      <input type="number" id="fd7-coupon" name="fd7-coupon" value="{{.Fd7Coupon}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd7-coupon" name="fd7-coupon" value="{{.Data.Fd7Coupon}}" inputmode="decimal" step="any" max="9999999" required/>
       <label for="fd7-compound-coupon">Compounding Period</label>
       <select class="cnt-textcombo" id="fd7-compound-coupon" name="fd7-compound-coupon">
-        <option value="annually" {{if eq .Fd7CompoundCoupon "annually"}} selected {{end}}>Annually</option>
-        <option value="semiannually" {{if eq .Fd7CompoundCoupon "semiannually"}} selected {{end}}>Semiannually</option>
-        <option value="quarterly" {{if eq .Fd7CompoundCoupon "quarterly"}} selected {{end}}>Quarterly</option>
-        <option value="monthly" {{if eq .Fd7CompoundCoupon "monthly"}} selected {{end}}>Monthly</option>
-        <option value="weekly" {{if eq .Fd7CompoundCoupon "weekly"}} selected {{end}}>Weekly</option>
-        <!-- <option value="continuously" {{if eq .Fd7CompoundCoupon "continuously"}} selected {{end}}>Continuously</option> -->
+        <option value="annually" {{if eq .Data.Fd7CompoundCoupon "annually"}} selected {{end}}>Annually</option>
+        <option value="semiannually" {{if eq .Data.Fd7CompoundCoupon "semiannually"}} selected {{end}}>Semiannually</option>
+        <option value="quarterly" {{if eq .Data.Fd7CompoundCoupon "quarterly"}} selected {{end}}>Quarterly</option>
+        <option value="monthly" {{if eq .Data.Fd7CompoundCoupon "monthly"}} selected {{end}}>Monthly</option>
+        <option value="weekly" {{if eq .Data.Fd7CompoundCoupon "weekly"}} selected {{end}}>Weekly</option>
+        <!-- <option value="continuously" {{if eq .Data.Fd7CompoundCoupon "continuously"}} selected {{end}}>Continuously</option> -->
       </select>
       <label for="fd7-current">Current Interest (%)</label>
-      <input type="number" id="fd7-current" name="fd7-current" value="{{.Fd7CurInterest}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd7-current" name="fd7-current" value="{{.Data.Fd7CurInterest}}" inputmode="decimal" step="any" max="9999999" required/>
       <label>Compounding Period or</label><br>
       <label for="fd7-compound">Coupon Payment Frequency</label>
       <select class="cnt-select" id="fd7-compound" name="fd7-compound">
-        <option value="annually" {{if eq .Fd7Compound "annually"}} selected {{end}}>Annually</option>
-        <option value="semiannually" {{if eq .Fd7Compound "semiannually"}} selected {{end}}>Semiannually</option>
-        <option value="quarterly" {{if eq .Fd7Compound "quarterly"}} selected {{end}}>Quarterly</option>
-        <option value="monthly" {{if eq .Fd7Compound "monthly"}} selected {{end}}>Monthly</option>
-        <option value="weekly" {{if eq .Fd7Compound "weekly"}} selected {{end}}>Weekly</option>
-        <!-- <option value="continuously" {{if eq .Fd7Compound "continuously"}} selected {{end}}>Continuously</option> -->
+        <option value="annually" {{if eq .Data.Fd7Compound "annually"}} selected {{end}}>Annually</option>
+        <option value="semiannually" {{if eq .Data.Fd7Compound "semiannually"}} selected {{end}}>Semiannually</option>
+        <option value="quarterly" {{if eq .Data.Fd7Compound "quarterly"}} selected {{end}}>Quarterly</option>
+        <option value="monthly" {{if eq .Data.Fd7Compound "monthly"}} selected {{end}}>Monthly</option>
+        <option value="weekly" {{if eq .Data.Fd7Compound "weekly"}} selected {{end}}>Weekly</option>
+        <!-- <option value="continuously" {{if eq .Data.Fd7Compound "continuously"}} selected {{end}}>Continuously</option> -->
       </select>
     </div>
     <div class="button-back-style">
@@ -47,8 +47,8 @@
   </form>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
-    <p class="p-note">{{index .Fd7Result 0}}</p>
-    <p class="p-result">{{index .Fd7Result 1}}</p>
+    <p class="p-note">{{index .Data.Fd7Result 0}}</p>
+    <p class="p-result">{{index .Data.Fd7Result 1}}</p>
   </div>
 </div>
 

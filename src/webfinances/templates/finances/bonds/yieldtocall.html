@@ -3,38 +3,38 @@
 <!-- rhs-ui3 -->
 <div id="rhs-ui3">
   <form action="/fin/bonds" method="post" enctype="application/x-www-form-urlencoded">
-    <input type="hidden" name="csrf_token" value="{{.CsrfToken}}"/>
+    <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
     <!-- margin: top, right, bottom, left -->
     <div class="cnt-grid">
       <label for="fd3-facevalue">Face Value</label>
-      <input type="number" id="fd3-facevalue" name="fd3-facevalue" value="{{.Fd3FaceValue}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd3-facevalue" name="fd3-facevalue" value="{{.Data.Fd3FaceValue}}" inputmode="decimal" step="any" max="9999999" required/>
       <label for="fd3-timecall">Time to Call</label>
-      <input type="number" id="fd3-timecall" name="fd3-timecall" value="{{.Fd3TimeCall}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd3-timecall" name="fd3-timecall" value="{{.Data.Fd3TimeCall}}" inputmode="decimal" step="any" max="9999999" required/>
       <label for="fd3-tp">Time Period</label>
       <select class="cnt-select" name="fd3-tp" id="fd3-tp">
-        <option value="year" {{if eq .Fd3TimePeriod "year"}} selected {{end}}>Year(s)</option>
-        <option value="semiyear" {{if eq .Fd3TimePeriod "semiyear"}} selected {{end}}>Semiyear(s)</option>
-        <option value="quarter" {{if eq .Fd3TimePeriod "quarter"}} selected {{end}}>Quarter(s)</option>
-        <option value="month" {{if eq .Fd3TimePeriod "month"}} selected {{end}}>Month(s)</option>
-        <option value="week" {{if eq .Fd3TimePeriod "week"}} selected {{end}}>Week(s)</option>
-        <option value="day" {{if eq .Fd3TimePeriod "day"}} selected {{end}}>Day(s)</option>
+        <option value="year" {{if eq .Data.Fd3TimePeriod "year"}} selected {{end}}>Year(s)</option>
+        <option value="semiyear" {{if eq .Data.Fd3TimePeriod "semiyear"}} selected {{end}}>Semiyear(s)</option>
+        <option value="quarter" {{if eq .Data.Fd3TimePeriod "quarter"}} selected {{end}}>Quarter(s)</option>
+        <option value="month" {{if eq .Data.Fd3TimePeriod "month"}} selected {{end}}>Month(s)</option>
+        <option value="week" {{if eq .Data.Fd3TimePeriod "week"}} selected {{end}}>Week(s)</option>
+        <option value="day" {{if eq .Data.Fd3TimePeriod "day"}} selected {{end}}>Day(s)</option>
       </select>
       <label for="fd3-coupon">Coupon Rate (%)</label>
-      <input type="number" id="fd3-coupon" name="fd3-coupon" value="{{.Fd3Coupon}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd3-coupon" name="fd3-coupon" value="{{.Data.Fd3Coupon}}" inputmode="decimal" step="any" max="9999999" required/>
       <label for="fd3-compound">Compounding Period</label>
       <select class="cnt-select" id="fd3-compound" name="fd3-compound">
-        <option value="annually" {{if eq .Fd3Compound "annually"}} selected {{end}}>Annually</option>
-        <option value="semiannually" {{if eq .Fd3Compound "semiannually"}} selected {{end}}>Semiannually</option>
-        <option value="quarterly" {{if eq .Fd3Compound "quarterly"}} selected {{end}}>Quarterly</option>
-        <option value="monthly" {{if eq .Fd3Compound "monthly"}} selected {{end}}>Monthly</option>
-        <option value="weekly" {{if eq .Fd3Compound "weekly"}} selected {{end}}>Weekly</option>
-        <option value="daily" {{if eq .Fd3Compound "daily"}} selected {{end}}>Daily</option>
-        <option value="continuously" {{if eq .Fd3Compound "continuously"}} selected {{end}}>Continuously</option>
+        <option value="annually" {{if eq .Data.Fd3Compound "annually"}} selected {{end}}>Annually</option>
+        <option value="semiannually" {{if eq .Data.Fd3Compound "semiannually"}} selected {{end}}>Semiannually</option>
+        <option value="quarterly" {{if eq .Data.Fd3Compound "quarterly"}} selected {{end}}>Quarterly</option>
+        <option value="monthly" {{if eq .Data.Fd3Compound "monthly"}} selected {{end}}>Monthly</option>
+        <option value="weekly" {{if eq .Data.Fd3Compound "weekly"}} selected {{end}}>Weekly</option>
+        <option value="daily" {{if eq .Data.Fd3Compound "daily"}} selected {{end}}>Daily</option>
+        <option value="continuously" {{if eq .Data.Fd3Compound "continuously"}} selected {{end}}>Continuously</option>
       </select>
       <label for="fd3-bondprice">Bond Price</label>
-      <input type="number" id="fd3-bondprice" name="fd3-bondprice" value="{{.Fd3BondPrice}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd3-bondprice" name="fd3-bondprice" value="{{.Data.Fd3BondPrice}}" inputmode="decimal" step="any" max="9999999" required/>
       <label for="fd3-callprice">Call Price</label>
-      <input type="number" id="fd3-callprice" name="fd3-callprice" value="{{.Fd3CallPrice}}" inputmode="decimal" step="any" max="9999999" required/>
+      <input type="number" id="fd3-callprice" name="fd3-callprice" value="{{.Data.Fd3CallPrice}}" inputmode="decimal" step="any" max="9999999" required/>
     </div>
     <div class="button-back-style">
       <button class="button" id="btcompute" name="compute" value="rhs-ui3" type="submit">Compute</button>
@@ -42,7 +42,7 @@
   </form>
   <div>
     <hr size="4" width="50%" color="darkgreen"/>
-    <p class="p-result">{{.Fd3Result}}</p>
+    <p class="p-result">{{.Data.Fd3Result}}</p>
   </div>
 </div>
 
