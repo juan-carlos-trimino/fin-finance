@@ -64,6 +64,53 @@ func (s WfAdminPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
+
+
+
+
+func (s WfAdminPages) UsersPage(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering wfadmin.UsersPage.", correlationId)
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
+    invalidSession(res)
+  } else {
+    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
+    cookie := sessions.CreateCookie(newSessionToken)
+    http.SetCookie(res, cookie)
+    templatesNeeded := []string{
+      "webfinances/templates/layout-no-navbar.html",
+      "webfinances/templates/admin/users.html",
+      "webfinances/templates/title.html",
+      "webfinances/templates/datetime.html",
+      "webfinances/templates/footer.html",
+    }
+    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+      Data: struct{
+        Header string
+        Datetime string
+        CsrfToken string
+      } { "Register User - Admin", logger.DatetimeFormat(), newSession.CsrfToken, },
+    })
+  }
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 func (s WfAdminPages) RegisterPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())

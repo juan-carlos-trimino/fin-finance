@@ -135,7 +135,6 @@ src/webfinances/templates/*
 # ... and this directory and its file...
 !src/webfinances/templates/admin/
 src/webfinances/templates/admin/*
-!src/webfinances/templates/admin/register.html
 !src/webfinances/templates/admin/welcome.html
 !src/webfinances/templates/admin/settings/
 src/webfinances/templates/admin/settigs/*
@@ -144,6 +143,11 @@ src/webfinances/templates/admin/settigs/*
 src/webfinances/templates/admin/settigs/security/*
 !src/webfinances/templates/admin/settings/security/password.html
 !src/webfinances/templates/admin/settings/security/security.html
+!src/webfinances/templates/admin/users/
+src/webfinances/templates/admin/users/*
+!src/webfinances/templates/admin/users/register.html
+!src/webfinances/templates/admin/users/unregister.html
+!src/webfinances/templates/admin/users/users.html
 # ... and this directory and its file...
 !src/webfinances/templates/banking/
 src/webfinances/templates/banking/*
