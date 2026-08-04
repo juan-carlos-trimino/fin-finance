@@ -135,15 +135,8 @@ src/webfinances/templates/*
 # ... and this directory and its file...
 !src/webfinances/templates/admin/
 src/webfinances/templates/admin/*
-
-
-!src/webfinances/templates/admin/admin_register.html
-!src/webfinances/templates/admin/admin_welcome.html
-
 !src/webfinances/templates/admin/register.html
 !src/webfinances/templates/admin/welcome.html
-
-
 !src/webfinances/templates/admin/settings/
 src/webfinances/templates/admin/settigs/*
 !src/webfinances/templates/admin/settings/settings.html
@@ -292,6 +285,7 @@ src/webfinances/wfbanking/*
 # ... and this directory and its file...
 !src/webfinances/wfadmin/
 src/webfinances/wfadmin/*
+!src/webfinances/wfadmin/fields.go
 !src/webfinances/wfadmin/WfAdminPages.go
 !src/webfinances/wfadmin/WfAdminSecurityPages.go
 ################################
