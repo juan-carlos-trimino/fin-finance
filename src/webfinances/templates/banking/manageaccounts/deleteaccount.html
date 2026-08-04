@@ -6,7 +6,7 @@
     <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
     <!-- Hold the selected table row ID value for the POST body. -->
     <input type="hidden" id="table_row_id" name="selected_id" value=""/>
-    <input type="hidden" id="btdelete" name="manageaccounts" value="rhs-ui2"/>
+    <input type="hidden" id="the_button" name="manageaccounts" value="rhs-ui2"/>
     <div class="custom-table-scrollable">
       <table class="custom-table" id="custom-table" float="center">
         <caption class="custom-table-caption">Accounts</caption>
@@ -36,7 +36,7 @@
       <!--
       Because the button is configured as type="button", it will never submit the form on its own.
       -->
-      <button class="button" id="btdelete" name="delete" type="button">Delete</button>
+      <button type="button" class="button" id="the_button" name="the_button">Delete</button>
     </div>
   </form>
 </div>

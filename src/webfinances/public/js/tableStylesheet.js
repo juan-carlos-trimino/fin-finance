@@ -70,11 +70,11 @@ document.addEventListener("click", function(event) {
   console.log("Mouse pointer physically hit this HTML tag:", event.target);
   //Target check using multiple lookup strategies.
   //Safe check using combined selector logic.
-  const clickedButton = event.target.id === "btdelete" ? event.target : event.target.closest("#btdelete");
+  const clickedButton = event.target.id === "the_button" ? event.target : event.target.closest("#the_button");
   if (!clickedButton) return;
   //Prevent premature default browser actions.
   event.preventDefault();
-  console.log("Success! Save button (#btdelete) detected via delegation.");
+  console.log("Success! Save button (#the_button) detected via delegation.");
   const dynamicTableBody = document.querySelector("tbody");
   if (!dynamicTableBody) {
     console.error("Table body target #custom-table tbody was not found!");
@@ -91,13 +91,13 @@ document.addEventListener("click", function(event) {
     console.log("CONTINUE. Processing ID:", id);
     //Locate the form and hidden input fields.
     const hiddenInput = document.getElementById("table_row_id");
-    const rowIdForm = document.getElementById("table_id_form");
-    if (hiddenInput && rowIdForm) {
+    const tableIdForm = document.getElementById("table_id_form");
+    if (hiddenInput && tableIdForm) {
       //Load the current active table row ID directly into the hidden element value.
       hiddenInput.value = id;
       console.log("Submitting secure POST request payload containing CSRF token...");
       //Dispatch the form standard POST request to the Go backend endpoint.
-      rowIdForm.submit();
+      tableIdForm.submit();
     } else {
       console.error("Critical Failure: Form layout elements could not be referenced.");
     }
