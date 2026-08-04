@@ -68,16 +68,3 @@ func (p WfBankingPages) BankingPage(res http.ResponseWriter, req *http.Request) 
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
