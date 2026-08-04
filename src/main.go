@@ -10,6 +10,7 @@
 package main
 
 import (
+  admin "finance/webfinances/wfadmin"  //Importing a package and assigning it a local alias.
   bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
   "context"
   "crypto/tls"
@@ -362,8 +363,8 @@ func makeHandlers() *handlers {
   var wfsio = webfinances.WfSiOrdinaryPages{}
   var wfsib = webfinances.WfSiBankersPages{}
   var wfmisc = webfinances.WfMiscellaneousPages{}
-  var wfverify = webfinances.WfVerificationPages{}
-  var wfsecurity = webfinances.WfSecurityPages{}
+  var wfverify = admin.WfVerificationPages{}
+  var wfsecurity = admin.WfSecurityPages{}
   /***
   The Go web server will route requests to different functions depending on the requested URL.
   ***/

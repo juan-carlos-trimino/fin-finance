@@ -1,4 +1,4 @@
-package webfinances
+package wfadmin
 
 import (
   "context"

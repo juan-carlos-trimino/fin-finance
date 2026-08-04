@@ -1,4 +1,4 @@
-package webfinances
+package wfadmin
 
 import (
   bank "finance/databases/banking" //Importing a package and assigning it a local alias.
@@ -13,11 +13,25 @@ import (
   "time"
 )
 
+/***
+When handling authentication errors, the application should not disclose which part of the
+authentication data was incorrect. Instead of "Invalid username" or "Invalid password", just use
+"Invalid username and/or password" interchangeably.
+***/
+func invalidSession(res http.ResponseWriter) {
+  templatesNeeded := []string{
+    "webfinances/templates/layout-simple.html",
+    "webfinances/templates/login.html",
+  }
+  renderer.Render(res, "layout-simple", templatesNeeded, renderer.PageData{
+    Data: struct{
+      Header string
+      ErrMsg string
+    } { "Login", "Invalid username and/or password" },
+  })
+}
+
 type WfVerificationPages struct {}
-
-
-
-
 
 func (s WfVerificationPages) AdminWelcomePage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
