@@ -5,7 +5,7 @@ const buttonIds = ["lhs-button1", "lhs-button2", "lhs-button3", "lhs-button4", "
 document.addEventListener('DOMContentLoaded', (event) => {
   console.log("Entering document.addEventListener...");
   //Pass Go variables into JavaScript via HTML5 data-* attributes. Grab the element by its exact ID.
-  const scriptTag = document.getElementById('page-ui-script');
+  const scriptTag = document.getElementById('element-id');
   //Read the Go data attribute natively.
   const cb = scriptTag ? scriptTag.dataset.cb : null;
   console.log(`Current Button from Go is: ${cb}`);

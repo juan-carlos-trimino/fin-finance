@@ -1,12 +1,11 @@
-/*xxx
+/*
 Multiple document.addEventListener("DOMContentLoaded", ...) listeners in a single file will run sequentially in the exact order they are
 registered (from top to bottom).
 */
 document.addEventListener("DOMContentLoaded", function() {
   console.log("\n\nEntering document.addEventListener #1...");
-//  const tableBody = document.querySelector("#custom-table tbody");
   const tableBody = document.querySelector("tbody");
-  const STORAGE_KEY = "lastSelectedAccount";
+  const STORAGE_KEY = "lastSelectedRow";
   //==========================================================
   //SECTION 1: Handle Table Row Click Interactions & Memory
   //==========================================================
@@ -37,13 +36,13 @@ document.addEventListener("DOMContentLoaded", function() {
      it instantly deletes the old value and writes the new one over it.
     */
     //Restore Memory or Fallback to First Row. Try to read the saved id from localStorage.
-    const savedId = localStorage.getItem(STORAGE_KEY);
+    const savedRow = localStorage.getItem(STORAGE_KEY);
     const allRows = tableBody.querySelectorAll(".clickable-row");
     let rowToSelect = null;
     //Loop through the table rows manually to find a string match.
-    if (savedId && allRows.length > 0) {
+    if (savedRow && allRows.length > 0) {
       for (let i = 0; i < allRows.length; i++) {
-        if (allRows[i].getAttribute("data-id") === savedId) {
+        if (allRows[i].getAttribute("data-id") === savedRow) {
           rowToSelect = allRows[i];
           break;  //Match found! Stop searching.
         }
@@ -75,9 +74,7 @@ document.addEventListener("click", function(event) {
   if (!clickedButton) return;
   //Prevent premature default browser actions.
   event.preventDefault();
-// console.log("Success! Save button detected.");
   console.log("Success! Save button (#btdelete) detected via delegation.");
-  // const dynamicTableBody = document.querySelector("#custom-table tbody");
   const dynamicTableBody = document.querySelector("tbody");
   if (!dynamicTableBody) {
     console.error("Table body target #custom-table tbody was not found!");
@@ -91,8 +88,7 @@ document.addEventListener("click", function(event) {
   const id = activeRow.getAttribute("data-id");
   const userConfirmed = confirm(`Are you sure you want to continue with id: "${id}"?`);
   if (userConfirmed) {
-//    console.log("User chose CONTINUE. Processing ID:", id);
-    console.log("User chose CONTINUE. Packing payload for ID:", id);
+    console.log("CONTINUE. Processing ID:", id);
     //Locate the form and hidden input fields.
     const hiddenInput = document.getElementById("table_row_id");
     const rowIdForm = document.getElementById("table_id_form");
@@ -105,15 +101,8 @@ document.addEventListener("click", function(event) {
     } else {
       console.error("Critical Failure: Form layout elements could not be referenced.");
     }
-                // --- YOUR GO ENDPOINT ACTION GOES HERE ---
-                // Example A: Redirect to a Go handler URL
-                // window.location.href = "/account/process?id=" + encodeURIComponent(accountId);
-
-                // Example B: Submit it to a hidden form field
-                // document.getElementById("hidden-account-input").value = accountId;
-                // document.getElementById("my-form").submit();
   } else {
-    console.log("User chose CANCEL.");
+    console.log("CANCEL.");
   }
   console.log("Exiting document.addEventListener... #2");
 });

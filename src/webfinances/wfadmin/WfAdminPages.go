@@ -45,7 +45,7 @@ func (s WfVerificationPages) AdminWelcomePage(res http.ResponseWriter, req *http
   } else {
     templatesNeeded := []string{
       "webfinances/templates/layout-no-navbar.html",
-      "webfinances/templates/admin/admin_welcome.html",
+      "webfinances/templates/admin/welcome.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
       "webfinances/templates/footer.html",
@@ -75,7 +75,7 @@ func (s WfVerificationPages) AdminRegisterPage(res http.ResponseWriter, req *htt
     http.SetCookie(res, cookie)
     templatesNeeded := []string{
       "webfinances/templates/layout-no-navbar.html",
-      "webfinances/templates/admin/admin_register.html",
+      "webfinances/templates/admin/register.html",
       "webfinances/templates/title.html",
       "webfinances/templates/datetime.html",
       "webfinances/templates/footer.html",
@@ -128,7 +128,7 @@ func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req 
     if clickedButton == "back" {
       templatesNeeded := []string{
         "webfinances/templates/layout-no-navbar.html",
-        "webfinances/templates/admin/admin_welcome.html",
+        "webfinances/templates/admin/welcome.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/footer.html",
@@ -180,7 +180,7 @@ func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req 
       if ok == nil {
         templatesNeeded := []string{
           "webfinances/templates/layout-no-navbar.html",
-          "webfinances/templates/admin/admin_welcome.html",
+          "webfinances/templates/admin/welcome.html",
           "webfinances/templates/title.html",
           "webfinances/templates/datetime.html",
           "webfinances/templates/footer.html",
@@ -197,7 +197,7 @@ func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req 
         http.SetCookie(res, cookie)
         templatesNeeded := []string{
           "webfinances/templates/layout-no-navbar.html",
-          "webfinances/templates/admin/admin_register.html",
+          "webfinances/templates/admin/register.html",
           "webfinances/templates/title.html",
           "webfinances/templates/datetime.html",
           "webfinances/templates/footer.html",
