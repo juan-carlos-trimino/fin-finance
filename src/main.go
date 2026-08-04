@@ -363,8 +363,8 @@ func makeHandlers() *handlers {
   var wfsio = webfinances.WfSiOrdinaryPages{}
   var wfsib = webfinances.WfSiBankersPages{}
   var wfmisc = webfinances.WfMiscellaneousPages{}
-  var wfverify = admin.WfVerificationPages{}
-  var wfsecurity = admin.WfSecurityPages{}
+  var wfadmin = admin.WfAdminPages{}
+  var wfsecurity = admin.WfAdminSettingsPages{}
   /***
   The Go web server will route requests to different functions depending on the requested URL.
   ***/
@@ -422,7 +422,6 @@ func makeHandlers() *handlers {
     }
   }
   //Serve static files; i.e., the server will serve them as they are, without processing it first.
-  h.mux["/public/js/admin/SettingsSecurity.js"] = wfverify.PublicSettingsSecurityFile
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/setPageUI.js"] = wfpages.PublicSetPageUIFile
   h.mux["/public/js/tableStylesheet.js"] = wfpages.PublicTableStylesheetFile
@@ -434,10 +433,10 @@ func makeHandlers() *handlers {
   h.mux["/welcome"] = wfpages.WelcomePage
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
-  h.mux["/admin/welcome"] = middlewares.AdminVerification(wfverify.AdminWelcomePage)
-  h.mux["/admin/saveregister"] = middlewares.AdminVerification(wfverify.AdminSaveRegisterPage)
-  h.mux["/admin/register"] = middlewares.AdminVerification(wfverify.AdminRegisterPage)
-  h.mux["/admin/settings"] = middlewares.AdminVerification(wfverify.AdminSettingsPage)
+  h.mux["/admin/welcome"] = middlewares.AdminVerification(wfadmin.WelcomePage)
+  h.mux["/admin/saveregister"] = middlewares.AdminVerification(wfadmin.SaveRegisterPage)
+  h.mux["/admin/register"] = middlewares.AdminVerification(wfadmin.RegisterPage)
+  h.mux["/admin/settings"] = middlewares.AdminVerification(wfadmin.AdminSettingsPage)
   h.mux["/admin/settings/security"] = middlewares.AdminVerification(wfsecurity.AdminSecurityPages)
   h.mux["/banking"] = wfbankPages.BankingPage
   // h.mux["/banking/manageaccounts"] = wfbankPages.BankingManageAccountsPages

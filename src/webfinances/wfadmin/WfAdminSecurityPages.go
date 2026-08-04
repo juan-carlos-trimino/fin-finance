@@ -16,7 +16,7 @@ import (
   "time"
 )
 
-type WfSecurityPages struct {
+type WfAdminSettingsPages struct {
 }
 
 type changePassword struct {
@@ -32,7 +32,7 @@ type changePassword struct {
   ErrMsg string
 }
 
-func (s WfSecurityPages) AdminSecurityPages(res http.ResponseWriter, req *http.Request) {
+func (s WfAdminSettingsPages) AdminSecurityPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {

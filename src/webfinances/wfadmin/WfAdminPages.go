@@ -31,45 +31,49 @@ func invalidSession(res http.ResponseWriter) {
   })
 }
 
-type WfVerificationPages struct {}
+func displayWelcomePage(res http.ResponseWriter) {
+  templatesNeeded := []string{
+    "webfinances/templates/layout-no-navbar.html",
+    "webfinances/templates/admin/welcome.html",
+    "webfinances/templates/title.html",
+    "webfinances/templates/datetime.html",
+    "webfinances/templates/footer.html",
+  }
+  renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+    Data: struct{
+      Header string
+      Datetime string
+    } { "Investments - Admin", logger.DatetimeFormat() },
+  })
+}
 
-func (s WfVerificationPages) AdminWelcomePage(res http.ResponseWriter, req *http.Request) {
+type WfAdminPages struct {}
+
+func (s WfAdminPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering AdminWelcomePage.", correlationId)
+  logger.LogInfo("Entering wfadmin.WelcomePage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
   } else {
-    templatesNeeded := []string{
-      "webfinances/templates/layout-no-navbar.html",
-      "webfinances/templates/admin/welcome.html",
-      "webfinances/templates/title.html",
-      "webfinances/templates/datetime.html",
-      "webfinances/templates/footer.html",
-    }
-    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-      Data: struct{
-        Header string
-        Datetime string
-      } { "Investments - Admin", logger.DatetimeFormat() },
-    })
+    displayWelcomePage(res)
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
-func (s WfVerificationPages) AdminRegisterPage(res http.ResponseWriter, req *http.Request) {
+func (s WfAdminPages) RegisterPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering AdminRegisterPage.", correlationId)
+  logger.LogInfo("Entering wfadmin.RegisterPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
-  } else if req.Method == http.MethodPost || req.Method == http.MethodGet {
+  } else {
     newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
     cookie := sessions.CreateCookie(newSessionToken)
     http.SetCookie(res, cookie)
@@ -106,39 +110,27 @@ func (s WfVerificationPages) AdminRegisterPage(res http.ResponseWriter, req *htt
           "", "false", time.Now().Format("2006-01-02"), "male", "", "", "", "", "", "", "",
           "", "" },
     })
-  } else {
-    errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, correlationId)
-    panic(errString)
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
-func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req *http.Request) {
+
+
+
+
+func (s WfAdminPages) SaveRegisterPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering AdminSaveRegisterPage.", correlationId)
+  logger.LogInfo("Entering wfadmin.SaveRegisterPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
   } else if req.Method == http.MethodPost || req.Method == http.MethodGet {
     clickedButton := req.FormValue("button_action")  //Return either "back" or "register".
     if clickedButton == "back" {
-      templatesNeeded := []string{
-        "webfinances/templates/layout-no-navbar.html",
-        "webfinances/templates/admin/welcome.html",
-        "webfinances/templates/title.html",
-        "webfinances/templates/datetime.html",
-        "webfinances/templates/footer.html",
-      }
-      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-        Data: struct{
-          Header string
-          Datetime string
-        } { "Investments - Admin", logger.DatetimeFormat() },
-      })
+      displayWelcomePage(res)
     } else {
       c := bank.AddCustomer {
         User_name: req.PostFormValue("uname"),
@@ -178,19 +170,7 @@ func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req 
       }
       ok := bank.DbAddCustomer(&c, context.Background(), correlationId)
       if ok == nil {
-        templatesNeeded := []string{
-          "webfinances/templates/layout-no-navbar.html",
-          "webfinances/templates/admin/welcome.html",
-          "webfinances/templates/title.html",
-          "webfinances/templates/datetime.html",
-          "webfinances/templates/footer.html",
-        }
-        renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-          Data: struct{
-            Header string
-            Datetime string
-          } { "Investments - Admin", logger.DatetimeFormat() },
-        })
+        displayWelcomePage(res)
       } else {
         newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
         cookie := sessions.CreateCookie(newSessionToken)
@@ -238,7 +218,7 @@ func (s WfVerificationPages) AdminSaveRegisterPage(res http.ResponseWriter, req 
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
-func (s WfVerificationPages) AdminSettingsPage(res http.ResponseWriter, req *http.Request) {
+func (s WfAdminPages) AdminSettingsPage(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
@@ -262,18 +242,5 @@ func (s WfVerificationPages) AdminSettingsPage(res http.ResponseWriter, req *htt
       } { "Investments - Admin", logger.DatetimeFormat() },
     })
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-
-
-
-func (p WfVerificationPages) PublicSettingsSecurityFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.PublicSettingsSecurityFile.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/admin/SettingsSecurity.js")
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
