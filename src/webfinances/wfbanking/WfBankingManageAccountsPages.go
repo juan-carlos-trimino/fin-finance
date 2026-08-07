@@ -15,8 +15,7 @@ import (
   "time"
 )
 
-type WfBankingMngAcctsPages struct {
-}
+type WfBankingMngAcctsPages struct {}
 
 type Row struct {  //Rows for the accounts.
   AccountName string
@@ -25,18 +24,20 @@ type Row struct {  //Rows for the accounts.
 
 func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering wfbanking.ManageAccountsPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
     return
   }
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering wfbanking.ManageAccountsPages.", correlationId)
+  //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     maf := getManageAccountsFields(userName)
+    var currentRHS string = "rhs-ui1"  //Default.
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -54,20 +55,25 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("manageaccounts"); ui != "" {  //Values from form and URL.
-      maf.CurrentPage = ui
+      currentRHS = ui
     }
     //
-    if strings.EqualFold(maf.CurrentPage, "rhs-ui1") {
+    if strings.EqualFold(currentRHS, "rhs-ui1") {
       maf.CurrentButton = "lhs-button1"
+      var fd1BankName,
+          fd1AccountType,
+          fd1AccountName,
+          fd1AccountNumber,
+          fd1RoutingNumber string
       if req.Method == http.MethodPost {
-        maf.Fd1BankName = req.PostFormValue("fd1-bankname")
-        maf.Fd1AccountType = req.PostFormValue("fd1-accounttype")
-        maf.Fd1AccountName = req.PostFormValue("fd1-accountname")
-        maf.Fd1AccountNumber = req.PostFormValue("fd1-accountnumber")
-        maf.Fd1RoutingNumber = req.PostFormValue("fd1-routingnumber")
+        fd1BankName = req.PostFormValue("fd1-bankname")
+        fd1AccountType = req.PostFormValue("fd1-accounttype")
+        fd1AccountName = req.PostFormValue("fd1-accountname")
+        fd1AccountNumber = req.PostFormValue("fd1-accountnumber")
+        fd1RoutingNumber = req.PostFormValue("fd1-routingnumber")
         //save to db
         logger.LogInfo(fmt.Sprintf("bankname = %s, accounttype = %s, accountname = %s, accountnumber = %s, routingnumber = %s",
-          maf.Fd1BankName, maf.Fd1AccountType, maf.Fd1AccountName, maf.Fd1AccountNumber, maf.Fd1RoutingNumber), correlationId)
+          fd1BankName, fd1AccountType, fd1AccountName, fd1AccountNumber, fd1RoutingNumber), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -85,7 +91,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
         Data: struct {
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd1BankName string
@@ -93,24 +99,27 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
           Fd1AccountName string
           Fd1AccountNumber string
           Fd1RoutingNumber string
-        } { "Manage Accounts", logger.DatetimeFormat(), "welcome", maf.CurrentButton, newSession.CsrfToken, maf.Fd1BankName,
-            maf.Fd1AccountType, maf.Fd1AccountName, maf.Fd1AccountNumber, maf.Fd1RoutingNumber },
+        } { "Manage Accounts", logger.DatetimeFormat(), bankingMenuPage, maf.CurrentButton, newSession.CsrfToken, fd1BankName,
+            fd1AccountType, fd1AccountName, fd1AccountNumber, fd1RoutingNumber },
       })
-    } else if strings.EqualFold(maf.CurrentPage, "rhs-ui2") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui2") {
       maf.CurrentButton = "lhs-button2"
-      if req.Method == http.MethodPost {
+      var rows []Row
+      // if req.Method == http.MethodPost {
+
+
 
           rowId := req.PostFormValue("selected_id")
 
           numberOfRows := 80
-          maf.Fd2Result = make([]Row, 0, numberOfRows + 1)
-          maf.Fd2Result = append(maf.Fd2Result,
+          rows = make([]Row, 0, numberOfRows + 1)
+          rows = append(rows,
             Row {
               AccountName: "--",
               AccountType: "savings",
             })
           for idx := 0; idx < numberOfRows; idx++ {
-            maf.Fd2Result = append(maf.Fd2Result,
+            rows = append(rows,
               Row {
                 AccountName: fmt.Sprintf("account name%d", idx + 1),
                 AccountType: "checking",
@@ -120,10 +129,10 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
 
           if rowId != "" {
             logger.LogInfo(fmt.Sprintf("Account ID = %s", rowId), correlationId);
-            for i, r := range maf.Fd2Result {
+            for i, r := range rows {
                 if r.AccountName == rowId {
                     // Remove the element and maintain order
-                    maf.Fd2Result = append(maf.Fd2Result[:i], maf.Fd2Result[i+1:]...)
+                    rows = append(rows[:i], rows[i+1:]...)
                     break // Stop searching after the first match
                 }
             }
@@ -131,7 +140,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
 
 
 
-      }
+      // }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
@@ -148,14 +157,14 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
         Data: struct {
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd2Result []Row
-        } { "Manage Accounts", logger.DatetimeFormat(), "welcome", maf.CurrentButton, newSession.CsrfToken, maf.Fd2Result },
+        } { "Manage Accounts", logger.DatetimeFormat(), bankingMenuPage, maf.CurrentButton, newSession.CsrfToken, rows },
       })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", maf.CurrentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
       logger.LogError(errString, correlationId)
       panic(errString)
     }
@@ -164,9 +173,9 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
       logger.LogWarning("*** Request timeout ***", correlationId)
       // if strings.EqualFold(maf.CurrentPage, "rhs-ui1") {
       //   bf.Fd1Result = ""
-      // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui2") {
-      //   bf.Fd2Result = ""
-      // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui3") {
+      // if strings.EqualFold(currentRHS, "rhs-ui2") {
+      //   rows = nil
+      // } //else if strings.EqualFold(bf.CurrentPage, "rhs-ui3") {
       //   bf.Fd3Result = ""
       // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui4") {
       //   bf.Fd4Result[0] = ""

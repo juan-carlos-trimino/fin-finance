@@ -12,6 +12,10 @@ import (
   "time"
 )
 
+var bankingMenuPage string = "home"
+var contactMenuPage = "contact"
+var aboutMenupage string = "about"
+
 /***
 When handling authentication errors, the application should not disclose which part of the
 authentication data was incorrect. Instead of "Invalid username" or "Invalid password", just use
@@ -62,8 +66,8 @@ func (p WfBankingPages) BankingPage(res http.ResponseWriter, req *http.Request) 
       Data: struct {
         Header string
         Datetime string
-        CurrentPage string
-        } { "Bankig", logger.DatetimeFormat(), "welcome" },
+        MenuPage string
+        } { "Bankig", logger.DatetimeFormat(), bankingMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)

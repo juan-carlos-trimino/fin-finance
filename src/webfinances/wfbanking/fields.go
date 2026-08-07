@@ -9,7 +9,7 @@ import (
   "os"
 )
 
-var mainDir string = "/fields/manageaccounts"
+var mainDir string = "/banking"
 
 func SetupDirStructure(dir string) {
   mainDir = dir + mainDir
@@ -36,16 +36,7 @@ type fields struct {
 }
 
 type manageAccountsFields struct {
-  CurrentPage string `json:"currentPage"`
   CurrentButton string `json:"currentButton"`
-  //
-  Fd1BankName string `json:"fFd1BankName"`
-  Fd1AccountType string `json:"fd1AccountType"`
-  Fd1AccountName string `json:"fd1AccountName"`
-  Fd1AccountNumber string `json:"fd1AccountNumber"`
-  Fd1RoutingNumber string `json:"fd1RoutingNumber"`
-  //
-  Fd2Result []Row `json:"fd2Result"`
 }
 
 func newManageAccountsFields(dir1, dir2, correlationId string) *manageAccountsFields {
@@ -69,19 +60,16 @@ func newManageAccountsFields(dir1, dir2, correlationId string) *manageAccountsFi
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "manageaccounts.txt"), correlationId)
   }
   return &manageAccountsFields {
-    CurrentPage: "rhs-ui1",
     CurrentButton: "lhs-button1",
-    Fd1BankName: "",
-    Fd1AccountType: "checking",
-    Fd1AccountName: "",
-    Fd1AccountNumber: "",
-    Fd1RoutingNumber: "",
   }
 }
 
 func getManageAccountsFields(userName string) *manageAccountsFields {
   return currentFields[userName].manageAccounts
 }
+
+
+/***
 
 func AddSessionDataPerUser(userName, correlationId string) {
   if _, ok := currentFields[userName]; !ok {
@@ -95,6 +83,8 @@ func AddSessionDataPerUser(userName, correlationId string) {
 func DeleteSessionDataPerUser(userName string) {
   delete(currentFields, userName)
 }
+***/
+
 
 /***
 Notes about synchronization:
