@@ -15,7 +15,7 @@ import (
   "os"
 )
 
-var mainDir string = "/fields"
+var mainDir string = "/finances"
 
 func SetupDirStructure(dir string) {
   mainDir = dir + mainDir
@@ -59,7 +59,7 @@ type fields struct {
 }
 
 type miscellaneousFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1Nominal string `json:"fd1Nominal"`
@@ -116,7 +116,7 @@ func newMiscellaneousFields(dir1, dir2, correlationId string) *miscellaneousFiel
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "miscellaneous.txt"), correlationId)
   }
   return &miscellaneousFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1Nominal: "3.5",
@@ -158,7 +158,7 @@ func getMiscellaneousFields(userName string) *miscellaneousFields {
 }
 
 type mortgageFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -205,7 +205,7 @@ func newMortgageFields(dir1, dir2, correlationId string) *mortgageFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "mortgage.txt"), correlationId)
   }
   return &mortgageFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1N: "30.0",
@@ -412,7 +412,7 @@ func getBondsFields(userName string) *bondsFields {
 }
 
 type adFvFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -451,7 +451,7 @@ func newAdFvFields(dir1, dir2, correlationId string) *adFvFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adfv.txt"), correlationId)
   }
   return &adFvFields {
-    CurrentPage: "rhs-ui2",
+    MenuPage: "",
     CurrentButton: "lhs-button2",
     //
     Fd1N: "1.0",
@@ -475,7 +475,7 @@ func getAdFvFields(userName string) *adFvFields {
 }
 
 type adPvFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -514,7 +514,7 @@ func newAdPvFields(dir1, dir2, correlationId string) *adPvFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adpv.txt"), correlationId)
   }
   return &adPvFields {
-    CurrentPage: "rhs-ui2",
+    MenuPage: "",
     CurrentButton: "lhs-button2",
     //
     Fd1N: "1.0",
@@ -538,7 +538,7 @@ func getAdPvFields(userName string) *adPvFields {
 }
 
 type adCpFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1Interest string `json:"fd1Interest"`
@@ -581,7 +581,7 @@ func newAdCpFields(dir1, dir2, correlationId string) *adCpFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adcp.txt"), correlationId)
   }
   return &adCpFields {
-    CurrentPage: "rhs-ui2",
+    MenuPage: "",
     CurrentButton: "lhs-button2",
     //
     Fd1Interest: "1.00",
@@ -609,7 +609,7 @@ func getAdCpFields(userName string) *adCpFields {
 }
 
 type adEppFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -648,7 +648,7 @@ func newAdEppFields(dir1, dir2, correlationId string) *adEppFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adepp.txt"), correlationId)
   }
   return &adEppFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1N: "1.00",
@@ -672,7 +672,7 @@ func getAdEppFields(userName string) *adEppFields {
 }
 
 type oaCpFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1Interest string `json:"fd1Interest"`
@@ -719,7 +719,7 @@ func newOaCpFields(dir1, dir2, correlationId string) *oaCpFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oacp.txt"), correlationId)
   }
   return &oaCpFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1Interest: "1.00",
@@ -743,7 +743,7 @@ func newOaCpFields(dir1, dir2, correlationId string) *oaCpFields {
 }
 
 type oaEppFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -786,7 +786,7 @@ func newOaEppFields(dir1, dir2, correlationId string) *oaEppFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oaepp.txt"), correlationId)
   }
   return &oaEppFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1N: "1.00",
@@ -806,7 +806,7 @@ func newOaEppFields(dir1, dir2, correlationId string) *oaEppFields {
 }
 
 type oaFvFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -845,7 +845,7 @@ func newOaFvFields(dir1, dir2, correlationId string) *oaFvFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oafv.txt"), correlationId)
   }
   return &oaFvFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1N: "1.0",
@@ -869,7 +869,7 @@ func getOaFvFields(userName string) *oaFvFields {
 }
 
 type oaGaFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -908,7 +908,7 @@ func newOaGaFields(dir1, dir2, correlationId string) *oaGaFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oaga.txt"), correlationId)
   }
   return &oaGaFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1N: "1.00",
@@ -932,7 +932,7 @@ func getOaGaFields(userName string) *oaGaFields {
 }
 
 type oaInterestRateFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -965,7 +965,7 @@ func newOaInterestRateFields(dir1, dir2, correlationId string) *oaInterestRateFi
       correlationId)
   }
   return &oaInterestRateFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1N: "1.0",
@@ -982,7 +982,7 @@ func getOaInterestRateFields(userName string) *oaInterestRateFields {
 }
 
 type oaPerpetuityFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1Interest string `json:"fd1Interest"`
@@ -1018,7 +1018,7 @@ func newOaPerpetuityFields(dir1, dir2, correlationId string) *oaPerpetuityFields
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oaperpetuity.txt"), correlationId)
   }
   return &oaPerpetuityFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1Interest: "1.00",
@@ -1039,7 +1039,7 @@ func getOaPerpetuityFields(userName string) *oaPerpetuityFields {
 }
 
 type oaPvFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -1078,7 +1078,7 @@ func newOaPvFields(dir1, dir2, correlationId string) *oaPvFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oapv.txt"), correlationId)
   }
   return &oaPvFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1N: "1.0",
@@ -1102,7 +1102,7 @@ func getOaPvFields(userName string) *oaPvFields {
 }
 
 type siAccurateFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1Time string `json:"fd1Time"`
@@ -1154,7 +1154,7 @@ func newSiAccurateFields(dir1, dir2, correlationId string) *siAccurateFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "siaccurate.txt"), correlationId)
   }
   return &siAccurateFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1Time: "1",
@@ -1191,7 +1191,7 @@ func getSiAccurateFields(userName string) *siAccurateFields {
 }
 
 type siBankersFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1Time string `json:"fd1Time"`
@@ -1242,7 +1242,7 @@ func newSiBankersFields(dir1, dir2, correlationId string) *siBankersFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "sibankers.txt"), correlationId)
   }
   return &siBankersFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1Time: "1",
@@ -1278,7 +1278,7 @@ func getSiBankersFields(userName string) *siBankersFields {
 }
 
 type siOrdinaryFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1Time string `json:"fd1Time"`
@@ -1329,7 +1329,7 @@ func newSiOrdinaryFields(dir1, dir2, correlationId string) *siOrdinaryFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "siordinary.txt"), correlationId)
   }
   return &siOrdinaryFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1Time: "1",
