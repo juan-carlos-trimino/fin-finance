@@ -1,15 +1,3 @@
-<!--
-Since you have many pages, copying and pasting the CSS link into every single file is going to become a maintenance nightmare.
-
-
-The professional and efficient way to handle this in Go is to use a Base Layout pattern. You define your HTML header, head tags, CSS links, and navbar once in a layout file, and then dynamically inject your many different page contents into it.
-
-When you execute your templates in your Go code, you must execute the "layout" template instead of the specific page template name. Go will parse everything together automatically.
-
-
--->
-
-
 {{define "layout"}}
 
 <!DOCTYPE html>

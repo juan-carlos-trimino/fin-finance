@@ -4,11 +4,11 @@
 
   <ul class="nav-menu">
     <li><a href="/welcome"
-      {{if eq .Data.CurrentPage "welcome"}} class="active" aria-current="page"{{end}}>Home</a></li>
+       {{if eq .Data.MenuPage "home"}} class="active" aria-current="page"{{end}}>Home</a></li>
     <li><a href="/contact"
-      {{if eq .Data.CurrentPage "contact"}} class="active" aria-current="page"{{end}}>Contact Us</a></li>
+      {{if eq .Data.MenuPage "contact"}} class="active" aria-current="page"{{end}}>Contact Us</a></li>
     <li><a href="/about"
-      {{if eq .Data.CurrentPage "about"}} class="active" aria-current="page"{{end}}>About Us</a></li>
+      {{if eq .Data.MenuPage "about"}} class="active" aria-current="page"{{end}}>About Us</a></li>
   </ul>
 </nav>
 
