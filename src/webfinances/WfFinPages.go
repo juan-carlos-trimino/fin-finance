@@ -12,7 +12,7 @@ import (
   "time"
 )
 
-var homeMenuPage string = "home"
+var financesMenuPage string = "home"
 var contactMenuPage = "contact"
 var aboutMenupage string = "about"
 
@@ -170,7 +170,7 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
         Header string
         Datetime string
         MenuPage string
-      } { "Investments", logger.DatetimeFormat(), homeMenuPage },
+      } { "Investments", logger.DatetimeFormat(), financesMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -258,7 +258,7 @@ func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
         Header string
         Datetime string
         MenuPage string
-      } { "Finances", logger.DatetimeFormat(), homeMenuPage },
+      } { "Finances", logger.DatetimeFormat(), financesMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -287,7 +287,7 @@ func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) 
         Header string
         Datetime string
         MenuPage string
-      } { "Simple Interest", logger.DatetimeFormat(), homeMenuPage },
+      } { "Simple Interest", logger.DatetimeFormat(), financesMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -316,7 +316,7 @@ func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request)
         Header string
         Datetime string
         MenuPage string
-      } { "Ordinary Annuity", logger.DatetimeFormat(), homeMenuPage },
+      } { "Ordinary Annuity", logger.DatetimeFormat(), financesMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -345,7 +345,7 @@ func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
         Header string
         Datetime string
         MenuPage string
-      } { "Annuity Due", logger.DatetimeFormat(), homeMenuPage },
+      } { "Annuity Due", logger.DatetimeFormat(), financesMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)

@@ -22,19 +22,20 @@ type WfAdCpPages struct {
 
 func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.AdCpPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
     return
   }
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering AdCpPages/webfinances.", correlationId)
+  //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     af := getAdCpFields(userName)
+    var currentRHS string = "rhs-ui2"  //Default.
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -52,10 +53,10 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      af.CurrentPage = ui
+      currentRHS = ui
     }
     //
-    // if strings.EqualFold(p.CurrentPage, "rhs-ui1") {
+    // if strings.EqualFold(currentRHS, "rhs-ui1") {
     //   p.CurrentButton = "lhs-button1"
     //   if req.Method == http.MethodPost {
     //     p.fd1Interest = req.PostFormValue("fd1-interest")
@@ -103,7 +104,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     //   } { "Ordinary Annuity / Compounding Periods", m.DTF(), p.CurrentButton,
     //       p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result,
     //     })
-    /*} else*/ if strings.EqualFold(af.CurrentPage, "rhs-ui2") {
+    /*} else*/ if strings.EqualFold(currentRHS, "rhs-ui2") {
       af.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
         af.Fd2Interest = req.FormValue("fd2-interest")
@@ -122,12 +123,11 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
           af.Fd2Result = fmt.Sprintf("Error: %s -- %+v", af.Fd2PV, err)
         } else {
           var oa finances.Annuities
-          af.Fd2Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_PV(pmt, pv,
-            i / 100.0, oa.GetCompoundingPeriod(af.Fd2Compound[0], true)),
-            oa.TimePeriods(af.Fd2Compound))
+          af.Fd2Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_PV(pmt, pv, i / 100.0,
+            oa.GetCompoundingPeriod(af.Fd2Compound[0], true)), oa.TimePeriods(af.Fd2Compound))
         }
-        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, pv = %s, %s", af.Fd2Interest,
-         af.Fd2Compound, af.Fd2Payment, af.Fd2PV, af.Fd2Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, pv = %s, %s", af.Fd2Interest, af.Fd2Compound,
+          af.Fd2Payment, af.Fd2PV, af.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -145,7 +145,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd2Interest string
@@ -153,10 +153,10 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
           Fd2Payment string
           Fd2PV string
           Fd2Result string
-        } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), "welcome", af.CurrentButton,
+        } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), financesMenuPage, af.CurrentButton,
             newSession.CsrfToken, af.Fd2Interest, af.Fd2Compound, af.Fd2Payment, af.Fd2PV, af.Fd2Result },
       })
-    } else if strings.EqualFold(af.CurrentPage, "rhs-ui3") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui3") {
       af.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
         af.Fd3Interest = req.FormValue("fd3-interest")
@@ -175,12 +175,11 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
           af.Fd3Result = fmt.Sprintf("Error: %s -- %+v", af.Fd3FV, err)
         } else {
           var oa finances.Annuities
-          af.Fd3Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_FV(pmt, fv,
-            i / 100.0, oa.GetCompoundingPeriod(af.Fd3Compound[0], true)),
-            oa.TimePeriods(af.Fd3Compound))
+          af.Fd3Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_FV(pmt, fv, i / 100.0,
+            oa.GetCompoundingPeriod(af.Fd3Compound[0], true)), oa.TimePeriods(af.Fd3Compound))
         }
-        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", af.Fd3Interest,
-         af.Fd3Compound, af.Fd3Payment, af.Fd3FV, af.Fd3Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", af.Fd3Interest, af.Fd3Compound,
+          af.Fd3Payment, af.Fd3FV, af.Fd3Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -198,7 +197,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd3Interest string
@@ -206,38 +205,36 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
           Fd3Payment string
           Fd3FV string
           Fd3Result string
-        } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), "welcome", af.CurrentButton,
+        } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), financesMenuPage, af.CurrentButton,
             newSession.CsrfToken, af.Fd3Interest, af.Fd3Compound, af.Fd3Payment, af.Fd3FV, af.Fd3Result },
       })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", af.CurrentPage)
-      logger.LogError(errString, "-1")
+      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
+      logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
-      if strings.EqualFold(af.CurrentPage, "rhs-ui2") {
+      logger.LogWarning("*** Request timeout ***", correlationId)
+      if strings.EqualFold(currentRHS, "rhs-ui2") {
         af.Fd2Result = ""
-      } else if strings.EqualFold(af.CurrentPage, "rhs-ui3") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui3") {
         af.Fd3Result = ""
       }
     }
     //
     if data, err := json.Marshal(af); err != nil {
-      logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/adcp.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
-        os.O_TRUNC, 0o600); err != nil {
-        logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
+        logger.LogError(fmt.Sprintf("%+v", err), correlationId)
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, "-1")
+    logger.LogError(errString, correlationId)
     panic(errString)
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

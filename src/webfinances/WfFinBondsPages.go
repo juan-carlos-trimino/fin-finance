@@ -28,8 +28,7 @@ var bond_notes = [...]string {
   "price will increase when rates fall -- and the less the bond price will drop when rates rise.",
 }
 
-type WfBondsPages struct {
-}
+type WfBondsPages struct {}
 
 func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
@@ -118,7 +117,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           Fd1StateTax string
           Fd1FederalTax string
           Fd1Result string
-        } { "Bonds", logger.DatetimeFormat(), homeMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd1TaxFree,
+        } { "Bonds", logger.DatetimeFormat(), financesMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd1TaxFree,
             bf.Fd1CityTax, bf.Fd1StateTax, bf.Fd1FederalTax, bf.Fd1Result },
       })
     } else if strings.EqualFold(currentRHS, "rhs-ui2") {
@@ -193,7 +192,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           Fd2Current string
           Fd2Compound string
           Fd2Result string
-        } { "Bonds", logger.DatetimeFormat(), homeMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd2FaceValue,
+        } { "Bonds", logger.DatetimeFormat(), financesMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd2FaceValue,
             bf.Fd2Time, bf.Fd2TimePeriod, bf.Fd2Coupon, bf.Fd2CompoundCoupon, bf.Fd2Current, bf.Fd2Compound,
             bf.Fd2Result },
       })
@@ -259,7 +258,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           Fd3BondPrice string
           Fd3CallPrice string
           Fd3Result string
-        } { "Bonds", logger.DatetimeFormat(), homeMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd3FaceValue,
+        } { "Bonds", logger.DatetimeFormat(), financesMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd3FaceValue,
             bf.Fd3TimeCall, bf.Fd3TimePeriod, bf.Fd3Coupon, bf.Fd3Compound, bf.Fd3BondPrice, bf.Fd3CallPrice, bf.Fd3Result },
       })
     } else if strings.EqualFold(currentRHS, "rhs-ui4") {
@@ -358,7 +357,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           Fd4CurInterest string
           Fd4BondPrice string
           Fd4Result [2]string
-        } { "Bonds", logger.DatetimeFormat(), homeMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd4FaceValue, bf.Fd4Time,
+        } { "Bonds", logger.DatetimeFormat(), financesMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd4FaceValue, bf.Fd4Time,
             bf.Fd4TimePeriod, bf.Fd4Coupon, bf.Fd4Compound, bf.Fd4CurrentRadio, bf.Fd4CurInterest, bf.Fd4BondPrice,
             bf.Fd4Result },
       })
@@ -456,9 +455,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           Fd5CurInterest string
           Fd5Compound string
           Fd5Result [7]string
-        } { "Bonds", logger.DatetimeFormat(), homeMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd5FaceValue,
+        } { "Bonds", logger.DatetimeFormat(), financesMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd5FaceValue,
             bf.Fd5Time, bf.Fd5TimePeriod, bf.Fd5Coupon, bf.Fd5CompoundCoupon, bf.Fd5CurInterest, bf.Fd5Compound, bf.Fd5Result },
       })
+    /***
     // } else if strings.EqualFold(currentRHS, "rhs-ui6") {
     //   bf.CurrentButton = "lhs-button6"
     //   if req.Method == http.MethodPost {
@@ -653,6 +653,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     //       bf.Fd8TimePeriod, bf.Fd8Coupon, bf.Fd8CompoundCoupon, bf.Fd8CurInterest, bf.Fd8Compound,
     //       bf.Fd8Result,
     //     })
+		***/
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
       logger.LogError(errString, correlationId)
