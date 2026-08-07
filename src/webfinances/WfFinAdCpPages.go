@@ -55,7 +55,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
       currentRHS = ui
     }
-    //
+    /***
     // if strings.EqualFold(currentRHS, "rhs-ui1") {
     //   p.CurrentButton = "lhs-button1"
     //   if req.Method == http.MethodPost {
@@ -84,10 +84,6 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     //                   p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result),
     //     })
     //   }
-    //   /***
-    //   The Must function wraps around the ParseGlob function that returns a pointer to a template
-    //   and an error, and it panics if the error is not nil.
-    //   ***/
     //   t := template.Must(template.ParseFiles("webfinances/templates/ordinaryannuity/cp/cp.html",
     //                                          "webfinances/templates/header.html",
     //                                          "webfinances/templates/ordinaryannuity/cp/i-PV-FV.html",
@@ -104,7 +100,8 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     //   } { "Ordinary Annuity / Compounding Periods", m.DTF(), p.CurrentButton,
     //       p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result,
     //     })
-    /*} else*/ if strings.EqualFold(currentRHS, "rhs-ui2") {
+    } else*/
+		if strings.EqualFold(currentRHS, "rhs-ui2") {
       af.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
         af.Fd2Interest = req.FormValue("fd2-interest")

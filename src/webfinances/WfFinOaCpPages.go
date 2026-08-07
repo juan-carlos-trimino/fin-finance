@@ -17,24 +17,24 @@ import (
   "time"
 )
 
-type WfOaCpPages struct {
-}
+type WfOaCpPages struct {}
 
 func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.OaCpPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
     return
   }
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering OaCpPages/webfinances.", correlationId)
+  //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     of := getOaCpFields(userName)
+    var currentRHS string = "rhs-ui1"  //Default.
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -52,10 +52,10 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      of.CurrentPage = ui
+      currentRHS = ui
     }
     //
-    if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+    if strings.EqualFold(currentRHS, "rhs-ui1") {
       of.CurrentButton = "lhs-button1"
       if req.Method == http.MethodPost {
         of.Fd1Interest = req.PostFormValue("fd1-interest")
@@ -74,12 +74,12 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
           of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1FV, err)
         } else {
           var oa finances.Annuities
-          of.Fd1Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.O_Periods_PV_FV(pv, fv,
-            i / 100.0, oa.GetCompoundingPeriod(of.Fd1Compound[0], true)),
+          of.Fd1Result = fmt.Sprintf("Compounding Period: %.5f %s",
+            oa.O_Periods_PV_FV(pv, fv, i / 100.0, oa.GetCompoundingPeriod(of.Fd1Compound[0], true)),
             oa.TimePeriods(of.Fd1Compound))
         }
         logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pv = %s, fv = %s, %s", of.Fd1Interest,
-         of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result), correlationId)
+          of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -97,7 +97,7 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd1Interest string
@@ -105,10 +105,10 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
           Fd1PV string
           Fd1FV string
           Fd1Result string
-        } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), "welcome", of.CurrentButton,
+        } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), financesMenuPage, of.CurrentButton,
             newSession.CsrfToken, of.Fd1Interest, of.Fd1Compound, of.Fd1PV, of.Fd1FV, of.Fd1Result },
       })
-    } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui2") {
       of.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
         of.Fd2Interest = req.FormValue("fd2-interest")
@@ -127,12 +127,12 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
           of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2PV, err)
         } else {
           var oa finances.Annuities
-          of.Fd2Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.O_Periods_PMT_PV(pmt, pv,
-            i / 100.0, oa.GetCompoundingPeriod(of.Fd2Compound[0], true)),
+          of.Fd2Result = fmt.Sprintf("Compounding Period: %.5f %s",
+            oa.O_Periods_PMT_PV(pmt, pv, i / 100.0, oa.GetCompoundingPeriod(of.Fd2Compound[0], true)),
             oa.TimePeriods(of.Fd2Compound))
         }
         logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, pv = %s, %s", of.Fd2Interest,
-         of.Fd2Compound, of.Fd2Payment, of.Fd2PV, of.Fd2Result), correlationId)
+          of.Fd2Compound, of.Fd2Payment, of.Fd2PV, of.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -150,7 +150,7 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuuPage string
           CurrentButton string
           CsrfToken string
           Fd2Interest string
@@ -158,10 +158,10 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
           Fd2Payment string
           Fd2PV string
           Fd2Result string
-        } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), "welcome", of.CurrentButton, newSession.CsrfToken,
+        } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), financesMenuPage, of.CurrentButton, newSession.CsrfToken,
             of.Fd2Interest, of.Fd2Compound, of.Fd2Payment, of.Fd2PV, of.Fd2Result },
       })
-    } else if strings.EqualFold(of.CurrentPage, "rhs-ui3") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui3") {
       of.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
         of.Fd3Interest = req.FormValue("fd3-interest")
@@ -180,12 +180,12 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
           of.Fd3Result = fmt.Sprintf("Error: %s -- %+v", of.Fd3FV, err)
         } else {
           var oa finances.Annuities
-          of.Fd3Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.O_Periods_PMT_FV(pmt, fv,
-            i / 100.0, oa.GetCompoundingPeriod(of.Fd3Compound[0], true)),
+          of.Fd3Result = fmt.Sprintf("Compounding Period: %.5f %s",
+            oa.O_Periods_PMT_FV(pmt, fv, i / 100.0, oa.GetCompoundingPeriod(of.Fd3Compound[0], true)),
             oa.TimePeriods(of.Fd3Compound))
         }
         logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", of.Fd3Interest,
-         of.Fd3Compound, of.Fd3Payment, of.Fd3FV, of.Fd3Result), correlationId)
+          of.Fd3Compound, of.Fd3Payment, of.Fd3FV, of.Fd3Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -203,7 +203,7 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd3Interest string
@@ -211,40 +211,38 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
           Fd3Payment string
           Fd3FV string
           Fd3Result string
-        } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), "welcome", of.CurrentButton, newSession.CsrfToken,
+        } { "Ordinary Annuity / Compounding Periods", logger.DatetimeFormat(), financesMenuPage, of.CurrentButton, newSession.CsrfToken,
             of.Fd3Interest, of.Fd3Compound, of.Fd3Payment, of.Fd3FV, of.Fd3Result },
       })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
-      logger.LogInfo(errString, "-1")
+      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
+      logger.LogInfo(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
-      if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+      logger.LogWarning("*** Request timeout ***", correlationId)
+      if strings.EqualFold(currentRHS, "rhs-ui1") {
         of.Fd1Result = ""
-      } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui2") {
         of.Fd2Result = ""
-      } else if strings.EqualFold(of.CurrentPage, "rhs-ui3") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui3") {
         of.Fd3Result = ""
       }
     }
     //
     if data, err := json.Marshal(of); err != nil {
-      logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/oacp.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
-        os.O_TRUNC, 0o600); err != nil {
-        logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
+        logger.LogError(fmt.Sprintf("%+v", err), correlationId)
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, "-1")
+    logger.LogError(errString, correlationId)
     panic(errString)
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

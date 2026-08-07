@@ -17,24 +17,24 @@ import (
   "time"
 )
 
-type WfOaPerpetuityPages struct {
-}
+type WfOaPerpetuityPages struct {}
 
 func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.OaPerpetuityPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
     return
   }
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering OaPerpetuityPages/webfinances.", correlationId)
+  //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     of := getOaPerpetuityFields(userName)
+    var currentRHS string = "rhs-ui1"  //Default.
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -52,10 +52,10 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      of.CurrentPage = ui
+      currentRHS = ui
     }
     //
-    if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+    if strings.EqualFold(currentRHS, "rhs-ui1") {
       of.CurrentButton = "lhs-button1"
       if req.Method == http.MethodPost {
         of.Fd1Interest = req.PostFormValue("fd1-interest")
@@ -74,7 +74,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
             oa.O_Perpetuity(i / 100.0, pmt, oa.GetCompoundingPeriod(of.Fd1Compound[0], true)))
         }
         logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, %s", of.Fd1Interest, of.Fd1Compound,
-         of.Fd1Pmt, of.Fd1Result), correlationId)
+          of.Fd1Pmt, of.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -92,17 +92,17 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd1Interest string
           Fd1Compound string
           Fd1Pmt string
           Fd1Result string
-        } { "Ordinary Annuity / Perpetuities", logger.DatetimeFormat(), "welcome", of.CurrentButton,
+        } { "Ordinary Annuity / Perpetuities", logger.DatetimeFormat(), financesMenuPage, of.CurrentButton,
             newSession.CsrfToken, of.Fd1Interest, of.Fd1Compound, of.Fd1Pmt, of.Fd1Result },
       })
-    } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui2") {
       of.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
         of.Fd2Interest = req.FormValue("fd2-interest")
@@ -122,11 +122,10 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
         } else {
           var oa finances.Annuities
           of.Fd2Result = fmt.Sprintf("Present Value of Perpetuity: $%.5f",
-            oa.O_GrowingPerpetuity(i / 100.0, grow, pmt,
-            oa.GetCompoundingPeriod(of.Fd2Compound[0], true)))
+            oa.O_GrowingPerpetuity(i / 100.0, grow, pmt, oa.GetCompoundingPeriod(of.Fd2Compound[0], true)))
         }
         logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, grow = %s, pmt = %s, %s", of.Fd2Interest,
-         of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result), correlationId)
+          of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -144,7 +143,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd2Interest string
@@ -152,38 +151,36 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
           Fd2Grow string
           Fd2Pmt string
           Fd2Result string
-        } { "Ordinary Annuity / Perpetuities", logger.DatetimeFormat(), "welcome", of.CurrentButton,
+        } { "Ordinary Annuity / Perpetuities", logger.DatetimeFormat(), financesMenuPage, of.CurrentButton,
             newSession.CsrfToken, of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result },
       })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
-      logger.LogError(errString, "-1")
+      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
+      logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
-      if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+      logger.LogWarning("*** Request timeout ***", correlationId)
+      if strings.EqualFold(currentRHS, "rhs-ui1") {
         of.Fd1Result = ""
-      } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui2") {
         of.Fd2Result = ""
       }
     }
     //
     if data, err := json.Marshal(of); err != nil {
-      logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/oaperpetuity.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
-        os.O_TRUNC, 0o600); err != nil {
-        logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
+        logger.LogError(fmt.Sprintf("%+v", err), correlationId)
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, "-1")
+    logger.LogError(errString, correlationId)
     panic(errString)
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

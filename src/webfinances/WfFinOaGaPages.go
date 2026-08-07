@@ -17,23 +17,24 @@ import (
   "time"
 )
 
-type WfOaGaPages struct {
-}
+type WfOaGaPages struct {}
 
 func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.OaGaPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
     return
   }
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.OaGaPages.", correlationId)
+  //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     of := getOaGaFields(userName)
+    var currentRHS string = "rhs-ui1"  //Default.
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -51,10 +52,10 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      of.CurrentPage = ui
+      currentRHS = ui
     }
     //
-    if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+    if strings.EqualFold(currentRHS, "rhs-ui1") {
       of.CurrentButton = "lhs-button1"
       if req.Method == http.MethodPost {
         of.Fd1N = req.PostFormValue("fd1-n")
@@ -77,8 +78,8 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
           of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1Pmt, err)
         } else {
           var oa finances.Annuities
-          of.Fd1Result = fmt.Sprintf("Future Value: $%.5f", oa.O_GrowingAnnuityFutureValue(pmt, n, grow, i / 100.0,
-            oa.GetCompoundingPeriod(of.Fd1Compound[0], true)))
+          of.Fd1Result = fmt.Sprintf("Future Value: $%.5f",
+            oa.O_GrowingAnnuityFutureValue(pmt, n, grow, i / 100.0, oa.GetCompoundingPeriod(of.Fd1Compound[0], true)))
         }
         logger.LogInfo(fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s", of.Fd1N, of.Fd1Interest, of.Fd1Compound,
           of.Fd1Grow, of.Fd1Pmt, of.Fd1Result), correlationId)
@@ -99,7 +100,7 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd1N string
@@ -108,10 +109,10 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
           Fd1Grow string
           Fd1Pmt string
           Fd1Result string
-        } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), "welcome", of.CurrentButton, newSession.CsrfToken,
+        } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), financesMenuPage, of.CurrentButton, newSession.CsrfToken,
             of.Fd1N, of.Fd1Interest, of.Fd1Compound, of.Fd1Grow, of.Fd1Pmt, of.Fd1Result },
       })
-    } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui2") {
       of.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
         of.Fd2N = req.PostFormValue("fd2-n")
@@ -134,8 +135,8 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
           of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2Pmt, err)
         } else {
           var oa finances.Annuities
-          of.Fd2Result = fmt.Sprintf("Present Value: $%.5f", oa.O_GrowingAnnuityPresentValue(pmt, n, grow, i / 100.0,
-            oa.GetCompoundingPeriod(of.Fd2Compound[0], true)))
+          of.Fd2Result = fmt.Sprintf("Present Value: $%.5f",
+            oa.O_GrowingAnnuityPresentValue(pmt, n, grow, i / 100.0, oa.GetCompoundingPeriod(of.Fd2Compound[0], true)))
         }
         logger.LogInfo(fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s", of.Fd2N, of.Fd2Interest, of.Fd2Compound,
           of.Fd2Grow, of.Fd2Pmt, of.Fd2Result), correlationId)
@@ -156,7 +157,7 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd2N string
@@ -165,20 +166,20 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
           Fd2Grow string
           Fd2Pmt string
           Fd2Result string
-        } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), "welcome", of.CurrentButton, newSession.CsrfToken,
+        } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), financesMenuPage, of.CurrentButton, newSession.CsrfToken,
             of.Fd2N, of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result },
       })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", of.CurrentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
       logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       logger.LogWarning("*** Request timeout ***", correlationId)
-      if strings.EqualFold(of.CurrentPage, "rhs-ui1") {
+      if strings.EqualFold(currentRHS, "rhs-ui1") {
         of.Fd1Result = ""
-      } else if strings.EqualFold(of.CurrentPage, "rhs-ui2") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui2") {
         of.Fd2Result = ""
       }
     }

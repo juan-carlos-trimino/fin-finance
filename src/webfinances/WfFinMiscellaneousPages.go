@@ -25,24 +25,24 @@ var misc_notes = [...]string {
   "Values are semicolon (;) separated; e.g., 3;3.1;3.2;-1.01",
 }
 
-type WfMiscellaneousPages struct {
-}
+type WfMiscellaneousPages struct {}
 
 func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.MiscellaneousPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
     return
   }
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.",
-    startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering MiscellaneousPages/webfinances.", correlationId)
+  //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     mf := getMiscellaneousFields(userName)
+    var currentRHS string = "rhs-ui1"  //Default.
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -60,10 +60,10 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      mf.CurrentPage = ui
+      currentRHS = ui
     }
     //
-    if strings.EqualFold(mf.CurrentPage, "rhs-ui1") {
+    if strings.EqualFold(currentRHS, "rhs-ui1") {
       mf.CurrentButton = "lhs-button1"
       if req.Method == http.MethodPost {
         mf.Fd1Nominal = req.PostFormValue("fd1-nominal")
@@ -75,10 +75,10 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         } else {
           var a finances.Annuities
           mf.Fd1Result[1] = fmt.Sprintf("Effective Annual Rate: %.5f%%",
-           a.NominalRateToEAR(nr / 100.0, a.GetCompoundingPeriod(mf.Fd1Compound[0], false)) * 100.0)
+            a.NominalRateToEAR(nr / 100.0, a.GetCompoundingPeriod(mf.Fd1Compound[0], false)) * 100.0)
         }
         logger.LogInfo(fmt.Sprintf("nominal rate = %s, cp = %s, %s", mf.Fd1Nominal, mf.Fd1Compound,
-         mf.Fd1Result[1]), correlationId)
+          mf.Fd1Result[1]), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -96,16 +96,16 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd1Nominal string
           Fd1Compound string
           Fd1Result [2]string
-        } { "Miscellaneous", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken,
+        } { "Miscellaneous", logger.DatetimeFormat(), financesMenuPage, mf.CurrentButton, newSession.CsrfToken,
             mf.Fd1Nominal, mf.Fd1Compound, mf.Fd1Result },
       })
-    } else if strings.EqualFold(mf.CurrentPage, "rhs-ui2") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui2") {
       mf.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
         mf.Fd2Effective = req.PostFormValue("fd2-effective")
@@ -116,11 +116,11 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
           mf.Fd2Result[2] = fmt.Sprintf("Error: %s -- %+v", mf.Fd2Effective, err)
         } else {
           var a finances.Annuities
-          mf.Fd2Result[2] = fmt.Sprintf("Nominal Rate: %.5f%% %s", a.EARToNominalRate(ear / 100.0,
-            a.GetCompoundingPeriod(mf.Fd2Compound[0], false)) * 100.0, mf.Fd2Compound)
+          mf.Fd2Result[2] = fmt.Sprintf("Nominal Rate: %.5f%% %s",
+            a.EARToNominalRate(ear / 100.0, a.GetCompoundingPeriod(mf.Fd2Compound[0], false)) * 100.0, mf.Fd2Compound)
         }
         logger.LogInfo(fmt.Sprintf("effective rate = %s, cp = %s, %s", mf.Fd2Effective,
-         mf.Fd2Compound, mf.Fd2Result[2]), correlationId)
+          mf.Fd2Compound, mf.Fd2Result[2]), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -138,16 +138,16 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd2Effective string
           Fd2Compound string
           Fd2Result [3]string
-        } { "Miscellaneous", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken,
+        } { "Miscellaneous", logger.DatetimeFormat(), financesMenuPage, mf.CurrentButton, newSession.CsrfToken,
             mf.Fd2Effective, mf.Fd2Compound, mf.Fd2Result },
       })
-    } else if strings.EqualFold(mf.CurrentPage, "rhs-ui3") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui3") {
       mf.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
         mf.Fd3Nominal = req.PostFormValue("fd3-nominal")
@@ -161,11 +161,11 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
           mf.Fd3Result[3] = fmt.Sprintf("Error: %s -- %+v", mf.Fd3Inflation, err)
         } else {
           var a finances.Annuities
-          mf.Fd3Result[3] = fmt.Sprintf("Real Interest Rate: %.5f%%", a.RealInterestRate(
-           nr / 100.0, ir / 100.0) * 100.0)
+          mf.Fd3Result[3] = fmt.Sprintf("Real Interest Rate: %.5f%%",
+            a.RealInterestRate(nr / 100.0, ir / 100.0) * 100.0)
         }
         logger.LogInfo(fmt.Sprintf("nominal rate = %s, inflation rate = %s, %s", mf.Fd3Nominal,
-         mf.Fd3Inflation, mf.Fd3Result[3]), correlationId)
+          mf.Fd3Inflation, mf.Fd3Result[3]), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -183,16 +183,16 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd3Nominal string
           Fd3Inflation string
           Fd3Result [4]string
-        } { "Miscellaneous", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken,
+        } { "Miscellaneous", logger.DatetimeFormat(), financesMenuPage, mf.CurrentButton, newSession.CsrfToken,
             mf.Fd3Nominal, mf.Fd3Inflation, mf.Fd3Result },
       })
-    } else if strings.EqualFold(mf.CurrentPage, "rhs-ui4") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui4") {
       mf.CurrentButton = "lhs-button4"
       if req.Method == http.MethodPost {
         mf.Fd4CurrentRate = req.PostFormValue("fd4-currentrate")
@@ -232,7 +232,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
             a.GetCompoundingPeriod(mf.Fd4NewCompound[0], isNewDaily365)) * 100.0)
         }
         logger.LogInfo(fmt.Sprintf("current rate = %s, current compound = %s, new compound = %s, %s",
-         mf.Fd4CurrentRate, mf.Fd4CurrentCompound, mf.Fd4NewCompound, mf.Fd4Result), correlationId)
+          mf.Fd4CurrentRate, mf.Fd4CurrentCompound, mf.Fd4NewCompound, mf.Fd4Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -250,17 +250,17 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd4CurrentRate string
           Fd4CurrentCompound string
           Fd4NewCompound string
           Fd4Result string
-        } { "Miscellaneous", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken,
+        } { "Miscellaneous", logger.DatetimeFormat(), financesMenuPage, mf.CurrentButton, newSession.CsrfToken,
             mf.Fd4CurrentRate, mf.Fd4CurrentCompound, mf.Fd4NewCompound, mf.Fd4Result },
       })
-    } else if strings.EqualFold(mf.CurrentPage, "rhs-ui5") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui5") {
       mf.CurrentButton = "lhs-button5"
       if req.Method == http.MethodPost {
         mf.Fd5Interest = req.PostFormValue("fd5-interest")
@@ -275,11 +275,12 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
           mf.Fd5Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd5Factor, err)
         } else {
           var a finances.Annuities
-          mf.Fd5Result = fmt.Sprintf("Growth/Decay: %.5f %s", a.GrowthDecayOfFunds(factor,
-           ir / 100.0, a.GetCompoundingPeriod(mf.Fd5Compound[0], true)), a.TimePeriods(mf.Fd5Compound))
+          mf.Fd5Result = fmt.Sprintf("Growth/Decay: %.5f %s",
+            a.GrowthDecayOfFunds(factor, ir / 100.0, a.GetCompoundingPeriod(mf.Fd5Compound[0], true)),
+            a.TimePeriods(mf.Fd5Compound))
         }
         logger.LogInfo(fmt.Sprintf("interest rate = %s, cp = %s, factor = %s, %s\n",
-         mf.Fd5Interest, mf.Fd5Compound, mf.Fd5Factor, mf.Fd5Result), correlationId)
+          mf.Fd5Interest, mf.Fd5Compound, mf.Fd5Factor, mf.Fd5Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -297,17 +298,17 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd5Interest string
           Fd5Compound string
           Fd5Factor string
           Fd5Result string
-        } { "Miscellaneous", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken,
+        } { "Miscellaneous", logger.DatetimeFormat(), financesMenuPage, mf.CurrentButton, newSession.CsrfToken,
             mf.Fd5Interest, mf.Fd5Compound, mf.Fd5Factor, mf.Fd5Result },
       })
-    } else if strings.EqualFold(mf.CurrentPage, "rhs-ui6") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui6") {
       mf.CurrentButton = "lhs-button6"
       if req.Method == http.MethodPost {
         mf.Fd6Values = req.PostFormValue("fd6-values")
@@ -343,14 +344,15 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd6Values string
           Fd6Result [2]string
-        } { "Miscellaneous", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken, mf.Fd6Values, mf.Fd6Result },
+        } { "Miscellaneous", logger.DatetimeFormat(), financesMenuPage, mf.CurrentButton, newSession.CsrfToken,
+            mf.Fd6Values, mf.Fd6Result },
       })
-    } else if strings.EqualFold(mf.CurrentPage, "rhs-ui7") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui7") {
       mf.CurrentButton = "lhs-button7"
       if req.Method == http.MethodPost {
         mf.Fd7Time = req.PostFormValue("fd7-time")
@@ -370,8 +372,9 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
           mf.Fd7Result = fmt.Sprintf("Error: %s -- %+v", mf.Fd7PV, err)
         } else {
           var a finances.Annuities
-          mf.Fd7Result = fmt.Sprintf("Future Value: %.5f", a.Depreciation(pv, rate / 100.0,
-           a.GetCompoundingPeriod(mf.Fd7Compound[0], false), time, a.GetTimePeriod(mf.Fd7TimePeriod[0], false)))
+          mf.Fd7Result = fmt.Sprintf("Future Value: %.5f",
+            a.Depreciation(pv, rate / 100.0, a.GetCompoundingPeriod(mf.Fd7Compound[0], false), time,
+            a.GetTimePeriod(mf.Fd7TimePeriod[0], false)))
         }
         logger.LogInfo(fmt.Sprintf("time = %s, tp = %s, rate = %s, cp = %s, pv = %s, %s\n",
          mf.Fd7Time, mf.Fd7TimePeriod, mf.Fd7Rate, mf.Fd7Compound, mf.Fd7PV, mf.Fd7Result), correlationId)
@@ -392,7 +395,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd7Time string
@@ -401,48 +404,46 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
           Fd7Compound string
           Fd7PV string
           Fd7Result string
-        } { "Miscellaneous", logger.DatetimeFormat(), "welcome", mf.CurrentButton, newSession.CsrfToken,
+        } { "Miscellaneous", logger.DatetimeFormat(), financesMenuPage, mf.CurrentButton, newSession.CsrfToken,
             mf.Fd7Time, mf.Fd7TimePeriod, mf.Fd7Rate, mf.Fd7Compound, mf.Fd7PV, mf.Fd7Result },
       })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", mf.CurrentPage)
-      logger.LogError(errString, "-1")
+      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
+      logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
-      if strings.EqualFold(mf.CurrentPage, "rhs-ui1") {
+      logger.LogWarning("*** Request timeout ***", correlationId)
+      if strings.EqualFold(currentRHS, "rhs-ui1") {
         mf.Fd1Result[1] = ""
-      } else if strings.EqualFold(mf.CurrentPage, "rhs-ui2") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui2") {
         mf.Fd2Result[2] = ""
-      } else if strings.EqualFold(mf.CurrentPage, "rhs-ui3") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui3") {
         mf.Fd3Result[3] = ""
-      } else if strings.EqualFold(mf.CurrentPage, "rhs-ui4") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui4") {
         mf.Fd4Result = ""
-      } else if strings.EqualFold(mf.CurrentPage, "rhs-ui5") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui5") {
         mf.Fd5Result = ""
-      } else if strings.EqualFold(mf.CurrentPage, "rhs-ui6") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui6") {
         mf.Fd6Result[1] = ""
-      } else if strings.EqualFold(mf.CurrentPage, "rhs-ui7") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui7") {
         mf.Fd7Result = ""
       }
     }
     //
     if data, err := json.Marshal(mf); err != nil {
-      logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/miscellaneous.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR |
-        os.O_TRUNC, 0o600); err != nil {
-        logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
+        logger.LogError(fmt.Sprintf("%+v", err), correlationId)
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, "-1")
+    logger.LogError(errString, correlationId)
     panic(errString)
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()),
-    correlationId)
+  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

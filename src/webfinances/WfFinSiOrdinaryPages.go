@@ -17,23 +17,24 @@ import (
   "time"
 )
 
-type WfSiOrdinaryPages struct {
-}
+type WfSiOrdinaryPages struct {}
 
 func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.SimpleInterestOrdinaryPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
     return
   }
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.SimpleInterestOrdinaryPages.", correlationId)
+  //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     sif := getSiOrdinaryFields(userName)
+    var currentRHS string = "rhs-ui1"  //Default.
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -51,10 +52,10 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      sif.CurrentPage = ui
+      currentRHS = ui
     }
     //
-    if strings.EqualFold(sif.CurrentPage, "rhs-ui1") {
+    if strings.EqualFold(currentRHS, "rhs-ui1") {
       sif.CurrentButton = "lhs-button1"
       if req.Method == http.MethodPost {
         sif.Fd1Time = req.PostFormValue("fd1-time")
@@ -97,7 +98,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd1Time string
@@ -106,10 +107,10 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
           Fd1Compound string
           Fd1PV string
           Fd1Result string
-        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), "welcome", sif.CurrentButton, newSession.CsrfToken,
-            sif.Fd1Time, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result },
+        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, sif.CurrentButton,
+            newSession.CsrfToken, sif.Fd1Time, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result },
       })
-    } else if strings.EqualFold(sif.CurrentPage, "rhs-ui2") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui2") {
       sif.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
         sif.Fd2Time = req.PostFormValue("fd2-time")
@@ -151,7 +152,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd2Time string
@@ -159,10 +160,10 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
           Fd2Amount string
           Fd2PV string
           Fd2Result string
-        } { "Simple Interest / Ordinary Interest", "welcome", logger.DatetimeFormat(), sif.CurrentButton, newSession.CsrfToken,
-            sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result },
+        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, sif.CurrentButton,
+            newSession.CsrfToken, sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result },
       })
-    } else if strings.EqualFold(sif.CurrentPage, "rhs-ui3") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui3") {
       sif.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
         sif.Fd3Time = req.PostFormValue("fd3-time")
@@ -205,7 +206,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd3Time string
@@ -214,10 +215,10 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
           Fd3Compound string
           Fd3Amount string
           Fd3Result string
-        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), "welcome", sif.CurrentButton, newSession.CsrfToken,
-            sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result },
+        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, sif.CurrentButton,
+            newSession.CsrfToken, sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result },
       })
-    } else if strings.EqualFold(sif.CurrentPage, "rhs-ui4") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui4") {
       sif.CurrentButton = "lhs-button4"
       if req.Method == http.MethodPost {
         sif.Fd4Interest = req.PostFormValue("fd4-interest")
@@ -238,7 +239,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
           var si finances.SimpleInterest
           var periods finances.Periods
           sif.Fd4Result = fmt.Sprintf("Time: %.5f %s", si.OrdinaryTime(pv, a, i / 100.0,
-             periods.GetCompoundingPeriod(sif.Fd4Compound[0], false)), periods.TimePeriods(sif.Fd4Compound))
+            periods.GetCompoundingPeriod(sif.Fd4Compound[0], false)), periods.TimePeriods(sif.Fd4Compound))
         }
         logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, a = %s, pv = %s, %s", sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount,
           sif.Fd4PV, sif.Fd4Result), correlationId)
@@ -259,7 +260,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd4Interest string
@@ -267,24 +268,24 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
           Fd4Amount string
           Fd4PV string
           Fd4Result string
-        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), "welcome", sif.CurrentButton, newSession.CsrfToken,
-            sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result },
+        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, sif.CurrentButton,
+            newSession.CsrfToken, sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result },
       })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", sif.CurrentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
       logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
-      if strings.EqualFold(sif.CurrentPage, "rhs-ui1") {
+      logger.LogWarning("*** Request timeout ***", correlationId)
+      if strings.EqualFold(currentRHS, "rhs-ui1") {
         sif.Fd1Result = ""
-      } else if strings.EqualFold(sif.CurrentPage, "rhs-ui2") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui2") {
         sif.Fd2Result = ""
-      } else if strings.EqualFold(sif.CurrentPage, "rhs-ui3") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui3") {
         sif.Fd3Result = ""
-      } else if strings.EqualFold(sif.CurrentPage, "rhs-ui4") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui4") {
         sif.Fd4Result = ""
       }
     }
