@@ -12,6 +12,10 @@ import (
   "time"
 )
 
+var homeMenuPage string = "home"
+var contactMenuPage = "contact"
+var aboutMenupage string = "about"
+
 /***
 When handling authentication errors, the application should not disclose which part of the
 authentication data was incorrect. Instead of "Invalid username" or "Invalid password", just use
@@ -165,8 +169,8 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
       Data: struct{
         Header string
         Datetime string
-        CurrentPage string
-      } { "Investments", logger.DatetimeFormat(), "welcome" },
+        MenuPage string
+      } { "Investments", logger.DatetimeFormat(), homeMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -194,7 +198,7 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
       Data: struct{
         Header string
         Datetime string
-        CurrentPage string
+        MenuPage string
       } { "Contact Us", logger.DatetimeFormat(), "contact" },
     })
   }
@@ -224,8 +228,8 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
       Data: struct{
         Header string
         Datetime string
-        CurrentPage string
-      } { "About Us", logger.DatetimeFormat(), "about" },
+        MenuPage string
+      } { "About Us", logger.DatetimeFormat(), aboutMenupage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -253,8 +257,8 @@ func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
       Data: struct{
         Header string
         Datetime string
-        CurrentPage string
-      } { "Finances", logger.DatetimeFormat(), "welcome" },
+        MenuPage string
+      } { "Finances", logger.DatetimeFormat(), homeMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -282,8 +286,8 @@ func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) 
       Data: struct{
         Header string
         Datetime string
-        CurrentPage string
-      } { "Simple Interest", logger.DatetimeFormat(), "welcome" },
+        MenuPage string
+      } { "Simple Interest", logger.DatetimeFormat(), homeMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -311,8 +315,8 @@ func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request)
       Data: struct{
         Header string
         Datetime string
-        CurrentPage string
-      } { "Ordinary Annuity", logger.DatetimeFormat(), "welcome" },
+        MenuPage string
+      } { "Ordinary Annuity", logger.DatetimeFormat(), homeMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -340,8 +344,8 @@ func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
       Data: struct{
         Header string
         Datetime string
-        CurrentPage string
-      } { "Annuity Due", logger.DatetimeFormat(), "welcome" },
+        MenuPage string
+      } { "Annuity Due", logger.DatetimeFormat(), homeMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)

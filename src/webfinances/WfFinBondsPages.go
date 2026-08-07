@@ -33,18 +33,20 @@ type WfBondsPages struct {
 
 func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.BondsPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res)
     return
   }
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.BondsPages.", correlationId)
+  //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     bf := getBondsFields(userName)
+    var currentRHS string = "rhs-ui1"  //Default.
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -62,10 +64,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      bf.CurrentPage = ui
+      currentRHS = ui
     }
     //
-    if strings.EqualFold(bf.CurrentPage, "rhs-ui1") {
+    if strings.EqualFold(currentRHS, "rhs-ui1") {
       bf.CurrentButton = "lhs-button1"
       if req.Method == http.MethodPost {
         bf.Fd1TaxFree = req.PostFormValue("fd1-taxfree")
@@ -108,7 +110,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd1TaxFree string
@@ -116,10 +118,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           Fd1StateTax string
           Fd1FederalTax string
           Fd1Result string
-        } { "Bonds", logger.DatetimeFormat(), "welcome", bf.CurrentButton, newSession.CsrfToken, bf.Fd1TaxFree,
+        } { "Bonds", logger.DatetimeFormat(), homeMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd1TaxFree,
             bf.Fd1CityTax, bf.Fd1StateTax, bf.Fd1FederalTax, bf.Fd1Result },
       })
-    } else if strings.EqualFold(bf.CurrentPage, "rhs-ui2") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui2") {
       bf.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
         bf.Fd2FaceValue = req.FormValue("fd2-facevalue")
@@ -180,7 +182,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd2FaceValue string
@@ -191,11 +193,11 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           Fd2Current string
           Fd2Compound string
           Fd2Result string
-        } { "Bonds", logger.DatetimeFormat(), "welcome", bf.CurrentButton, newSession.CsrfToken, bf.Fd2FaceValue,
+        } { "Bonds", logger.DatetimeFormat(), homeMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd2FaceValue,
             bf.Fd2Time, bf.Fd2TimePeriod, bf.Fd2Coupon, bf.Fd2CompoundCoupon, bf.Fd2Current, bf.Fd2Compound,
             bf.Fd2Result },
       })
-    } else if strings.EqualFold(bf.CurrentPage, "rhs-ui3") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui3") {
       bf.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
         bf.Fd3FaceValue = req.PostFormValue("fd3-facevalue")
@@ -246,7 +248,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd3FaceValue string
@@ -257,10 +259,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           Fd3BondPrice string
           Fd3CallPrice string
           Fd3Result string
-        } { "Bonds", logger.DatetimeFormat(), "welcome", bf.CurrentButton, newSession.CsrfToken, bf.Fd3FaceValue,
+        } { "Bonds", logger.DatetimeFormat(), homeMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd3FaceValue,
             bf.Fd3TimeCall, bf.Fd3TimePeriod, bf.Fd3Coupon, bf.Fd3Compound, bf.Fd3BondPrice, bf.Fd3CallPrice, bf.Fd3Result },
       })
-    } else if strings.EqualFold(bf.CurrentPage, "rhs-ui4") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui4") {
       bf.CurrentButton = "lhs-button4"
       if req.Method == http.MethodPost {
         bf.Fd4FaceValue = req.PostFormValue("fd4-facevalue")
@@ -344,7 +346,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd4FaceValue string
@@ -356,11 +358,11 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           Fd4CurInterest string
           Fd4BondPrice string
           Fd4Result [2]string
-        } { "Bonds", logger.DatetimeFormat(), "welcome", bf.CurrentButton, newSession.CsrfToken, bf.Fd4FaceValue, bf.Fd4Time,
+        } { "Bonds", logger.DatetimeFormat(), homeMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd4FaceValue, bf.Fd4Time,
             bf.Fd4TimePeriod, bf.Fd4Coupon, bf.Fd4Compound, bf.Fd4CurrentRadio, bf.Fd4CurInterest, bf.Fd4BondPrice,
             bf.Fd4Result },
       })
-    } else if strings.EqualFold(bf.CurrentPage, "rhs-ui5") {
+    } else if strings.EqualFold(currentRHS, "rhs-ui5") {
       bf.CurrentButton = "lhs-button5"
       if req.Method == http.MethodPost {
         bf.Fd5FaceValue = req.PostFormValue("fd5-facevalue")
@@ -443,7 +445,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         Data: struct{
           Header string
           Datetime string
-          CurrentPage string
+          MenuPage string
           CurrentButton string
           CsrfToken string
           Fd5FaceValue string
@@ -454,10 +456,10 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
           Fd5CurInterest string
           Fd5Compound string
           Fd5Result [7]string
-        } { "Bonds", logger.DatetimeFormat(), "welcome", bf.CurrentButton, newSession.CsrfToken, bf.Fd5FaceValue,
+        } { "Bonds", logger.DatetimeFormat(), homeMenuPage, bf.CurrentButton, newSession.CsrfToken, bf.Fd5FaceValue,
             bf.Fd5Time, bf.Fd5TimePeriod, bf.Fd5Coupon, bf.Fd5CompoundCoupon, bf.Fd5CurInterest, bf.Fd5Compound, bf.Fd5Result },
       })
-    // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui6") {
+    // } else if strings.EqualFold(currentRHS, "rhs-ui6") {
     //   bf.CurrentButton = "lhs-button6"
     //   if req.Method == http.MethodPost {
     //     bf.Fd6FaceValue = req.PostFormValue("fd6-facevalue")
@@ -524,7 +526,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     //       bf.Fd6TimePeriod, bf.Fd6Coupon, bf.Fd6CompoundCoupon, bf.Fd6CurInterest, bf.Fd6Compound,
     //       bf.Fd6Result,
     //     })
-    // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui7") {
+    // } else if strings.EqualFold(currentRHS, "rhs-ui7") {
     //   bf.CurrentButton = "lhs-button7"
     //   if req.Method == http.MethodPost {
     //     bf.Fd7FaceValue = req.PostFormValue("fd7-facevalue")
@@ -585,7 +587,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     //       bf.Fd7TimePeriod, bf.Fd7Coupon, bf.Fd7CompoundCoupon, bf.Fd7CurInterest, bf.Fd7Compound,
     //       bf.Fd7Result,
     //     })
-    // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui8") {
+    // } else if strings.EqualFold(currentRHS, "rhs-ui8") {
     //   bf.CurrentButton = "lhs-button8"
     //   if req.Method == http.MethodPost {
     //     bf.Fd8FaceValue = req.PostFormValue("fd8-facevalue")
@@ -652,23 +654,23 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     //       bf.Fd8Result,
     //     })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", bf.CurrentPage)
+      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
       logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
-      if strings.EqualFold(bf.CurrentPage, "rhs-ui1") {
+      logger.LogWarning("*** Request timeout ***", correlationId)
+      if strings.EqualFold(currentRHS, "rhs-ui1") {
         bf.Fd1Result = ""
-      } else if strings.EqualFold(bf.CurrentPage, "rhs-ui2") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui2") {
         bf.Fd2Result = ""
-      } else if strings.EqualFold(bf.CurrentPage, "rhs-ui3") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui3") {
         bf.Fd3Result = ""
-      } else if strings.EqualFold(bf.CurrentPage, "rhs-ui4") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui4") {
         bf.Fd4Result[0] = ""
         bf.Fd4Result[1] = ""
-      } else if strings.EqualFold(bf.CurrentPage, "rhs-ui5") {
+      } else if strings.EqualFold(currentRHS, "rhs-ui5") {
         bf.Fd5Result[0] = ""
         bf.Fd5Result[1] = ""
         bf.Fd5Result[2] = ""
@@ -676,11 +678,11 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         bf.Fd5Result[4] = ""
         bf.Fd5Result[5] = ""
         bf.Fd5Result[6] = ""
-      // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui6") {
+      // } else if strings.EqualFold(currentRHS, "rhs-ui6") {
       //   bf.Fd6Result[1] = ""
-      // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui7") {
+      // } else if strings.EqualFold(currentRHS, "rhs-ui7") {
       //   bf.Fd7Result[1] = ""
-      // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui8") {
+      // } else if strings.EqualFold(currentRHS, "rhs-ui8") {
       //   bf.Fd8Result[1] = ""
       }
     }

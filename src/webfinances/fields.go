@@ -237,7 +237,7 @@ func getMortgageFields(userName string) *mortgageFields {
 }
 
 type bondsFields struct {
-  CurrentPage string `json:"currentPage"`
+  MenuPage string `json:"menuPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1TaxFree string `json:"fd1TaxFree"`
@@ -332,7 +332,7 @@ func newBondsFields(dir1, dir2, correlationId string) *bondsFields {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "bonds.txt"), correlationId)
   }
   return &bondsFields {
-    CurrentPage: "rhs-ui1",
+    MenuPage: "",
     CurrentButton: "lhs-button1",
     //
     Fd1TaxFree: "3.5",
