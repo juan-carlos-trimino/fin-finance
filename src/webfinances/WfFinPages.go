@@ -2,7 +2,7 @@ package webfinances
 
 import (
   bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
-  banking "finance/webfinances/wfbanking"  //Importing a package and assigning it a local alias.
+  admin "finance/webfinances/wfadmin"
   "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/gplogger"
@@ -17,9 +17,8 @@ var contactMenuPage = "contact"
 var aboutMenupage string = "about"
 
 /***
-When handling authentication errors, the application should not disclose which part of the
-authentication data was incorrect. Instead of "Invalid username" or "Invalid password", just use
-"Invalid username and/or password" interchangeably.
+When handling authentication errors, the application should not disclose which part of the authentication data was incorrect.
+Instead of "Invalid username" or "Invalid password", just use "Invalid username and/or password" interchangeably.
 ***/
 func invalidSession(res http.ResponseWriter) {
   templatesNeeded := []string{
@@ -93,7 +92,7 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   } else {
     sessionToken, session := sessions.AddEntryToSessions(un)
     AddSessionDataPerUser(un, correlationId)
-    banking.AddSessionDataPerUser(un, correlationId)
+    admin.AddSessionDataPerUser(un, correlationId)
     /***
     Once a cookie is set on a client, it is sent along with every subsequent request. Cookies store
     historical information (including user login information) on the client's computer. The
