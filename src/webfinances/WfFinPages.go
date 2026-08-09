@@ -9,6 +9,7 @@ import (
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gpsessions"
   "net/http"
+  "path/filepath"
   "time"
 )
 
@@ -356,7 +357,17 @@ func (p WfPages) PublicHomeFile(res http.ResponseWriter, req *http.Request) {
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.PublicHomeFile.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/css/home.css")
+  //Get the absolute path to prevent 404 HTML response (for testing).
+  absPath, err := filepath.Abs("./webfinances/public/css/home.css")
+  if err != nil {
+    logger.LogError("Failed to resolve absolute path", correlationId)
+    http.Error(res, "Internal Server Error", http.StatusInternalServerError)
+    return
+  }
+  logger.LogInfo(fmt.Sprintf("Abs path: %s.", absPath), correlationId)
+  //Serve using the verified path.
+  //http.ServeFile(res, req, absPath)  //Uncomment for testing
+  http.ServeFile(res, req, "./webfinances/public/css/home.css")  //Comment for testing
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
@@ -377,5 +388,15 @@ func (p WfPages) PublicTableStylesheetFile(res http.ResponseWriter, req *http.Re
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.PublicTableSylesheetFile.", correlationId)
   http.ServeFile(res, req, "./webfinances/public/js/tableStylesheet.js")
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
+}
+
+func (p WfPages) PublicScrollbarTabFieldsFile(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.PublicScrollbarTabFieldsFile.", correlationId)
+  http.ServeFile(res, req, "./webfinances/public/js/scrollbarTabFields.js")
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
