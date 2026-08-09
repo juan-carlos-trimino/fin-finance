@@ -527,10 +527,8 @@ input[type="hidden"] {
 
 
 
-
-/* ==========================================================================
-DESKTOP STYLES
-========================================================================== */
+/*** Nav ***/
+/* DESKTOP STYLES */
 nav {
   position: relative;
   background-color: rgb(2, 71, 31);
@@ -539,21 +537,18 @@ nav ul.nav-menu {
   list-style: none;
   margin: 0;
   padding: 15px 0;  /* Add 15px of padding to the top and bottom inside the bar */
-  /* background-color: rgb(2, 71, 31); */
   /* Flexbox centers items horizontally */
-  display: flex !important; /* Force explicit flex layout on desktop */
+  display: flex !important;  /* Force explicit flex layout on desktop */
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap; /* Allow items to wrap nicely if screen is too small */
-/*  overflow: visible;*/  /* Ensure the hover lift effect isn't clipped out of sight */
+  flex-wrap: wrap;  /* Allow items to wrap nicely if screen is too small */
 }
 nav ul.nav-menu li {  /* Style the list items (no color or text styles here) */
   display: inline-block;
   transition: transform 0.2s ease;  /* Put the transition on the parent */
 }
-/* 4. The lift effect happens on the LI element when the link is hovered */
-nav ul.nav-menu li:has(a:hover) {
-  transform: translateY(-3px); /* Lifts the whole item cleanly */
+nav ul.nav-menu li:has(a:hover) {  /* The lift effect happens on the LI element when the link is hovered */
+  transform: translateY(-3px);  /* Lift the whole item cleanly */
 }
 nav ul.nav-menu li a {  /* Apply all text, spacing, and block settings to the links */
   display: block;
@@ -562,29 +557,18 @@ nav ul.nav-menu li a {  /* Apply all text, spacing, and block settings to the li
   font-size: 24px;
   text-decoration: none;
   color: rgb(185, 241, 163);
-  border-radius: 30px; /* This makes the buttons perfectly rounded */
-  transition: background-color 0.2s, color 0.2s; /* Smooth hover effect */
-
-  overflow: hidden; /* Prevents background bleeding or clipping sub-pixels */
-
+  border-radius: 30px;  /* Make the buttons perfectly rounded */
+  transition: background-color 0.2s, color 0.2s;  /* Smooth hover effect */
+  overflow: hidden;  /* Prevent background bleeding or clipping sub-pixels */
 }
-
-
-
-
 nav ul.nav-menu li a:focus {
   outline: none;
 }
-
 nav ul.nav-menu li a:focus,
 nav ul.nav-menu li a:visited,
 nav ul.nav-menu li a.active {
   text-decoration: none !important;
 }
-
-
-
-
 nav ul.nav-menu li a:hover {  /* Style the general hover state for unselected links */
   background-color: rgb(185, 241, 163);
   color: rgb(2, 71, 31)
@@ -594,14 +578,56 @@ nav ul.nav-menu li a.active {  /* Style the active page so the user knows where 
   color: rgb(245, 5, 5)
 }
 nav ul.nav-menu li a.active:hover {  /* Differentiate when a user hovers over the already active link */
-  background-color: rgb(106, 213, 64); /* Slightly darker green */
+  background-color: rgb(106, 213, 64);  /* Slightly darker green */
   color: rgb(2, 71, 31);
-  cursor: default; /* Changes pointer to show it is already selected */
+  cursor: default;  /* Change pointer to show it is already selected */
 }
-
  @media (max-width: 600px) {  /* Shrink font size on mobile screens so it doesn't break */
   nav ul.nav-menu li a {
     font-size: 18px;
     padding: 15px;
   }
 }
+/*** Nav ***/
+/*** Scroll bar ***/
+.cnt-scroll {  /* Container that forces a scrollbar when fields overflow */
+  max-height: 65vh;  /* 65% of screen; smaller when there are few fields */
+  overflow-y: auto;  /* Show vertical scrollbar only when needed */
+  padding-right: 10px;  /* Keep scrollbar from overlapping inputs */
+  border: 1px solid #ccc;  /* Optional layout border */
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+.cnt-grid {  /* Form grid alignment layout */
+  display: grid;
+  grid-template-columns: 150px 1fr;  /* Format labels to 150px, inputs to fill the rest */
+  gap: 15px;  /* Spacing between grid cells */
+  padding: 15px;
+  align-items: center;  /* Vertically aligns short labels with tall inputs */
+}
+.label-red {  /* Custom colors for required label formatting */
+  color: #ff4d4d;
+  font-weight: bold;
+}
+/* Mobile Responsive CSS (Media Queries)
+To make your fields stack cleanly into a single vertical column on mobile devices while remaining side-by-side on desktop displays, append
+this media breakpoint rule to your CSS:
+*/
+@media (max-width: 600px) {  /* Responsive Layout Breakpoint */
+  /* Change from side-by-side to a single vertical column stack */
+  .cnt-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+  /* Shift labels to stack directly above their respective inputs */
+  .cnt-grid label {
+    margin-bottom: -4px;
+    font-size: 0.9rem;
+  }
+  .cnt-scroll {
+    /* Adjust height constraints for smaller smartphone viewports */
+    max-height: 40vh;  /* Use 40% of screen height on mobile viewports */
+  }
+}
+/*** Scroll bar ***/
