@@ -197,6 +197,7 @@ func main() {
   readUsers(dataDir, users)
   webfinances.SetupDirStructure(dataDir)
   banking.SetupDirStructure(dataDir)
+  admin.SetupDirStructure(dataDir)
   //Database.
   if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
     if ok := bank.ExecuteSqlScript(host, default_user, default_password, default_dbname, admin_dbname, sslmode,
@@ -364,6 +365,7 @@ func makeHandlers() *handlers {
   var wfsib = webfinances.WfSiBankersPages{}
   var wfmisc = webfinances.WfMiscellaneousPages{}
   var wfadmin = admin.WfAdminPages{}
+  var wfadminUsers = admin.WfAdminUsersPages{}
   var wfsecurity = admin.WfAdminSettingsPages{}
   /***
   The Go web server will route requests to different functions depending on the requested URL.
@@ -425,6 +427,7 @@ func makeHandlers() *handlers {
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/setPageUI.js"] = wfpages.PublicSetPageUIFile
   h.mux["/public/js/tableStylesheet.js"] = wfpages.PublicTableStylesheetFile
+  h.mux["/public/js/scrollbarTabFields.js"] = wfpages.PublicScrollbarTabFieldsFile
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
   h.mux["/login"] = wfpages.LoginPage
@@ -434,8 +437,9 @@ func makeHandlers() *handlers {
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
   h.mux["/admin/welcome"] = middlewares.AdminVerification(wfadmin.WelcomePage)
-  h.mux["/admin/saveregister"] = middlewares.AdminVerification(wfadmin.SaveRegisterPage)
-  h.mux["/admin/users"] = middlewares.AdminVerification(wfadmin.UsersPage)
+  // h.mux["/admin/saveregister"] = middlewares.AdminVerification(wfadmin.SaveRegisterPage)
+  h.mux["/admin/users"] = middlewares.AdminVerification(wfadminUsers.AdminUsersPage)
+  // h.mux["/admin/users/register"] = middlewares.AdminVerification(wfadminUsers.AdminUsersRegisterPage)
   h.mux["/admin/settings"] = middlewares.AdminVerification(wfadmin.AdminSettingsPage)
   h.mux["/admin/settings/security"] = middlewares.AdminVerification(wfsecurity.AdminSecurityPages)
   h.mux["/banking"] = wfbankPages.BankingPage
