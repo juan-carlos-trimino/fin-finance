@@ -27,7 +27,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
   logger.LogInfo("Entering webfinances.SimpleInterestAccuratePages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //

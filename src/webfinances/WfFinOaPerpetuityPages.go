@@ -27,7 +27,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
   logger.LogInfo("Entering webfinances.OaPerpetuityPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //

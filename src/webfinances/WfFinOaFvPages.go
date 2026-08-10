@@ -27,7 +27,7 @@ func (o WfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.OaFvPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //

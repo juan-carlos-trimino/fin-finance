@@ -27,7 +27,7 @@ func (o WfOaCpPages) OaCpPages(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.OaCpPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //

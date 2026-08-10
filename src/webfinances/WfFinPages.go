@@ -21,7 +21,8 @@ var aboutMenupage string = "about"
 When handling authentication errors, the application should not disclose which part of the authentication data was incorrect.
 Instead of "Invalid username" or "Invalid password", just use "Invalid username and/or password" interchangeably.
 ***/
-func invalidSession(res http.ResponseWriter) {
+func invalidSession(res http.ResponseWriter, correlationId string) {
+  logger.LogInfo("Invalid session (webfinances.invalidSession).", correlationId)
   templatesNeeded := []string{
     "webfinances/templates/layout-simple.html",
     "webfinances/templates/login.html",
@@ -89,7 +90,7 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   pw := req.PostFormValue("pwd")
   ok, isAdmin := bank.DbAuthenticateUser(req.Context(), un, pw, correlationId)
   if !ok {
-    invalidSession(res)
+    invalidSession(res, correlationId)
   } else {
     sessionToken, session := sessions.AddEntryToSessions(un)
     AddSessionDataPerUser(un, correlationId)
@@ -137,7 +138,7 @@ func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.LogoutPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
   } else {
     DeleteSessionDataPerUser(sessions.GetUserName(sessionToken))
     cookie := sessions.DeleteSession(sessionToken)
@@ -155,7 +156,7 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.WelcomePage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
   } else {
     templatesNeeded := []string{
       "webfinances/templates/layout.html",
@@ -184,7 +185,7 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.ContactPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
   } else {
     templatesNeeded := []string{
       "webfinances/templates/layout.html",
@@ -213,7 +214,7 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.AboutPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
   } else {
     //Explicitly map out the entire structural block stack for this page.
     templatesNeeded := []string{
@@ -243,7 +244,7 @@ func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.FinancesPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
   } else {
     templatesNeeded := []string{
       "webfinances/templates/layout.html",
@@ -272,7 +273,7 @@ func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) 
   logger.LogInfo("Entering webfinances.SimpleInterestPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
   } else {
     templatesNeeded := []string{
       "webfinances/templates/layout.html",
@@ -301,7 +302,7 @@ func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request)
   logger.LogInfo("Entering webfinances.OrdinaryAnnuityPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
   } else {
     templatesNeeded := []string{
       "webfinances/templates/layout.html",
@@ -330,7 +331,7 @@ func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.AnnuityDuePage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
   } else {
     templatesNeeded := []string{
       "webfinances/templates/layout.html",

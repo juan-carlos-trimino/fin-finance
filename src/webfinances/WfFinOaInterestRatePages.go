@@ -27,7 +27,7 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
   logger.LogInfo("Entering webfinances.OaInterestRatePages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //

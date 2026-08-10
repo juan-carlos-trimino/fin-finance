@@ -37,7 +37,7 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
   logger.LogInfo("Entering webfinances.MortgagePages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //

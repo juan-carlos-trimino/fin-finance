@@ -27,7 +27,7 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.AdEppPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //

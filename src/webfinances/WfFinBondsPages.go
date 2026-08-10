@@ -38,7 +38,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.BondsPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //
@@ -679,12 +679,14 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         bf.Fd5Result[4] = ""
         bf.Fd5Result[5] = ""
         bf.Fd5Result[6] = ""
+				/***
       // } else if strings.EqualFold(currentRHS, "rhs-ui6") {
       //   bf.Fd6Result[1] = ""
       // } else if strings.EqualFold(currentRHS, "rhs-ui7") {
       //   bf.Fd7Result[1] = ""
       // } else if strings.EqualFold(currentRHS, "rhs-ui8") {
       //   bf.Fd8Result[1] = ""
+			  ***/
       }
     }
     //

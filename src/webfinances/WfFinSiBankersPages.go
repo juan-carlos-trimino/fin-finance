@@ -27,7 +27,7 @@ func (s WfSiBankersPages) SimpleInterestBankersPages(res http.ResponseWriter, re
   logger.LogInfo("Entering webfinances.SimpleInterestBankersPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //

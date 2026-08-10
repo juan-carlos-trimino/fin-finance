@@ -35,7 +35,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
   logger.LogInfo("Entering webfinances.MiscellaneousPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //

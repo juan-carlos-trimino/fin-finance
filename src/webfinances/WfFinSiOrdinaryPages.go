@@ -27,7 +27,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
   logger.LogInfo("Entering webfinances.SimpleInterestOrdinaryPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //

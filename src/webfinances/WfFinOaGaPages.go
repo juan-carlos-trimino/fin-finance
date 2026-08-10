@@ -27,7 +27,7 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.OaGaPages.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
     return
   }
   //
