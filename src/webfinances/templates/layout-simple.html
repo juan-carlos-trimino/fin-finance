@@ -11,12 +11,11 @@
   </head>
   <body>
     <main>
-      <!-- <div class="center-title">
-        <h1>Login</h1>
-      </div> -->
       <!-- This dynamically injects the unique content of whatever page you are on -->
       {{template "content" .}}
     </main>
+    <!-- This placeholder dynamically injects scripts for pages that need them -->
+    {{template "scripts" .}}
   </body>
 </html>
 
