@@ -427,7 +427,8 @@ func makeHandlers() *handlers {
   h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
   h.mux["/public/js/setPageUI.js"] = wfpages.PublicSetPageUIFile
   h.mux["/public/js/tableStylesheet.js"] = wfpages.PublicTableStylesheetFile
-  h.mux["/public/js/scrollbarTabFields.js"] = wfpages.PublicScrollbarTabFieldsFile
+  h.mux["/public/js/tabSplitPage.js"] = wfpages.PublicTabSplitPageFile
+  h.mux["/public/js/tabFullPage.js"] = wfpages.PublicTabFullPageFile
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
   h.mux["/login"] = wfpages.LoginPage
@@ -437,13 +438,10 @@ func makeHandlers() *handlers {
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
   h.mux["/admin/welcome"] = middlewares.AdminVerification(wfadmin.WelcomePage)
-  // h.mux["/admin/saveregister"] = middlewares.AdminVerification(wfadmin.SaveRegisterPage)
   h.mux["/admin/users"] = middlewares.AdminVerification(wfadminUsers.AdminUsersPage)
-  // h.mux["/admin/users/register"] = middlewares.AdminVerification(wfadminUsers.AdminUsersRegisterPage)
   h.mux["/admin/settings"] = middlewares.AdminVerification(wfadmin.AdminSettingsPage)
   h.mux["/admin/settings/security"] = middlewares.AdminVerification(wfsecurity.AdminSecurityPages)
   h.mux["/banking"] = wfbankPages.BankingPage
-  // h.mux["/banking/manageaccounts"] = wfbankPages.BankingManageAccountsPages
   h.mux["/banking/manageaccounts"] = wfbankMngAcctsPages.ManageAccountsPages
   h.mux["/finances"] = wfpages.FinancesPage
   h.mux["/fin/ordinaryannuity"] = wfpages.OrdinaryAnnuityPage
