@@ -6,7 +6,7 @@
 <div class="font-color">
   <legend>Fields in Red are required</legend><br>
 </div>
-<form id="registration-form" method="post" action="/admin/users" enctype="application/x-www-form-urlencoded" autocomplete="off">
+<form method="post" action="/admin/users" enctype="application/x-www-form-urlencoded" autocomplete="off">
   <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
   <div class="cnt-scroll" id="form-scroll-cnt">
     <div class="cnt-grid">
@@ -60,4 +60,10 @@
   <br><label class="p-result">{{.Data.ErrMsg}}</label>
 </div>
 
+{{end}}
+
+{{define "scripts"}}
+  <!-- This will automatically insert itself at the bottom of the master layout -->
+  <script type="text/javascript" src="/public/js/setPageUI.js" id="element-id" data-cb="{{.Data.CurrentButton}}"></script>
+  <script type="text/javascript" src="/public/js/tabSplitPage.js" id="scrollbar-script"></script>
 {{end}}
