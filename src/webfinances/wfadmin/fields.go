@@ -9,7 +9,7 @@ import (
   "os"
 )
 
-var mainDir string = "/fields/admin"
+var mainDir string = "/admin"
 
 func SetupDirStructure(dir string) {
   mainDir = dir + mainDir
@@ -33,10 +33,48 @@ them with the same Session data because they all have the same SessionID.
 type fields struct {
   //Make the pointers unexported so that clients can't interact with them directly but only via exported methods.
   manageAccounts *manageAccountsFields
+	users *usersFields
 }
 
+type usersFields struct {
+  CurrentButton string `json:"currentButton"`
+}
+
+func newUsersFields(dir1, dir2, correlationId string) *usersFields {
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  obj, err := readFields(dir + "users.txt")
+  if obj != nil {
+    var m usersFields
+    err := json.Unmarshal(obj, &m)
+    if err != nil {
+      //Write error, but continue with default values.
+      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+    } else {
+      return &m
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "users.txt"), correlationId)
+  }
+  return &usersFields {
+    CurrentButton: "lhs-button1",
+  }
+}
+
+func getUsersFields(userName string) *usersFields {
+  return currentFields[userName].users
+}
+
+
+
+
+
+
 type manageAccountsFields struct {
-  CurrentPage string `json:"currentPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1BankName string `json:"fFd1BankName"`
@@ -69,7 +107,6 @@ func newManageAccountsFields(dir1, dir2, correlationId string) *manageAccountsFi
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "manageaccounts.txt"), correlationId)
   }
   return &manageAccountsFields {
-    CurrentPage: "rhs-ui1",
     CurrentButton: "lhs-button1",
     Fd1BankName: "",
     Fd1AccountType: "checking",
@@ -83,10 +120,16 @@ func getManageAccountsFields(userName string) *manageAccountsFields {
   return currentFields[userName].manageAccounts
 }
 
+
+
+
+
+
 func AddSessionDataPerUser(userName, correlationId string) {
   if _, ok := currentFields[userName]; !ok {
     fd := &fields{
       manageAccounts: newManageAccountsFields(mainDir, userName, correlationId),
+      users: newUsersFields(mainDir, userName, correlationId),
     }
     currentFields[userName] = fd
   }
