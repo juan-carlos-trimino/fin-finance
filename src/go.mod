@@ -36,13 +36,13 @@ go 1.26.4
 require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.10.0
-	github.com/juan-carlos-trimino/go-middlewares v1.1.11
+	github.com/juan-carlos-trimino/go-middlewares v1.1.12
 	github.com/juan-carlos-trimino/go-os v1.1.1
 	github.com/juan-carlos-trimino/gplogger v1.0.7
 	github.com/juan-carlos-trimino/gposu v1.0.1
 	github.com/juan-carlos-trimino/gps3storage v1.0.1
 	github.com/juan-carlos-trimino/gpsessions v1.0.1
-	golang.org/x/crypto v0.54.0
+	golang.org/x/crypto v0.55.0
 )
 
 require (
@@ -52,9 +52,9 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/text v0.40.0 // indirect
+	golang.org/x/text v0.41.0 // indirect
 )
 
 //To debug code inside a dependency module (moduleA) while running your main module, you need to point the Go  compiler to a local copy
