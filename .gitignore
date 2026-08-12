@@ -37,6 +37,7 @@ src/*
 !src/main.go
 !src/psql-clean.txt
 !src/psql-list.txt
+!src/upgrade-pg.sh
 # ... and these files under the 'finances' directory...
 !src/concurrency/
 src/concurrency/*
@@ -116,7 +117,9 @@ src/webfinances/public/css/*
 !src/webfinances/public/js/
 src/webfinances/public/js/*
 !src/webfinances/public/js/setPageUI.js
+!src/webfinances/public/js/tabFullPage.js
 !src/webfinances/public/js/tableStylesheet.js
+!src/webfinances/public/js/tabSplitPage.js
 !src/webfinances/templates/
 src/webfinances/templates/*
 !src/webfinances/templates/about.html
@@ -292,6 +295,7 @@ src/webfinances/wfadmin/*
 !src/webfinances/wfadmin/fields.go
 !src/webfinances/wfadmin/WfAdminPages.go
 !src/webfinances/wfadmin/WfAdminSecurityPages.go
+!src/webfinances/wfadmin/WfAdminUsersPages.go
 ################################
 # Infrastructure as Code (IaC) #
 ################################
