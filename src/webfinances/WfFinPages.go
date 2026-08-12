@@ -392,12 +392,22 @@ func (p WfPages) PublicTableStylesheetFile(res http.ResponseWriter, req *http.Re
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
-func (p WfPages) PublicScrollbarTabFieldsFile(res http.ResponseWriter, req *http.Request) {
+func (p WfPages) PublicTabSplitPageFile(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.PublicScrollbarTabFieldsFile.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/scrollbarTabFields.js")
+  logger.LogInfo("Entering webfinances.PublicTabSplitPageFile.", correlationId)
+  http.ServeFile(res, req, "./webfinances/public/js/tabSplitPage.js")
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
+}
+
+func (p WfPages) PublicTabFullPageFile(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.PublicTabFullPageFile.", correlationId)
+  http.ServeFile(res, req, "./webfinances/public/js/tabFullPage.js")
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
