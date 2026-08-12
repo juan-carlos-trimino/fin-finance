@@ -6,12 +6,12 @@ package banking
 //  Ctrl+K and Ctrl+J
 
 import (
-  "context"
-  "fmt"
-  "github.com/google/uuid"
-  "github.com/jackc/pgx/v5"
-  "github.com/juan-carlos-trimino/gplogger"
-  "time"
+  // "context"
+  // "fmt"
+  // "github.com/google/uuid"
+  // "github.com/jackc/pgx/v5"
+  // "github.com/juan-carlos-trimino/gplogger"
+  // "time"
 )
 
 /***
@@ -26,12 +26,12 @@ const (
   //  "@stateName, @countryName, @zipCode, @primaryEmail, @secondaryEmail, @primaryPhone, " +
   //  "@secondaryPhone)"
 
-  SP_CUSTOMER_INFO = "CALL bs.sp_customer_info(@userName, @password, @firstName, " +
-   "@middleName, @lastName, @dateOfBirth, @taxIdentifier, @address1, @address2, @cityName, " +
-   "@stateName, @countryName, @zipCode, @primaryEmail, @secondaryEmail, @primaryPhone, " +
-   "@secondaryPhone)"
-  QR_GET_ALL_CUSTOMERS = "SELECT customer_id, customer_type, username, password_hash, " +
-   "created_at, updated_at FROM bs.tbl_customer"
+  // SP_CUSTOMER_INFO = "CALL bs.sp_customer_info(@userName, @password, @firstName, " +
+  //  "@middleName, @lastName, @dateOfBirth, @taxIdentifier, @address1, @address2, @cityName, " +
+  //  "@stateName, @countryName, @zipCode, @primaryEmail, @secondaryEmail, @primaryPhone, " +
+  //  "@secondaryPhone)"
+  // QR_GET_ALL_CUSTOMERS = "SELECT customer_id, customer_type, username, password_hash, " +
+  //  "created_at, updated_at FROM bs.tbl_customer"
   QR_GET_ALL_CUSTOMERS_INFO = "SELECT customer_info_id, customer_id, first_name, COALESCE(middle_name, ''), " +
    "last_name, date_of_birth, tax_identifier, address_1, COALESCE(address_2, ''), city_name, state_name, " +
    "country_name, COALESCE(zip_code, ''), COALESCE(primary_email, ''), COALESCE(secondary_email, ''), primary_phone, COALESCE(secondary_phone, ''), " +
@@ -42,33 +42,32 @@ const (
     //  c.SecondaryEmail, c.PrimaryPhone, c.SecondaryPhone)
 )
 
-type Customer struct {
-	Id uuid.UUID // Maps to a PostgreSQL UUID column
-  // Id UUID //`json: "customer_id"`
-  Username string //`json: "username"`
-  Password_hash string //`json: "password_hash"`
-  First_name string
-  Middle_name string
-  Last_name string
-  Birth_date time.Time
-	Gender byte
-  Address_1 string
-  Address_2 string
-  City_name string
-  State_name string
-  Country_name string
-  Zip_code string
-  Primary_email string
-  Secondary_email string
-  Primary_phone string
-  Secondary_phone string
-  Created_at time.Time
-  Updated_at time.Time
-}
+// type Customer1 struct {
+// 	Id uuid.UUID // Maps to a PostgreSQL UUID column
+//   // Id UUID //`json: "customer_id"`
+//   Username string //`json: "username"`
+//   Password_hash string //`json: "password_hash"`
+//   First_name string
+//   Middle_name string
+//   Last_name string
+//   Birth_date time.Time
+// 	Gender byte
+//   Address_1 string
+//   Address_2 string
+//   City_name string
+//   State_name string
+//   Country_name string
+//   Zip_code string
+//   Primary_email string
+//   Secondary_email string
+//   Primary_phone string
+//   Secondary_phone string
+//   Created_at time.Time
+//   Updated_at time.Time
+// }
 
 
-
-
+/*
 func (bs *banking) SaveCustomer(ctx context.Context, userName, password, customerType,
   firstName, middleName, lastName *string, dateOfBirth *time.Time, taxIdentifier, address1,
   address2, cityName, stateName, countryName, zipCode, primaryEmail, secondaryEmail,
@@ -105,6 +104,9 @@ func (bs *banking) SaveCustomer(ctx context.Context, userName, password, custome
     return true
   }
 }
+*/
+
+
 
 
 /**
