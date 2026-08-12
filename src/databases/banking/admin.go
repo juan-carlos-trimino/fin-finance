@@ -18,13 +18,11 @@ import (
 
 /***
 Notes:
-In pgx, you can use named arguments for stored procedures by using the pgx.NamedArgs type, where
-parameter names are prefixed with an @ symbol in the query string. The library will then
-automatically rewrite the query to use positional parameters ($1, $2, etc.) before execution.
+In pgx, you can use named arguments for stored procedures by using the pgx.NamedArgs type, where parameter names are prefixed with an @ symbol
+in the query string. The library will then automatically rewrite the query to use positional parameters ($1, $2, etc.) before execution.
 ***/
 const (
-  //Use placeholder syntax (like $1, $2) to safely pass parameters to the function, preventing
-  //SQL injection.
+  //Use placeholder syntax (like $1, $2) to safely pass parameters to the function, preventing SQL injection.
   SP_ADD_CUSTOMER = "CALL fin.add_customer($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)"
   //Pass null for OUT parameter in the call.
   SP_AUTHENTICATE_USER = "CALL fin.authenticate_user($1, $2, $3, null, null)"
@@ -32,9 +30,8 @@ const (
   SP_CHANGE_PASSWORD = "CALL fin.change_password($1, $2, $3, $4, null)"
 )
 
-type AddCustomer struct {
-  User_name, Password, First_name, Last_name, Gender, Address1, City, State,
-  Country, Email, Phone string
+type Customer struct {
+  User_name, Password, First_name,Last_name, Gender, Address1, City, State, Country, Email, Phone string
   Marketing bool
   //Nullable types.
   Address2, Middle_name, Zip_code *string
@@ -57,32 +54,28 @@ type CustomersContactDetails struct {  //Struct tags.
   Updated_at time.Time  `db:"updated_at"`
 }
 
-func DbAddCustomer(c *AddCustomer, ctx context.Context, correlationId string) error {
+func DbAddCustomer(c *Customer, ctx context.Context, correlationId string) error {
   db := GetBsInstance()
   //Use Exec when the stored procedure does not return a result set.
-  _, err := db.bsPool.Exec(ctx, SP_ADD_CUSTOMER, c.User_name, c.Password, c.First_name,
-    c.Middle_name, c.Last_name, c.Marketing, c.Birth_date, c.Gender, c.Address1, c.Address2,
-    c.City, c.State, c.Country, c.Zip_code, c.Email, c.Phone)
+  _, err := db.bsPool.Exec(ctx, SP_ADD_CUSTOMER, c.User_name, c.Password, c.First_name, c.Middle_name, c.Last_name, c.Marketing,
+    c.Birth_date, c.Gender, c.Address1, c.Address2, c.City, c.State, c.Country, c.Zip_code, c.Email, c.Phone)
   if err != nil {
     logger.LogError(fmt.Sprintf("SP fin.add_customer: %v", err), correlationId)
   } else {
-    logger.LogInfo(fmt.Sprintf("SP fin.add_customer succeeded. Username: %s", c.User_name),
-      correlationId)
+    logger.LogInfo(fmt.Sprintf("SP fin.add_customer succeeded. Username: %s", c.User_name), correlationId)
   }
   return err
 }
 
 /***
-Hash in the backend/application layer, if possible: Hashing within the database can expose
-plain-text passwords in query logs. Hashing the password in your application code before sending
-it to the database is often a safer practice.
-This function should be used during user registration.
+Hash in the backend/application layer, if possible: Hashing within the database can expose plain-text passwords in query logs. Hashing
+the password in your application code before sending it to the database is often a safer practice. This function should be used during
+user registration.
 ***/
 func HashAndSaltPassword(password, correlationId string) string {
   /***
-  Use strong algorithms: Modern algorithms such as Argon2, bcrypt, or PBKDF2 are recommended over
-  older ones like MD5 or SHA-1, which are considered broken for password hashing.
-  Use GenerateFromPassword to hash & salt the password. The cost can be any value you want, but
+  Use strong algorithms: Modern algorithms such as Argon2, bcrypt, or PBKDF2 are recommended over older ones like MD5 or SHA-1, which are
+  considered broken for password hashing. Use GenerateFromPassword to hash & salt the password. The cost can be any value you want, but
   DefaultCost is a good starting point.
   ***/
   hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -91,9 +84,8 @@ func HashAndSaltPassword(password, correlationId string) string {
     return ""
   }
   /***
-  The resulting hash string includes the salt and all necessary parameters, which should be
-  stored in the database. GenerateFromPassword returns a byte slice, so convert it to a string
-  for storage.
+  The resulting hash string includes the salt and all necessary parameters, which should be stored in the database. GenerateFromPassword
+  returns a byte slice, so convert it to a string for storage.
   ***/
   return string(hash)
 }
