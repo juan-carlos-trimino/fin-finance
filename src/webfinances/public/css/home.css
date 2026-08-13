@@ -640,3 +640,24 @@ button[disabled] {  /* Disabled styling rules override hover triggers safely */
   outline-offset: 2px;  /* Add a clean gap between the button and the ring */
 }
 /* Base button styles */
+
+
+/* Add this inside home.css */
+.cnt-alphabet-range {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.cnt-alphabet-range label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 10px;
+}
+
+#alphabet-range {
+    width: 100%;
+    max-width: 300px;
+    cursor: pointer;
+}
