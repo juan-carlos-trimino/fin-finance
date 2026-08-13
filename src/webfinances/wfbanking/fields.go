@@ -71,15 +71,6 @@ func getManageAccountsFields(userName string) *manageAccountsFields {
 
 /***
 
-func AddSessionDataPerUser(userName, correlationId string) {
-  if _, ok := currentFields[userName]; !ok {
-    fd := &fields{
-      manageAccounts: newManageAccountsFields(mainDir, userName, correlationId),
-    }
-    currentFields[userName] = fd
-  }
-}
-
 func DeleteSessionDataPerUser(userName string) {
   delete(currentFields, userName)
 }
