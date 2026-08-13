@@ -33,7 +33,6 @@ func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Req
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     fields := getUsersFields(userName)
-    var currentRHS string = "rhs-ui1"  //Default.
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
     MultipartForm fields; the data are in the form of key-value pairs.
@@ -48,11 +47,11 @@ func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Req
     is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
     except that it's for the PostForm field instead of the Form field.
     ***/
-    if ui := req.FormValue("save"); ui != "" {  //Values from form and URL.
-      currentRHS = ui
+    if ui := req.FormValue("db"); ui != "" {  //Values from form and URL.
+      fields.CurrentPage = ui
     }
     //
-    if strings.EqualFold(currentRHS, "rhs-ui1") {
+    if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
       fields.CurrentButton = "lhs-button1"
       pd := struct{
         Header string
@@ -77,7 +76,7 @@ func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Req
         Phone string
         ErrMsg string
         } { "Register User - Admin", logger.DatetimeFormat(), fields.CurrentButton, "", "", "", "", "", "", "male",
-            time.Now().Format("2006-01-02"), "false", "", "", "", "", "", "", "", "", "", }
+            time.Now().Format("2006-01-02"), "false", "", "", "", "", "", "", "", "", "" }
       if req.Method == http.MethodPost {
         c := bank.Customer {
           User_name: req.PostFormValue("uname"),
@@ -104,19 +103,19 @@ func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Req
         c.Address2 = bank.StringPtr(address2)
         zip_code := req.PostFormValue("zip_code")
         c.Zip_code = bank.StringPtr(zip_code)
-        originalDate := req.PostFormValue("bdate")
+        //originalDate := req.PostFormValue("bdate")
         /***
         Go's time formatting uses a reference date and time: Mon Jan 2 15:04:05 MST 2006. Each component of this reference time (e.g.,
         02 for the day, 01 for the month, 2006 for the year) is used as a placeholder in the layout string to match the input format;
         e.g., "dd/mm/yyyy" is "02/01/2006".
         ***/
-        newDate, err := time.Parse("2006-01-02", originalDate)
+        newDate, err := time.Parse("2006-01-02", "originalDate")
         if err != nil {
-         // s := fmt.Sprintf("%v", err)
           logger.LogError(err.Error(), correlationId)
+          /***
+          On error, time.Parse returns a zero time value (0001-01-01 00:00:00 +0000 UTC).
+          ***/
           c.Birth_date = bank.TimePtr(newDate)
-
-        //  pd.ErrMsg = err.Error()
         } else {
           c.Birth_date = bank.TimePtr(newDate)
           err = bank.DbAddCustomer(&c, context.Background(), correlationId)
@@ -162,15 +161,42 @@ func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Req
       Do not read or write sensitive information from the disk; use the database exclusively.
       ***/
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{ Data: pd})
-    } else if strings.EqualFold(currentRHS, "rhs-ui2") {
+    } else if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
       fields.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
+        //Go is designed to look at the request, realize the body hasn't been parsed yet, and automatically call ParseForm() for you under the hood.
+
+        fields.SelectedRange = req.PostFormValue("alphabet-range")
+
+
+        var minLetter, maxLetter string
+        switch fields.SelectedRange {
+        case "1":
+          minLetter, maxLetter = "A", "G"
+        case "2":
+          minLetter, maxLetter = "H", "N"
+        case "3":
+          minLetter, maxLetter = "O", "T"
+        case "4":
+          minLetter, maxLetter = "U", "Z"
+        default:
+          minLetter, maxLetter = "A", "G" // Fallback safety
+        }
+        logger.LogInfo(fmt.Sprintf("min: %s,  max: %s", minLetter, maxLetter), correlationId)
+        // 4. Pass these bounded letters into your SQL query execution
+        //query := "SELECT id, username FROM users WHERE username >= ? AND username <= ?"
+
+
+
+        // alpharange := req.PostFormValue("alphabet-range")
+        // fields.SelectedRange = SelectedRange
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       templatesNeeded := []string{
         "webfinances/templates/layout-no-navbar.html",
+        "webfinances/templates/slider-alphabet.html",
         "webfinances/templates/admin/users/users.html",
         "webfinances/templates/admin/users/unregister.html",
         "webfinances/templates/title.html",
@@ -186,12 +212,11 @@ func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Req
           Datetime string
           CurrentButton string
           CsrfToken string
-        } { "Unregister User - Admin", logger.DatetimeFormat(), fields.CurrentButton, newSession.CsrfToken },
+          SelectedRange string
+        } { "Unregister User - Admin", logger.DatetimeFormat(), fields.CurrentButton, newSession.CsrfToken, fields.SelectedRange },
       })
-
-
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
+      errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
       logger.LogError(errString, correlationId)
       panic(errString)
     }
