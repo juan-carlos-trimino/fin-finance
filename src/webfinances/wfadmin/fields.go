@@ -33,11 +33,13 @@ them with the same Session data because they all have the same SessionID.
 type fields struct {
   //Make the pointers unexported so that clients can't interact with them directly but only via exported methods.
   manageAccounts *manageAccountsFields
-	users *usersFields
+  users *usersFields
 }
 
 type usersFields struct {
   CurrentButton string `json:"currentButton"`
+  CurrentPage string  `json:"currentPage"`
+  SelectedRange string `json:"selectedRange"`
 }
 
 func newUsersFields(dir1, dir2, correlationId string) *usersFields {
@@ -45,24 +47,31 @@ func newUsersFields(dir1, dir2, correlationId string) *usersFields {
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := usersFields {
+    CurrentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    SelectedRange: "1",
+  }
   obj, err := readFields(dir + "users.txt")
   if obj != nil {
-    var m usersFields
-    err := json.Unmarshal(obj, &m)
-    if err != nil {
-      //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-    } else {
-      return &m
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     }
   } else if err != nil {
     logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "users.txt"), correlationId)
   }
-  return &usersFields {
-    CurrentButton: "lhs-button1",
-  }
+  return &m
 }
 
 func getUsersFields(userName string) *usersFields {
