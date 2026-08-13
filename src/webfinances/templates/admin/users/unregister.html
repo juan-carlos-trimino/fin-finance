@@ -1,5 +1,22 @@
+<!-- The define action for the register page -->
 {{define "users-layout"}}
 
-<p>Unregister is under construction</p>
+<!-- rhs-ui2 -->
+<form method="post" action="/admin/users" enctype="application/x-www-form-urlencoded" autocomplete="off">
+  <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
+  <div class="cnt-scroll" id="form-scroll-cnt">
 
+    {{template "slider-alphabet" .}}
+
+  </div>
+  <div class="button-back-style">
+    <button type="submit" class="button" id="btdb" name="db" value="rhs-ui2">Save</button>
+  </div>
+</form>
+
+{{end}}
+
+{{define "scripts"}}
+  <!-- This will automatically insert itself at the bottom of the master layout -->
+  <script type="text/javascript" src="/public/js/setPageUI.js" id="element-id" data-cb="{{.Data.CurrentButton}}"></script>
 {{end}}
