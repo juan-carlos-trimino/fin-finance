@@ -429,6 +429,7 @@ func makeHandlers() *handlers {
   h.mux["/public/js/tableStylesheet.js"] = wfpages.PublicTableStylesheetFile
   h.mux["/public/js/tabSplitPage.js"] = wfpages.PublicTabSplitPageFile
   h.mux["/public/js/tabFullPage.js"] = wfpages.PublicTabFullPageFile
+  h.mux["/public/js/slider-alphabet.js"] = wfpages.PublicSliderAlphabetFile
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
   h.mux["/login"] = wfpages.LoginPage
