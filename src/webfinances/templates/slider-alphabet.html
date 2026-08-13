@@ -1,0 +1,29 @@
+{{define "slider-alphabet"}}
+
+<div class="cnt-alphabet-range">
+  <label for="alphabet-range">Filter by Name Range:</label>
+  <input type="range" id="alphabet-range" name="alphabet-range" min="1" max="4" step="1"
+         value="{{if .Data.SelectedRange}}{{.Data.SelectedRange}}{{else}}1{{end}}" list="alphabet-groups">
+  <datalist id="alphabet-groups">
+    <option value="1" label="A - G"></option>
+    <option value="2" label="H - N"></option>
+    <option value="3" label="O - T"></option>
+    <option value="4" label="U - Z"></option>
+  </datalist>
+  <!--
+  When the Go backend builds the HTML page, it looks inside the <strong> tag and processes the {{.Data.SelectedRange | alphabetRange}}
+  pipeline sequence:
+  * .Data.SelectedRange: It retrieves the stored range value from the struct data (such as "2").
+  * | (The Pipe Operator): It automatically passes that value as the input argument into the function on the right.
+  * alphabetRange: It calls the custom template.FuncMap helper function defined in the renderer package. If the input value is "2", the function
+    returns the string "H - N".
+  -->
+  <p>Selected Range: <strong id="range-display">{{.Data.SelectedRange | alphabetRange}}</strong></p>
+</div>
+
+{{end}}
+
+{{define "scripts"}}
+  <!-- This will automatically insert itself at the bottom of the master layout -->
+  <script type="text/javascript" src="/public/js/slider-alphabet.js"></script>
+{{end}}
