@@ -117,6 +117,7 @@ src/webfinances/public/css/*
 !src/webfinances/public/js/
 src/webfinances/public/js/*
 !src/webfinances/public/js/setPageUI.js
+!src/webfinances/public/js/slider-alphabet.js
 !src/webfinances/public/js/tabFullPage.js
 !src/webfinances/public/js/tableStylesheet.js
 !src/webfinances/public/js/tabSplitPage.js
@@ -133,6 +134,7 @@ src/webfinances/templates/*
 !src/webfinances/templates/layout.html
 !src/webfinances/templates/login.html
 !src/webfinances/templates/navbar.html
+!src/webfinances/templates/slider-alphabet.html
 !src/webfinances/templates/title.html
 !src/webfinances/templates/welcome.html
 # ... and this directory and its file...
