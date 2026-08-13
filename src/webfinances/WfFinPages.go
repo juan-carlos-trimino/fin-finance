@@ -411,3 +411,13 @@ func (p WfPages) PublicTabFullPageFile(res http.ResponseWriter, req *http.Reques
   http.ServeFile(res, req, "./webfinances/public/js/tabFullPage.js")
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
+
+func (p WfPages) PublicSliderAlphabetFile(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
+  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+  startTime, _ := ctxKey.GetStartTime(req.Context())
+  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+  logger.LogInfo("Entering webfinances.PublicSliderAlphabetFile.", correlationId)
+  http.ServeFile(res, req, "./webfinances/public/js/slider-alphabet.js")
+  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
+}
