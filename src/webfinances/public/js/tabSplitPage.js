@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("Entering document.addEventListener (scrollbarTabFields.js)...");
+  console.log("Entering tabSplitPage.js...");
 
   // 1. SELECT WORKSPACE CONTAINERS
   const leftSide = document.querySelector(".left-side");
