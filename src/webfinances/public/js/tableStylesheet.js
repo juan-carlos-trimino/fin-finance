@@ -3,7 +3,7 @@ Multiple document.addEventListener("DOMContentLoaded", ...) listeners in a singl
 registered (from top to bottom).
 */
 document.addEventListener("DOMContentLoaded", function() {
-  console.log("\n\nEntering document.addEventListener #1...");
+  console.log("\n\nEntering tableStylesheet.js #1...");
   const tableBody = document.querySelector("tbody");
   const STORAGE_KEY = "lastSelectedRow";
   //==========================================================
@@ -58,31 +58,45 @@ document.addEventListener("DOMContentLoaded", function() {
       console.log("Active row applied successfully:", rowToSelect.getAttribute("data-id"));
     }
   }
-  console.log("Exiting document.addEventListener #1...");
+  console.log("Exiting tableStylesheet.js #1...");
 });
 
 //==============================================================
 //SECTION 3: Unified Button Click & Secure Form POST Submitter
 //==============================================================
+/*
+When you submit a form using the JavaScript's form.submit() method, the browser only sends the data from standard input elements (like <input>,
+<select>, or <textarea>). It completely ignores the name and value attributes of <button> elements.
+
+When a human physically clicks a standard submit button (type="submit"), the browser includes that specific button's name/value because it was
+the trigger. However, when you change a button to type="button" and force a submission via JavaScript (form.submit()), the browser treats the
+form as an isolated object and only serializes actual form fields (<input>). Using hidden inputs completely bypasses this limitation.
+*/
 document.addEventListener("click", function(event) {
-  console.log("\n\nEntering document.addEventListener #2...");
+  console.log("\n\nEntering tableStylesheet.js #2...");
   //Log exactly what element the mouse pointer touched.
   console.log("Mouse pointer physically hit this HTML tag:", event.target);
   //Target check using multiple lookup strategies.
   //Safe check using combined selector logic.
-  const clickedButton = event.target.id === "the_button" ? event.target : event.target.closest("#the_button");
-  if (!clickedButton) return;
+  const clickedButton = event.target.id === "bttable" ? event.target : event.target.closest("#bttable");
+  if (!clickedButton) {
+    console.error("Cannot find the clicked button.");
+    console.log("Exiting tableStylesheet.js... #2");
+    return;
+  }
   //Prevent premature default browser actions.
   event.preventDefault();
-  console.log("Success! Save button (#the_button) detected via delegation.");
+  console.log("Success! Save button detected via delegation:", clickedButton);
   const dynamicTableBody = document.querySelector("tbody");
   if (!dynamicTableBody) {
     console.error("Table body target #custom-table tbody was not found!");
+    console.log("Exiting tableStylesheet.js... #2");
     return;
   }
   const activeRow = dynamicTableBody.querySelector(".clickable-row.active-row");
   if (!activeRow) {
     alert("Please select a row first.");
+    console.log("Exiting tableStylesheet.js... #2");
     return;
   }
   const id = activeRow.getAttribute("data-id");
@@ -95,7 +109,13 @@ document.addEventListener("click", function(event) {
     if (hiddenInput && tableIdForm) {
       //Load the current active table row ID directly into the hidden element value.
       hiddenInput.value = id;
-      console.log("Submitting secure POST request payload containing CSRF token...");
+      const hiddenInputButtonId = document.getElementById("hidden_bttable");
+      //Grab the value directly from the clicked button and put it in the hidden input
+      if (hiddenInputButtonId) {
+        hiddenInputButtonId.value = clickedButton.value; // This grabs "rhs-*"
+        console.log("Loaded button value into payload:", clickedButton.value);
+      }
+      console.log("Submitting secure POST request payload...");
       //Dispatch the form standard POST request to the Go backend endpoint.
       tableIdForm.submit();
     } else {
@@ -104,5 +124,5 @@ document.addEventListener("click", function(event) {
   } else {
     console.log("CANCEL.");
   }
-  console.log("Exiting document.addEventListener... #2");
+  console.log("Exiting tableStylesheet.js... #2");
 });
