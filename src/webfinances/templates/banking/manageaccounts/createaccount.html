@@ -9,10 +9,10 @@
       <input type="text" id="fd1-bankname" name="fd1-bankname" value="{{.Data.Fd1BankName}}" inputmode="text" maxlength="32" required/>
       <label for="fd1-accounttype">Account Type</label>
       <select class="cnt-select" id="fd1-accounttype" name="fd1-accounttype">
-        <option value="checking" {{if eq .Data.Fd1AccountType "checking"}} selected {{end}}>Checking Accounts</option>
-        <option value="savings" {{if eq .Data.Fd1AccountType "savings"}} selected {{end}}>Savings Accounts</option>
-        <option value="mma" {{if eq .Data.Fd1AccountType "mma"}} selected {{end}}>Money Market Accounts</option>
-        <option value="cd" {{if eq .Data.Fd1AccountType "cd"}} selected {{end}}>Certificates of Deposit (CDs)</option>
+        <option value="checking" {{if eq .Data.Fd1AccountType `checking`}} selected {{end}}>Checking Accounts</option>
+        <option value="savings" {{if eq .Data.Fd1AccountType `savings`}} selected {{end}}>Savings Accounts</option>
+        <option value="mma" {{if eq .Data.Fd1AccountType `mma`}} selected {{end}}>Money Market Accounts</option>
+        <option value="cd" {{if eq .Data.Fd1AccountType `cd`}} selected {{end}}>Certificates of Deposit (CDs)</option>
       </select>
       <label for="fd1-accountname">Account Name</label>
       <input type="text" id="fd1-accountname" name="fd1-accountname" value="{{.Data.Fd1AccountName}}" inputmode="text" maxlength="32" required/>
@@ -22,9 +22,16 @@
       <input type="text" id="fd1-routingnumber" name="fd1-routingnumber" value="{{.Data.Fd1RoutingNumber}}" inputmode="text" maxlength="32" required/>
     </div>
     <div class="button-back-style">
-      <button class="button" id="btsave" name="manageaccounts" value="rhs-ui1" type="submit">Save</button>
+      <!-- Match the id and name of the button in table page. -->
+      <button type="submit" class="button" id="bttable" name="tablestyle" value="rhs-ui1">Save</button>
     </div>
   </form>
 </div>
 
+{{end}}
+
+{{define "scripts"}}
+  <!-- This will automatically insert itself at the bottom of the master layout -->
+  <script type="text/javascript" src="/public/js/setPageUI.js" id="element-id" data-cb="{{.Data.CurrentButton}}"></script>
+  <script type="text/javascript" src="/public/js/tabSplitPage.js" id="scrollbar-script"></script>
 {{end}}
