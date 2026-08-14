@@ -37,6 +37,7 @@ type fields struct {
 
 type manageAccountsFields struct {
   CurrentButton string `json:"currentButton"`
+  CurrentPage string  `json:"currentPage"`
 }
 
 func newManageAccountsFields(dir1, dir2, correlationId string) *manageAccountsFields {
@@ -44,38 +45,49 @@ func newManageAccountsFields(dir1, dir2, correlationId string) *manageAccountsFi
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := manageAccountsFields{
+    CurrentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+  }
   obj, err := readFields(dir + "manageaccounts.txt")
   if obj != nil {
-    var m manageAccountsFields
-    err := json.Unmarshal(obj, &m)
-    if err != nil {
-      //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-    } else {
-      return &m
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
     }
   } else if err != nil {
     logger.LogError(fmt.Sprintf("%+v", err), correlationId)
   } else {
     logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "manageaccounts.txt"), correlationId)
   }
-  return &manageAccountsFields {
-    CurrentButton: "lhs-button1",
-  }
+  return &m
 }
 
 func getManageAccountsFields(userName string) *manageAccountsFields {
   return currentFields[userName].manageAccounts
 }
 
-
-/***
+func AddSessionDataPerUser(userName, correlationId string) {
+  if _, ok := currentFields[userName]; !ok {
+    fd := &fields{
+      manageAccounts: newManageAccountsFields(mainDir, userName, correlationId),
+      // users: newUsersFields(mainDir, userName, correlationId),
+    }
+    currentFields[userName] = fd
+  }
+}
 
 func DeleteSessionDataPerUser(userName string) {
   delete(currentFields, userName)
 }
-***/
-
 
 /***
 Notes about synchronization:
