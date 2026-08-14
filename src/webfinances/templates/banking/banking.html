@@ -1,19 +1,24 @@
 {{define "content"}}
 
 <div class="button-style">
-  <a href="/banking/accounts" target="_self">
+  <a href="/banking/accounts" target="_self" tabindex="-1">
     <button class="button" disabled>Accounts</button>
   </a>
 </div>
 <div class="button-style">
-  <a href="/banking/manageaccounts" target="_self">
+  <a href="/banking/manageaccounts" target="_self" tabindex="-1">
     <button class="button">Manage Accounts</button>
   </a>
 </div>
 <div class="button-back-style">
-  <a href="/welcome" target="_self">
+  <a href="/welcome" target="_self" tabindex="-1">
     <button class="button">Back</button>
   </a>
 </div>
 
+{{end}}
+
+{{define "scripts"}}
+  <!-- This will automatically insert itself at the bottom of the master layout -->
+  <script type="text/javascript" src="/public/js/tabFullPage.js" id="tab-full-page"></script>
 {{end}}
