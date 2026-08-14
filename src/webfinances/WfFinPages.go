@@ -1,16 +1,18 @@
 package webfinances
 
 import (
-  bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
-  admin "finance/webfinances/wfadmin"
+  bank "finance/databases/banking" //Importing a package and assigning it a local alias.
+  banking "finance/webfinances/wfbanking"
   "finance/renderer"
+  admin "finance/webfinances/wfadmin"
   "fmt"
-  "github.com/juan-carlos-trimino/gplogger"
-  "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/gpsessions"
   "net/http"
   "path/filepath"
   "time"
+
+  "github.com/juan-carlos-trimino/go-middlewares"
+  "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/gpsessions"
 )
 
 var financesMenuPage string = "home"
@@ -94,6 +96,7 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   } else {
     sessionToken, session := sessions.AddEntryToSessions(un)
     AddSessionDataPerUser(un, correlationId)
+    banking.AddSessionDataPerUser(un, correlationId)
     admin.AddSessionDataPerUser(un, correlationId)
     /***
     Once a cookie is set on a client, it is sent along with every subsequent request. Cookies store
