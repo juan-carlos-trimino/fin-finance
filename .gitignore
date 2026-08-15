@@ -134,7 +134,6 @@ src/webfinances/templates/*
 !src/webfinances/templates/layout.html
 !src/webfinances/templates/login.html
 !src/webfinances/templates/navbar.html
-!src/webfinances/templates/slider-alphabet.html
 !src/webfinances/templates/title.html
 !src/webfinances/templates/welcome.html
 # ... and this directory and its file...
@@ -285,6 +284,12 @@ src/webfinances/templates/finances/simpleinterestordinary/*
 !src/webfinances/templates/finances/simpleinterestordinary/interestrate.html
 !src/webfinances/templates/finances/simpleinterestordinary/principal.html
 !src/webfinances/templates/finances/simpleinterestordinary/time.html
+# ... and this directory and its file...
+!src/webfinances/templates/helpers/
+src/webfinances/templates/helpers/*
+!src/webfinances/templates/helpers/scroll-container.html
+!src/webfinances/templates/helpers/slider-alphabet-container.html
+!src/webfinances/templates/helpers/table-container.html
 # ... and this directory and its file...
 !src/webfinances/wfbanking/
 src/webfinances/wfbanking/*
