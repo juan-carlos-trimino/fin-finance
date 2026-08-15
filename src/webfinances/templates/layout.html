@@ -1,5 +1,4 @@
 {{define "layout"}}
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -10,28 +9,36 @@
     <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
   </head>
   <body>
-    <main>
-      <div class="center-title">
-        <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
-        {{template "title" .}}
-      </div>
-      <div class="center-datetime">
-        {{template "datetime" .}}
-      </div>
-      <div>
-        {{template "navbar" .}}
-      </div>
-      <!-- This dynamically injects the unique content of whatever page you are on -->
-      {{template "content" .}}
-    </main>
-    {{template "footer"}}
-    <!-- This placeholder dynamically injects scripts for pages that need them -->
-    {{template "scripts" .}}
+    {{if eq .Data.LayoutType `standard`}}
+      <main>
+        <div class="center-title">
+          <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
+          {{template "title" .}}
+        </div>
+        <div class="center-datetime">
+          {{template "datetime" .}}
+        </div>
+        <div>
+          {{template "navbar" .}}
+        </div>
+        <!-- This dynamically injects the unique content of whatever page you are on -->
+        {{template "content" .}}
+      </main>
+      {{template "footer"}}
+    {{end}}
+    <!-- Standard without navagation menu -->
+    {{if eq .Data.LayoutType `std-wo-nav-menu`}}
+      <main>
+        <div class="center-title">
+          {{template "title" .}}
+        </div>
+        <div class="center-datetime">
+          {{template "datetime" .}}
+        </div>
+        {{template "content" .}}
+      </main>
+      {{template "footer"}}
+    {{end}}
   </body>
 </html>
-
-{{end}}
-
-<!-- Fallback empty definition so Go won't error out on scriptless pages -->
-{{define "scripts"}}
 {{end}}
