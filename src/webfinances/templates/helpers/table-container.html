@@ -1,0 +1,8 @@
+{{define "table-container"}}
+<div class="custom-table-scrollable">
+  <table class="custom-table" id="custom-table" float="center">
+    {{/* Inject the custom table data here */}}
+    {{block "table-content" .}}{{end}}
+  </table>
+</div>
+{{end}}
