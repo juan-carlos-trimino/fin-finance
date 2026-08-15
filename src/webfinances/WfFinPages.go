@@ -95,9 +95,6 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
     invalidSession(res, correlationId)
   } else {
     sessionToken, session := sessions.AddEntryToSessions(un)
-    AddSessionDataPerUser(un, correlationId)
-    banking.AddSessionDataPerUser(un, correlationId)
-    admin.AddSessionDataPerUser(un, correlationId)
     /***
     Once a cookie is set on a client, it is sent along with every subsequent request. Cookies store
     historical information (including user login information) on the client's computer. The
@@ -125,8 +122,11 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
       Value: tokenString,
     })
     if isAdmin {
+      admin.AddSessionDataPerUser(un, correlationId)
       http.Redirect(res, req, "/admin/welcome", http.StatusSeeOther)
     } else {
+      AddSessionDataPerUser(un, correlationId)
+      banking.AddSessionDataPerUser(un, correlationId)
       http.Redirect(res, req, "/welcome", http.StatusSeeOther)
     }
   }
