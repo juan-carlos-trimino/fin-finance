@@ -54,6 +54,7 @@ func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Req
     if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
       fields.CurrentButton = "lhs-button1"
       pd := struct{
+        LayoutType string
         Header string
         Datetime string
         CurrentButton string
@@ -75,7 +76,7 @@ func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Req
         Email string
         Phone string
         ErrMsg string
-        } { "Register User - Admin", logger.DatetimeFormat(), fields.CurrentButton, "", "", "", "", "", "", "male",
+        } { "std-wo-nav-menu", "Register User - Admin", logger.DatetimeFormat(), fields.CurrentButton, "", "", "", "", "", "", "male",
             time.Now().Format("2006-01-02"), "false", "", "", "", "", "", "", "", "", "" }
       if req.Method == http.MethodPost {
         c := bank.Customer {
@@ -196,9 +197,9 @@ func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Req
       http.SetCookie(res, cookie)
       templatesNeeded := []string{
         "webfinances/templates/layout-no-navbar.html",
-        "webfinances/templates/slider-alphabet.html",
         "webfinances/templates/admin/users/users.html",
         "webfinances/templates/admin/users/unregister.html",
+        "webfinances/templates/helpers/slider-alphabet-container.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/footer.html",

@@ -36,8 +36,8 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
   //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
-    maf := getManageAccountsFields(userName)
-    var currentRHS string = "rhs-ui1"  //Default.
+    fields := getManageAccountsFields(userName)
+
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around
     the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
@@ -54,12 +54,12 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
     FormValue method does it. The PostFormValue method does the same thing, except that it's for
     the PostForm field instead of the Form field.
     ***/
-    if ui := req.FormValue("manageaccounts"); ui != "" {  //Values from form and URL.
-      currentRHS = ui
+    if ui := req.FormValue("tablestyle"); ui != "" {  //Values from form and URL.
+      fields.CurrentPage = ui
     }
     //
-    if strings.EqualFold(currentRHS, "rhs-ui1") {
-      maf.CurrentButton = "lhs-button1"
+    if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
+      fields.CurrentButton = "lhs-button1"
       var fd1BankName,
           fd1AccountType,
           fd1AccountName,
@@ -89,6 +89,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct {
+					LayoutType string
           Header string
           Datetime string
           MenuPage string
@@ -99,11 +100,11 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
           Fd1AccountName string
           Fd1AccountNumber string
           Fd1RoutingNumber string
-        } { "Manage Accounts", logger.DatetimeFormat(), bankingMenuPage, maf.CurrentButton, newSession.CsrfToken, fd1BankName,
-            fd1AccountType, fd1AccountName, fd1AccountNumber, fd1RoutingNumber },
+        } { "standard", "Manage Accounts", logger.DatetimeFormat(), bankingMenuPage, fields.CurrentButton, newSession.CsrfToken,
+				    fd1BankName, fd1AccountType, fd1AccountName, fd1AccountNumber, fd1RoutingNumber },
       })
-    } else if strings.EqualFold(currentRHS, "rhs-ui2") {
-      maf.CurrentButton = "lhs-button2"
+    } else if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
+      fields.CurrentButton = "lhs-button2"
       var rows []Row
       // if req.Method == http.MethodPost {
 
@@ -148,6 +149,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
         "webfinances/templates/layout.html",
         "webfinances/templates/banking/manageaccounts/manageaccounts.html",
         "webfinances/templates/banking/manageaccounts/deleteaccount.html",
+        "webfinances/templates/helpers/table-container.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
@@ -155,16 +157,18 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct {
+					LayoutType string
           Header string
           Datetime string
           MenuPage string
           CurrentButton string
           CsrfToken string
           Fd2Result []Row
-        } { "Manage Accounts", logger.DatetimeFormat(), bankingMenuPage, maf.CurrentButton, newSession.CsrfToken, rows },
+        } { "standard", "Manage Accounts", logger.DatetimeFormat(), bankingMenuPage, fields.CurrentButton,
+				    newSession.CsrfToken, rows },
       })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
+      errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
       logger.LogError(errString, correlationId)
       panic(errString)
     }
@@ -173,7 +177,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
       logger.LogWarning("*** Request timeout ***", correlationId)
       // if strings.EqualFold(maf.CurrentPage, "rhs-ui1") {
       //   bf.Fd1Result = ""
-      // if strings.EqualFold(currentRHS, "rhs-ui2") {
+      // if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
       //   rows = nil
       // } //else if strings.EqualFold(bf.CurrentPage, "rhs-ui3") {
       //   bf.Fd3Result = ""
@@ -197,7 +201,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
       // }
     }
     //
-    if data, err := json.Marshal(maf); err != nil {
+    if data, err := json.Marshal(fields); err != nil {
       logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/manageaccounts.txt", mainDir, userName)

@@ -62,7 +62,7 @@ func (s WfAdminSettingsPages) AdminSecurityPages(res http.ResponseWriter, req *h
     is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
     except that it's for the PostForm field instead of the Form field.
     ***/
-    if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
+    if ui := req.FormValue("db"); ui != "" {  //Values from form and URL.
       fields.CurrentPage = ui
     }
     //
@@ -102,6 +102,7 @@ func (s WfAdminSettingsPages) AdminSecurityPages(res http.ResponseWriter, req *h
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct{
+          LayoutType string
           Header string
           Datetime string
           CurrentPage string
@@ -112,8 +113,8 @@ func (s WfAdminSettingsPages) AdminSecurityPages(res http.ResponseWriter, req *h
           New string
           Confirm string
           ErrMsg string
-        } { "Change Password - Admin", logger.DatetimeFormat(), fields.CurrentPage, fields.CurrentButton, newSession.CsrfToken, fields.Username,
-            fields.Old, fields.New, fields.Confirm, errorMsg },
+        } { "std-wo-nav-menu", "Change Password - Admin", logger.DatetimeFormat(), fields.CurrentPage, fields.CurrentButton,
+            newSession.CsrfToken, fields.Username, fields.Old, fields.New, fields.Confirm, errorMsg },
       })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
@@ -159,7 +160,7 @@ func (s WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Re
   logger.LogInfo("Entering wfadmin.AdminUsersPages.", correlationId)
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
-		fields := getManageAccountsFields(userName)
+    fields := getManageAccountsFields(userName)
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
     MultipartForm fields; the data are in the form of key-value pairs.
@@ -174,7 +175,7 @@ func (s WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Re
     is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
     except that it's for the PostForm field instead of the Form field.
     ***/
-		/**
+    /**
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
       fields.CurrentPage = ui
     }

@@ -37,9 +37,10 @@ func displayWelcomePage(res http.ResponseWriter) {
   }
   renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
     Data: struct{
+			LayoutType string
       Header string
       Datetime string
-    } { "Investments - Admin", logger.DatetimeFormat() },
+    } { "std-wo-nav-menu", "Investments - Admin", logger.DatetimeFormat() },
   })
 }
 
