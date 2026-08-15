@@ -1,0 +1,15 @@
+{{define "scroll-container"}}
+
+<div class="cnt-scroll" id="form-scroll-cnt">
+  {{/*
+  Execute the dynamic inner template block and pass down the dot context.
+
+  You might wonder why we don't just write {{template "scroll-content" .}}.
+  If you use {{template "scroll-content" .}} and a page forgets to define what goes inside, your app will crash with a template
+  parsing error. By using {{block}}, it fails gracefully. If a page doesn't define any content, Go will just render an empty scroll
+  container instead of breaking your website.
+  */}}
+  {{block "scroll-content" .}}{{end}}
+</div>
+
+{{end}}
