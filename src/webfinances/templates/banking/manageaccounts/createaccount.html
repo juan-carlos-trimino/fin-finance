@@ -1,5 +1,4 @@
-{{define "manage_accounts-layout"}}
-
+{{define "manage-accounts-layout"}}
 <!-- rhs-ui1 -->
 <div id="rhs-ui1">
   <form action="/banking/manageaccounts" method="post" enctype="application/x-www-form-urlencoded">
@@ -27,11 +26,6 @@
     </div>
   </form>
 </div>
-
-{{end}}
-
-{{define "scripts"}}
-  <!-- This will automatically insert itself at the bottom of the master layout -->
-  <script type="text/javascript" src="/public/js/setPageUI.js" id="element-id" data-cb="{{.Data.CurrentButton}}"></script>
-  <script type="text/javascript" src="/public/js/tabSplitPage.js" id="scrollbar-script"></script>
+<script type="text/javascript" src="/public/js/setPageUI.js" id="element-id" data-cb="{{.Data.CurrentButton}}"></script>
+<script type="text/javascript" src="/public/js/tabSplitPage.js" id="scrollbar-script"></script>
 {{end}}

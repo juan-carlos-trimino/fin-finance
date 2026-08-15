@@ -1,5 +1,36 @@
-{{define "manage_accounts-layout"}}
+<!-- Define the unique table contents FIRST at the top level -->
+{{define "table-content"}}
+<caption class="custom-table-caption">Accounts</caption>
+<thead>
+  <tr>
+    <th>Account Name</th>
+    <th>Account Type</th>
+  </tr>
+</thead>
+<tfoot>
+  <tr>
+    <th>Account Name</th>
+    <th>Account Type</th>
+  </tr>
+</tfoot>
+<tbody id="tbody">
+  {{range .Data.Fd2Result}}
+  <!--
+  By default, table rows (<tr>) cannot receive focus via the Tab key. If they are acting as clickable buttons in your application,
+  they need a tabindex="0" attribute.
+  Putting tabindex="0" on an element tells the browser: "Treat this non-interactive element like a standard button or input field."
+  Putting tabindex="-1" on an element tells the browser: "Do not let the user hit Tab to get here, but keep it programmatically
+  focusable."
+  -->
+  <tr class="clickable-row" data-id="{{.AccountName}}" tabindex="0"> <!-- Row -->
+    <td>{{.AccountName}}</td> <!-- Data -->
+    <td>{{.AccountType}}</td>
+  </tr>
+  {{end}}
+</tbody>
+{{end}}
 
+{{define "manage-accounts-layout"}}
 <!-- rhs-ui2 -->
 <div id="rhs-ui2">
   <form id="table_id_form" action="/banking/manageaccounts" method="post" enctype="application/x-www-form-urlencoded">
@@ -7,37 +38,8 @@
     <!-- Hold the selected table row ID value for the POST body. -->
     <input type="hidden" id="table_row_id" name="selected_id" value=""/>
     <input type="hidden" id="hidden_bttable" name="tablestyle" value=""/>
-    <div class="custom-table-scrollable">
-      <table class="custom-table" id="custom-table" float="center">
-        <caption class="custom-table-caption">Accounts</caption>
-        <thead>
-          <tr>
-            <th>Account Name</th>
-            <th>Account Type</th>
-          </tr>
-        </thead>
-        <tfoot>
-          <tr>
-            <th>Account Name</th>
-            <th>Account Type</th>
-          </tr>
-        </tfoot>
-        <tbody id="tbody">
-          {{range .Data.Fd2Result}}
-          <!--
-          By default, table rows (<tr>) cannot receive focus via the Tab key. If they are acting as clickable buttons in your application,
-          they need a tabindex="0" attribute.
-          Putting tabindex="0" on an element tells the browser: "Treat this non-interactive element like a standard button or input field."
-          Putting tabindex="-1" on an element tells the browser: "Do not let the user hit Tab to get here, but keep it programmatically focusable."
-          -->
-          <tr class="clickable-row" data-id="{{.AccountName}}" tabindex="0"> <!-- Row -->
-            <td>{{.AccountName}}</td> <!-- Data -->
-            <td>{{.AccountType}}</td>
-          </tr>
-          {{end}}
-        </tbody>
-      </table>
-    </div>
+    <!-- Call the table container here. It will find 'table-content' -->
+    {{template "table-container" .}}
     <div class="button-back-style">
       <!--
       Because the button is configured as type="button", it will never submit the form on its own.
@@ -46,12 +48,7 @@
     </div>
   </form>
 </div>
-
-{{end}}
-
-{{define "scripts"}}
-  <!-- This will automatically insert itself at the bottom of the master layout -->
-  <script type="text/javascript" src="/public/js/setPageUI.js" id="element-id" data-cb="{{.Data.CurrentButton}}"></script>
-  <script type="text/javascript" src="/public/js/tabSplitPage.js" id="scrollbar-script"></script>
-  <script type="text/javascript" src="/public/js/tableStylesheet.js"></script>
+<script type="text/javascript" src="/public/js/setPageUI.js" id="element-id" data-cb="{{.Data.CurrentButton}}"></script>
+<script type="text/javascript" src="/public/js/tabSplitPage.js"></script>
+<script type="text/javascript" src="/public/js/tableStylesheet.js"></script>
 {{end}}

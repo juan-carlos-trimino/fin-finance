@@ -1,5 +1,4 @@
 {{define "content"}}
-
 <div class="split-screen">
   <div class="left-side">
     <div class="button-style">
@@ -19,12 +18,7 @@
     </div>
   </div>
   <div class="right-side">
-    {{template "manage_accounts-layout" .}}
+    {{template "manage-accounts-layout" .}}
   </div>
 </div>
-
-{{end}}
-
-<!-- Fallback empty definition so Go won't error out on scriptless pages -->
-{{define "scripts"}}
 {{end}}

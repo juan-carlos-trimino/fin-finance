@@ -1,6 +1,5 @@
 <!-- The define action for the home page -->
 {{define "content"}}
-
 <div class="button-style">
   <a href="/admin/users" target="_self" tabindex="-1">
     <button class="button" autofocus>Users</button>
@@ -17,10 +16,5 @@
     <button class="button">Logout</button>
   </a>
 </div>
-
-{{end}}
-
-{{define "scripts"}}
-  <!-- This will automatically insert itself at the bottom of the master layout -->
-  <script type="text/javascript" src="/public/js/tabFullPage.js" id="tab-full-page"></script>
+<script type="text/javascript" src="/public/js/tabFullPage.js"></script>
 {{end}}

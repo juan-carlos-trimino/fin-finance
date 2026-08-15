@@ -1,23 +1,29 @@
-<!-- The define action for the register page -->
-{{define "users-layout"}}
+<!--
+  Go templates do not allow you to define a template block inside another block or layout element.
+  1. Define the internal scroll content FIRST at the top level
+-->
+{{define "scroll-content"}}
+{{end}}
 
+<!-- The define action for the register page -->
+<!-- 2. Now define your main users-layout -->
+{{define "users-layout"}}
 <!-- rhs-ui2 -->
 <form method="post" action="/admin/users" enctype="application/x-www-form-urlencoded" autocomplete="off">
   <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
   <div class="cnt-scroll" id="form-scroll-cnt">
 
+    {{/*
     {{template "slider-alphabet" .}}
+    */}}
 
+    <!-- 3. Simply call the scroll container here. It will automatically find 'scroll-content' -->
+    {{template "scroll-container" .}}
   </div>
   <div class="button-back-style">
     <button type="submit" class="button" id="btdb" name="db" value="rhs-ui2">Save</button>
   </div>
 </form>
-
-{{end}}
-
-{{define "scripts"}}
-  <!-- This will automatically insert itself at the bottom of the master layout -->
-  <script type="text/javascript" src="/public/js/setPageUI.js" id="element-id" data-cb="{{.Data.CurrentButton}}"></script>
-  <script type="text/javascript" src="/public/js/tabSplitPage.js" id="scrollbar-script"></script>
+<script type="text/javascript" src="/public/js/setPageUI.js" id="element-id" data-cb="{{.Data.CurrentButton}}"></script>
+<script type="text/javascript" src="/public/js/tabSplitPage.js" id="scrollbar-script"></script>
 {{end}}
