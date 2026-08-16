@@ -17,20 +17,21 @@ var contactMenuPage = "contact"
 var aboutMenupage string = "about"
 
 /***
-When handling authentication errors, the application should not disclose which part of the
-authentication data was incorrect. Instead of "Invalid username" or "Invalid password", just use
-"Invalid username and/or password" interchangeably.
+When handling authentication errors, the application should not disclose which part of the authentication data was incorrect.
+Instead of "Invalid username" or "Invalid password", just use "Invalid username and/or password" interchangeably.
 ***/
-func invalidSession(res http.ResponseWriter) {
+func invalidSession(res http.ResponseWriter, correlationId string) {
+  logger.LogInfo("Invalid session (wfbanking.invalidSession).", correlationId)
   templatesNeeded := []string{
-    "webfinances/templates/layout-simple.html",
+    "webfinances/templates/layout.html",
     "webfinances/templates/login.html",
   }
-  renderer.Render(res, "layout-simple", templatesNeeded, renderer.PageData{
+  renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
     Data: struct{
+      LayoutType string
       Header string
       ErrMsg string
-    } { "Login", "Invalid username and/or password" },
+    } { "std-wo-headers", "Login", "Invalid username and/or password" },
   })
 }
 
@@ -52,7 +53,7 @@ func (p WfBankingPages) BankingPage(res http.ResponseWriter, req *http.Request) 
   logger.LogInfo("Entering wfbanking.BankingPage.", correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
-    invalidSession(res)
+    invalidSession(res, correlationId)
   } else {
     templatesNeeded := []string{
       "webfinances/templates/layout.html",
@@ -64,10 +65,11 @@ func (p WfBankingPages) BankingPage(res http.ResponseWriter, req *http.Request) 
     }
     renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
       Data: struct {
+        LayoutType string
         Header string
         Datetime string
         MenuPage string
-        } { "Bankig", logger.DatetimeFormat(), bankingMenuPage },
+        } { "standard", "Bankig", logger.DatetimeFormat(), bankingMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
