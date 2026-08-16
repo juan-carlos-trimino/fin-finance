@@ -17,6 +17,76 @@ import (
   "time"
 )
 
+type adFvFields struct {
+  MenuPage string `json:"menuPage"`
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
+  //
+  Fd1N string `json:"fd1N"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
+  //
+  Fd2N string `json:"fd2N"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2PMT string `json:"fd2PMT"`
+  Fd2Result string `json:"fd2Result"`
+}
+
+func newAdFvFields(dir1, dir2, correlationId string) *adFvFields {
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := adFvFields{
+    MenuPage: "",
+    CurrentButton: "lhs-button2",
+    CurrentPage: "rhs-ui2",
+    //
+    Fd1N: "1.0",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "monthly",
+    Fd1FV: "1.00",
+    Fd1Result: "",
+    //
+    Fd2N: "1.0",
+    Fd2TimePeriod: "year",
+    Fd2Interest: "1.00",
+    Fd2Compound: "monthly",
+    Fd2PMT: "1.00",
+    Fd2Result: "",
+  }
+  obj, err := readFields(dir + "adfv.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adfv.txt"), correlationId)
+  }
+  return &m
+}
+
+func getAdFvFields(userName string) *adFvFields {
+  return currentFields[userName].adFv
+}
+
 type WfAdFvPages struct {}
 
 func (a WfAdFvPages) AdFvPages(res http.ResponseWriter, req *http.Request) {

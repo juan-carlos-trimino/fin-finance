@@ -17,8 +17,85 @@ import (
   "time"
 )
 
-type WfAdCpPages struct {
+type adCpFields struct {
+  MenuPage string `json:"menuPage"`
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
+  //
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1PV string `json:"fd1PV"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
+  //
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2Payment string `json:"fd2Payment"`
+  Fd2PV string `json:"fd2PV"`
+  Fd2Result string `json:"fd2Result"`
+  //
+  Fd3Interest string `json:"fd3Interest"`
+  Fd3Compound string `json:"fd3Compound"`
+  Fd3Payment string `json:"fd3Payment"`
+  Fd3FV string `json:"fd3FV"`
+  Fd3Result string `json:"fd3Result"`
 }
+
+func newAdCpFields(dir1, dir2, correlationId string) *adCpFields {
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := adCpFields {
+    MenuPage: "",
+    CurrentPage: "rhs-ui2",
+    CurrentButton: "lhs-button2",
+    //
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1PV: "1.00",
+    Fd1FV: "1.00",
+    Fd1Result: "",
+    //
+    Fd2Interest: "1.00",
+    Fd2Compound: "annually",
+    Fd2Payment: "1.00",
+    Fd2PV: "1.00",
+    Fd2Result: "",
+    //
+    Fd3Interest: "1.00",
+    Fd3Compound: "annually",
+    Fd3Payment: "1.00",
+    Fd3FV: "1.00",
+    Fd3Result: "",
+  }
+  obj, err := readFields(dir + "adcp.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adcp.txt"), correlationId)
+  }
+  return &m
+}
+
+func getAdCpFields(userName string) *adCpFields {
+  return currentFields[userName].adCp
+}
+
+type WfAdCpPages struct {}
 
 func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}

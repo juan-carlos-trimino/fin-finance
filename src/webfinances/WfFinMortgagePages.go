@@ -17,6 +17,92 @@ import (
   "time"
 )
 
+type mortgageFields struct {
+  MenuPage string `json:"menuPage"`
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
+  //
+  Fd1N string `json:"fd1N"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1Amount string `json:"fd1Amount"`
+  Fd1Result [3]string `json:"fd1Result"`
+  //
+  Fd2N string `json:"Fd2N"`
+  Fd2TimePeriod string `json:"Fd2TimePeriod"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2Amount string `json:"fd2Amount"`
+  Fd2TotalCost string `json:"fd2TotalCost"`
+  Fd2TotalInterest string `json:"fd2TotalInterest"`
+  Fd2Result []Row `json:"fd2Result"`
+  //
+  Fd3Mrate string `json:"fd3Mrate"`
+  Fd3Mbalance string `json:"fd3Mbalance"`
+  Fd3Hrate string `json:"fd3Hrate"`
+  Fd3Hbalance string `json:"fd3Hbalance"`
+  Fd3Result [3]string `json:"fd3Result"`
+}
+
+func newMortgageFields(dir1, dir2, correlationId string) *mortgageFields {
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := mortgageFields{
+    MenuPage: "",
+    CurrentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    //
+    Fd1N: "30.0",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "7.50",
+    Fd1Compound: "monthly",
+    Fd1Amount: "100000.00",
+    Fd1Result: [3]string { "", "", "" },
+    //
+    Fd2N: "30.0",
+    Fd2TimePeriod: "year",
+    Fd2Interest: "3.00",
+    Fd2Compound: "monthly",
+    Fd2Amount: "100000.00",
+    Fd2TotalCost: "",
+    Fd2TotalInterest: "",
+    Fd2Result: []Row{},
+    //
+    Fd3Mrate: "3.375",
+    Fd3Mbalance: "300000.00",
+    Fd3Hrate: "2.875",
+    Fd3Hbalance: "100000.00",
+    Fd3Result: [3]string { mortgage_notes[0], mortgage_notes[1], "" },
+  }
+  obj, err := readFields(dir + "mortgage.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "mortgage.txt"), correlationId)
+  }
+  return &m
+}
+
+func getMortgageFields(userName string) *mortgageFields {
+  return currentFields[userName].mortgage
+}
+
 var mortgage_notes = [...]string {
   "Refinance mortgage and HELOC with one load.",
   "If the blended interest rate is higher than what you could get on a new fixed-rate mortgage, consider it.",
@@ -45,20 +131,18 @@ func (mp WfMortgagePages) MortgagePages(res http.ResponseWriter, req *http.Reque
     userName := sessions.GetUserName(sessionToken)
     fields := getMortgageFields(userName)
     /***
-    The functions in Request that allow to extract data from the URL and/or the body revolve around
-    the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
+    The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
+    MultipartForm fields; the data are in the form of key-value pairs.
 
-    If the form and the URL have the same key name, both of them will be placed in a slice, with
-    the form value always prioritized before the URL value.
+    If the form and the URL have the same key name, both of them will be placed in a slice, with the form value always prioritized
+    before the URL value.
 
-    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm
-    field provides key-value pairs only for the form and not the URL. The PostForm field supports
-    only application/x-www-form-urlencoded.
+    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm field provides key-value pairs only
+    for the form and not the URL. The PostForm field supports only application/x-www-form-urlencoded.
 
-    The FormValue method lets you access the key-value pairs just like the Form field, except that
-    it's for a specific key and there is no need to call the ParseForm method beforehand -- the
-    FormValue method does it. The PostFormValue method does the same thing, except that it's for
-    the PostForm field instead of the Form field.
+    The FormValue method lets you access the key-value pairs just like the Form field, except that it's for a specific key and there
+    is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
+    except that it's for the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
       fields.CurrentPage = ui

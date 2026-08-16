@@ -16,6 +16,48 @@ import (
   "time"
 )
 
+type usersFields struct {
+  CurrentButton string `json:"currentButton"`
+  CurrentPage string  `json:"currentPage"`
+  SelectedRange string `json:"selectedRange"`
+}
+
+func newUsersFields(dir1, dir2, correlationId string) *usersFields {
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := usersFields {
+    CurrentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+    SelectedRange: "1",
+  }
+  obj, err := readFields(dir + "users.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "users.txt"), correlationId)
+  }
+  return &m
+}
+
+func getUsersFields(userName string) *usersFields {
+  return currentFields[userName].users
+}
+
 type WfAdminUsersPages struct {}
 
 func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Request) {

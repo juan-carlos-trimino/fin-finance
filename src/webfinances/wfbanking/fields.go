@@ -1,10 +1,10 @@
 package wfbanking
 
 import (
-  "encoding/json"
+  // "encoding/json"
   "errors"
   "fmt"
-  "github.com/juan-carlos-trimino/gplogger"
+  // "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/gposu"
   "os"
 )
@@ -33,46 +33,6 @@ them with the same Session data because they all have the same SessionID.
 type fields struct {
   //Make the pointers unexported so that clients can't interact with them directly but only via exported methods.
   manageAccounts *manageAccountsFields
-}
-
-type manageAccountsFields struct {
-  CurrentButton string `json:"currentButton"`
-  CurrentPage string  `json:"currentPage"`
-}
-
-func newManageAccountsFields(dir1, dir2, correlationId string) *manageAccountsFields {
-  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
-  if err != nil {
-    panic("Cannot create directory '" + dir + "': " + err.Error())
-  }
-  //Default values returned if file is missing, empty, or JSON is corrupt.
-  m := manageAccountsFields{
-    CurrentButton: "lhs-button1",
-    CurrentPage: "rhs-ui1",
-  }
-  obj, err := readFields(dir + "manageaccounts.txt")
-  if obj != nil {
-    /***
-    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
-    length ensures parsing only files that actually contain data.
-    ***/
-    if len(obj) != 0 {  //Check if the file contains no data (empty)
-      err = json.Unmarshal(obj, &m)
-      if err != nil {
-        //Write error, but continue with default values.
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-      }
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "manageaccounts.txt"), correlationId)
-  }
-  return &m
-}
-
-func getManageAccountsFields(userName string) *manageAccountsFields {
-  return currentFields[userName].manageAccounts
 }
 
 func AddSessionDataPerUser(userName, correlationId string) {

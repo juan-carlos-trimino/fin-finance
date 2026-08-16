@@ -17,6 +17,76 @@ import (
   "time"
 )
 
+type adEppFields struct {
+  MenuPage string `json:"menuPage"`
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
+  //
+  Fd1N string `json:"fd1N"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1FV string `json:"fd1FV"`
+  Fd1Result string `json:"fd1Result"`
+  //
+  Fd2N string `json:"fd2N"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2PV string `json:"fd2PV"`
+  Fd2Result string `json:"fd2Result"`
+}
+
+func newAdEppFields(dir1, dir2, correlationId string) *adEppFields {
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := adEppFields {
+    MenuPage: "",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
+    //
+    Fd1N: "1.00",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1FV: "1.00",
+    Fd1Result: "",
+    //
+    Fd2N: "1.00",
+    Fd2TimePeriod: "year",
+    Fd2Interest: "1.00",
+    Fd2Compound: "annually",
+    Fd2PV: "1.00",
+    Fd2Result: "",
+  }
+  obj, err := readFields(dir + "adepp.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adepp.txt"), correlationId)
+  }
+  return &m
+}
+
+func getAdEppFields(userName string) *adEppFields {
+  return currentFields[userName].adEpp
+}
+
 type WfAdEppPages struct {}
 
 func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {

@@ -15,6 +15,46 @@ import (
   "time"
 )
 
+type manageAccountsFields struct {
+  CurrentButton string `json:"currentButton"`
+  CurrentPage string  `json:"currentPage"`
+}
+
+func newManageAccountsFields(dir1, dir2, correlationId string) *manageAccountsFields {
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := manageAccountsFields{
+    CurrentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+  }
+  obj, err := readFields(dir + "manageaccounts.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "manageaccounts.txt"), correlationId)
+  }
+  return &m
+}
+
+func getManageAccountsFields(userName string) *manageAccountsFields {
+  return currentFields[userName].manageAccounts
+}
+
 type WfBankingMngAcctsPages struct {}
 
 type Row struct {  //Rows for the accounts.
@@ -37,22 +77,19 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
     fields := getManageAccountsFields(userName)
-
     /***
-    The functions in Request that allow to extract data from the URL and/or the body revolve around
-    the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
+    The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
+    MultipartForm fields; the data are in the form of key-value pairs.
 
-    If the form and the URL have the same key name, both of them will be placed in a slice, with
-    the form value always prioritized before the URL value.
+    If the form and the URL have the same key name, both of them will be placed in a slice, with the form value always prioritized
+    before the URL value.
 
-    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm
-    field provides key-value pairs only for the form and not the URL. The PostForm field supports
-    only application/x-www-form-urlencoded.
+    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm field provides key-value pairs only
+    for the form and not the URL. The PostForm field supports only application/x-www-form-urlencoded.
 
-    The FormValue method lets you access the key-value pairs just like the Form field, except that
-    it's for a specific key and there is no need to call the ParseForm method beforehand -- the
-    FormValue method does it. The PostFormValue method does the same thing, except that it's for
-    the PostForm field instead of the Form field.
+    The FormValue method lets you access the key-value pairs just like the Form field, except that it's for a specific key and there
+    is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
+    except that it's for the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("tablestyle"); ui != "" {  //Values from form and URL.
       fields.CurrentPage = ui
@@ -89,7 +126,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct {
-					LayoutType string
+          LayoutType string
           Header string
           Datetime string
           MenuPage string
@@ -101,7 +138,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
           Fd1AccountNumber string
           Fd1RoutingNumber string
         } { "standard", "Manage Accounts", logger.DatetimeFormat(), bankingMenuPage, fields.CurrentButton, newSession.CsrfToken,
-				    fd1BankName, fd1AccountType, fd1AccountName, fd1AccountNumber, fd1RoutingNumber },
+            fd1BankName, fd1AccountType, fd1AccountName, fd1AccountNumber, fd1RoutingNumber },
       })
     } else if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
       fields.CurrentButton = "lhs-button2"
@@ -157,7 +194,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct {
-					LayoutType string
+          LayoutType string
           Header string
           Datetime string
           MenuPage string
@@ -165,7 +202,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
           CsrfToken string
           Fd2Result []Row
         } { "standard", "Manage Accounts", logger.DatetimeFormat(), bankingMenuPage, fields.CurrentButton,
-				    newSession.CsrfToken, rows },
+            newSession.CsrfToken, rows },
       })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
