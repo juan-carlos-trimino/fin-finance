@@ -13,31 +13,33 @@
       <main>
         <div class="center-title">
           <!-- The dot (.) that follows the name of the template to be included is the data passed into the template -->
-          {{template "title" .}}
+          {{block "title" .}}{{end}}
         </div>
         <div class="center-datetime">
-          {{template "datetime" .}}
+          {{block "datetime" .}}{{end}}
         </div>
         <div>
-          {{template "navbar" .}}
+          {{block "navbar" .}}{{end}}
         </div>
         <!-- This dynamically injects the unique content of whatever page you are on -->
         {{template "content" .}}
       </main>
-      {{template "footer"}}
-    {{end}}
-    <!-- Standard without navagation menu -->
-    {{if eq .Data.LayoutType `std-wo-nav-menu`}}
+      {{block "footer" .}}{{end}}
+    {{else if eq .Data.LayoutType `std-wo-nav-menu`}}  <!-- Standard without navagation menu -->
       <main>
         <div class="center-title">
-          {{template "title" .}}
+          {{block "title" .}}{{end}}
         </div>
         <div class="center-datetime">
-          {{template "datetime" .}}
+          {{block "datetime" .}}{{end}}
         </div>
         {{template "content" .}}
       </main>
-      {{template "footer"}}
+      {{block "footer" .}}{{end}}
+    {{else if eq .Data.LayoutType `std-wo-headers`}}  <!-- Standard without headers, footer & navagation menu -->
+      <main>
+        {{template "content" .}}
+      </main>
     {{end}}
   </body>
 </html>

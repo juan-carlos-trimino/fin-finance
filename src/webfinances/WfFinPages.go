@@ -9,7 +9,6 @@ import (
   "net/http"
   "path/filepath"
   "time"
-
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/gpsessions"
@@ -26,14 +25,15 @@ Instead of "Invalid username" or "Invalid password", just use "Invalid username 
 func invalidSession(res http.ResponseWriter, correlationId string) {
   logger.LogInfo("Invalid session (webfinances.invalidSession).", correlationId)
   templatesNeeded := []string{
-    "webfinances/templates/layout-simple.html",
+    "webfinances/templates/layout.html",
     "webfinances/templates/login.html",
   }
-  renderer.Render(res, "layout-simple", templatesNeeded, renderer.PageData{
+  renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
     Data: struct{
+      LayoutType string
       Header string
       ErrMsg string
-    } { "Login", "Invalid username and/or password" },
+    } { "std-wo-headers", "Login", "Invalid username and/or password" },
   })
 }
 
@@ -46,13 +46,14 @@ func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.IndexPage.", correlationId)
   templatesNeeded := []string{
-    "webfinances/templates/layout-simple.html",
+    "webfinances/templates/layout.html",
     "webfinances/templates/index.html",
   }
-  renderer.Render(res, "layout-simple", templatesNeeded, renderer.PageData{
+  renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
     Data: struct{
+      LayoutType string
       Header string
-    } { "Welcome to Investments" },
+    } { "std-wo-headers", "Welcome to Investments" },
   })
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -64,14 +65,15 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering LoginPage.", correlationId)
   templatesNeeded := []string{
-    "webfinances/templates/layout-simple.html",
+    "webfinances/templates/layout.html",
     "webfinances/templates/login.html",
   }
-  renderer.Render(res, "layout-simple", templatesNeeded, renderer.PageData{
+  renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
     Data: struct{
+      LayoutType string
       Header string
       ErrMsg string
-    } { "Login", "" },
+    } { "std-wo-headers", "Login", "" },
   })
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
@@ -171,10 +173,11 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
     }
     renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
       Data: struct{
+        LayoutType string
         Header string
         Datetime string
         MenuPage string
-      } { "Investments", logger.DatetimeFormat(), financesMenuPage },
+      } { "standard", "Investments", logger.DatetimeFormat(), financesMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -200,10 +203,11 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
     }
     renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
       Data: struct{
+        LayoutType string
         Header string
         Datetime string
         MenuPage string
-      } { "Contact Us", logger.DatetimeFormat(), "contact" },
+      } { "standard", "Contact Us", logger.DatetimeFormat(), "contact" },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -230,10 +234,11 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
     }
     renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
       Data: struct{
+        LayoutType string
         Header string
         Datetime string
         MenuPage string
-      } { "About Us", logger.DatetimeFormat(), aboutMenupage },
+      } { "standard", "About Us", logger.DatetimeFormat(), aboutMenupage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -259,10 +264,11 @@ func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
     }
     renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
       Data: struct{
+        LayoutType string
         Header string
         Datetime string
         MenuPage string
-      } { "Finances", logger.DatetimeFormat(), financesMenuPage },
+      } { "standard", "Finances", logger.DatetimeFormat(), financesMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -288,10 +294,11 @@ func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) 
     }
     renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
       Data: struct{
+        LayoutType string
         Header string
         Datetime string
         MenuPage string
-      } { "Simple Interest", logger.DatetimeFormat(), financesMenuPage },
+      } { "standard", "Simple Interest", logger.DatetimeFormat(), financesMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -317,10 +324,11 @@ func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request)
     }
     renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
       Data: struct{
+        LayoutType string
         Header string
         Datetime string
         MenuPage string
-      } { "Ordinary Annuity", logger.DatetimeFormat(), financesMenuPage },
+      } { "standard", "Ordinary Annuity", logger.DatetimeFormat(), financesMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -346,10 +354,11 @@ func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
     }
     renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
       Data: struct{
+        LayoutType string
         Header string
         Datetime string
         MenuPage string
-      } { "Annuity Due", logger.DatetimeFormat(), financesMenuPage },
+      } { "standard", "Annuity Due", logger.DatetimeFormat(), financesMenuPage },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
