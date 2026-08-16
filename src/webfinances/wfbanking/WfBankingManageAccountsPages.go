@@ -175,30 +175,6 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
     //
     if req.Context().Err() == context.DeadlineExceeded {
       logger.LogWarning("*** Request timeout ***", correlationId)
-      // if strings.EqualFold(maf.CurrentPage, "rhs-ui1") {
-      //   bf.Fd1Result = ""
-      // if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
-      //   rows = nil
-      // } //else if strings.EqualFold(bf.CurrentPage, "rhs-ui3") {
-      //   bf.Fd3Result = ""
-      // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui4") {
-      //   bf.Fd4Result[0] = ""
-      //   bf.Fd4Result[1] = ""
-      // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui5") {
-      //   bf.Fd5Result[0] = ""
-      //   bf.Fd5Result[1] = ""
-      //   bf.Fd5Result[2] = ""
-      //   bf.Fd5Result[3] = ""
-      //   bf.Fd5Result[4] = ""
-      //   bf.Fd5Result[5] = ""
-      //   bf.Fd5Result[6] = ""
-      // // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui6") {
-      // //   bf.Fd6Result[1] = ""
-      // // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui7") {
-      // //   bf.Fd7Result[1] = ""
-      // // } else if strings.EqualFold(bf.CurrentPage, "rhs-ui8") {
-      // //   bf.Fd8Result[1] = ""
-      // }
     }
     //
     if data, err := json.Marshal(fields); err != nil {
