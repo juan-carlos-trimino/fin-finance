@@ -159,6 +159,7 @@ func getMiscellaneousFields(userName string) *miscellaneousFields {
 
 type mortgageFields struct {
   MenuPage string `json:"menuPage"`
+  CurrentPage string `json:"currentPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -189,24 +190,11 @@ func newMortgageFields(dir1, dir2, correlationId string) *mortgageFields {
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
-  obj, err := readFields(dir + "mortgage.txt")
-  if obj != nil {
-    var m mortgageFields
-    err := json.Unmarshal(obj, &m)
-    if err != nil {
-      //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-    } else {
-      return &m
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "mortgage.txt"), correlationId)
-  }
-  return &mortgageFields {
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := mortgageFields{
     MenuPage: "",
     CurrentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
     //
     Fd1N: "30.0",
     Fd1TimePeriod: "year",
@@ -230,6 +218,25 @@ func newMortgageFields(dir1, dir2, correlationId string) *mortgageFields {
     Fd3Hbalance: "100000.00",
     Fd3Result: [3]string { mortgage_notes[0], mortgage_notes[1], "" },
   }
+  obj, err := readFields(dir + "mortgage.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "mortgage.txt"), correlationId)
+  }
+  return &m
 }
 
 func getMortgageFields(userName string) *mortgageFields {

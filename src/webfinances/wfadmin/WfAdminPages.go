@@ -16,14 +16,15 @@ Instead of "Invalid username" or "Invalid password", just use "Invalid username 
 func invalidSession(res http.ResponseWriter, correlationId string) {
   logger.LogInfo("Invalid session (wfadmin.invalidSession).", correlationId)
   templatesNeeded := []string{
-    "webfinances/templates/layout-simple.html",
+    "webfinances/templates/layout.html",
     "webfinances/templates/login.html",
   }
-  renderer.Render(res, "layout-simple", templatesNeeded, renderer.PageData{
+  renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
     Data: struct{
+      LayoutType string
       Header string
       ErrMsg string
-    } { "Login", "Invalid username and/or password" },
+    } { "std-wo-headers", "Login", "Invalid username and/or password" },
   })
 }
 

@@ -196,7 +196,7 @@ func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Req
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       templatesNeeded := []string{
-        "webfinances/templates/layout-no-navbar.html",
+        "webfinances/templates/layout.html",
         "webfinances/templates/admin/users/users.html",
         "webfinances/templates/admin/users/unregister.html",
         "webfinances/templates/helpers/slider-alphabet-container.html",
@@ -209,12 +209,14 @@ func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Req
       ***/
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct{
+          LayoutType string
           Header string
           Datetime string
           CurrentButton string
           CsrfToken string
           SelectedRange string
-        } { "Unregister User - Admin", logger.DatetimeFormat(), fields.CurrentButton, newSession.CsrfToken, fields.SelectedRange },
+        } { "std-wo-nav-menu", "Unregister User - Admin", logger.DatetimeFormat(), fields.CurrentButton, newSession.CsrfToken,
+            fields.SelectedRange },
       })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
