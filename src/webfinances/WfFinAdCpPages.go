@@ -34,26 +34,23 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
-    af := getAdCpFields(userName)
-    var currentRHS string = "rhs-ui2"  //Default.
+    fields := getAdCpFields(userName)
     /***
-    The functions in Request that allow to extract data from the URL and/or the body revolve around
-    the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
+    The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
+    MultipartForm fields; the data are in the form of key-value pairs.
 
-    If the form and the URL have the same key name, both of them will be placed in a slice, with
-    the form value always prioritized before the URL value.
+    If the form and the URL have the same key name, both of them will be placed in a slice, with the form value always prioritized
+    before the URL value.
 
-    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm
-    field provides key-value pairs only for the form and not the URL. The PostForm field supports
-    only application/x-www-form-urlencoded.
+    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm field provides key-value pairs only
+    for the form and not the URL. The PostForm field supports only application/x-www-form-urlencoded.
 
-    The FormValue method lets you access the key-value pairs just like the Form field, except that
-    it's for a specific key and there is no need to call the ParseForm method beforehand -- the
-    FormValue method does it. The PostFormValue method does the same thing, except that it's for
-    the PostForm field instead of the Form field.
+    The FormValue method lets you access the key-value pairs just like the Form field, except that it's for a specific key and there
+    is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
+    except that it's for the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      currentRHS = ui
+      fields.CurrentPage = ui
     }
     /***
     // if strings.EqualFold(currentRHS, "rhs-ui1") {
@@ -101,30 +98,30 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     //       p.fd1Interest, p.fd1Compound, p.fd1PV, p.fd1FV, p.fd1Result,
     //     })
     } else*/
-		if strings.EqualFold(currentRHS, "rhs-ui2") {
-      af.CurrentButton = "lhs-button2"
+    if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
+      fields.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
-        af.Fd2Interest = req.FormValue("fd2-interest")
-        af.Fd2Compound = req.PostFormValue("fd2-cp")
-        af.Fd2Payment = req.PostFormValue("fd2-payment")
-        af.Fd2PV = req.PostFormValue("fd2-pv")
+        fields.Fd2Interest = req.FormValue("fd2-interest")
+        fields.Fd2Compound = req.PostFormValue("fd2-cp")
+        fields.Fd2Payment = req.PostFormValue("fd2-payment")
+        fields.Fd2PV = req.PostFormValue("fd2-pv")
         var i float64
         var pmt float64
         var pv float64
         var err error
-        if i, err = strconv.ParseFloat(af.Fd2Interest, 64); err != nil {
-          af.Fd2Result = fmt.Sprintf("Error: %s -- %+v", af.Fd2Interest, err)
-        } else if pmt, err = strconv.ParseFloat(af.Fd2Payment, 64); err != nil {
-          af.Fd2Result = fmt.Sprintf("Error: %s -- %+v", af.Fd2Payment, err)
-        } else if pv, err = strconv.ParseFloat(af.Fd2PV, 64); err != nil {
-          af.Fd2Result = fmt.Sprintf("Error: %s -- %+v", af.Fd2PV, err)
+        if i, err = strconv.ParseFloat(fields.Fd2Interest, 64); err != nil {
+          fields.Fd2Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd2Interest, err)
+        } else if pmt, err = strconv.ParseFloat(fields.Fd2Payment, 64); err != nil {
+          fields.Fd2Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd2Payment, err)
+        } else if pv, err = strconv.ParseFloat(fields.Fd2PV, 64); err != nil {
+          fields.Fd2Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd2PV, err)
         } else {
           var oa finances.Annuities
-          af.Fd2Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_PV(pmt, pv, i / 100.0,
-            oa.GetCompoundingPeriod(af.Fd2Compound[0], true)), oa.TimePeriods(af.Fd2Compound))
+          fields.Fd2Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_PV(pmt, pv, i / 100.0,
+            oa.GetCompoundingPeriod(fields.Fd2Compound[0], true)), oa.TimePeriods(fields.Fd2Compound))
         }
-        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, pv = %s, %s", af.Fd2Interest, af.Fd2Compound,
-          af.Fd2Payment, af.Fd2PV, af.Fd2Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, pv = %s, %s", fields.Fd2Interest, fields.Fd2Compound,
+          fields.Fd2Payment, fields.Fd2PV, fields.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -140,6 +137,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct{
+          LayoutType string
           Header string
           Datetime string
           MenuPage string
@@ -150,33 +148,33 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
           Fd2Payment string
           Fd2PV string
           Fd2Result string
-        } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), financesMenuPage, af.CurrentButton,
-            newSession.CsrfToken, af.Fd2Interest, af.Fd2Compound, af.Fd2Payment, af.Fd2PV, af.Fd2Result },
+        } { "standard", "Annuity Due / Compounding Periods", logger.DatetimeFormat(), financesMenuPage, fields.CurrentButton,
+            newSession.CsrfToken, fields.Fd2Interest, fields.Fd2Compound, fields.Fd2Payment, fields.Fd2PV, fields.Fd2Result },
       })
-    } else if strings.EqualFold(currentRHS, "rhs-ui3") {
-      af.CurrentButton = "lhs-button3"
+    } else if strings.EqualFold(fields.CurrentPage, "rhs-ui3") {
+      fields.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
-        af.Fd3Interest = req.FormValue("fd3-interest")
-        af.Fd3Compound = req.PostFormValue("fd3-cp")
-        af.Fd3Payment = req.PostFormValue("fd3-payment")
-        af.Fd3FV = req.PostFormValue("fd3-fv")
+        fields.Fd3Interest = req.FormValue("fd3-interest")
+        fields.Fd3Compound = req.PostFormValue("fd3-cp")
+        fields.Fd3Payment = req.PostFormValue("fd3-payment")
+        fields.Fd3FV = req.PostFormValue("fd3-fv")
         var i float64
         var pmt float64
         var fv float64
         var err error
-        if i, err = strconv.ParseFloat(af.Fd3Interest, 64); err != nil {
-          af.Fd3Result = fmt.Sprintf("Error: %s -- %+v", af.Fd3Interest, err)
-        } else if pmt, err = strconv.ParseFloat(af.Fd3Payment, 64); err != nil {
-          af.Fd3Result = fmt.Sprintf("Error: %s -- %+v", af.Fd3Payment, err)
-        } else if fv, err = strconv.ParseFloat(af.Fd3FV, 64); err != nil {
-          af.Fd3Result = fmt.Sprintf("Error: %s -- %+v", af.Fd3FV, err)
+        if i, err = strconv.ParseFloat(fields.Fd3Interest, 64); err != nil {
+          fields.Fd3Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd3Interest, err)
+        } else if pmt, err = strconv.ParseFloat(fields.Fd3Payment, 64); err != nil {
+          fields.Fd3Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd3Payment, err)
+        } else if fv, err = strconv.ParseFloat(fields.Fd3FV, 64); err != nil {
+          fields.Fd3Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd3FV, err)
         } else {
           var oa finances.Annuities
-          af.Fd3Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_FV(pmt, fv, i / 100.0,
-            oa.GetCompoundingPeriod(af.Fd3Compound[0], true)), oa.TimePeriods(af.Fd3Compound))
+          fields.Fd3Result = fmt.Sprintf("Compounding Period: %.5f %s", oa.D_Periods_PMT_FV(pmt, fv, i / 100.0,
+            oa.GetCompoundingPeriod(fields.Fd3Compound[0], true)), oa.TimePeriods(fields.Fd3Compound))
         }
-        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", af.Fd3Interest, af.Fd3Compound,
-          af.Fd3Payment, af.Fd3FV, af.Fd3Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, pmt = %s, fv = %s, %s", fields.Fd3Interest, fields.Fd3Compound,
+          fields.Fd3Payment, fields.Fd3FV, fields.Fd3Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -192,6 +190,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct{
+          LayoutType string
           Header string
           Datetime string
           MenuPage string
@@ -202,25 +201,25 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
           Fd3Payment string
           Fd3FV string
           Fd3Result string
-        } { "Annuity Due / Compounding Periods", logger.DatetimeFormat(), financesMenuPage, af.CurrentButton,
-            newSession.CsrfToken, af.Fd3Interest, af.Fd3Compound, af.Fd3Payment, af.Fd3FV, af.Fd3Result },
+        } { "standard", "Annuity Due / Compounding Periods", logger.DatetimeFormat(), financesMenuPage, fields.CurrentButton,
+            newSession.CsrfToken, fields.Fd3Interest, fields.Fd3Compound, fields.Fd3Payment, fields.Fd3FV, fields.Fd3Result },
       })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
+      errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
       logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       logger.LogWarning("*** Request timeout ***", correlationId)
-      if strings.EqualFold(currentRHS, "rhs-ui2") {
-        af.Fd2Result = ""
-      } else if strings.EqualFold(currentRHS, "rhs-ui3") {
-        af.Fd3Result = ""
+      if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
+        fields.Fd2Result = ""
+      } else if strings.EqualFold(fields.CurrentPage, "rhs-ui3") {
+        fields.Fd3Result = ""
       }
     }
     //
-    if data, err := json.Marshal(af); err != nil {
+    if data, err := json.Marshal(fields); err != nil {
       logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/adcp.txt", mainDir, userName)

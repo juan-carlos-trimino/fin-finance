@@ -420,6 +420,7 @@ func getBondsFields(userName string) *bondsFields {
 
 type adFvFields struct {
   MenuPage string `json:"menuPage"`
+  CurrentPage string `json:"currentPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -442,24 +443,11 @@ func newAdFvFields(dir1, dir2, correlationId string) *adFvFields {
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
-  obj, err := readFields(dir + "adfv.txt")
-  if obj != nil {
-    var a adFvFields
-    err := json.Unmarshal(obj, &a)
-    if err != nil {
-      //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-    } else {
-      return &a
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adfv.txt"), correlationId)
-  }
-  return &adFvFields {
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := adFvFields{
     MenuPage: "",
     CurrentButton: "lhs-button2",
+    CurrentPage: "rhs-ui2",
     //
     Fd1N: "1.0",
     Fd1TimePeriod: "year",
@@ -475,6 +463,25 @@ func newAdFvFields(dir1, dir2, correlationId string) *adFvFields {
     Fd2PMT: "1.00",
     Fd2Result: "",
   }
+  obj, err := readFields(dir + "adfv.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adfv.txt"), correlationId)
+  }
+  return &m
 }
 
 func getAdFvFields(userName string) *adFvFields {
@@ -483,6 +490,7 @@ func getAdFvFields(userName string) *adFvFields {
 
 type adPvFields struct {
   MenuPage string `json:"menuPage"`
+  CurrentPage string `json:"currentPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -505,24 +513,11 @@ func newAdPvFields(dir1, dir2, correlationId string) *adPvFields {
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
-  obj, err := readFields(dir + "adpv.txt")
-  if obj != nil {
-    var a adPvFields
-    err := json.Unmarshal(obj, &a)
-    if err != nil {
-      //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-    } else {
-      return &a
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adpv.txt"), correlationId)
-  }
-  return &adPvFields {
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := adPvFields {
     MenuPage: "",
-    CurrentButton: "lhs-button2",
+    CurrentPage: "rhs-ui2",
+		CurrentButton: "lhs-button2",
     //
     Fd1N: "1.0",
     Fd1TimePeriod: "year",
@@ -538,6 +533,25 @@ func newAdPvFields(dir1, dir2, correlationId string) *adPvFields {
     Fd2PMT: "1.00",
     Fd2Result: "",
   }
+  obj, err := readFields(dir + "adpv.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adpv.txt"), correlationId)
+  }
+  return &m
 }
 
 func getAdPvFields(userName string) *adPvFields {
@@ -546,6 +560,7 @@ func getAdPvFields(userName string) *adPvFields {
 
 type adCpFields struct {
   MenuPage string `json:"menuPage"`
+  CurrentPage string `json:"currentPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1Interest string `json:"fd1Interest"`
@@ -572,23 +587,10 @@ func newAdCpFields(dir1, dir2, correlationId string) *adCpFields {
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
-  obj, err := readFields(dir + "adcp.txt")
-  if obj != nil {
-    var a adCpFields
-    err := json.Unmarshal(obj, &a)
-    if err != nil {
-      //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-    } else {
-      return &a
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adcp.txt"), correlationId)
-  }
-  return &adCpFields {
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := adCpFields {
     MenuPage: "",
+    CurrentPage: "rhs-ui2",
     CurrentButton: "lhs-button2",
     //
     Fd1Interest: "1.00",
@@ -609,6 +611,25 @@ func newAdCpFields(dir1, dir2, correlationId string) *adCpFields {
     Fd3FV: "1.00",
     Fd3Result: "",
   }
+  obj, err := readFields(dir + "adcp.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adcp.txt"), correlationId)
+  }
+  return &m
 }
 
 func getAdCpFields(userName string) *adCpFields {
@@ -617,6 +638,7 @@ func getAdCpFields(userName string) *adCpFields {
 
 type adEppFields struct {
   MenuPage string `json:"menuPage"`
+  CurrentPage string `json:"currentPage"`
   CurrentButton string `json:"currentButton"`
   //
   Fd1N string `json:"fd1N"`
@@ -639,23 +661,10 @@ func newAdEppFields(dir1, dir2, correlationId string) *adEppFields {
   if err != nil {
     panic("Cannot create directory '" + dir + "': " + err.Error())
   }
-  obj, err := readFields(dir + "adepp.txt")
-  if obj != nil {
-    var a adEppFields
-    err := json.Unmarshal(obj, &a)
-    if err != nil {
-      //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-    } else {
-      return &a
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adepp.txt"), correlationId)
-  }
-  return &adEppFields {
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := adEppFields {
     MenuPage: "",
+    CurrentPage: "rhs-ui1",
     CurrentButton: "lhs-button1",
     //
     Fd1N: "1.00",
@@ -672,6 +681,25 @@ func newAdEppFields(dir1, dir2, correlationId string) *adEppFields {
     Fd2PV: "1.00",
     Fd2Result: "",
   }
+  obj, err := readFields(dir + "adepp.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adepp.txt"), correlationId)
+  }
+  return &m
 }
 
 func getAdEppFields(userName string) *adEppFields {

@@ -1,19 +1,18 @@
 {{define "content"}}
-
 <div class="split-screen">
   <div class="left-side">
     <div class="button-style">
-      <a href="/fin/annuitydue/pv?compute=rhs-ui1" target="_self">
+      <a href="/fin/annuitydue/pv?compute=rhs-ui1" target="_self" tabindex="-1">
         <button class="button" id="lhs-button1" disabled>n, i, FV</button>
       </a>
     </div>
     <div class="button-style">
-      <a href="/fin/annuitydue/pv?compute=rhs-ui2" target="_self">
+      <a href="/fin/annuitydue/pv?compute=rhs-ui2" target="_self" tabindex="-1">
         <button class="button" id="lhs-button2">n, i, PMT</button>
       </a>
     </div>
     <div class="button-back-style">
-      <a href="/fin/annuitydue" target="_self">
+      <a href="/fin/annuitydue" target="_self" tabindex="-1">
         <button class="button">Back</button>
       </a>
     </div>
@@ -23,10 +22,6 @@
     {{template "adpresentvalue-layout" .}}
   </div>
 </div>
-
-{{end}}
-
-{{define "scripts"}}
-  <!-- This will automatically insert itself at the bottom of the master layout -->
-  <script type="text/javascript" src="/public/js/setPageUI.js" id="element-id" data-cb="{{.Data.CurrentButton}}"></script>
+<script type="text/javascript" src="/public/js/setPageUI.js" id="element-id" data-cb="{{.Data.CurrentButton}}"></script>
+<script type="text/javascript" src="/public/js/tabSplitPage.js"></script>
 {{end}}
