@@ -17,7 +17,77 @@ import (
   "time"
 )
 
-type WfOaGaPages struct {}
+type oaGaFields struct {
+  MenuPage string `json:"menuPage"`
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
+  //
+  Fd1N string `json:"fd1N"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1Grow string `json:"fd1Grow"`
+  Fd1Pmt string `json:"fd1Pmt"`
+  Fd1Result string `json:"fd1Result"`
+  //
+  Fd2N string `json:"fd2N"`
+  Fd2Interest string `json:"fd2Interest"`
+  Fd2Compound string `json:"fd2Compound"`
+  Fd2Grow string `json:"fd2Grow"`
+  Fd2Pmt string `json:"fd2Pmt"`
+  Fd2Result string `json:"fd2Result"`
+}
+
+func newOaGaFields(dir1, dir2, correlationId string) *oaGaFields {
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := oaGaFields{
+    MenuPage: "",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
+    //
+    Fd1N: "1.00",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1Grow: "1.00",
+    Fd1Pmt: "1.00",
+    Fd1Result: "",
+    //
+    Fd2N: "1.00",
+    Fd2Interest: "1.00",
+    Fd2Compound: "annually",
+    Fd2Grow: "1.00",
+    Fd2Pmt: "1.00",
+    Fd2Result: "",
+  }
+  obj, err := readFields(dir + "oaga.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oaga.txt"), correlationId)
+  }
+  return &m
+}
+
+func getOaGaFields(userName string) *oaGaFields {
+  return currentFields[userName].oaGa
+}
+
+type WfOaGaPages struct{}
 
 func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
@@ -33,56 +103,53 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
   //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
-    of := getOaGaFields(userName)
-    var currentRHS string = "rhs-ui1"  //Default.
+    fields := getOaGaFields(userName)
     /***
-    The functions in Request that allow to extract data from the URL and/or the body revolve around
-    the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
+    The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
+    MultipartForm fields; the data are in the form of key-value pairs.
 
-    If the form and the URL have the same key name, both of them will be placed in a slice, with
-    the form value always prioritized before the URL value.
+    If the form and the URL have the same key name, both of them will be placed in a slice, with the form value always prioritized
+    before the URL value.
 
-    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm
-    field provides key-value pairs only for the form and not the URL. The PostForm field supports
-    only application/x-www-form-urlencoded.
+    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm field provides key-value pairs only
+    for the form and not the URL. The PostForm field supports only application/x-www-form-urlencoded.
 
-    The FormValue method lets you access the key-value pairs just like the Form field, except that
-    it's for a specific key and there is no need to call the ParseForm method beforehand -- the
-    FormValue method does it. The PostFormValue method does the same thing, except that it's for
-    the PostForm field instead of the Form field.
+    The FormValue method lets you access the key-value pairs just like the Form field, except that it's for a specific key and there
+    is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
+    except that it's for the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      currentRHS = ui
+      fields.CurrentPage = ui
     }
     //
-    if strings.EqualFold(currentRHS, "rhs-ui1") {
-      of.CurrentButton = "lhs-button1"
+    if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
+      fields.CurrentButton = "lhs-button1"
       if req.Method == http.MethodPost {
-        of.Fd1N = req.PostFormValue("fd1-n")
-        of.Fd1Interest = req.PostFormValue("fd1-interest")
-        of.Fd1Compound = req.PostFormValue("fd1-cp")
-        of.Fd1Grow = req.PostFormValue("fd1-grow")
-        of.Fd1Pmt = req.PostFormValue("fd1-pmt")
+        fields.Fd1N = req.PostFormValue("fd1-n")
+        fields.Fd1Interest = req.PostFormValue("fd1-interest")
+        fields.Fd1Compound = req.PostFormValue("fd1-cp")
+        fields.Fd1Grow = req.PostFormValue("fd1-grow")
+        fields.Fd1Pmt = req.PostFormValue("fd1-pmt")
         var n float64
         var i float64
         var grow float64
         var pmt float64
         var err error
-        if n, err = strconv.ParseFloat(of.Fd1N, 64); err != nil {
-          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1N, err)
-        } else if i, err = strconv.ParseFloat(of.Fd1Interest, 64); err != nil {
-          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1Interest, err)
-        } else if grow, err = strconv.ParseFloat(of.Fd1Grow, 64); err != nil {
-          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1Grow, err)
-        } else if pmt, err = strconv.ParseFloat(of.Fd1Pmt, 64); err != nil {
-          of.Fd1Result = fmt.Sprintf("Error: %s -- %+v", of.Fd1Pmt, err)
+        if n, err = strconv.ParseFloat(fields.Fd1N, 64); err != nil {
+          fields.Fd1Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd1N, err)
+        } else if i, err = strconv.ParseFloat(fields.Fd1Interest, 64); err != nil {
+          fields.Fd1Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd1Interest, err)
+        } else if grow, err = strconv.ParseFloat(fields.Fd1Grow, 64); err != nil {
+          fields.Fd1Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd1Grow, err)
+        } else if pmt, err = strconv.ParseFloat(fields.Fd1Pmt, 64); err != nil {
+          fields.Fd1Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd1Pmt, err)
         } else {
           var oa finances.Annuities
-          of.Fd1Result = fmt.Sprintf("Future Value: $%.5f",
-            oa.O_GrowingAnnuityFutureValue(pmt, n, grow, i / 100.0, oa.GetCompoundingPeriod(of.Fd1Compound[0], true)))
+          fields.Fd1Result = fmt.Sprintf("Future Value: $%.5f",
+            oa.O_GrowingAnnuityFutureValue(pmt, n, grow, i / 100.0, oa.GetCompoundingPeriod(fields.Fd1Compound[0], true)))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s", of.Fd1N, of.Fd1Interest, of.Fd1Compound,
-          of.Fd1Grow, of.Fd1Pmt, of.Fd1Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s", fields.Fd1N, fields.Fd1Interest, fields.Fd1Compound,
+          fields.Fd1Grow, fields.Fd1Pmt, fields.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -98,6 +165,7 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct{
+          LayoutType string
           Header string
           Datetime string
           MenuPage string
@@ -109,37 +177,37 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
           Fd1Grow string
           Fd1Pmt string
           Fd1Result string
-        } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), financesMenuPage, of.CurrentButton, newSession.CsrfToken,
-            of.Fd1N, of.Fd1Interest, of.Fd1Compound, of.Fd1Grow, of.Fd1Pmt, of.Fd1Result },
+        } { "standard", "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), financesMenuPage, fields.CurrentButton,
+            newSession.CsrfToken, fields.Fd1N, fields.Fd1Interest, fields.Fd1Compound, fields.Fd1Grow, fields.Fd1Pmt, fields.Fd1Result },
       })
-    } else if strings.EqualFold(currentRHS, "rhs-ui2") {
-      of.CurrentButton = "lhs-button2"
+    } else if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
+      fields.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
-        of.Fd2N = req.PostFormValue("fd2-n")
-        of.Fd2Interest = req.PostFormValue("fd2-interest")
-        of.Fd2Compound = req.PostFormValue("fd2-cp")
-        of.Fd2Grow = req.PostFormValue("fd2-grow")
-        of.Fd2Pmt = req.PostFormValue("fd2-pmt")
+        fields.Fd2N = req.PostFormValue("fd2-n")
+        fields.Fd2Interest = req.PostFormValue("fd2-interest")
+        fields.Fd2Compound = req.PostFormValue("fd2-cp")
+        fields.Fd2Grow = req.PostFormValue("fd2-grow")
+        fields.Fd2Pmt = req.PostFormValue("fd2-pmt")
         var n float64
         var i float64
         var grow float64
         var pmt float64
         var err error
-        if n, err = strconv.ParseFloat(of.Fd2N, 64); err != nil {
-          of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2N, err)
-        } else if i, err = strconv.ParseFloat(of.Fd2Interest, 64); err != nil {
-          of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2Interest, err)
-        } else if grow, err = strconv.ParseFloat(of.Fd2Grow, 64); err != nil {
-          of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2Grow, err)
-        } else if pmt, err = strconv.ParseFloat(of.Fd2Pmt, 64); err != nil {
-          of.Fd2Result = fmt.Sprintf("Error: %s -- %+v", of.Fd2Pmt, err)
+        if n, err = strconv.ParseFloat(fields.Fd2N, 64); err != nil {
+          fields.Fd2Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd2N, err)
+        } else if i, err = strconv.ParseFloat(fields.Fd2Interest, 64); err != nil {
+          fields.Fd2Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd2Interest, err)
+        } else if grow, err = strconv.ParseFloat(fields.Fd2Grow, 64); err != nil {
+          fields.Fd2Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd2Grow, err)
+        } else if pmt, err = strconv.ParseFloat(fields.Fd2Pmt, 64); err != nil {
+          fields.Fd2Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd2Pmt, err)
         } else {
           var oa finances.Annuities
-          of.Fd2Result = fmt.Sprintf("Present Value: $%.5f",
-            oa.O_GrowingAnnuityPresentValue(pmt, n, grow, i / 100.0, oa.GetCompoundingPeriod(of.Fd2Compound[0], true)))
+          fields.Fd2Result = fmt.Sprintf("Present Value: $%.5f",
+            oa.O_GrowingAnnuityPresentValue(pmt, n, grow, i / 100.0, oa.GetCompoundingPeriod(fields.Fd2Compound[0], true)))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s", of.Fd2N, of.Fd2Interest, of.Fd2Compound,
-          of.Fd2Grow, of.Fd2Pmt, of.Fd2Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, i = %s, cp = %s, grow = %s, pmt = %s, %s", fields.Fd2N, fields.Fd2Interest, fields.Fd2Compound,
+          fields.Fd2Grow, fields.Fd2Pmt, fields.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -155,6 +223,7 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct{
+          LayoutType string
           Header string
           Datetime string
           MenuPage string
@@ -166,25 +235,25 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
           Fd2Grow string
           Fd2Pmt string
           Fd2Result string
-        } { "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), financesMenuPage, of.CurrentButton, newSession.CsrfToken,
-            of.Fd2N, of.Fd2Interest, of.Fd2Compound, of.Fd2Grow, of.Fd2Pmt, of.Fd2Result },
+        } { "standard", "Ordinary Annuity / Growing Annuity", logger.DatetimeFormat(), financesMenuPage, fields.CurrentButton,
+            newSession.CsrfToken, fields.Fd2N, fields.Fd2Interest, fields.Fd2Compound, fields.Fd2Grow, fields.Fd2Pmt, fields.Fd2Result },
       })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
+      errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
       logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       logger.LogWarning("*** Request timeout ***", correlationId)
-      if strings.EqualFold(currentRHS, "rhs-ui1") {
-        of.Fd1Result = ""
-      } else if strings.EqualFold(currentRHS, "rhs-ui2") {
-        of.Fd2Result = ""
+      if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
+        fields.Fd1Result = ""
+      } else if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
+        fields.Fd2Result = ""
       }
     }
     //
-    if data, err := json.Marshal(of); err != nil {
+    if data, err := json.Marshal(fields); err != nil {
       logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/oaga.txt", mainDir, userName)
