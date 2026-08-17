@@ -1,5 +1,10 @@
 package webfinances
 
+//To fold all block comments:
+//  Ctrl+K and Ctrl+/
+//To unfold all block comments:
+//  Ctrl+K and Ctrl+J
+
 import (
   "context"
   "encoding/json"
@@ -17,7 +22,101 @@ import (
   "time"
 )
 
-type WfSiOrdinaryPages struct {}
+type siOrdinaryFields struct{
+  MenuPage string `json:"menuPage"`
+  CurrentPage string `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
+  //
+  Fd1Time string `json:"fd1Time"`
+  Fd1TimePeriod string `json:"fd1TimePeriod"`
+  Fd1Interest string `json:"fd1Interest"`
+  Fd1Compound string `json:"fd1Compound"`
+  Fd1PV string `json:"fd1PV"`
+  Fd1Result string `json:"fd1Result"`
+  //
+  Fd2Time string `json:"fd2Time"`
+  Fd2TimePeriod string `json:"fd2TimePeriod"`
+  Fd2Amount string `json:"fd2Amount"`
+  Fd2PV string `json:"fd2PV"`
+  Fd2Result string `json:"fd2Result"`
+  //
+  Fd3Time string `json:"fd3Time"`
+  Fd3TimePeriod string `json:"fd3TimePeriod"`
+  Fd3Interest string `json:"fd3Interest"`
+  Fd3Compound string `json:"fd3Compound"`
+  Fd3Amount string `json:"fd3Amount"`
+  Fd3Result string `json:"fd3Result"`
+  //
+  Fd4Interest string `json:"fd4Interest"`
+  Fd4Compound string `json:"fd4Compound"`
+  Fd4Amount string `json:"fd4Amount"`
+  Fd4PV string `json:"fd4PV"`
+  Fd4Result string `json:"fd4Result"`
+}
+
+func newSiOrdinaryFields(dir1, dir2, correlationId string) *siOrdinaryFields {
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
+  }
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := siOrdinaryFields{
+    MenuPage: "",
+    CurrentPage: "rhs-ui1",
+    CurrentButton: "lhs-button1",
+    //
+    Fd1Time: "1",
+    Fd1TimePeriod: "year",
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1PV: "1.00",
+    Fd1Result: "",
+    //
+    Fd2Time: "1",
+    Fd2TimePeriod: "year",
+    Fd2Amount: "1.00",
+    Fd2PV: "1.00",
+    Fd2Result: "",
+    //
+    Fd3Time: "1",
+    Fd3TimePeriod: "year",
+    Fd3Interest: "1.0",
+    Fd3Compound: "annually",
+    Fd3Amount: "1.00",
+    Fd3Result: "",
+    //
+    Fd4Interest: "1.00",
+    Fd4Compound: "annually",
+    Fd4Amount: "1.00",
+    Fd4PV: "1.00",
+    Fd4Result: "",
+  }
+  obj, err := readFields(dir + "siordinary.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "siordinary.txt"), correlationId)
+  }
+  return &m
+}
+
+func getSiOrdinaryFields(userName string) *siOrdinaryFields {
+  return currentFields[userName].siOrdinary
+}
+
+type WfSiOrdinaryPages struct{}
 
 func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
@@ -33,54 +132,51 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
   //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
-    sif := getSiOrdinaryFields(userName)
-    var currentRHS string = "rhs-ui1"  //Default.
+    fields := getSiOrdinaryFields(userName)
     /***
-    The functions in Request that allow to extract data from the URL and/or the body revolve around
-    the Form, PostForm, and MultipartForm fields; the data are in the form of key-value pairs.
+    The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and MultipartForm
+    fields; the data are in the form of key-value pairs.
 
-    If the form and the URL have the same key name, both of them will be placed in a slice, with
-    the form value always prioritized before the URL value.
+    If the form and the URL have the same key name, both of them will be placed in a slice, with the form value always prioritized before
+    the URL value.
 
-    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm
-    field provides key-value pairs only for the form and not the URL. The PostForm field supports
-    only application/x-www-form-urlencoded.
+    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm field provides key-value pairs only for
+    the form and not the URL. The PostForm field supports only application/x-www-form-urlencoded.
 
-    The FormValue method lets you access the key-value pairs just like the Form field, except that
-    it's for a specific key and there is no need to call the ParseForm method beforehand -- the
-    FormValue method does it. The PostFormValue method does the same thing, except that it's for
-    the PostForm field instead of the Form field.
+    The FormValue method lets you access the key-value pairs just like the Form field, except that it's for a specific key and there is no
+    need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing, except that
+    it's for the PostForm field instead of the Form field.
     ***/
     if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      currentRHS = ui
+      fields.CurrentPage = ui
     }
     //
-    if strings.EqualFold(currentRHS, "rhs-ui1") {
-      sif.CurrentButton = "lhs-button1"
+    if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
+      fields.CurrentButton = "lhs-button1"
       if req.Method == http.MethodPost {
-        sif.Fd1Time = req.PostFormValue("fd1-time")
-        sif.Fd1TimePeriod = req.PostFormValue("fd1-tp")
-        sif.Fd1Interest = req.PostFormValue("fd1-interest")
-        sif.Fd1Compound = req.PostFormValue("fd1-compound")
-        sif.Fd1PV = req.PostFormValue("fd1-pv")
+        fields.Fd1Time = req.PostFormValue("fd1-time")
+        fields.Fd1TimePeriod = req.PostFormValue("fd1-tp")
+        fields.Fd1Interest = req.PostFormValue("fd1-interest")
+        fields.Fd1Compound = req.PostFormValue("fd1-compound")
+        fields.Fd1PV = req.PostFormValue("fd1-pv")
         var n float64
         var i float64
         var pv float64
         var err error
-        if n, err = strconv.ParseFloat(sif.Fd1Time, 64); err != nil {
-          sif.Fd1Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd1Time, err)
-        } else if i, err = strconv.ParseFloat(sif.Fd1Interest, 64); err != nil {
-          sif.Fd1Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd1Interest, err)
-        } else if pv, err = strconv.ParseFloat(sif.Fd1PV, 64); err != nil {
-          sif.Fd1Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd1PV, err)
+        if n, err = strconv.ParseFloat(fields.Fd1Time, 64); err != nil {
+          fields.Fd1Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd1Time, err)
+        } else if i, err = strconv.ParseFloat(fields.Fd1Interest, 64); err != nil {
+          fields.Fd1Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd1Interest, err)
+        } else if pv, err = strconv.ParseFloat(fields.Fd1PV, 64); err != nil {
+          fields.Fd1Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd1PV, err)
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd1Result = fmt.Sprintf("Amount of Interest: $%.5f", si.OrdinaryInterest(pv, i / 100.0,
-            periods.GetCompoundingPeriod(sif.Fd1Compound[0], false), n, periods.GetTimePeriod(sif.Fd1TimePeriod[0], false)))
+          fields.Fd1Result = fmt.Sprintf("Amount of Interest: $%.5f", si.OrdinaryInterest(pv, i / 100.0,
+            periods.GetCompoundingPeriod(fields.Fd1Compound[0], false), n, periods.GetTimePeriod(fields.Fd1TimePeriod[0], false)))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", sif.Fd1Time, sif.Fd1TimePeriod,
-          sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, pv = %s, %s", fields.Fd1Time, fields.Fd1TimePeriod,
+          fields.Fd1Interest, fields.Fd1Compound, fields.Fd1PV, fields.Fd1Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -96,6 +192,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct{
+          LayoutType string
           Header string
           Datetime string
           MenuPage string
@@ -107,34 +204,35 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
           Fd1Compound string
           Fd1PV string
           Fd1Result string
-        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, sif.CurrentButton,
-            newSession.CsrfToken, sif.Fd1Time, sif.Fd1TimePeriod, sif.Fd1Interest, sif.Fd1Compound, sif.Fd1PV, sif.Fd1Result },
+        } { "standard", "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, fields.CurrentButton,
+            newSession.CsrfToken, fields.Fd1Time, fields.Fd1TimePeriod, fields.Fd1Interest, fields.Fd1Compound, fields.Fd1PV,
+            fields.Fd1Result },
       })
-    } else if strings.EqualFold(currentRHS, "rhs-ui2") {
-      sif.CurrentButton = "lhs-button2"
+    } else if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
+      fields.CurrentButton = "lhs-button2"
       if req.Method == http.MethodPost {
-        sif.Fd2Time = req.PostFormValue("fd2-time")
-        sif.Fd2TimePeriod = req.PostFormValue("fd2-tp")
-        sif.Fd2Amount = req.PostFormValue("fd2-amount")
-        sif.Fd2PV = req.PostFormValue("fd2-pv")
+        fields.Fd2Time = req.PostFormValue("fd2-time")
+        fields.Fd2TimePeriod = req.PostFormValue("fd2-tp")
+        fields.Fd2Amount = req.PostFormValue("fd2-amount")
+        fields.Fd2PV = req.PostFormValue("fd2-pv")
         var n float64
         var a float64
         var pv float64
         var err error
-        if n, err = strconv.ParseFloat(sif.Fd2Time, 64); err != nil {
-          sif.Fd2Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd2Time, err)
-        } else if a, err = strconv.ParseFloat(sif.Fd2Amount, 64); err != nil {
-          sif.Fd2Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd2Amount, err)
-        } else if pv, err = strconv.ParseFloat(sif.Fd2PV, 64); err != nil {
-          sif.Fd2Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd2PV, err)
+        if n, err = strconv.ParseFloat(fields.Fd2Time, 64); err != nil {
+          fields.Fd2Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd2Time, err)
+        } else if a, err = strconv.ParseFloat(fields.Fd2Amount, 64); err != nil {
+          fields.Fd2Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd2Amount, err)
+        } else if pv, err = strconv.ParseFloat(fields.Fd2PV, 64); err != nil {
+          fields.Fd2Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd2PV, err)
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd2Result = fmt.Sprintf("Interest Rate: %.5f%%",
-            si.OrdinaryRate(pv, a, n, periods.GetTimePeriod(sif.Fd2TimePeriod[0], false)) * 100.0)
+          fields.Fd2Result = fmt.Sprintf("Interest Rate: %.5f%%",
+            si.OrdinaryRate(pv, a, n, periods.GetTimePeriod(fields.Fd2TimePeriod[0], false)) * 100.0)
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, a = %s, pv = %s, %s", sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount,
-          sif.Fd2PV, sif.Fd2Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, a = %s, pv = %s, %s", fields.Fd2Time, fields.Fd2TimePeriod, fields.Fd2Amount,
+          fields.Fd2PV, fields.Fd2Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -150,6 +248,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct{
+          LayoutType string
           Header string
           Datetime string
           MenuPage string
@@ -160,35 +259,35 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
           Fd2Amount string
           Fd2PV string
           Fd2Result string
-        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, sif.CurrentButton,
-            newSession.CsrfToken, sif.Fd2Time, sif.Fd2TimePeriod, sif.Fd2Amount, sif.Fd2PV, sif.Fd2Result },
+        } { "standard", "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, fields.CurrentButton,
+            newSession.CsrfToken, fields.Fd2Time, fields.Fd2TimePeriod, fields.Fd2Amount, fields.Fd2PV, fields.Fd2Result },
       })
-    } else if strings.EqualFold(currentRHS, "rhs-ui3") {
-      sif.CurrentButton = "lhs-button3"
+    } else if strings.EqualFold(fields.CurrentPage, "rhs-ui3") {
+      fields.CurrentButton = "lhs-button3"
       if req.Method == http.MethodPost {
-        sif.Fd3Time = req.PostFormValue("fd3-time")
-        sif.Fd3TimePeriod = req.PostFormValue("fd3-tp")
-        sif.Fd3Interest = req.PostFormValue("fd3-interest")
-        sif.Fd3Compound = req.PostFormValue("fd3-compound")
-        sif.Fd3Amount = req.PostFormValue("fd3-amount")
+        fields.Fd3Time = req.PostFormValue("fd3-time")
+        fields.Fd3TimePeriod = req.PostFormValue("fd3-tp")
+        fields.Fd3Interest = req.PostFormValue("fd3-interest")
+        fields.Fd3Compound = req.PostFormValue("fd3-compound")
+        fields.Fd3Amount = req.PostFormValue("fd3-amount")
         var n float64
         var i float64
         var a float64
         var err error
-        if n, err = strconv.ParseFloat(sif.Fd3Time, 64); err != nil {
-          sif.Fd3Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd3Time, err)
-        } else if i, err = strconv.ParseFloat(sif.Fd3Interest, 64); err != nil {
-          sif.Fd3Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd3Interest, err)
-        } else if a, err = strconv.ParseFloat(sif.Fd3Amount, 64); err != nil {
-          sif.Fd3Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd3Amount, err)
+        if n, err = strconv.ParseFloat(fields.Fd3Time, 64); err != nil {
+          fields.Fd3Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd3Time, err)
+        } else if i, err = strconv.ParseFloat(fields.Fd3Interest, 64); err != nil {
+          fields.Fd3Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd3Interest, err)
+        } else if a, err = strconv.ParseFloat(fields.Fd3Amount, 64); err != nil {
+          fields.Fd3Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd3Amount, err)
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd3Result = fmt.Sprintf("Principal: $%.5f", si.OrdinaryPrincipal(a, i / 100.0,
-            periods.GetCompoundingPeriod(sif.Fd3Compound[0], false), n, periods.GetTimePeriod(sif.Fd3TimePeriod[0], false)))
+          fields.Fd3Result = fmt.Sprintf("Principal: $%.5f", si.OrdinaryPrincipal(a, i / 100.0,
+            periods.GetCompoundingPeriod(fields.Fd3Compound[0], false), n, periods.GetTimePeriod(fields.Fd3TimePeriod[0], false)))
         }
-        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s", sif.Fd3Time, sif.Fd3TimePeriod,
-          sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("n = %s, tp = %s, i = %s, cp = %s, a = %s, %s", fields.Fd3Time, fields.Fd3TimePeriod,
+          fields.Fd3Interest, fields.Fd3Compound, fields.Fd3Amount, fields.Fd3Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -204,6 +303,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct{
+          LayoutType string
           Header string
           Datetime string
           MenuPage string
@@ -215,34 +315,35 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
           Fd3Compound string
           Fd3Amount string
           Fd3Result string
-        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, sif.CurrentButton,
-            newSession.CsrfToken, sif.Fd3Time, sif.Fd3TimePeriod, sif.Fd3Interest, sif.Fd3Compound, sif.Fd3Amount, sif.Fd3Result },
+        } { "standard", "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, fields.CurrentButton,
+            newSession.CsrfToken, fields.Fd3Time, fields.Fd3TimePeriod, fields.Fd3Interest, fields.Fd3Compound, fields.Fd3Amount,
+            fields.Fd3Result },
       })
-    } else if strings.EqualFold(currentRHS, "rhs-ui4") {
-      sif.CurrentButton = "lhs-button4"
+    } else if strings.EqualFold(fields.CurrentPage, "rhs-ui4") {
+      fields.CurrentButton = "lhs-button4"
       if req.Method == http.MethodPost {
-        sif.Fd4Interest = req.PostFormValue("fd4-interest")
-        sif.Fd4Compound = req.PostFormValue("fd4-compound")
-        sif.Fd4Amount = req.PostFormValue("fd4-amount")
-        sif.Fd4PV = req.PostFormValue("fd4-pv")
+        fields.Fd4Interest = req.PostFormValue("fd4-interest")
+        fields.Fd4Compound = req.PostFormValue("fd4-compound")
+        fields.Fd4Amount = req.PostFormValue("fd4-amount")
+        fields.Fd4PV = req.PostFormValue("fd4-pv")
         var i float64
         var a float64
         var pv float64
         var err error
-        if i, err = strconv.ParseFloat(sif.Fd4Interest, 64); err != nil {
-          sif.Fd4Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd4Interest, err)
-        } else if a, err = strconv.ParseFloat(sif.Fd4Amount, 64); err != nil {
-          sif.Fd4Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd4Amount, err)
-        } else if pv, err = strconv.ParseFloat(sif.Fd4PV, 64); err != nil {
-          sif.Fd4Result = fmt.Sprintf("Error: %s -- %+v", sif.Fd4PV, err)
+        if i, err = strconv.ParseFloat(fields.Fd4Interest, 64); err != nil {
+          fields.Fd4Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd4Interest, err)
+        } else if a, err = strconv.ParseFloat(fields.Fd4Amount, 64); err != nil {
+          fields.Fd4Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd4Amount, err)
+        } else if pv, err = strconv.ParseFloat(fields.Fd4PV, 64); err != nil {
+          fields.Fd4Result = fmt.Sprintf("Error: %s -- %+v", fields.Fd4PV, err)
         } else {
           var si finances.SimpleInterest
           var periods finances.Periods
-          sif.Fd4Result = fmt.Sprintf("Time: %.5f %s", si.OrdinaryTime(pv, a, i / 100.0,
-            periods.GetCompoundingPeriod(sif.Fd4Compound[0], false)), periods.TimePeriods(sif.Fd4Compound))
+          fields.Fd4Result = fmt.Sprintf("Time: %.5f %s", si.OrdinaryTime(pv, a, i / 100.0,
+            periods.GetCompoundingPeriod(fields.Fd4Compound[0], false)), periods.TimePeriods(fields.Fd4Compound))
         }
-        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, a = %s, pv = %s, %s", sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount,
-          sif.Fd4PV, sif.Fd4Result), correlationId)
+        logger.LogInfo(fmt.Sprintf("i = %s, cp = %s, a = %s, pv = %s, %s", fields.Fd4Interest, fields.Fd4Compound, fields.Fd4Amount,
+          fields.Fd4PV, fields.Fd4Result), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
@@ -258,6 +359,7 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
       }
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
         Data: struct{
+          LayoutType string
           Header string
           Datetime string
           MenuPage string
@@ -268,29 +370,29 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
           Fd4Amount string
           Fd4PV string
           Fd4Result string
-        } { "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, sif.CurrentButton,
-            newSession.CsrfToken, sif.Fd4Interest, sif.Fd4Compound, sif.Fd4Amount, sif.Fd4PV, sif.Fd4Result },
+        } { "standard", "Simple Interest / Ordinary Interest", logger.DatetimeFormat(), financesMenuPage, fields.CurrentButton,
+            newSession.CsrfToken, fields.Fd4Interest, fields.Fd4Compound, fields.Fd4Amount, fields.Fd4PV, fields.Fd4Result },
       })
     } else {
-      errString := fmt.Sprintf("Unsupported page: %s", currentRHS)
+      errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
       logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
       logger.LogWarning("*** Request timeout ***", correlationId)
-      if strings.EqualFold(currentRHS, "rhs-ui1") {
-        sif.Fd1Result = ""
-      } else if strings.EqualFold(currentRHS, "rhs-ui2") {
-        sif.Fd2Result = ""
-      } else if strings.EqualFold(currentRHS, "rhs-ui3") {
-        sif.Fd3Result = ""
-      } else if strings.EqualFold(currentRHS, "rhs-ui4") {
-        sif.Fd4Result = ""
+      if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
+        fields.Fd1Result = ""
+      } else if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
+        fields.Fd2Result = ""
+      } else if strings.EqualFold(fields.CurrentPage, "rhs-ui3") {
+        fields.Fd3Result = ""
+      } else if strings.EqualFold(fields.CurrentPage, "rhs-ui4") {
+        fields.Fd4Result = ""
       }
     }
     //
-    if data, err := json.Marshal(sif); err != nil {
+    if data, err := json.Marshal(fields); err != nil {
       logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
       filePath := fmt.Sprintf("%s/%s/siordinary.txt", mainDir, userName)
