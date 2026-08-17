@@ -1,10 +1,8 @@
 package wfadmin
 
 import (
-  "encoding/json"
   "errors"
   "fmt"
-  "github.com/juan-carlos-trimino/gplogger"
   "github.com/juan-carlos-trimino/gposu"
   "os"
 )
@@ -32,70 +30,14 @@ them with the same Session data because they all have the same SessionID.
 ***/
 type fields struct {
   //Make the pointers unexported so that clients can't interact with them directly but only via exported methods.
-  manageAccounts *manageAccountsFields
+  settings *settingsFields
   users *usersFields
 }
-
-
-
-
-
-
-type manageAccountsFields struct {
-  CurrentButton string `json:"currentButton"`
-  //
-  Fd1BankName string `json:"fFd1BankName"`
-  Fd1AccountType string `json:"fd1AccountType"`
-  Fd1AccountName string `json:"fd1AccountName"`
-  Fd1AccountNumber string `json:"fd1AccountNumber"`
-  Fd1RoutingNumber string `json:"fd1RoutingNumber"`
-  //
-  // Fd2Result []Row `json:"fd2Result"`
-}
-
-func newManageAccountsFields(dir1, dir2, correlationId string) *manageAccountsFields {
-  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
-  if err != nil {
-    panic("Cannot create directory '" + dir + "': " + err.Error())
-  }
-  obj, err := readFields(dir + "manageaccounts.txt")
-  if obj != nil {
-    var m manageAccountsFields
-    err := json.Unmarshal(obj, &m)
-    if err != nil {
-      //Write error, but continue with default values.
-      logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-    } else {
-      return &m
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "manageaccounts.txt"), correlationId)
-  }
-  return &manageAccountsFields {
-    CurrentButton: "lhs-button1",
-    Fd1BankName: "",
-    Fd1AccountType: "checking",
-    Fd1AccountName: "",
-    Fd1AccountNumber: "",
-    Fd1RoutingNumber: "",
-  }
-}
-
-func getManageAccountsFields(userName string) *manageAccountsFields {
-  return currentFields[userName].manageAccounts
-}
-
-
-
-
-
 
 func AddSessionDataPerUser(userName, correlationId string) {
   if _, ok := currentFields[userName]; !ok {
     fd := &fields{
-      manageAccounts: newManageAccountsFields(mainDir, userName, correlationId),
+      settings: newSettingsFields(mainDir, userName, correlationId),
       users: newUsersFields(mainDir, userName, correlationId),
     }
     currentFields[userName] = fd

@@ -60,7 +60,7 @@ func getUsersFields(userName string) *usersFields {
 
 type WfAdminUsersPages struct {}
 
-func (u WfAdminUsersPages) AdminUsersPage(res http.ResponseWriter, req *http.Request) {
+func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())

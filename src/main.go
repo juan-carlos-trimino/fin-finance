@@ -365,8 +365,8 @@ func makeHandlers() *handlers {
   var wfsib = webfinances.WfSiBankersPages{}
   var wfmisc = webfinances.WfMiscellaneousPages{}
   var wfadmin = admin.WfAdminPages{}
-  var wfadminUsers = admin.WfAdminUsersPages{}
-  var wfsecurity = admin.WfAdminSettingsPages{}
+  var wfadminusers = admin.WfAdminUsersPages{}
+	var wfadminsettings = admin.WfAdminSettingsPages{}
   /***
   The Go web server will route requests to different functions depending on the requested URL.
   ***/
@@ -439,9 +439,9 @@ func makeHandlers() *handlers {
   h.mux["/contact"] = wfpages.ContactPage
   h.mux["/about"] = wfpages.AboutPage
   h.mux["/admin/welcome"] = middlewares.AdminVerification(wfadmin.WelcomePage)
-  h.mux["/admin/users"] = middlewares.AdminVerification(wfadminUsers.AdminUsersPage)
+  h.mux["/admin/users"] = middlewares.AdminVerification(wfadminusers.AdminUsersPages)
   h.mux["/admin/settings"] = middlewares.AdminVerification(wfadmin.AdminSettingsPage)
-  h.mux["/admin/settings/security"] = middlewares.AdminVerification(wfsecurity.AdminSecurityPages)
+  h.mux["/admin/settings/security"] = middlewares.AdminVerification(wfadminsettings.AdminSettingsPages)
   h.mux["/banking"] = wfbankPages.BankingPage
   h.mux["/banking/manageaccounts"] = wfbankMngAcctsPages.ManageAccountsPages
   h.mux["/finances"] = wfpages.FinancesPage

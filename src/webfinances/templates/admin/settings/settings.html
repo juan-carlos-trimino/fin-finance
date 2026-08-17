@@ -1,6 +1,5 @@
 <!-- The define action for the home page -->
 {{define "content"}}
-
 <div class="button-style">
   <a href="/admin/settings/security" target="_self" tabindex="-1">
     <button class="button">Security</button>
@@ -12,10 +11,5 @@
     <button class="button">Back</button>
   </a>
 </div>
-
-{{end}}
-
-{{define "scripts"}}
-  <!-- This will automatically insert itself at the bottom of the master layout -->
-  <script type="text/javascript" src="/public/js/tabFullPage.js"></script>
+<script type="text/javascript" src="/public/js/tabFullPage.js"></script>
 {{end}}

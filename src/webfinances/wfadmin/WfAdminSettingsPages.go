@@ -16,38 +16,63 @@ import (
   "time"
 )
 
-type WfAdminSettingsPages struct {}
-
-type changePassword struct {
-  Header string
-  Datetime string
-  CurrentPage string
-  CurrentButton string
-  CsrfToken string
-  Username string
-  Old string
-  New string
-  Confirm string
-  ErrMsg string
+type settingsFields struct{
+  CurrentPage string  `json:"currentPage"`
+  CurrentButton string `json:"currentButton"`
 }
 
-func (s WfAdminSettingsPages) AdminSecurityPages(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, "-1")
-    return
+func newSettingsFields(dir1, dir2, correlationId string) *settingsFields {
+  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
+  if err != nil {
+    panic("Cannot create directory '" + dir + "': " + err.Error())
   }
+  //Default values returned if file is missing, empty, or JSON is corrupt.
+  m := settingsFields {
+    CurrentButton: "lhs-button1",
+    CurrentPage: "rhs-ui1",
+  }
+  obj, err := readFields(dir + "settings.txt")
+  if obj != nil {
+    /***
+    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
+    length ensures parsing only files that actually contain data.
+    ***/
+    if len(obj) != 0 {  //Check if the file contains no data (empty)
+      err = json.Unmarshal(obj, &m)
+      if err != nil {
+        //Write error, but continue with default values.
+        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
+      }
+    }
+  } else if err != nil {
+    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "settings.txt"), correlationId)
+  }
+  return &m
+}
+
+func getSettingsFields(userName string) *settingsFields {
+  return currentFields[userName].settings
+}
+
+type WfAdminSettingsPages struct{}
+
+func (s WfAdminSettingsPages) AdminSettingsPages(res http.ResponseWriter, req *http.Request) {
+  ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering AdminSecurityPages.", correlationId)
+  logger.LogInfo("Entering wfadmin.AdminSettingsPages.", correlationId)
+  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
+  if sessionToken == "" {
+    invalidSession(res, correlationId)
+    return
+  }
+  //
   if req.Method == http.MethodPost || req.Method == http.MethodGet {
     userName := sessions.GetUserName(sessionToken)
-    fields := changePassword {
-      "Change Password", logger.DatetimeFormat(), "rhs-ui1", "lhs-button1", "", "", "", "", "", "",
-    }
-    var errorMsg string = ""
+    fields := getSettingsFields(userName)
     /***
     The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
     MultipartForm fields; the data are in the form of key-value pairs.
@@ -68,193 +93,70 @@ func (s WfAdminSettingsPages) AdminSecurityPages(res http.ResponseWriter, req *h
     //
     if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
       fields.CurrentButton = "lhs-button1"
+      pd := struct{
+        LayoutType string
+        Header string
+        Datetime string
+        CurrentButton string
+        CsrfToken string
+        Username string
+        Old string
+        New string
+        Confirm string
+        ErrMsg string
+      } { "std-wo-nav-menu", "Settings - Admin", logger.DatetimeFormat(), fields.CurrentButton, "", "", "", "", "", "" }
       if req.Method == http.MethodPost {
-        fields.Username = req.PostFormValue("un")
-        fields.Old = req.PostFormValue("oldpwd")
-        fields.New = req.PostFormValue("newpwd")
-        fields.Confirm = req.PostFormValue("connewpwd")
-        if strings.EqualFold(fields.New, fields.Confirm) {
-          ok := banking.DbChangePassword(req.Context(), fields.Username, fields.Old, fields.New, correlationId)
+        username := req.PostFormValue("un")
+        old := req.PostFormValue("oldpwd")
+        new := req.PostFormValue("newpwd")
+        confirm := req.PostFormValue("connewpwd")
+        if strings.EqualFold(new, confirm) {
+          ok := banking.DbChangePassword(req.Context(), username, old, new, correlationId)
           if ok {
-            errorMsg = "Your password has been successfully updated!"
+            pd.ErrMsg = "Your password has been successfully updated!"
           } else {
-            errorMsg = "Your password was NOT successfully updated!"
+            pd.ErrMsg = "Your password was NOT successfully updated!"
           }
         } else {
-          errorMsg = "New password and confirmation password do not match."
+          pd.ErrMsg = "New password and confirmation password do not match."
         }
-        fields.Username = ""
-        fields.Old = ""
-        fields.New = ""
-        fields.Confirm = ""
-        logger.LogInfo(fmt.Sprintf("%s", errorMsg), correlationId)
+        logger.LogInfo(fmt.Sprintf("%s", pd.ErrMsg), correlationId)
       }
       newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       templatesNeeded := []string{
-        "webfinances/templates/layout-no-navbar.html",
+        "webfinances/templates/layout.html",
         "webfinances/templates/admin/settings/security/security.html",
         "webfinances/templates/admin/settings/security/password.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/footer.html",
       }
-      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-        Data: struct{
-          LayoutType string
-          Header string
-          Datetime string
-          CurrentPage string
-          CurrentButton string
-          CsrfToken string
-          Username string
-          Old string
-          New string
-          Confirm string
-          ErrMsg string
-        } { "std-wo-nav-menu", "Change Password - Admin", logger.DatetimeFormat(), fields.CurrentPage, fields.CurrentButton,
-            newSession.CsrfToken, fields.Username, fields.Old, fields.New, fields.Confirm, errorMsg },
-      })
+      pd.CsrfToken = newSession.CsrfToken
+      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{ Data: pd})
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
-      logger.LogError(errString, "-1")
+      logger.LogError(errString, correlationId)
       panic(errString)
     }
     //
     if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
-      if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
-        fields.ErrMsg = ""
-      }
+      logger.LogWarning("*** Request timeout ***", correlationId)
     }
     //
     if data, err := json.Marshal(fields); err != nil {
-      logger.LogError(fmt.Sprintf("%+v", err), "-1")
+      logger.LogError(fmt.Sprintf("%+v", err), correlationId)
     } else {
-      filePath := fmt.Sprintf("%s/%s/mortgage.txt", mainDir, userName)
+      filePath := fmt.Sprintf("%s/%s/settings.txt", mainDir, userName)
       if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
-        logger.LogError(fmt.Sprintf("%+v", err), "-1")
+        logger.LogError(fmt.Sprintf("%+v", err), correlationId)
       }
     }
   } else {
     errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, "-1")
+    logger.LogError(errString, correlationId)
     panic(errString)
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
-
-
-/**
-func (s WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res)
-    return
-  }
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering wfadmin.AdminUsersPages.", correlationId)
-  if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    userName := sessions.GetUserName(sessionToken)
-    fields := getManageAccountsFields(userName)
-    /***
-    The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
-    MultipartForm fields; the data are in the form of key-value pairs.
-
-    If the form and the URL have the same key name, both of them will be placed in a slice, with the form value always prioritized
-    before the URL value.
-
-    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm field provides key-value pairs only
-    for the form and not the URL. The PostForm field supports only application/x-www-form-urlencoded.
-
-    The FormValue method lets you access the key-value pairs just like the Form field, except that it's for a specific key and there
-    is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
-    except that it's for the PostForm field instead of the Form field.
-    ***/
-    /**
-    if ui := req.FormValue("compute"); ui != "" {  //Values from form and URL.
-      fields.CurrentPage = ui
-    }
-    //
-    if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
-      fields.CurrentButton = "lhs-button1"
-      if req.Method == http.MethodPost {
-        fields.Username = req.PostFormValue("un")
-        fields.Old = req.PostFormValue("oldpwd")
-        fields.New = req.PostFormValue("newpwd")
-        fields.Confirm = req.PostFormValue("connewpwd")
-        if strings.EqualFold(fields.New, fields.Confirm) {
-          ok := banking.DbChangePassword(req.Context(), fields.Username, fields.Old, fields.New, correlationId)
-          if ok {
-            errorMsg = "Your password has been successfully updated!"
-          } else {
-            errorMsg = "Your password was NOT successfully updated!"
-          }
-        } else {
-          errorMsg = "New password and confirmation password do not match."
-        }
-        fields.Username = ""
-        fields.Old = ""
-        fields.New = ""
-        fields.Confirm = ""
-        logger.LogInfo(fmt.Sprintf("%s", errorMsg), correlationId)
-      }
-      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-      cookie := sessions.CreateCookie(newSessionToken)
-      http.SetCookie(res, cookie)
-      templatesNeeded := []string{
-        "webfinances/templates/layout-no-navbar.html",
-        "webfinances/templates/admin/settings/security/security.html",
-        "webfinances/templates/admin/settings/security/password.html",
-        "webfinances/templates/title.html",
-        "webfinances/templates/datetime.html",
-        "webfinances/templates/footer.html",
-      }
-      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-        Data: struct{
-          Header string
-          Datetime string
-          CurrentPage string
-          CurrentButton string
-          CsrfToken string
-          Username string
-          Old string
-          New string
-          Confirm string
-          ErrMsg string
-        } { "Change Password - Admin", logger.DatetimeFormat(), fields.CurrentPage, fields.CurrentButton, newSession.CsrfToken, fields.Username,
-            fields.Old, fields.New, fields.Confirm, errorMsg },
-      })
-    } else {
-      errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
-      logger.LogError(errString, "-1")
-      panic(errString)
-    }
-    //
-    if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", "-1")
-      if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
-        fields.ErrMsg = ""
-      }
-    }
-    //
-    if data, err := json.Marshal(fields); err != nil {
-      logger.LogError(fmt.Sprintf("%+v", err), "-1")
-    } else {
-      filePath := fmt.Sprintf("%s/%s/mortgage.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
-        logger.LogError(fmt.Sprintf("%+v", err), "-1")
-      }
-    }
-  } else {
-    errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, "-1")
-    panic(errString)
-  }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-**/
