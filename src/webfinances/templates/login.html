@@ -1,6 +1,5 @@
 <!-- The define action for the login page -->
 {{define "content"}}
-
 <div class="center-title">
   <h1>{{.Data.Header}}</h1>
 </div>
@@ -32,10 +31,5 @@
 <div>
   <br><label class="p-result">{{.Data.ErrMsg}}</label>
 </div>
-
-{{end}}
-
-{{define "scripts"}}
-  <!-- This will automatically insert itself at the bottom of the master layout -->
-  <script type="text/javascript" src="/public/js/tabFullPage.js" id="tab-full-page"></script>
+<script type="text/javascript" src="/public/js/tabFullPage.js" id="tab-full-page"></script>
 {{end}}

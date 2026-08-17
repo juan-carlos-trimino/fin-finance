@@ -1,7 +1,5 @@
 {{define "navbar"}}
-
 <nav aria-label="Main Navigation">
-
   <ul class="nav-menu">
     <li><a href="/welcome"
        {{if eq .Data.MenuPage "home"}} class="active" aria-current="page"{{end}}>Home</a></li>
@@ -11,5 +9,4 @@
       {{if eq .Data.MenuPage "about"}} class="active" aria-current="page"{{end}}>About Us</a></li>
   </ul>
 </nav>
-
 {{end}}
