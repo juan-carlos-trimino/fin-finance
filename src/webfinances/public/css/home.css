@@ -214,7 +214,7 @@ body {
 
 
 /*-------------------------------------------------*/
-/* Global Fix: Prevents layout overflow from padding */
+/* Global Fix: Prevent layout overflow from padding */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -595,14 +595,18 @@ this media breakpoint rule to your CSS:
 .button-back-style a {  /* Fix the anchor element so it collapses tightly to the button dimensions */
   display: inline-block;  /* Collapse link wrapper around the inner button */
   text-decoration: none;  /* Clean up any inherited default browser link underlines */
-  width: max-content;  /* Snap container boundary directly onto the button box */
+  width: 220px;  /* Snap container boundary directly onto the button box */
+}
+.button-back-style button {
+  max-width: 220px;  /* Prevent the button from expanding to 100% of the screen */
 }
 .button {  /* BUTTON MASTER CLASSES - Unified properties for structural styling */
   background-color: rgb(2, 71, 31);
   color: rgb(185, 241, 163);
   border-radius: 8px;
-  height: 50px;
-  width: 200px;
+  padding-top: 12px;  /* Baseline height is driven by padding */
+  padding-bottom: 12px;
+  width: 100%;  /* Fill the 220px maximum constraint */
   font-size: 18px;
   font-weight: 600;
   border: 2px solid transparent;  /* Invisible border to prevent shifting layout on hover */
