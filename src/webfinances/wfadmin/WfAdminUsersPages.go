@@ -146,13 +146,13 @@ func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Re
         c.Address2 = bank.StringPtr(address2)
         zip_code := req.PostFormValue("zip_code")
         c.Zip_code = bank.StringPtr(zip_code)
-        //originalDate := req.PostFormValue("bdate")
+        originalDate := req.PostFormValue("bdate")
         /***
         Go's time formatting uses a reference date and time: Mon Jan 2 15:04:05 MST 2006. Each component of this reference time (e.g.,
         02 for the day, 01 for the month, 2006 for the year) is used as a placeholder in the layout string to match the input format;
         e.g., "dd/mm/yyyy" is "02/01/2006".
         ***/
-        newDate, err := time.Parse("2006-01-02", "originalDate")
+        newDate, err := time.Parse("2006-01-02", originalDate)
         if err != nil {
           logger.LogError(err.Error(), correlationId)
           /***
@@ -192,7 +192,7 @@ func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Re
       cookie := sessions.CreateCookie(newSessionToken)
       http.SetCookie(res, cookie)
       templatesNeeded := []string{
-        "webfinances/templates/layout-no-navbar.html",
+        "webfinances/templates/layout.html",
         "webfinances/templates/admin/users/users.html",
         "webfinances/templates/admin/users/register.html",
         "webfinances/templates/title.html",
