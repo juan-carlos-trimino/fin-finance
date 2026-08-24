@@ -1,27 +1,90 @@
-<!--
-  Go templates do not allow you to define a template block inside another block or layout element.
-  1. Define the internal scroll content FIRST at the top level
--->
-{{define "scroll-content"}}
+{{/*
+Go templates do not allow you to define a template block inside another block or layout element.
+
+Define the internal table content FIRST at the top level.
+Additionally, to keep your table structured cleanly within your global layout files, your scroll-content block needs to
+call your table-content template inside a standard <table> element tag.
+*/}}
+{{define "table-content"}}
+<caption class="custom-table-caption">Accounts</caption>
+<thead>
+  <tr>
+    <th>Account Name</th>
+    <th>Account Type</th>
+  </tr>
+</thead>
+<tfoot>
+  <tr>
+    <th>Account Name</th>
+    <th>Account Type</th>
+  </tr>
+</tfoot>
+<tbody id="tbody">
+  {{range .Data.Fd2Result}}
+    <!--
+    By default, table rows (<tr>) cannot receive focus via the Tab key. If they are acting as clickable buttons in your application,
+    they need a tabindex="0" attribute.
+    Putting tabindex="0" on an element tells the browser: Treat this non-interactive element like a standard button or input field.
+    Putting tabindex="-1" on an element tells the browser: Do not let the user hit Tab to get here, but keep it programmatically
+    focusable."
+    -->
+    <tr class="clickable-row" data-id="{{.AccountName}}" tabindex="0"> <!-- Row -->
+      <td>{{.AccountName}}</td> <!-- Data -->
+      <td>{{.AccountType}}</td>
+    </tr>
+  {{end}}
+</tbody>
 {{end}}
 
-<!-- The define action for the register page -->
-<!-- 2. Now define your main users-layout -->
+<!-- Main users-layout -->
 {{define "users-layout"}}
 <!-- rhs-ui2 -->
-<form method="post" action="/admin/users" enctype="application/x-www-form-urlencoded" autocomplete="off">
+<form id="table_id_form" method="post" action="/admin/users" enctype="application/x-www-form-urlencoded" autocomplete="off">
   <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
-  <div class="cnt-scroll" id="form-scroll-cnt">
+  <!-- ----------------=====================================================
+  These hidden inputs act as buckets for tableStylesheet.js to drop the selected row ID and button actions into before
+  submitting the form context!
+  ----------------===================================================== -->
+  <input type="hidden" id="table_row_id" name="selected_id" value=""/>
+  <input type="hidden" id="hidden_bttable" name="tablestyle" value=""/>
 
-    {{/*
-    {{template "slider-alphabet-container" .}}
-    */}}
+  {{template "slider-alphabet-container" .}}
 
-    <!-- 3. Simply call the scroll container here. It will automatically find 'scroll-content' -->
-    {{template "slider-alphabet-container" .}}
+  <!--
+  We trap the loaded scroll container helper template inside a fresh local div framework element. This isolates it entirely
+  from global CSS class hierarchies that were stretching the container block.
+  -->
+  <div class="local-scroll-viewport">
+    <table class="custom-data-table">
+      {{template "table-content" .}}
+    </table>
+  </div>
+  <!-- Native Form Submit Pagination Controls -->
+  <div class="pagination-container">
+    <!-- Previous Page Button -->
+    {{if .Data.HasPrev}}
+      <button type="submit" name="page" value="{{.Data.PrevPage}}" class="pagination-btn">&laquo; Previous</button>
+    {{else}}
+      <button type="button" class="pagination-btn" disabled>&laquo; Previous</button>
+    {{end}}
+    <!-- Page Info Text -->
+    <span class="pagination-info">
+      Page <strong>{{.Data.CurrentPage}}</strong> of {{.Data.TotalPages}}
+    </span>
+    <!-- Next Page Button -->
+    {{if .Data.HasNext}}
+      <button type="submit" name="page" value="{{.Data.NextPage}}" class="pagination-btn">Next &raquo;</button>
+    {{else}}
+      <button type="button" class="pagination-btn" disabled>Next &raquo;</button>
+    {{end}}
   </div>
   <div class="button-back-style">
-    <button type="submit" class="button" id="btdb" name="db" value="rhs-ui2">Save</button>
+    <button type="button" class="button" id="bttable" name="tablestyle" value="rhs-ui2"
+     {{if not .Data.Fd2Result}}disabled{{end}}>Delete User</button>
   </div>
+  <!-- <div class="button-back-style">
+    <button type="submit" class="button" id="btdb" name="db" value="rhs-ui2">Get Users</button>
+  </div> -->
 </form>
+<script type="text/javascript" src="/public/js/tableStylesheet.js"></script>
 {{end}}
