@@ -17,7 +17,28 @@ type PageData struct {
   Data any
 }
 
-//Global template functions available to all templates processed by Render.
+/***
+Global template functions available to all templates processed by Render.
+
+Global Level Configuration
+When you define your functions globally, you typically attach them to a central variable or map once when the server first
+boots up (usually in main() or an init() block).
+* How it works: Go compiles and saves the helper logic into memory a single time during initialization.
+* The Big Advantage: Any HTML template page processed by your web application can call get_pagination_pages at any time.
+  You do not have to copy and paste registration code for every individual page router endpoint.
+* Performance: It is faster because Go doesn't waste time rebuilding the mathematical function layout rules every time a
+  user clicks a button or reloads a page.
+
+Function Level Configuration
+When you define functions inside a local handler (like our renderTemplate example), you attach them to the template instance
+directly within that specific HTTP request path block.
+* How it works: Every single time a user requests that page, Go allocates fresh system memory to re-register the helper
+  function logic, processes the layout, and then destroys it when the request completes.
+* The Big Advantage: It allows you to build unique helpers that require direct access to a specific request's data values
+  (like reading a user's logged-in session cookies or parsing URL queries).
+* The Catch: No other pages on your site can see that helper function. If you need pagination on an "Accounts" page and a
+  "Users" page, you have to write out the configuration code inside both function routers.
+***/
 var funcMap = template.FuncMap{
   "alphabetRange": func(val string) string {
     switch val {
@@ -28,7 +49,38 @@ var funcMap = template.FuncMap{
     default: return "A - G"
     }
   },
-  // Add your new functions right here:
+  /***
+  Go templates do not naturally let you iterate over a numeric loop (like 1 to totalPages) out of the box. To make an
+  HTML loop code work seamlessly, simply attach a quick sequence helper function to your template functions right before
+  parsing the file.
+  ***/
+  "get_pagination_pages": func(current, total int) []int {
+    var pages []int
+    if total <= 7 {
+      for i := 1; i <= total; i++ {
+        pages = append(pages, i)
+      }
+      return pages
+    }
+    pages = append(pages, 1)  //Always show page 1
+    if current <= 4 {
+      for i := 2; i <= 5; i++ {
+        pages = append(pages, i)
+      }
+      pages = append(pages, -1)  //-1 triggers the ellipsis (...) branch
+    } else if current >= (total - 3) {
+      pages = append(pages, -1)
+      for i := total - 4; i <= (total - 1); i++ {
+        pages = append(pages, i)
+      }
+    } else {
+      pages = append(pages, -1)
+      pages = append(pages, current - 1, current, current + 1)
+      pages = append(pages, -1)
+    }
+    pages = append(pages, total)  //Always show the last page
+    return pages
+  },
 }
 
 func InitTemplates(templateFS embed.FS) {
