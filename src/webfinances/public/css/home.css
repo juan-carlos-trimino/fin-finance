@@ -299,11 +299,22 @@ caption.custom-table-caption {
 .custom-data-table td:nth-child(2) {
   width: 35% !important;
 }
+/* Sticky Footer */
+.custom-data-table tfoot th {
+  position: sticky !important;
+  bottom: 0 !important;
+  top: auto !important;
+  z-index: 2;
+}
 /* =========================================================================
    ZEBRA STRIPING & INTERACTION STATES
 ========================================================================= */
-.custom-data-table tbody tr:nth-of-type(even) { background-color: rgb(185, 243, 163); }
-.custom-data-table tbody tr:nth-of-type(odd) { background-color: rgb(160, 239, 129); }
+.custom-data-table tbody tr:nth-of-type(even) {
+  background-color: rgb(185, 243, 163);
+}
+.custom-data-table tbody tr:nth-of-type(odd) {
+  background-color: rgb(160, 239, 129);
+}
 /* Hover State */
 .custom-data-table tbody tr:not(.active-row):hover {
   background-color: rgb(111, 230, 64);
@@ -313,15 +324,8 @@ caption.custom-table-caption {
 .custom-data-table tbody tr.active-row {
   background-color: rgb(95, 197, 54) !important;
 }
-/* Sticky Footer */
-.custom-data-table tfoot th {
-  position: sticky !important;
-  bottom: 0 !important;
-  top: auto !important;
-  z-index: 2;
-}
 /* =========================================================================
-   PAGINATION COMPONENT
+   STANDALONE PAGINATION COMPONENT
 ========================================================================= */
 .pagination-container {
   display: flex;
@@ -330,6 +334,7 @@ caption.custom-table-caption {
   gap: 12px;
   margin: 20px 0;
 }
+/* Base button properties */
 .pagination-btn {
   padding: 8px 16px;
   font-size: 14px;
@@ -356,8 +361,33 @@ caption.custom-table-caption {
   font-size: 14px;
   color: #555555;
 }
-form {
-  width: 100% !important;
+/* Numbered block spacing */
+.pagination-container .pagination-btn {
+  min-width: 38px;
+  padding: 8px 12px;
+  text-align: center;
+}
+/* Active Page Highlight (Matches your dark-green theme) */
+.pagination-btn.active-page-btn {
+  background-color: rgb(2, 71, 31) !important;
+  color: rgb(185, 241, 163) !important;
+  border-color: rgb(1, 46, 20) !important;
+  font-weight: bold;
+  cursor: default;
+  pointer-events: none;  /* Disable clicking the page you are already on */
+}
+/* Plain styling for the truncation ellipsis (...) block */
+.pagination-ellipsis {
+  padding: 8px 4px;
+  font-size: 14px;
+  color: #777777;
+  user-select: none;
+}
+/* =========================================================================
+   FORM COMPONENT SECURITY CONTAINER OVERRIDE
+========================================================================= */
+#table_id_form {
+  width: 100% !important;  /* Replace universal 'form' selector with precise page ID */
 }
 /*** Table ***/
 /*** Input Buttons ***/
