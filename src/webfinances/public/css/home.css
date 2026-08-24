@@ -218,82 +218,146 @@ body {
 *, *::before, *::after {
   box-sizing: border-box;
 }
+
+
+
 /*** Table ***/
-caption.custom-table-caption {
-  position: sticky;
-  top: 0;
-  z-index: 3;  /* Must be higher than <th> z-index so it sits above <th> */
-  background-color: rgb(2, 71, 31);  /* Give it a solid background so rows don't bleed through */
-  color: rgb(185, 241, 163);
-  padding: 10px 0;
-  font-weight: bold;
+/* =========================================================================
+   TABLE CONTAINER & VIEWPORT
+========================================================================= */
+.local-scroll-viewport {
+  width: 95% !important;
+  max-width: 1400px !important;
+  height: max-content !important;  /* Allow the box to shrink to match the data rows exactly */
+  max-height: 55vh !important;
+  overflow-y: auto !important;  /* Scrollbar only shows if data overflows */
+  display: block !important;
+  margin: 0 auto 15px auto;
+  border: 1px solid #dcdcdc;
+  background-color: #ffffff;
+  border-radius: 4px;
 }
-.custom-table-scrollable {
-  max-height: 85vh;  /* Wrapper takes up exactly 85% of the screen height */
-  overflow-y: auto;  /* Spill long content into an isolated scrollbar */
-  width: 90%;
-  margin: 25px auto;
-  border-radius: 5px;
-  box-shadow: 0px 10px 30px 5px rgba(0, 0, 0, 0.15);
+/* Custom Override: Make this specific table smaller */
+.local-scroll-viewport.short-viewport {
+  max-height: 35vh !important;  /* Override the global 55vh down to 35% */
 }
-/* This overrides the base max-height safely because it uses two classes */
-.custom-table-scrollable.smaller-table {
-  max-height: 55vh;
+/* Custom Override : Make a different table much taller */
+.local-scroll-viewport.tall-viewport {
+  max-height: 85vh !important;  /* Override the global 55vh up to 85vh */
 }
-.custom-table {
+/* =========================================================================
+   MAIN DATA TABLE STYLING (Green Theme)
+========================================================================= */
+.custom-data-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
   color: rgb(2, 71, 31);
-  font-size: 28px;
-  font-style: normal;
   font-weight: bold;
-  border-collapse: separate;  /* CRITICAL: collapse prevents sticky headers from working */
-  border-spacing: 0;  /* Restore the tight appearance of collapsed borders */
-  margin: 25px auto;
-  height: auto;  /* Perfectly fills the 85vh space */
-  width: 100%;  /* Spans full width of container */
-  margin: 0;  /* Margin is now handled by the parent container */
 }
-/* CRITICAL ADJUSTMENT: Push the table headers down below the sticky caption */
-th {  /* headers */
-  /* Typography */
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-  color: rgb(185, 241, 163);
-  /* Spacing & Layout */
-  padding: 12px 15px;
-  /* Sticky Header Behavior */
-  position: sticky;
-  top: 52px;  /* Adjust this value to match the exact height of the caption */
-  z-index: 2;  /* Keep headers above scrolling body rows */
+/* Table Header Banner */
+caption.custom-table-caption {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 3;
   background-color: rgb(2, 71, 31);
-}
-td {  /* tabular data */
-  font-size: 18px;
+  color: rgb(185, 241, 163);
+  font-size: 24px !important;
   font-weight: bold;
   text-align: center;
+  padding: 12px 0 !important;
+}
+/* Sticky Column Headers */
+.custom-data-table thead,
+.custom-data-table th {
+  position: sticky !important;
+  top: 48px !important;  /* Lock flush under the caption banner */
+  z-index: 2;
+  background-color: rgb(2, 71, 31);
+  color: rgb(185, 241, 163);
+  font-size: 18px;
+  text-align: center;
   padding: 12px 15px;
+  border: none !important;
 }
-tbody tr:nth-of-type(even) {
-  background-color: rgb(185, 243, 163);
+.custom-data-table thead tr {
+  border-bottom: 2px solid rgb(1, 46, 20) !important;
 }
-tbody tr:nth-of-type(odd) {
-  background-color: rgb(160, 239, 129);
+/* Table Data Cells */
+.custom-data-table td {
+  font-size: 18px;
+  text-align: center;
+  padding: 12px 15px;
+  border: none !important;
 }
-tbody tr:not(.active-row):hover {  /* Hover Effect (Optional: skip if row is already active) */
+/* 65% / 35% Column Proportional Width Split */
+.custom-data-table th:nth-child(1),
+.custom-data-table td:nth-child(1) {
+  width: 65% !important;
+}
+.custom-data-table th:nth-child(2),
+.custom-data-table td:nth-child(2) {
+  width: 35% !important;
+}
+/* =========================================================================
+   ZEBRA STRIPING & INTERACTION STATES
+========================================================================= */
+.custom-data-table tbody tr:nth-of-type(even) { background-color: rgb(185, 243, 163); }
+.custom-data-table tbody tr:nth-of-type(odd) { background-color: rgb(160, 239, 129); }
+/* Hover State */
+.custom-data-table tbody tr:not(.active-row):hover {
   background-color: rgb(111, 230, 64);
 }
-tr.clickable-row {
-  cursor: pointer;
+/* Active Row Highlight State */
+.clickable-row { cursor: pointer; }
+.custom-data-table tbody tr.active-row {
+  background-color: rgb(95, 197, 54) !important;
 }
-.clickable.active-row,
-tbody tr.clickable-row.active-row {
-  background-color: rgb(95, 197, 54);
-}
-tfoot th {  /* Keep your footer pinned to the bottom during scrolls */
-  position: sticky;
-  bottom: 0;
-  top: auto;
+/* Sticky Footer */
+.custom-data-table tfoot th {
+  position: sticky !important;
+  bottom: 0 !important;
+  top: auto !important;
   z-index: 2;
+}
+/* =========================================================================
+   PAGINATION COMPONENT
+========================================================================= */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+.pagination-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333333;
+  background-color: #ffffff;
+  border: 1px solid #dcdcdc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.pagination-btn:hover:not(:disabled) {
+  background-color: #f5f5f5;
+  border-color: #b5b5b5;
+}
+.pagination-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  color: #aaaaaa !important;
+  background-color: #f9f9f9 !important;
+  border-color: #e5e5e5 !important;
+}
+.pagination-info {
+  font-size: 14px;
+  color: #555555;
+}
+form {
+  width: 100% !important;
 }
 /*** Table ***/
 /*** Input Buttons ***/
