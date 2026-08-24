@@ -359,6 +359,7 @@ Using the last selected range (or defaulting to the first range on a fresh login
         "webfinances/templates/admin/users/unregister.html",
         "webfinances/templates/helpers/slider-alphabet-container.html",
         "webfinances/templates/helpers/scroll-container.html",
+        "webfinances/templates/helpers/pagination-container.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/footer.html",
