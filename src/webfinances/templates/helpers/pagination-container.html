@@ -1,0 +1,28 @@
+{{define "pagination-controls"}}
+<div class="pagination-container">
+  <!-- Previous Page Button -->
+  {{if .HasPrev}}
+    <button type="submit" name="page" value="{{.PrevPage}}" class="pagination-btn">&laquo; Previous</button>
+  {{else}}
+    <button type="button" class="pagination-btn" disabled>&laquo; Previous</button>
+  {{end}}
+  <!-- Assign the current page value to a local variable. -->
+  {{$current := .CurrentPage}}
+  <!-- Smart Number Loop Trigger Block -->
+  {{range get_pagination_pages .CurrentPage .TotalPages}}
+    {{if eq . -1}}
+      <!-- Draw the ellipsis spacing separator block -->
+      <span class="pagination-ellipsis">&hellip;</span>
+    {{else}}
+      <button type="submit" name="page" value="{{.}}"
+       class="pagination-btn {{if eq . $current}}active-page-btn{{end}}">{{.}}</button>
+    {{end}}
+  {{end}}
+  <!-- Next Page Button -->
+  {{if .HasNext}}
+    <button type="submit" name="page" value="{{.NextPage}}" class="pagination-btn">Next &raquo;</button>
+  {{else}}
+    <button type="button" class="pagination-btn" disabled>Next &raquo;</button>
+  {{end}}
+</div>
+{{end}}
