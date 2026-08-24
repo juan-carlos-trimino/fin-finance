@@ -12,7 +12,7 @@
   * {{else}} 1: If it does not exist (it is null, empty, or false), it outputs 1 as a fallback.
   */}}
   <input type="range" id="alphabet-range" name="alphabet-range" min="1" max="4" step="1"
-         value="{{if .Data.SelectedRange}}{{.Data.SelectedRange}}{{else}}`1`{{end}}" list="alphabet-groups">
+   value="{{if .Data.SelectedRange}}{{.Data.SelectedRange}}{{else}}1{{end}}" list="alphabet-groups">
   <datalist id="alphabet-groups">
     <option value="1" label="A - G"></option>
     <option value="2" label="H - N"></option>
