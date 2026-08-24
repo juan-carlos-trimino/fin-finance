@@ -15,17 +15,17 @@
 </tfoot>
 <tbody id="tbody">
   {{range .Data.Fd2Result}}
-  <!--
-  By default, table rows (<tr>) cannot receive focus via the Tab key. If they are acting as clickable buttons in your application,
-  they need a tabindex="0" attribute.
-  Putting tabindex="0" on an element tells the browser: "Treat this non-interactive element like a standard button or input field."
-  Putting tabindex="-1" on an element tells the browser: "Do not let the user hit Tab to get here, but keep it programmatically
-  focusable."
-  -->
-  <tr class="clickable-row" data-id="{{.AccountName}}" tabindex="0"> <!-- Row -->
-    <td>{{.AccountName}}</td> <!-- Data -->
-    <td>{{.AccountType}}</td>
-  </tr>
+    <!--
+    By default, table rows (<tr>) cannot receive focus via the Tab key. If they are acting as clickable buttons in your application,
+    they need a tabindex="0" attribute.
+    Putting tabindex="0" on an element tells the browser: "Treat this non-interactive element like a standard button or input field."
+    Putting tabindex="-1" on an element tells the browser: "Do not let the user hit Tab to get here, but keep it programmatically
+    focusable."
+    -->
+    <tr class="clickable-row" data-id="{{.AccountName}}" tabindex="0"> <!-- Row -->
+      <td>{{.AccountName}}</td> <!-- Data -->
+      <td>{{.AccountType}}</td>
+    </tr>
   {{end}}
 </tbody>
 {{end}}
@@ -33,13 +33,18 @@
 {{define "manage-accounts-layout"}}
 <!-- rhs-ui2 -->
 <div id="rhs-ui2">
-  <form id="table_id_form" action="/banking/manageaccounts" method="post" enctype="application/x-www-form-urlencoded">
+  <form id="table_id_form" action="/banking/manageaccounts" method="post" enctype="application/x-www-form-urlencoded" autocomplete="off">
     <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
     <!-- Hold the selected table row ID value for the POST body. -->
     <input type="hidden" id="table_row_id" name="selected_id" value=""/>
     <input type="hidden" id="hidden_bttable" name="tablestyle" value=""/>
-    <!-- Call the table container here. It will find 'table-content' -->
-    {{template "table-container" .}}
+    <!-- The <br> tag provides the spacing beneath the fixed menu. -->
+    <br>
+    <div class="local-scroll-viewport tall-viewport">
+      <table class="custom-data-table">
+        {{template "table-content" .}}
+      </table>
+    </div>
     <div class="button-back-style">
       <!--
       Because the button is configured as type="button", it will never submit the form on its own.
