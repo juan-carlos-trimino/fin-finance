@@ -14,7 +14,22 @@ import (
   "os"
   "strings"
   "time"
+
+
+  "strconv"
+  "math"
+
+
 )
+
+
+type Row struct {  //Rows for the accounts.
+  AccountName string
+  AccountType string
+}
+
+
+
 
 type usersFields struct {
   CurrentButton string `json:"currentButton"`
@@ -206,12 +221,113 @@ func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Re
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{ Data: pd})
     } else if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
       fields.CurrentButton = "lhs-button2"
+
+
+      /*
+Using the last selected range (or defaulting to the first range on a fresh login) is an excellent usability pattern. In UX design, this is called Smart Defaults.By predicting what the user wants to see, you eliminate a mandatory extra click every time they visit the page, while still giving them full control to change the range using the slider whenever they want.
+      */
+
+
+      //Always parse the form up front so Go reads both URL query strings and POST bodies cleanly
+      if err := req.ParseForm(); err != nil {
+        // Handle error if necessary
+      }
+
+      // Check if the user explicitly dragged the slider (POST)
+      rangeInput := req.PostFormValue("alphabet-range")
+      if rangeInput != "" {
+        fields.SelectedRange = rangeInput
+      }
+      // SMART DEFAULT: If the user just landed on the page (GET request)
+      // and fields.SelectedRange is blank, automatically fall back to the first range ("1")
+      if fields.SelectedRange == "" {
+        fields.SelectedRange = "1"
+      }
+      var minLetter, maxLetter string
+      switch fields.SelectedRange {
+      case "1":
+        minLetter, maxLetter = "A", "G"
+      case "2":
+        minLetter, maxLetter = "H", "N"
+      case "3":
+        minLetter, maxLetter = "O", "T"
+      case "4":
+        minLetter, maxLetter = "U", "Z"
+      default:
+        minLetter, maxLetter = "A", "G" // Fallback safety
+      }
+      logger.LogInfo(fmt.Sprintf("min: %s,  max: %s", minLetter, maxLetter), correlationId)
+
+      var rows []Row
+      numberOfRows := 80
+      rows = make([]Row, 0, numberOfRows + 1)
+      rows = append(rows,
+            Row {
+              AccountName: "--",
+              AccountType: "savings",
+            })
+          for idx := 0; idx < numberOfRows; idx++ {
+            rows = append(rows,
+              Row {
+                AccountName: fmt.Sprintf("account name%d", idx + 1),
+                AccountType: "checking",
+              })
+          }
+
+
+          rowId := req.PostFormValue("selected_id")
+
+          if rowId != "" {
+            logger.LogInfo(fmt.Sprintf("Account ID = %s", rowId), correlationId);
+            for i, r := range rows {
+                if r.AccountName == rowId {
+                    // Remove the element and maintain order
+                    rows = append(rows[:i], rows[i+1:]...)
+                    break // Stop searching after the first match
+                }
+            }
+          }
+
+
+
+
+      //Extract the page from form body (POST) or URL query string (GET)
+      pageStr := req.FormValue("page")
+      currentPage, err := strconv.Atoi(pageStr)
+      if err != nil || currentPage < 1 {
+        currentPage = 1
+      }
+      //Pagination Math Calculations
+      pageSize := 10  // Items per page
+      totalItems := len(rows)
+      totalPages := int(math.Ceil(float64(totalItems) / float64(pageSize)))
+      if totalPages < 1 {
+        totalPages = 1
+
+      }
+      //
+      if currentPage > totalPages {
+        currentPage = totalPages
+      }
+      //Calculate slicing boundaries
+      offset := (currentPage - 1) * pageSize
+      end := offset + pageSize
+      if end > totalItems {
+        end = totalItems
+      }
+      // Slice the data chunk safely
+//      var paginatedItems []string
+      var paginatedItems []Row
+      if offset < totalItems {
+//        paginatedItems = mockDatabase[offset:end]
+        paginatedItems = rows[offset:end]
+      }
+      //
+
       if req.Method == http.MethodPost {
         //Go is designed to look at the request, realize the body hasn't been parsed yet, and automatically call ParseForm() for you under the hood.
 
         fields.SelectedRange = req.PostFormValue("alphabet-range")
-
-
         var minLetter, maxLetter string
         switch fields.SelectedRange {
         case "1":
@@ -242,6 +358,7 @@ func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Re
         "webfinances/templates/admin/users/users.html",
         "webfinances/templates/admin/users/unregister.html",
         "webfinances/templates/helpers/slider-alphabet-container.html",
+        "webfinances/templates/helpers/scroll-container.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/footer.html",
@@ -257,8 +374,20 @@ func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Re
           CurrentButton string
           CsrfToken string
           SelectedRange string
+          ////
+//            Items       []string
+            Fd2Result       []Row
+  CurrentPage int
+  TotalPages  int
+  PrevPage    int
+  NextPage    int
+  HasPrev     bool
+  HasNext     bool
+
         } { "std-wo-nav-menu", "Unregister User - Admin", logger.DatetimeFormat(), fields.CurrentButton, newSession.CsrfToken,
-            fields.SelectedRange },
+            fields.SelectedRange,
+paginatedItems, currentPage, totalPages, currentPage - 1, currentPage + 1, currentPage > 1, currentPage < totalPages,
+          },
       })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
