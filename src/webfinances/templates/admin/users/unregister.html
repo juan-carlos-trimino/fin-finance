@@ -59,25 +59,9 @@ call your table-content template inside a standard <table> element tag.
       {{template "table-content" .}}
     </table>
   </div>
-  <!-- Native Form Submit Pagination Controls -->
-  <div class="pagination-container">
-    <!-- Previous Page Button -->
-    {{if .Data.HasPrev}}
-      <button type="submit" name="page" value="{{.Data.PrevPage}}" class="pagination-btn">&laquo; Previous</button>
-    {{else}}
-      <button type="button" class="pagination-btn" disabled>&laquo; Previous</button>
-    {{end}}
-    <!-- Page Info Text -->
-    <span class="pagination-info">
-      Page <strong>{{.Data.CurrentPage}}</strong> of {{.Data.TotalPages}}
-    </span>
-    <!-- Next Page Button -->
-    {{if .Data.HasNext}}
-      <button type="submit" name="page" value="{{.Data.NextPage}}" class="pagination-btn">Next &raquo;</button>
-    {{else}}
-      <button type="button" class="pagination-btn" disabled>Next &raquo;</button>
-    {{end}}
-  </div>
+
+  {{template "pagination-controls" .Data}}
+
   <div class="button-back-style">
     <button type="button" class="button" id="bttable" name="tablestyle" value="rhs-ui2"
      {{if not .Data.Fd2Result}}disabled{{end}}>Delete User</button>
