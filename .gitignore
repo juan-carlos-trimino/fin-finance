@@ -287,9 +287,9 @@ src/webfinances/templates/finances/simpleinterestordinary/*
 # ... and this directory and its file...
 !src/webfinances/templates/helpers/
 src/webfinances/templates/helpers/*
+!src/webfinances/templates/helpers/pagination-container.html
 !src/webfinances/templates/helpers/scroll-container.html
 !src/webfinances/templates/helpers/slider-alphabet-container.html
-!src/webfinances/templates/helpers/table-container.html
 # ... and this directory and its file...
 !src/webfinances/wfbanking/
 src/webfinances/wfbanking/*
