@@ -186,7 +186,6 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
         "webfinances/templates/layout.html",
         "webfinances/templates/banking/manageaccounts/manageaccounts.html",
         "webfinances/templates/banking/manageaccounts/deleteaccount.html",
-        "webfinances/templates/helpers/table-container.html",
         "webfinances/templates/title.html",
         "webfinances/templates/datetime.html",
         "webfinances/templates/navbar.html",
