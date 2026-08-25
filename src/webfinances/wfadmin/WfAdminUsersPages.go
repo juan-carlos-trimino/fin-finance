@@ -364,6 +364,9 @@ Using the last selected range (or defaulting to the first range on a fresh login
         "webfinances/templates/datetime.html",
         "webfinances/templates/footer.html",
       }
+
+labels := []string{"A - G", "H - N", "O - T", "U - Z"}
+
       /***
       Do not read or write sensitive information from the disk; use the database exclusively.
       ***/
@@ -384,11 +387,13 @@ Using the last selected range (or defaulting to the first range on a fresh login
   NextPage    int
   HasPrev     bool
   HasNext     bool
+  RangeLabels   []string
+  SliderMax     int
 
         } { "std-wo-nav-menu", "Unregister User - Admin", logger.DatetimeFormat(), fields.CurrentButton, newSession.CsrfToken,
             fields.SelectedRange,
 paginatedItems, currentPage, totalPages, currentPage - 1, currentPage + 1, currentPage > 1, currentPage < totalPages,
-          },
+  labels, len(labels)         },
       })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
