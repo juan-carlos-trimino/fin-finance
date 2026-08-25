@@ -9,6 +9,7 @@ import (
   ***/
   "html/template"
   "net/http"
+  "strconv"
 )
 
 var GlobalTemplateFS embed.FS
@@ -40,14 +41,24 @@ directly within that specific HTTP request path block.
   "Users" page, you have to write out the configuration code inside both function routers.
 ***/
 var funcMap = template.FuncMap{
-  "alphabetRange": func(val string) string {
-    switch val {
-    case "1": return "A - G"
-    case "2": return "H - N"
-    case "3": return "O - T"
-    case "4": return "U - Z"
-    default: return "A - G"
+  "alphabetRange": func(val string, labels []string) string {
+    //If the labels array is empty, fall back safely.
+    if len(labels) == 0 {
+      return ""
     }
+    //Convert the slider's string value (e.g., "2") into an integer index; use Atoi because the slider values come
+    //through as strings.
+    index, err := strconv.Atoi(val)
+    if err != nil {
+      return labels[0]  //Fallback to the first item if parsing fails.
+    }
+    //The slider starts at index 1, but Go slices start at index 0; subtract 1.
+    sliceIndex := index - 1
+    //Prevent index out of bounds.
+    if -1 < sliceIndex && sliceIndex < len(labels) {
+      return labels[sliceIndex]
+    }
+    return labels[0]
   },
   /***
   Go templates do not naturally let you iterate over a numeric loop (like 1 to totalPages) out of the box. To make an

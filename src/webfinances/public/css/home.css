@@ -738,24 +738,127 @@ button[disabled] {  /* Disabled styling rules override hover triggers safely */
   outline-offset: 2px;  /* Add a clean gap between the button and the ring */
 }
 /* Base button styles */
-
-
-/* Add this inside home.css */
+/* Slider */
+/* =========================================================================
+   ALPHABET SLIDER CONTROLLER COMPONENT
+========================================================================= */
 .cnt-alphabet-range {
-    margin: 20px 0;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
+  margin: 20px auto;  /* Center the component block */
+  padding: 15px;
+  background-color: rgb(240, 249, 235);  /* Subtle green tint background */
+  border-radius: 6px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 0 1px rgb(185, 241, 163);  /* Allow smooth transitions */
+  transition: box-shadow 0.2s ease-in-out;  /* Smooth focus-ring transition */
+  /* Take up half its parent element container */
+  width: 100%;
+  max-width: 50%;
+  min-width: 290px;  /* Prevent the slider from becoming microscopic on mobile phones */
+  box-sizing: border-box;
 }
-
+/* Combined Typography Rules */
+.cnt-alphabet-range label,
+.cnt-alphabet-range p {
+  font-size: 15px;
+  font-weight: bold;
+  color: rgb(2, 71, 31);  /* The exact matching dark green */
+  user-select: none;
+}
 .cnt-alphabet-range label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 10px;
+  display: block;
+  margin-bottom: 10px;
 }
-
+.cnt-alphabet-range p {
+  margin-top: 15px;
+}
+/* Main Input Container */
 #alphabet-range {
-    width: 100%;
-    max-width: 300px;
-    cursor: pointer;
+  width: 100%;
+  max-width: 100%;
+  cursor: pointer;
+  display: block;
+  accent-color: rgb(2, 71, 31);
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;  /* Let the track handle the color background */
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
+/* Strip native focus rings from the inner track bar */
+#alphabet-range:focus,
+#alphabet-range:active {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+/* Focus Indicator: Highlight the outer component box when tabbed into */
+.cnt-alphabet-range:focus-within {
+  box-shadow: 0 0 0 2px rgb(2, 71, 31), 0 0 12px rgba(2, 71, 31, 0.3);
+}
+/* Focus Indicator: Make the drag ball thumb pulse slightly when tabbed into */
+#alphabet-range:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(2, 71, 31, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
+#alphabet-range:focus::-moz-range-thumb {
+  box-shadow: 0 0 0 4px rgba(2, 71, 31, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
+/* Slider Track Line (Webkit: Chrome, Safari, Edge) */
+#alphabet-range::-webkit-slider-runnable-track {
+  height: 12px;
+  border-radius: 6px;
+  background-color: #e5e5e5;
+  border: 1px solid rgb(2, 71, 31) !important;
+  box-sizing: border-box;
+}
+/* Slider Track Line (Firefox Fallback) */
+#alphabet-range::-moz-range-track {
+  height: 12px;
+  border-radius: 6px;
+  background-color: #e5e5e5;
+  border: 1px solid rgb(2, 71, 31) !important;
+  box-sizing: border-box;
+}
+/* Drag Ball Thumb Handle (Webkit: Chrome, Safari, Edge) */
+#alphabet-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgb(2, 71, 31);
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+  margin-top: -7px !important;  /* Perfectly centers thumb over the bordered track */
+  transition: box-shadow 0.15s ease-in-out;  /* Smooth handle focus glow animation */
+}
+/* Drag Ball Thumb Handle (Firefox Fallback) */
+#alphabet-range::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgb(2, 71, 31);
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+  transition: box-shadow 0.15s ease-in-out;  /* Smooth handle focus glow animation */
+}
+/* =========================================================================
+   CUSTOM COMPONENT TICK MARKS
+========================================================================= */
+.slider-ticks-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 10px;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+.slider-tick-mark {
+  font-size: 11px;
+  font-weight: bold;
+  color: rgb(150, 150, 150);
+  user-select: none;
+}
+/* Slider */

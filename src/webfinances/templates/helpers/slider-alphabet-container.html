@@ -1,33 +1,43 @@
 {{define "slider-alphabet-container"}}
-
 <div class="cnt-alphabet-range">
   <label for="alphabet-range">Filter by Name Range:</label>
   {{/*
-  Go templates completely ignore HTML comments and try to execute everything inside them. Comments must be written using Go's official
-  template comment syntax.
+  Go templates completely ignore HTML comments and try to execute everything inside them. Comments must be written using
+  Go's official template comment syntax.
 
   The template logic inside {{}} functions exactly like an If/Else statement:
   * {{if .Data.SelectedRange}}: It checks if SelectedRange exists and is not empty or zero.
   * {{.Data.SelectedRange}}: If it exists, it outputs that specific value.
   * {{else}} 1: If it does not exist (it is null, empty, or false), it outputs 1 as a fallback.
   */}}
-  <input type="range" id="alphabet-range" name="alphabet-range" min="1" max="4" step="1"
-   value="{{if .Data.SelectedRange}}{{.Data.SelectedRange}}{{else}}1{{end}}" list="alphabet-groups">
-  <datalist id="alphabet-groups">
-    <option value="1" label="A - G"></option>
-    <option value="2" label="H - N"></option>
-    <option value="3" label="O - T"></option>
-    <option value="4" label="U - Z"></option>
-  </datalist>
-  <!--
-  When the Go backend builds the HTML page, it looks inside the <strong> tag and processes the {{.Data.SelectedRange | alphabetRange}}
-  pipeline sequence:
+  <input type="range" id="alphabet-range" name="alphabet-range" min="1"
+         max="{{.Data.SliderMax}}" step="1"
+         value="{{if .Data.SelectedRange}}{{.Data.SelectedRange}}{{else}}1{{end}}"
+         data-labels="{{range $index, $element := .Data.RangeLabels}}{{if $index}},{{end}}{{$element}}{{end}}">
+
+  <!-- JavaScript will safely inject the static marks here -->
+  <div id="slider-ticks-container" class="slider-ticks-container"></div>
+  {{/*
+  When the Go backend builds the HTML page, it looks inside the <strong> tag and processes the
+  {{.Data.SelectedRange | alphabetRange}} pipeline sequence:
   * .Data.SelectedRange: It retrieves the stored range value from the struct data (such as "2").
   * | (The Pipe Operator): It automatically passes that value as the input argument into the function on the right.
-  * alphabetRange: It calls the custom template.FuncMap helper function defined in the renderer package. If the input value is "2", the function
-    returns the string "H - N".
-  -->
-  <p>Selected Range: <strong id="range-display">{{.Data.SelectedRange | alphabetRange}}</strong></p>
+  * alphabetRange: It calls the custom template.FuncMap helper function defined in the renderer package. If the input
+    value is "2", the function returns the appropriate string.
+  */}}
+  <p>Selected Range:
+    <strong id="range-display">
+      {{if .Data.SelectedRange}}
+        {{/* Pass both the value AND the dynamic slice into the function. */}}
+        {{ alphabetRange .Data.SelectedRange .Data.RangeLabels}}
+      {{else}}
+        {{/*
+         Grab the first element from the Go slice dynamically; use the built-in Go template function 'index'
+         and print it onto the screen.
+        */}}
+        {{index .Data.RangeLabels 0}}
+      {{end}}
+    </strong>
+  </p>
 </div>
-
 {{end}}
