@@ -36,11 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
   //INITIALIZATION: Run both setup steps on page load.
   generateTicks();
   updateDisplay(slider.value);
-  // Target the newly updated button ID
+  //Target the newly updated button ID.
   const submitBtn = document.getElementById('btn-alphabet-submit');
   if (submitBtn) {
     submitBtn.addEventListener('click', () => {
-      // Look upwards in the DOM tree to see if this slider is sitting inside an existing form.
+      //Look upwards in the DOM tree to see if this slider is sitting inside an existing form.
       const parentForm = slider.closest('form');
       if (parentForm) {
         //Submit the parent form (POST or GET) if it is nested inside.
