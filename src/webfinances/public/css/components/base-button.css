@@ -1,0 +1,67 @@
+.button-style,
+.button-back-style {  /* Base rules applied to all the structural wrappers */
+  display: flex;  /* Convert wrapper to flex container */
+  justify-content: center;  /* Center the elements inside horizontally */
+  align-items: center;  /* Center elements vertically if layout heights change */
+  width: 100%;  /* Ensure the container spans the column to allow centering */
+}
+.button-style {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+.button-back-style {
+  margin-top: 40px;
+  margin-bottom: 0px;
+}
+.button-style a,
+.button-back-style a {  /* Fix the anchor element so it collapses tightly to the button dimensions */
+  display: inline-block;  /* Collapse link wrapper around the inner button */
+  text-decoration: none;  /* Clean up any inherited default browser link underlines */
+  width: 220px;  /* Snap container boundary directly onto the button box */
+}
+.button-back-style button {
+  max-width: 220px;  /* Prevent the button from expanding to 100% of the screen */
+}
+.button {  /* BUTTON MASTER CLASSES - Unified properties for structural styling */
+  background-color: rgb(2, 71, 31);
+  color: rgb(185, 241, 163);
+  border-radius: 8px;
+  padding-top: 12px;  /* Baseline height is driven by padding */
+  padding-bottom: 12px;
+  width: 100%;  /* Fill the 220px maximum constraint */
+  font-size: 18px;
+  font-weight: 600;
+  border: 2px solid transparent;  /* Invisible border to prevent shifting layout on hover */
+  cursor: pointer;  /* Hand cursor feedback on hover */
+  display: inline-flex;  /* Force text lines inside button bounds cleanly */
+  align-items: center;  /* Vertically center text label */
+  justify-content: center;  /* Horizontally center text label */
+  transition: all 0.25s ease;/* Smooth transition animation loop */
+}
+.button:hover:not([disabled]):not(:disabled) {  /* INTERACTIVE FEEDBACK & STATES - Hover state interaction */
+  background-color: rgb(185, 241, 163);
+  color: rgb(2, 71, 31);
+  border: 2px solid rgb(2, 71, 31);
+  transform: translateY(-1px);  /* Slight lift effect */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.button:active:not([disabled]):not(:disabled) {  /* Active click state interaction */
+  transform: translateY(0);  /* Settle down on actual click stroke */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+button:disabled,
+button[disabled] {  /* Disabled styling rules override hover triggers safely */
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;  /* Block hover triggers from activating state changes */
+  background-color: rgb(2, 71, 31) !important;  /* Preserve initial base colors */
+  color: rgb(185, 241, 163) !important;
+  border-color: transparent !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+.button:focus,
+.button:focus-visible {  /* Trigger when the button is clicked or tabbed into via keyboard */
+  outline: 4px solid rgb(2, 71, 31);  /* Thicker indicator match the dark green theme */
+  outline-offset: 2px;  /* Add a clean gap between the button and the ring */
+}
