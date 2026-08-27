@@ -1,4 +1,5 @@
 {{define "slider-alphabet-container"}}
+<form action="/your-table-endpoint" method="GET" class="cnt-alphabet-range">
 <div class="cnt-alphabet-range">
   <label for="alphabet-range">Filter by Name Range:</label>
   {{/*
@@ -39,5 +40,6 @@
       {{end}}
     </strong>
   </p>
+  <button type="button" id="btn-alphabet-submit" class="btn-slider-submit">Apply Filter</button>
 </div>
 {{end}}
