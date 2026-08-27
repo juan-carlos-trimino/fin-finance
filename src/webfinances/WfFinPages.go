@@ -244,192 +244,78 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
-func (p WfPages) FinancesPage(res http.ResponseWriter, req *http.Request) {
+func (p WfPages) ServeFinancePages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.FinancesPage.", correlationId)
+  logger.LogInfo(fmt.Sprintf("Entering webfinances.ServeFinancesPage for path: %s", req.URL.Path), correlationId)
   sessionToken, _ := ctxKey.GetSessionToken(req.Context())
   if sessionToken == "" {
     invalidSession(res, correlationId)
-  } else {
-    templatesNeeded := []string{
-      "webfinances/templates/layout.html",
-      "webfinances/templates/finances/finances.html",
-      "webfinances/templates/title.html",
-      "webfinances/templates/datetime.html",
-      "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html",
-    }
-    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-      Data: struct{
-        LayoutType string
-        Header string
-        Datetime string
-        MenuPage string
-      } { "standard", "Finances", logger.DatetimeFormat(), financesMenuPage },
-    })
-  }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) SimpleInterestPage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.SimpleInterestPage.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-  } else {
-    templatesNeeded := []string{
-      "webfinances/templates/layout.html",
-      "webfinances/templates/finances/simpleinterest.html",
-      "webfinances/templates/title.html",
-      "webfinances/templates/datetime.html",
-      "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html",
-    }
-    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-      Data: struct{
-        LayoutType string
-        Header string
-        Datetime string
-        MenuPage string
-      } { "standard", "Simple Interest", logger.DatetimeFormat(), financesMenuPage },
-    })
-  }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) OrdinaryAnnuityPage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.OrdinaryAnnuityPage.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-  } else {
-    templatesNeeded := []string{
-      "webfinances/templates/layout.html",
-      "webfinances/templates/finances/ordinaryannuity.html",
-      "webfinances/templates/title.html",
-      "webfinances/templates/datetime.html",
-      "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html",
-    }
-    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-      Data: struct{
-        LayoutType string
-        Header string
-        Datetime string
-        MenuPage string
-      } { "standard", "Ordinary Annuity", logger.DatetimeFormat(), financesMenuPage },
-    })
-  }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) AnnuityDuePage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.AnnuityDuePage.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-  } else {
-    templatesNeeded := []string{
-      "webfinances/templates/layout.html",
-      "webfinances/templates/finances/annuitydue.html",
-      "webfinances/templates/title.html",
-      "webfinances/templates/datetime.html",
-      "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html",
-    }
-    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-      Data: struct{
-        LayoutType string
-        Header string
-        Datetime string
-        MenuPage string
-      } { "standard", "Annuity Due", logger.DatetimeFormat(), financesMenuPage },
-    })
-  }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicHomeFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.PublicHomeFile.", correlationId)
-  //Get the absolute path to prevent 404 HTML response (for testing).
-  absPath, err := filepath.Abs("./webfinances/public/css/home.css")
-  if err != nil {
-    logger.LogError("Failed to resolve absolute path", correlationId)
-    http.Error(res, "Internal Server Error", http.StatusInternalServerError)
     return
   }
-  logger.LogInfo(fmt.Sprintf("Abs path: %s.", absPath), correlationId)
-  //Serve using the verified path.
-  //http.ServeFile(res, req, absPath)  //Uncomment for testing
-  http.ServeFile(res, req, "./webfinances/public/css/home.css")  //Comment for testing
+  //Declare dynamic variables based on the URL path.
+  var bodyTemplate string
+  var pageHeader string
+  //Map the incoming route path to its respective template and title.
+  switch req.URL.Path {
+  case "/fin/ordinaryannuity":
+    bodyTemplate = "ordinaryannuity.html"
+    pageHeader = "Ordinary Annuity"
+  case "/fin/annuitydue":
+    bodyTemplate = "annuitydue.html"
+    pageHeader = "Annuity Due"
+  case "/finances":
+    bodyTemplate = "finances.html"
+    pageHeader = "Finances"
+  case "/fin/simpleinterest":
+    bodyTemplate = "simpleinterest.html"
+    pageHeader = "Simple Interest"
+  default:
+    http.NotFound(res, req)
+    return
+  }
+  //Construct the templates slice dynamically using the variables.
+  templatesNeeded := []string{
+    "webfinances/templates/layout.html",
+    "webfinances/templates/finances/" + bodyTemplate,  //Dynamically loaded.
+    "webfinances/templates/title.html",
+    "webfinances/templates/datetime.html",
+    "webfinances/templates/navbar.html",
+    "webfinances/templates/footer.html",
+  }
+  //Render using the standard layout data structure.
+  renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+    Data: struct {
+      LayoutType string
+      Header     string
+      Datetime   string
+      MenuPage   string
+    }{
+      "standard",
+      pageHeader,  //Dynamically loaded.
+      logger.DatetimeFormat(),
+      financesMenuPage,
+    },
+  })
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
-func (p WfPages) PublicSetPageUIFile(res http.ResponseWriter, req *http.Request) {
+func (p WfPages) ServeStaticFiles(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.PublicSetPageUIFile.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/setPageUI.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicTableStylesheetFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.PublicTableSylesheetFile.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/tableStylesheet.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicTabSplitPageFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.PublicTabSplitPageFile.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/tabSplitPage.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicTabFullPageFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.PublicTabFullPageFile.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/tabFullPage.js")
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
-}
-
-func (p WfPages) PublicSliderAlphabetFile(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering webfinances.PublicSliderAlphabetFile.", correlationId)
-  http.ServeFile(res, req, "./webfinances/public/js/slider-alphabet.js")
+  logger.LogInfo(fmt.Sprintf("Entering webfinances.ServeStaticFiles for path: %s", req.URL.Path), correlationId)
+  /***
+  Automatically looks at the browser request (e.g., "/public/css/components/base-button.css") and maps it to the
+  local file system folder layout.
+  ***/
+  localPath := filepath.Join("./webfinances", req.URL.Path)
+  //Clean the path string to keep it secure.
+  localPath = filepath.Clean(localPath)
+  //Serve the file dynamically based on the exact path requested.
+  http.ServeFile(res, req, localPath)
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }

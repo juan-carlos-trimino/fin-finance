@@ -22,6 +22,7 @@ import (
   "finance/webfinances"
   banking "finance/webfinances/wfbanking"  //Importing a package and assigning it a local alias.
   "fmt"
+  "io/fs"
   "net"
   "net/http"
   "net/http/pprof"
@@ -44,6 +45,7 @@ import (
   "golang.org/x/crypto/acme/autocert"
   "os"
   "os/signal"
+  "path/filepath"
   "strconv"
   "strings"
   "sync"
@@ -366,35 +368,30 @@ func makeHandlers() *handlers {
   var wfmisc = webfinances.WfMiscellaneousPages{}
   var wfadmin = admin.WfAdminPages{}
   var wfadminusers = admin.WfAdminUsersPages{}
-	var wfadminsettings = admin.WfAdminSettingsPages{}
+  var wfadminsettings = admin.WfAdminSettingsPages{}
   /***
   The Go web server will route requests to different functions depending on the requested URL.
   ***/
   h := &handlers{}
   /***
-  With a map, we can give the built-in function make only an initial size and not a capacity, as
-  with slices: hence, a single argument. Just like with slices, if we know up front the number of
-  elements a map will contain, we should create it by providing an initial size. Doing this avoids
-  potential map growth, which is quite heavy computation-wise because it requires reallocating
-  enough space and rebalancing all the elements. Also, specifying a size n doesn't mean making a
-  map with a maximum number of n elements. We can still add more than n elements if needed.
-  (Instead, it means asking the Go runtime to allocate a map with room for at least n elements,
-  which is helpful if we already know the size up front.)
+  With a map, we can give the built-in function make only an initial size and not a capacity, as with slices: hence, a single argument.
+  Just like with slices, if we know up front the number of elements a map will contain, we should create it by providing an initial size.
+  Doing this avoids potential map growth, which is quite heavy computation-wise because it requires reallocating enough space and
+  rebalancing all the elements. Also, specifying a size n doesn't mean making a map with a maximum number of n elements. We can still add
+  more than n elements if needed. (Instead, it means asking the Go runtime to allocate a map with room for at least n elements, which is
+  helpful if we already know the size up front.)
 
   Maps and memory usage
   ---------------------
-  A map is composed of eight-element buckets. Under the hood, a Go map is a pointer to a
-  runtime.hmap struct. The number of buckets in a map cannot shrink. Therefore, removing elements
-  from a map doesn't impact the number of existing buckets; it just zeroes the slots in the
+  A map is composed of eight-element buckets. Under the hood, a Go map is a pointer to a runtime.hmap struct. The number of buckets in a
+  map cannot shrink. Therefore, removing elements from a map doesn't impact the number of existing buckets; it just zeroes the slots in the
   buckets. A map can only grow and have more buckets; it never shrinks.
 
-  If we don't want to manually restart our service to clean the amount of memory consumed by the
-  map, a solution would be to change the map type to store an array pointer; e.g., change
-  map[int][128]byte to map[int]*[128]byte. It doesn't solve the fact that we will have a
-  significant number of buckets; however, each bucket entry will reserve the size of a pointer for
-  the value instead of 128 bytes (8 bytes on 64-bit systems and 4 bytes on 32-bit systems). Of
-  course, with this solution the array of [128]byte will be stored on the heap; this can lead to
-  fragmentation of the heap as well as putting pressure on the GC.
+  If we don't want to manually restart our service to clean the amount of memory consumed by the map, a solution would be to change the map
+  type to store an array pointer; e.g., change map[int][128]byte to map[int]*[128]byte. It doesn't solve the fact that we will have a
+  significant number of buckets; however, each bucket entry will reserve the size of a pointer for the value instead of 128 bytes (8 bytes
+  on 64-bit systems and 4 bytes on 32-bit systems). Of course, with this solution the array of [128]byte will be stored on the heap; this
+  can lead to fragmentation of the heap as well as putting pressure on the GC.
   ***/
   h.mux = make(map[string]http.HandlerFunc, 128)
   h.mux["/readiness"] = func (res http.ResponseWriter, req *http.Request) {
@@ -423,13 +420,52 @@ func makeHandlers() *handlers {
         correlationId)
     }
   }
-  //Serve static files; i.e., the server will serve them as they are, without processing it first.
-  h.mux["/public/css/home.css"] = wfpages.PublicHomeFile
-  h.mux["/public/js/setPageUI.js"] = wfpages.PublicSetPageUIFile
-  h.mux["/public/js/tableStylesheet.js"] = wfpages.PublicTableStylesheetFile
-  h.mux["/public/js/tabSplitPage.js"] = wfpages.PublicTabSplitPageFile
-  h.mux["/public/js/tabFullPage.js"] = wfpages.PublicTabFullPageFile
-  h.mux["/public/js/slider-alphabet.js"] = wfpages.PublicSliderAlphabetFile
+  /***
+  Serve static files; i.e., the server will serve them as they are, without processing it first.
+  Scan the entire public folder, find every single file inside it, and add its URL path to h.mux automatically.
+  ***/
+  rootDir := "./webfinances/public"  //The starting directory.
+  /***
+  filepath.WalkDir works by recursively stepping through a root directory tree, reading the contents of every directory it encounters,
+  and executing a custom callback function for every single file or folder found.
+
+  It executes sequentially (on a single goroutine) and uses an efficient depth-first traversal strategy to explore directories to their
+  deepest level before moving to the next sibling folder.
+
+  * path string: The complete relative or absolute path to the file from the starting root (e.g., "./src/utils/math.go").
+  * d fs.DirEntry: A lightweight descriptor containing the file's basic identity. This is why WalkDir is fast; it only contains the
+  name (d.Name()), type (d.Type()), and whether it is a folder (d.IsDir()). It does not fetch heavy metadata like file size or modified
+  dates unless you explicitly ask it to by running d.Info().
+  * err error: It informs the function if Go encountered an OS error (like a permission denied error) trying to read that specific file
+  before your code could look at it.
+  ***/
+  err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+    if err != nil {
+      return err  //Prevent panic if there is a permission error accessing a file.
+    }
+    //Check if the current path is a directory; skip directories, only files.
+    if !d.IsDir() {
+      /***
+      Convert the local disk path (e.g., "webfinances/public/css/home.css") into a clean URL path
+      (e.g., "/public/css/home.css").
+      ***/
+      urlPath := "/" + filepath.ToSlash(path)
+      /***
+      Remove the "./webfinances" prefix if the project folder structure requires it so that the key becomes
+      exactly "/public/css/home.css".
+      ***/
+      urlPath = strings.TrimPrefix(urlPath, "/webfinances")
+      //Map it directly to the universal file server handler.
+      h.mux[urlPath] = wfpages.ServeStaticFiles
+    }
+    return nil
+  })
+  //
+  if err != nil {
+    errMsg := fmt.Sprintf("Error auto-loading public static files: %v", err)
+    logger.LogError(errMsg, falseCorrelationId)
+    panic(errMsg)
+  }
   h.mux["/favicon.ico"] = faviconHandler
   h.mux["/"] = wfpages.IndexPage
   h.mux["/login"] = wfpages.LoginPage
@@ -444,8 +480,8 @@ func makeHandlers() *handlers {
   h.mux["/admin/settings/security"] = middlewares.AdminVerification(wfadminsettings.AdminSettingsPages)
   h.mux["/banking"] = wfbankPages.BankingPage
   h.mux["/banking/manageaccounts"] = wfbankMngAcctsPages.ManageAccountsPages
-  h.mux["/finances"] = wfpages.FinancesPage
-  h.mux["/fin/ordinaryannuity"] = wfpages.OrdinaryAnnuityPage
+  h.mux["/finances"] = wfpages.ServeFinancePages
+  h.mux["/fin/ordinaryannuity"] = wfpages.ServeFinancePages
   h.mux["/fin/ordinaryannuity/interestrate"] = wfoainterest.OaInterestRatePages
   h.mux["/fin/ordinaryannuity/fv"] = wfoafv.OaFvPages
   h.mux["/fin/ordinaryannuity/pv"] = wfoapv.OaPvPages
@@ -453,14 +489,14 @@ func makeHandlers() *handlers {
   h.mux["/fin/ordinaryannuity/epp"] = wfoaepp.OaEppPages
   h.mux["/fin/ordinaryannuity/ga"] = wfoaga.OaGaPages
   h.mux["/fin/ordinaryannuity/perpetuity"] = wfoaperpetuity.OaPerpetuityPages
-  h.mux["/fin/annuitydue"] = wfpages.AnnuityDuePage
+  h.mux["/fin/annuitydue"] = wfpages.ServeFinancePages
   h.mux["/fin/annuitydue/cp"] = wfadcp.AdCpPages
   h.mux["/fin/annuitydue/epp"] = wfadepp.AdEppPages
   h.mux["/fin/annuitydue/fv"] = wfadfv.AdFvPages
   h.mux["/fin/annuitydue/pv"] = wfadpv.AdPvPages
   h.mux["/fin/bonds"] = wfbonds.BondsPages
   h.mux["/fin/mortgage"] = wfmortgage.MortgagePages
-  h.mux["/fin/simpleinterest"] = wfpages.SimpleInterestPage
+  h.mux["/fin/simpleinterest"] = wfpages.ServeFinancePages
   h.mux["/fin/simpleinterest/accurate"] = wfsia.SimpleInterestAccuratePages
   h.mux["/fin/simpleinterest/bankers"] = wfsib.SimpleInterestBankersPages
   h.mux["/fin/simpleinterest/ordinary"] = wfsio.SimpleInterestOrdinaryPages
