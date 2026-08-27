@@ -36,5 +36,23 @@ document.addEventListener('DOMContentLoaded', () => {
   //INITIALIZATION: Run both setup steps on page load.
   generateTicks();
   updateDisplay(slider.value);
+  // Target the newly updated button ID
+  const submitBtn = document.getElementById('btn-alphabet-submit');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', () => {
+      // Look upwards in the DOM tree to see if this slider is sitting inside an existing form.
+      const parentForm = slider.closest('form');
+      if (parentForm) {
+        //Submit the parent form (POST or GET) if it is nested inside.
+        parentForm.submit();
+      } else {
+        //Universal fallback if standalone (No hardcoded URL needed).
+        //It appends the value onto the current page URL automatically.
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('alphabet-range', slider.value);
+        window.location.href = currentUrl.toString();
+      }
+    });
+  }
   console.log("Exiting slider-alphabet.js (1)...");
 });
