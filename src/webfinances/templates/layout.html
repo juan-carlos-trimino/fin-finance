@@ -6,7 +6,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Finances App</title>
-    <link href="/public/css/home.css" rel="stylesheet" type="text/css"/>
+    <!-- Always load the global layout variables first. -->
+    <link type="text/css" href="/public/css/home.css" rel="stylesheet"/>
+    <link type="text/css" href="/public/css/components/base-button.css" rel="stylesheet"/>
+    <!-- Component files will inject their styles here. -->
+    {{block "css-files" .}}{{end}}
   </head>
   <body>
     {{/*
