@@ -88,6 +88,7 @@ src/security/*
 # ... and this directory and its file...
 !src/webfinances/
 src/webfinances/*
+!src/webfinances/fields_test.go
 !src/webfinances/fields.go
 !src/webfinances/WfAdminPages.go
 !src/webfinances/WfAdminSecurityPages.go
