@@ -222,6 +222,11 @@ func main() {
   ***/
   renderer.InitTemplates(GlobalTemplateFS)
   /***
+  Clean the user information kept on a global map.
+  Check every 5 minutes, evict users idle for longer than 30 minutes.
+  ***/
+  webfinances.StartSessionJanitor(30 * time.Minute, 5 * time.Minute, falseCorrelationId)
+  /***
   When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return ErrServerClosed.
   Make sure the program doesn't exit and waits instead for Shutdown to return.
   ***/

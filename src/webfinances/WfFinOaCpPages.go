@@ -42,12 +42,8 @@ type oaCpFields struct{
 }
 
 func newOaCpFields(dir1, dir2, correlationId string) *oaCpFields {
-  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
-  if err != nil {
-    panic("Cannot create directory '" + dir + "': " + err.Error())
-  }
   //Default values returned if file is missing, empty, or JSON is corrupt.
-  m := oaCpFields{
+  defaults := oaCpFields{
     MenuPage: "",
     CurrentPage: "rhs-ui1",
     CurrentButton: "lhs-button1",
@@ -70,29 +66,13 @@ func newOaCpFields(dir1, dir2, correlationId string) *oaCpFields {
     Fd3FV: "1.00",
     Fd3Result: "",
   }
-  obj, err := readFields(dir + "oacp.txt")
-  if obj != nil {
-    /***
-    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
-    length ensures parsing only files that actually contain data.
-    ***/
-    if len(obj) != 0 {  //Check if the file contains no data (empty)
-      err = json.Unmarshal(obj, &m)
-      if err != nil {
-        //Write error, but continue with default values.
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-      }
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oacp.txt"), correlationId)
-  }
-  return &m
+  return loadFieldsFromDisk(dir1, dir2, "oacp.txt", correlationId, &defaults)
 }
 
 func getOaCpFields(userName string) *oaCpFields {
-  return currentFields[userName].oaCp
+  return getFieldsGeneric(userName, func(s *UserSession) *oaCpFields {
+    return s.Fields.oaCp
+  })
 }
 
 type WfOaCpPages struct{}

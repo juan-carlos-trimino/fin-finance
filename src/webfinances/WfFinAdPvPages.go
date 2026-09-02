@@ -38,12 +38,8 @@ type adPvFields struct {
 }
 
 func newAdPvFields(dir1, dir2, correlationId string) *adPvFields {
-  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
-  if err != nil {
-    panic("Cannot create directory '" + dir + "': " + err.Error())
-  }
   //Default values returned if file is missing, empty, or JSON is corrupt.
-  m := adPvFields {
+  defaults := adPvFields{
     MenuPage: "",
     CurrentPage: "rhs-ui2",
 		CurrentButton: "lhs-button2",
@@ -62,29 +58,13 @@ func newAdPvFields(dir1, dir2, correlationId string) *adPvFields {
     Fd2PMT: "1.00",
     Fd2Result: "",
   }
-  obj, err := readFields(dir + "adpv.txt")
-  if obj != nil {
-    /***
-    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
-    length ensures parsing only files that actually contain data.
-    ***/
-    if len(obj) != 0 {  //Check if the file contains no data (empty)
-      err = json.Unmarshal(obj, &m)
-      if err != nil {
-        //Write error, but continue with default values.
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-      }
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "adpv.txt"), correlationId)
-  }
-  return &m
+  return loadFieldsFromDisk(dir1, dir2, "adpv.txt", correlationId, &defaults)
 }
 
 func getAdPvFields(userName string) *adPvFields {
-  return currentFields[userName].adPv
+  return getFieldsGeneric(userName, func(s *UserSession) *adPvFields {
+    return s.Fields.adPv
+  })
 }
 
 type WfAdPvPages struct {}

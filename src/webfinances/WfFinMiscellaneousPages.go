@@ -56,12 +56,8 @@ type miscellaneousFields struct{
 }
 
 func newMiscellaneousFields(dir1, dir2, correlationId string) *miscellaneousFields {
-  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
-  if err != nil {
-    panic("Cannot create directory '" + dir + "': " + err.Error())
-  }
   //Default values returned if file is missing, empty, or JSON is corrupt.
-  m := miscellaneousFields{
+  defaults := miscellaneousFields{
     MenuPage: "",
     CurrentPage: "rhs-ui1",
     CurrentButton: "lhs-button1",
@@ -98,29 +94,13 @@ func newMiscellaneousFields(dir1, dir2, correlationId string) *miscellaneousFiel
     Fd7PV: "1.00",
     Fd7Result: "",
   }
-  obj, err := readFields(dir + "miscellaneous.txt")
-  if obj != nil {
-    /***
-    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
-    length ensures parsing only files that actually contain data.
-    ***/
-    if len(obj) != 0 {  //Check if the file contains no data (empty)
-      err = json.Unmarshal(obj, &m)
-      if err != nil {
-        //Write error, but continue with default values.
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-      }
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "miscellaneous.txt"), correlationId)
-  }
-  return &m
+  return loadFieldsFromDisk(dir1, dir2, "miscellaneous.txt", correlationId, &defaults)
 }
 
 func getMiscellaneousFields(userName string) *miscellaneousFields {
-  return currentFields[userName].miscellaneous
+  return getFieldsGeneric(userName, func(s *UserSession) *miscellaneousFields {
+    return s.Fields.miscellaneous
+  })
 }
 
 var misc_notes = [...]string {

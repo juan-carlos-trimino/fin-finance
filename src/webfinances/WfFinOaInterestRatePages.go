@@ -31,12 +31,8 @@ type oaInterestRateFields struct {
 }
 
 func newOaInterestRateFields(dir1, dir2, correlationId string) *oaInterestRateFields {
-  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
-  if err != nil {
-    panic("Cannot create directory '" + dir + "': " + err.Error())
-  }
   //Default values returned if file is missing, empty, or JSON is corrupt.
-  m := oaInterestRateFields{
+  defaults := oaInterestRateFields{
     MenuPage: "",
     CurrentPage: "rhs-ui1",
     CurrentButton: "lhs-button1",
@@ -48,29 +44,13 @@ func newOaInterestRateFields(dir1, dir2, correlationId string) *oaInterestRateFi
     Fd1FV: "1.07",
     Fd1Result: "",
   }
-  obj, err := readFields(dir + "oainterestrate.txt")
-  if obj != nil {
-    /***
-    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
-    length ensures parsing only files that actually contain data.
-    ***/
-    if len(obj) != 0 {  //Check if the file contains no data (empty)
-      err = json.Unmarshal(obj, &m)
-      if err != nil {
-        //Write error, but continue with default values.
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-      }
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "oainterestrate.txt"), correlationId)
-  }
-  return &m
+  return loadFieldsFromDisk(dir1, dir2, "oainterestrate.txt", correlationId, &defaults)
 }
 
 func getOaInterestRateFields(userName string) *oaInterestRateFields {
-  return currentFields[userName].oaInterestRate
+  return getFieldsGeneric(userName, func(s *UserSession) *oaInterestRateFields {
+    return s.Fields.oaInterestRate
+  })
 }
 
 type WfOaInterestRatePages struct{}

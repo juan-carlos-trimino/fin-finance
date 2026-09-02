@@ -50,12 +50,8 @@ type siBankersFields struct {
 }
 
 func newSiBankersFields(dir1, dir2, correlationId string) *siBankersFields {
-  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
-  if err != nil {
-    panic("Cannot create directory '" + dir + "': " + err.Error())
-  }
   //Default values returned if file is missing, empty, or JSON is corrupt.
-  m := siBankersFields{
+  defaults := siBankersFields{
     MenuPage: "",
     CurrentPage: "rhs-ui1",
     CurrentButton: "lhs-button1",
@@ -86,29 +82,13 @@ func newSiBankersFields(dir1, dir2, correlationId string) *siBankersFields {
     Fd4PV: "1.00",
     Fd4Result: "",
   }
-  obj, err := readFields(dir + "sibankers.txt")
-  if obj != nil {
-    /***
-    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
-    length ensures parsing only files that actually contain data.
-    ***/
-    if len(obj) != 0 {  //Check if the file contains no data (empty)
-      err = json.Unmarshal(obj, &m)
-      if err != nil {
-        //Write error, but continue with default values.
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-      }
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "sibankers.txt"), correlationId)
-  }
-  return &m
+  return loadFieldsFromDisk(dir1, dir2, "sibankers.txt", correlationId, &defaults)
 }
 
 func getSiBankersFields(userName string) *siBankersFields {
-  return currentFields[userName].siBankers
+  return getFieldsGeneric(userName, func(s *UserSession) *siBankersFields {
+    return s.Fields.siBankers
+  })
 }
 
 type WfSiBankersPages struct{}

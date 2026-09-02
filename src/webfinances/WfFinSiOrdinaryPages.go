@@ -55,12 +55,8 @@ type siOrdinaryFields struct{
 }
 
 func newSiOrdinaryFields(dir1, dir2, correlationId string) *siOrdinaryFields {
-  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
-  if err != nil {
-    panic("Cannot create directory '" + dir + "': " + err.Error())
-  }
   //Default values returned if file is missing, empty, or JSON is corrupt.
-  m := siOrdinaryFields{
+  defaults := siOrdinaryFields{
     MenuPage: "",
     CurrentPage: "rhs-ui1",
     CurrentButton: "lhs-button1",
@@ -91,29 +87,13 @@ func newSiOrdinaryFields(dir1, dir2, correlationId string) *siOrdinaryFields {
     Fd4PV: "1.00",
     Fd4Result: "",
   }
-  obj, err := readFields(dir + "siordinary.txt")
-  if obj != nil {
-    /***
-    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
-    length ensures parsing only files that actually contain data.
-    ***/
-    if len(obj) != 0 {  //Check if the file contains no data (empty)
-      err = json.Unmarshal(obj, &m)
-      if err != nil {
-        //Write error, but continue with default values.
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-      }
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "siordinary.txt"), correlationId)
-  }
-  return &m
+  return loadFieldsFromDisk(dir1, dir2, "siordinary.txt", correlationId, &defaults)
 }
 
 func getSiOrdinaryFields(userName string) *siOrdinaryFields {
-  return currentFields[userName].siOrdinary
+  return getFieldsGeneric(userName, func(s *UserSession) *siOrdinaryFields {
+    return s.Fields.siOrdinary
+  })
 }
 
 type WfSiOrdinaryPages struct{}

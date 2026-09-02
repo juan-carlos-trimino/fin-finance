@@ -103,7 +103,7 @@ func TestAddDeleteConcurrency(t *testing.T) {
       if id % 2 == 0 {
         AddSessionDataPerUser(testUser, fmt.Sprintf("corr-%d", id))
       } else {
-        DeleteSessionDataPerUser(testUser)
+        DeleteSessionDataPerUser(testUser, "-1")
       }
     })
   }
@@ -127,7 +127,7 @@ func BenchmarkSessionThroughput(b *testing.B) {
     for pb.Next() {
       user := users[rand.Intn(len(users))]
       AddSessionDataPerUser(user, "bench-corr-id")
-      DeleteSessionDataPerUser(user)
+      DeleteSessionDataPerUser(user, "-1")
     }
   })
 }
