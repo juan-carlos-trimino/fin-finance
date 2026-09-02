@@ -95,19 +95,19 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
   }
   currentFieldsLock.Unlock()
   /***
-    The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
-    MultipartForm fields; the data are in the form of key-value pairs.
+  The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
+  MultipartForm fields; the data are in the form of key-value pairs.
 
-    If the form and the URL have the same key name, both of them will be placed in a slice, with the form value always prioritized
-    before the URL value.
+  If the form and the URL have the same key name, both of them will be placed in a slice, with the form value always prioritized
+  before the URL value.
 
-    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm field provides key-value pairs only
-    for the form and not the URL. The PostForm field supports only application/x-www-form-urlencoded.
+  Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm field provides key-value pairs only
+  for the form and not the URL. The PostForm field supports only application/x-www-form-urlencoded.
 
-    The FormValue method lets you access the key-value pairs just like the Form field, except that it's for a specific key and there
-    is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
-    except that it's for the PostForm field instead of the Form field.
-    ***/
+  The FormValue method lets you access the key-value pairs just like the Form field, except that it's for a specific key and there
+  is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
+  except that it's for the PostForm field instead of the Form field.
+  ***/
   if ui := req.FormValue("compute"); ui != "" { //Values from form and URL.
     fields.CurrentPage = ui
   }
@@ -220,7 +220,7 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
 
-// Extraction helper for UI-1 calculations.
+//Extraction helper for UI-1 calculations.
 func (a WfAdEppPages) processUi1Form(req *http.Request, fields *adEppFields, correlationId string) {
   fields.Fd1N = req.PostFormValue("fd1-n")
   fields.Fd1TimePeriod = req.PostFormValue("fd1-tp")
@@ -246,7 +246,7 @@ func (a WfAdEppPages) processUi1Form(req *http.Request, fields *adEppFields, cor
     fields.Fd1TimePeriod, fields.Fd1Interest, fields.Fd1Compound, fields.Fd1FV, fields.Fd1Result), correlationId)
 }
 
-// Extraction helper for UI-2 calculations.
+//Extraction helper for UI-2 calculations.
 func (a WfAdEppPages) processUi2Form(req *http.Request, fields *adEppFields, correlationId string) {
   fields.Fd2N = req.PostFormValue("fd2-n")
   fields.Fd2TimePeriod = req.PostFormValue("fd2-tp")
