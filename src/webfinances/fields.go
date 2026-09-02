@@ -222,6 +222,10 @@ func AddSessionDataPerUser(userName, correlationId string) {
 }
 
 func DeleteSessionDataPerUser(userName, correlationId string) {
+
+logger.LogInfo("*********** DeleteSessionDataPerUser ***********", correlationId)
+
+
   unlock := UserLockMgr.LockUser(userName)
   defer unlock()
   /***
@@ -268,6 +272,14 @@ func StartSessionJanitor(timeoutDuration time.Duration, checkInterval time.Durat
     //It automatically blocks and loops indefinitely, executing the body of the loop every time the ticker sends a new
     //value down its channel.
     for range ticker.C {
+
+
+
+logger.LogInfo("*********** StartSessionJanitor ***********", correlationId)
+
+
+
+
       now := time.Now()  //Return the current local time as a time.Time object.
       var expiredUsers []string
       //Read-Lock the global map to identify expired users.
