@@ -1,0 +1,10 @@
+# This file defines the portable formatting rules for this project.
+# It forces the editor to use spaces instead of tabs for Go code files.
+root = true
+
+[*.go]
+indent_style = space
+indent_size = 2
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
