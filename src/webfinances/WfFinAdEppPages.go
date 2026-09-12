@@ -12,8 +12,8 @@ import (
   "time"
   "github.com/juan-carlos-trimino/go-middlewares"
   osu "github.com/juan-carlos-trimino/go-os"
-  logger "github.com/juan-carlos-trimino/gplogger"
-  sessions "github.com/juan-carlos-trimino/gpsessions"
+  logger "github.com/juan-carlos-trimino/go-logger"
+  sessions "github.com/juan-carlos-trimino/go-sessions"
 )
 
 type adEppFields struct {

@@ -11,8 +11,8 @@ import (
   "errors"
   "finance/concurrency/LockManager"
   "fmt"
-  "github.com/juan-carlos-trimino/gplogger"
-  "github.com/juan-carlos-trimino/gposu"
+  "github.com/juan-carlos-trimino/go-logger"
+  "github.com/juan-carlos-trimino/go-os"
   "os"
   "path/filepath"
   "sync"
@@ -285,10 +285,17 @@ logger.LogInfo("*********** StartSessionJanitor ***********", correlationId)
       //Read-Lock the global map to identify expired users.
       currentFieldsLock.RLock()
       for userName, session := range currentFields {
+
+logger.LogInfo(fmt.Sprintf("*********** %s ***********", userName), correlationId)
+
+logger.LogInfo(fmt.Sprintf("*********** LastAccessed %v\n", now.Sub(session.LastAccessed)), correlationId)
+logger.LogInfo(fmt.Sprintf("*********** timeout Duration %v\n", timeoutDuration), correlationId)
+
         if now.Sub(session.LastAccessed) > timeoutDuration {
           expiredUsers = append(expiredUsers, userName)
         }
       }
+logger.LogInfo(fmt.Sprintf("*********** expiredUsers %d ***********", len(expiredUsers)), correlationId)
       currentFieldsLock.RUnlock()
       //Evict only the expired users.
       for _, userName := range expiredUsers {
@@ -298,7 +305,18 @@ logger.LogInfo("*********** StartSessionJanitor ***********", correlationId)
         ***/
         currentFieldsLock.RLock()
         session, stillExists := currentFields[userName]
+
+
+logger.LogInfo(fmt.Sprintf("*********** expiredUsers %s:  ***********", userName), correlationId)
+logger.LogInfo(fmt.Sprintf("*********** timeout Duration %v\n", timeoutDuration), correlationId)
+logger.LogInfo(fmt.Sprintf("*********** LastAccessed %v\n", time.Since(session.LastAccessed)), correlationId)
+
+
         if !stillExists || !(timeoutDuration > time.Since(session.LastAccessed)) {
+
+logger.LogInfo("*********** continueeeeeeeeeeee ***********", correlationId)
+
+
           currentFieldsLock.RUnlock()
           continue  //Skip entirely! No LockUser call, no refCount adjustments.
         }
@@ -307,8 +325,16 @@ logger.LogInfo("*********** StartSessionJanitor ***********", correlationId)
         unlock := UserLockMgr.LockUser(userName)
         //Secure the full write-lock to safely mutate the global session map.
         currentFieldsLock.Lock()
+
+logger.LogInfo("@@@@@@@@@@@@@@@@@@@@", correlationId)
+
         //Check to see if it was removed while waiting for the lock.
         if currentSession, exists := currentFields[userName]; exists {
+
+logger.LogInfo(fmt.Sprintf("@@@@@@@@@@@ timeout Duration %v\n", timeoutDuration), correlationId)
+logger.LogInfo(fmt.Sprintf("@@@@@@@@@@@@ LastAccessed %v\n", time.Since(session.LastAccessed)), correlationId)
+
+
           /***
           There is a blocking call (UserLockMgr.LockUser). The thread might sleep for several milliseconds waiting for
           a busy user lock, making the original time.Now snapshot heavily outdated by the time the lock is acquired. Hence,
