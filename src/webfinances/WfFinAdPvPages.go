@@ -66,7 +66,7 @@ func getAdPvFields(userName string) *adPvFields {
   })
 }
 
-type WfAdPvPages struct {}
+type WfAdPvPages struct{}
 
 func (a WfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
@@ -142,7 +142,7 @@ func (a WfAdPvPages) AdPvPages(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.CsrfToken,
+      newSession.GetCsrfToken(),
       fields.Fd2N,
       fields.Fd2TimePeriod,
       fields.Fd2Interest,

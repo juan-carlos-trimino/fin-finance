@@ -128,7 +128,7 @@ func (o WfOaInterestRatePages) OaInterestRatePages(res http.ResponseWriter, req 
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.CsrfToken,
+      newSession.GetCsrfToken(),
       fields.Fd1N,
       fields.Fd1TimePeriod,
       fields.Fd1Compound,

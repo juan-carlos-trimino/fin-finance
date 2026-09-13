@@ -7,9 +7,9 @@ import (
   "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/gplogger"
-  "github.com/juan-carlos-trimino/gposu"
-  "github.com/juan-carlos-trimino/gpsessions"
+  "github.com/juan-carlos-trimino/go-logger"
+  "github.com/juan-carlos-trimino/go-os"
+  "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
   "os"
   "strings"
@@ -133,7 +133,7 @@ func (s WfAdminSettingsPages) AdminSettingsPages(res http.ResponseWriter, req *h
         "webfinances/templates/datetime.html",
         "webfinances/templates/footer.html",
       }
-      pd.CsrfToken = newSession.CsrfToken
+      pd.CsrfToken = newSession.GetCsrfToken()
       renderer.Render(res, "layout", templatesNeeded, renderer.PageData{ Data: pd})
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)

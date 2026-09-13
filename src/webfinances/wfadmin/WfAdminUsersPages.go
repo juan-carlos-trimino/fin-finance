@@ -7,9 +7,9 @@ import (
   "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/gplogger"
-  "github.com/juan-carlos-trimino/gposu"
-  "github.com/juan-carlos-trimino/gpsessions"
+  "github.com/juan-carlos-trimino/go-logger"
+  "github.com/juan-carlos-trimino/go-os"
+  "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
   "os"
   "strings"
@@ -214,7 +214,7 @@ func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Re
         "webfinances/templates/datetime.html",
         "webfinances/templates/footer.html",
       }
-      pd.CsrfToken = newSession.CsrfToken
+      pd.CsrfToken = newSession.GetCsrfToken()
       /***
       Do not read or write sensitive information from the disk; use the database exclusively.
       ***/
@@ -390,7 +390,7 @@ labels := []string{"A - G", "H - N", "O - T", "U - Z"}
   RangeLabels   []string
   SliderMax     int
 
-        } { "std-wo-nav-menu", "Unregister User - Admin", logger.DatetimeFormat(), fields.CurrentButton, newSession.CsrfToken,
+        } { "std-wo-nav-menu", "Unregister User - Admin", logger.DatetimeFormat(), fields.CurrentButton, newSession.GetCsrfToken(),
             fields.SelectedRange,
 paginatedItems, currentPage, totalPages, currentPage - 1, currentPage + 1, currentPage > 1, currentPage < totalPages,
   labels, len(labels)         },

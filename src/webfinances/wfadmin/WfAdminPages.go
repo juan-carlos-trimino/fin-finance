@@ -4,8 +4,8 @@ import (
   "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/gplogger"
-  "github.com/juan-carlos-trimino/gpsessions"
+  "github.com/juan-carlos-trimino/go-logger"
+  "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
   "time"
 )
@@ -57,7 +57,7 @@ func (s WfAdminPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
         Header string
         Datetime string
         CsrfToken string
-      } { "std-wo-nav-menu", "Investments - Admin", logger.DatetimeFormat(), newSession.CsrfToken },
+      } { "std-wo-nav-menu", "Investments - Admin", logger.DatetimeFormat(), newSession.GetCsrfToken() },
     })
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
@@ -90,7 +90,7 @@ func (s WfAdminPages) AdminSettingsPage(res http.ResponseWriter, req *http.Reque
       Header string
       Datetime string
       CsrfToken string
-    } { "std-wo-nav-menu", "Settings - Admin", logger.DatetimeFormat(), newSession.CsrfToken },
+    } { "std-wo-nav-menu", "Settings - Admin", logger.DatetimeFormat(), newSession.GetCsrfToken() },
   })
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }

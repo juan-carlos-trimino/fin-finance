@@ -5,7 +5,7 @@ import (
   "finance/finances"
   "finance/renderer"
   "fmt"
-  "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/go-os"
   "github.com/juan-carlos-trimino/go-sessions"
@@ -142,7 +142,7 @@ func (a WfAdFvPages) AdFvPages(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.CsrfToken,
+      newSession.GetCsrfToken(),
       fields.Fd2N,
       fields.Fd2TimePeriod,
       fields.Fd2Interest,

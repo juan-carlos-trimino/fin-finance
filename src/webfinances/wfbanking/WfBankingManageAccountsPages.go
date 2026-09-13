@@ -5,10 +5,10 @@ import (
   "encoding/json"
   "finance/renderer"
   "fmt"
-  "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/gposu"
-  "github.com/juan-carlos-trimino/gpsessions"
+  "github.com/juan-carlos-trimino/go-os"
+  "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
   "os"
   "strings"
@@ -137,7 +137,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
           Fd1AccountName string
           Fd1AccountNumber string
           Fd1RoutingNumber string
-        } { "standard", "Manage Accounts", logger.DatetimeFormat(), bankingMenuPage, fields.CurrentButton, newSession.CsrfToken,
+        } { "standard", "Manage Accounts", logger.DatetimeFormat(), bankingMenuPage, fields.CurrentButton, newSession.GetCsrfToken(),
             fd1BankName, fd1AccountType, fd1AccountName, fd1AccountNumber, fd1RoutingNumber },
       })
     } else if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
@@ -201,7 +201,7 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
           CsrfToken string
           Fd2Result []Row
         } { "standard", "Manage Accounts", logger.DatetimeFormat(), bankingMenuPage, fields.CurrentButton,
-            newSession.CsrfToken, rows },
+            newSession.GetCsrfToken(), rows },
       })
     } else {
       errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
