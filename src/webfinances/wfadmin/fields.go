@@ -3,7 +3,7 @@ package wfadmin
 import (
   "errors"
   "fmt"
-  "github.com/juan-carlos-trimino/gposu"
+  "github.com/juan-carlos-trimino/go-os"
   "os"
 )
 

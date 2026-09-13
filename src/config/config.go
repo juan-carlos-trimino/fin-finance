@@ -2,7 +2,7 @@ package config
 
 import (
   "fmt"
-  "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/go-logger"
   "os"
   "strconv"
 )

@@ -9,7 +9,7 @@ import (
   "context"
   "fmt"
   "github.com/jackc/pgx/v5"
-  "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/go-logger"
   "golang.org/x/crypto/bcrypt"
   "math"
   "math/rand"

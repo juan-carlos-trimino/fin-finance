@@ -13,7 +13,7 @@ import (
   "github.com/jackc/pgx/v5/pgconn"
   "github.com/jackc/pgx/v5/pgxpool"
   "github.com/juan-carlos-trimino/go-os"
-  "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/go-logger"
   "os/exec"
   "regexp"
   "strconv"

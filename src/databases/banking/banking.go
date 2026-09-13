@@ -10,7 +10,7 @@ import (
   // "fmt"
   // "github.com/google/uuid"
   // "github.com/jackc/pgx/v5"
-  // "github.com/juan-carlos-trimino/gplogger"
+  // "github.com/juan-carlos-trimino/go-logger"
   // "time"
 )
 

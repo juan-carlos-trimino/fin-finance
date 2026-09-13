@@ -4,8 +4,8 @@ import (
   // "encoding/json"
   "errors"
   "fmt"
-  // "github.com/juan-carlos-trimino/gplogger"
-  "github.com/juan-carlos-trimino/gposu"
+  // "github.com/juan-carlos-trimino/go-logger"
+  "github.com/juan-carlos-trimino/go-os"
   "os"
 )
 
