@@ -37,12 +37,13 @@ import (
   the profile package will only register its handlers with the default multiplexer (http.DefaultServeMux).
   **/
   // _ "net/http/pprof" //Blank import of pprof.
-  "github.com/juan-carlos-trimino/gplogger"
+  "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/go-os"
-  "github.com/juan-carlos-trimino/gps3storage"
-  "github.com/juan-carlos-trimino/gpsessions"
+  "github.com/juan-carlos-trimino/go-s3storage"
+  "github.com/juan-carlos-trimino/go-sessions"
   "golang.org/x/crypto/acme/autocert"
+  "github.com/redis/go-redis/v9"
   "os"
   "os/signal"
   "path/filepath"
@@ -53,13 +54,7 @@ import (
   "time"
 )
 
-var (  //Environment variables.
-  USER_NAME string = "a"
-  PASSWORD string = "a"
-)
-
 const (
-  users string = "user.txt"
   bucketName string = "fin-finances"
   dataDirName string = "wsf_data_dir"
   falseCorrelationId = "-1"
@@ -85,13 +80,16 @@ const (
 //////////////////////////
 )
 
-/***
-Embed the folder safely from the project root where main.go lives.
-Because you are using //go:embed, Go isn't reading files off a slow hard drive or SSD. It is reading strings directly from your
-computer's RAM.
-***/
-//go:embed all:webfinances/templates
-var GlobalTemplateFS embed.FS
+var (
+  redis_addr string
+  /***
+  Embed the folder safely from the project root where main.go lives.
+  Because you are using //go:embed, Go isn't reading files off a slow hard drive or SSD. It is reading strings directly from your
+  computer's RAM.
+  ***/
+  //go:embed all:webfinances/templates
+  GlobalTemplateFS embed.FS
+)
 
 /***
 In Go, a handler is an interface (type Handler interface) that has a method named ServeHTTP with two parameters: an http.ResponseWriter
@@ -131,12 +129,10 @@ func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
     correlationId = falseCorrelationId
   }
   var prevent_probes bool = !((strings.EqualFold("/liveness", req.URL.Path) ||
-                               strings.EqualFold("/readiness", req.URL.Path)) &&
-                               config.GetPreventProbesOutput(correlationId))
+                            strings.EqualFold("/readiness", req.URL.Path)) && config.GetPreventProbesOutput(correlationId))
   if prevent_probes {
     logger.LogInfo("Entering ServeHTTP/main.", correlationId)
-    logger.LogInfo(fmt.Sprintf("Method: %s, Request URI: %s", req.Method, req.RequestURI),
-     correlationId)
+    logger.LogInfo(fmt.Sprintf("Method: %s, Request URI: %s", req.Method, req.RequestURI), correlationId)
   }
   //Implement route forwarding.
   if handler, ok := h.mux[req.URL.Path]; ok {
@@ -196,7 +192,7 @@ func main() {
   } else {
     logger.LogInfo("The current user is not running as root.", falseCorrelationId)
   }
-  readUsers(dataDir, users)
+  //Directories.
   webfinances.SetupDirStructure(dataDir)
   banking.SetupDirStructure(dataDir)
   admin.SetupDirStructure(dataDir)
@@ -221,11 +217,27 @@ func main() {
   Pass the root virtual filesystem into te renderer initialization function.
   ***/
   renderer.InitTemplates(GlobalTemplateFS)
+  if config.GetK8s(falseCorrelationId) {
+    redis_addr = "redis-service:6379"
+  } else {
+    redis_addr = "localhost:6379"
+  }
+  //Connect to the Redis. Using a non-nil completely empty context.Context.
+  err = sessions.StartRedisServer(context.Background(), &redis.Options{
+    Addr: redis_addr,  //Redis Server address.
+    Password: "",  //No password for local development.
+    DB: 0,  //Default DB.
+  })
+  if err != nil {
+    panic(err)
+  }
+  logger.LogInfo("Connected to the Redis Server.", falseCorrelationId)
   /***
   Clean the user information kept on a global map.
   Check every 5 minutes, evict users idle for longer than 30 minutes.
   ***/
-  webfinances.StartSessionJanitor(30 * time.Minute, 5 * time.Minute, falseCorrelationId)
+  //jct webfinances.StartSessionJanitor(/*30*/11 * time.Minute, 5 * time.Minute, falseCorrelationId)]
+  logger.LogInfo(fmt.Sprintf("The session timeout is %s.", sessions.GetSessionTimeoutString()), falseCorrelationId)
   /***
   When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return ErrServerClosed.
   Make sure the program doesn't exit and waits instead for Shutdown to return.
@@ -574,26 +586,6 @@ func makeHttpToHttpsRedirectHandler(port int) *handlers {
     http.Redirect(res, req, u.String(), http.StatusMovedPermanently)
   }
   return h
-}
-
-func readUsers(dir, filename string) {
-  dirErr, err := osu.CreateDirs(0o077, 0o777, dir)
-  if err != nil {
-    panic("Cannot create directory '" + dirErr + "': " + err.Error())
-  }
-  filePath := dir + "/" + filename
-  //If file exists, do not write the hard-coded users a second time.
-  if ok, _ := osu.CheckFileExists(filePath); !ok {
-    if err = sessions.AddUserToFile(filePath, USER_NAME, PASSWORD); err != nil {
-      panic(err)
-    } else if err = sessions.AddUserToFile(filePath, "b", "b"); err != nil {
-      panic(err)
-    }
-  }
-  //
-  if err := sessions.ReadUsersFromFile(filePath); err != nil {
-    panic(err)
-  }
 }
 
 // ////////////

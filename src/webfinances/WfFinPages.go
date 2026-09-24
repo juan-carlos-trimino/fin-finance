@@ -1,22 +1,26 @@
 package webfinances
 
 import (
+  // "errors"
   bank "finance/databases/banking" //Importing a package and assigning it a local alias.
-  banking "finance/webfinances/wfbanking"
   "finance/renderer"
   admin "finance/webfinances/wfadmin"
+  banking "finance/webfinances/wfbanking"
   "fmt"
+  "github.com/juan-carlos-trimino/go-logger"
+  "github.com/juan-carlos-trimino/go-middlewares"
+  "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
   "path/filepath"
+  "strings"
   "time"
-  "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/gplogger"
-  "github.com/juan-carlos-trimino/gpsessions"
 )
 
-var financesMenuPage string = "home"
-var contactMenuPage = "contact"
-var aboutMenupage string = "about"
+var (
+  financesMenuPage string = "home"
+  contactMenuPage = "contact"
+  aboutMenupage string = "about"
+)
 
 /***
 When handling authentication errors, the application should not disclose which part of the authentication data was incorrect.
@@ -63,7 +67,7 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering LoginPage.", correlationId)
+  logger.LogInfo("Entering webfinances.LoginPage.", correlationId)
   templatesNeeded := []string{
     "webfinances/templates/layout.html",
     "webfinances/templates/login.html",
@@ -83,20 +87,16 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
-  logger.LogInfo("Entering VerifyLogin.", correlationId)
-  //Only allow POST requests.
-  if req.Method != http.MethodPost {
-    logger.LogInfo("Method not allowed.", correlationId)
-    http.Error(res, "Method not allowed.", http.StatusMethodNotAllowed)
-    return
-  }
+  logger.LogInfo("Entering webfinances.VerifyLogin.", correlationId)
   un := req.PostFormValue("uname")
   pw := req.PostFormValue("pwd")
   ok, isAdmin := bank.DbAuthenticateUser(req.Context(), un, pw, correlationId)
   if !ok {
+    logger.LogError(fmt.Sprintf("Login failed for user %s.", un), correlationId)
     invalidSession(res, correlationId)
   } else {
-    sessionToken, session := sessions.AddEntryToSessions(un)
+    logger.LogInfo(fmt.Sprintf("User %s successfully logged in.", un), correlationId)
+    cookie, err := sessions.SaveRedis(req.Context(), un)
     /***
     Once a cookie is set on a client, it is sent along with every subsequent request. Cookies store
     historical information (including user login information) on the client's computer. The
@@ -108,15 +108,11 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
     should always be random and unique. You can use cookies or URL arguments to get the client's
     identity.
     ***/
-    http.SetCookie(res, &http.Cookie{
-      Name: "session_token",
-      Value: sessionToken,
-      Expires: session.Expiry,
-    })
+    http.SetCookie(res, cookie)
     tokenString, err := middlewares.GenerateJwtToken(isAdmin)
     if err != nil {
       logger.LogError(fmt.Sprintf("Error signing token: %v+", err), correlationId)
-      http.Error(res, "Error signing token: ", http.StatusInternalServerError)
+      http.Error(res, "Internal Server Error", http.StatusInternalServerError)
       return
     }
     http.SetCookie(res, &http.Cookie{
@@ -141,15 +137,13 @@ func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.LogoutPage.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-  } else {
-    DeleteSessionDataPerUser(sessions.GetUserName(sessionToken), correlationId)
-    cookie := sessions.DeleteSession(sessionToken)
-    http.SetCookie(res, cookie)
-    http.Redirect(res, req, "/", http.StatusSeeOther)
-  }
+  cookie, _ := req.Cookie("session_token")
+  count, _ := sessions.DelRedis(req.Context(), strings.Split(cookie.Value, "|")[0])
+  //Continue with or without error to ensure the client-side cookie is deleted.
+  logger.LogInfo(fmt.Sprintf("%d session(s) deleted.", count), correlationId)
+  cookie.MaxAge = -1  //Instruct the browser to delete immediately.
+  http.SetCookie(res, cookie)
+  http.Redirect(res, req, "/", http.StatusSeeOther)
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
@@ -159,27 +153,22 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.WelcomePage.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-  } else {
-    templatesNeeded := []string{
-      "webfinances/templates/layout.html",
-      "webfinances/templates/welcome.html",
-      "webfinances/templates/title.html",
-      "webfinances/templates/datetime.html",
-      "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html",
-    }
-    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-      Data: struct{
-        LayoutType string
-        Header string
-        Datetime string
-        MenuPage string
-      } { "standard", "Investments", logger.DatetimeFormat(), financesMenuPage },
-    })
+  templatesNeeded := []string{
+    "webfinances/templates/layout.html",
+    "webfinances/templates/welcome.html",
+    "webfinances/templates/title.html",
+    "webfinances/templates/datetime.html",
+    "webfinances/templates/navbar.html",
+    "webfinances/templates/footer.html",
   }
+  renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+    Data: struct{
+      LayoutType string
+      Header string
+      Datetime string
+      MenuPage string
+    } { "standard", "Investments", logger.DatetimeFormat(), financesMenuPage },
+  })
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
@@ -189,27 +178,22 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.ContactPage.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-  } else {
-    templatesNeeded := []string{
-      "webfinances/templates/layout.html",
-      "webfinances/templates/contact.html",
-      "webfinances/templates/title.html",
-      "webfinances/templates/datetime.html",
-      "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html",
-    }
-    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-      Data: struct{
-        LayoutType string
-        Header string
-        Datetime string
-        MenuPage string
-      } { "standard", "Contact Us", logger.DatetimeFormat(), "contact" },
-    })
+  templatesNeeded := []string{
+    "webfinances/templates/layout.html",
+    "webfinances/templates/contact.html",
+    "webfinances/templates/title.html",
+    "webfinances/templates/datetime.html",
+    "webfinances/templates/navbar.html",
+    "webfinances/templates/footer.html",
   }
+  renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+    Data: struct{
+      LayoutType string
+      Header string
+      Datetime string
+      MenuPage string
+    } { "standard", "Contact Us", logger.DatetimeFormat(), "contact" },
+  })
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
@@ -219,28 +203,23 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.AboutPage.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-  } else {
-    //Explicitly map out the entire structural block stack for this page.
-    templatesNeeded := []string{
-      "webfinances/templates/layout.html",
-      "webfinances/templates/about.html",
-      "webfinances/templates/title.html",
-      "webfinances/templates/datetime.html",
-      "webfinances/templates/navbar.html",
-      "webfinances/templates/footer.html",
-    }
-    renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-      Data: struct{
-        LayoutType string
-        Header string
-        Datetime string
-        MenuPage string
-      } { "standard", "About Us", logger.DatetimeFormat(), aboutMenupage },
-    })
+  //Explicitly map out the entire structural block stack for this page.
+  templatesNeeded := []string{
+    "webfinances/templates/layout.html",
+    "webfinances/templates/about.html",
+    "webfinances/templates/title.html",
+    "webfinances/templates/datetime.html",
+    "webfinances/templates/navbar.html",
+    "webfinances/templates/footer.html",
   }
+  renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
+    Data: struct{
+      LayoutType string
+      Header string
+      Datetime string
+      MenuPage string
+    } { "standard", "About Us", logger.DatetimeFormat(), aboutMenupage },
+  })
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
@@ -250,11 +229,6 @@ func (p WfPages) ServeFinancePages(res http.ResponseWriter, req *http.Request) {
   startTime, _ := ctxKey.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo(fmt.Sprintf("Entering webfinances.ServeFinancesPage for path: %s", req.URL.Path), correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-    return
-  }
   //Declare dynamic variables based on the URL path.
   var bodyTemplate string
   var pageHeader string

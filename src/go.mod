@@ -36,48 +36,31 @@ go 1.26.4
 require (
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/juan-carlos-trimino/go-logger v1.0.9
-	github.com/juan-carlos-trimino/go-middlewares v1.1.15
+	github.com/juan-carlos-trimino/go-middlewares v1.1.7
 	github.com/juan-carlos-trimino/go-os v1.1.2
 	github.com/juan-carlos-trimino/go-s3storage v1.0.4
-	github.com/juan-carlos-trimino/go-sessions v1.0.8
+	github.com/juan-carlos-trimino/go-sessions v1.0.16
 	golang.org/x/crypto v0.57.0
 )
 
 require (
 	github.com/aws/aws-sdk-go v1.55.8 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/juan-carlos-trimino/go-os v1.1.2 // indirect
-	github.com/juan-carlos-trimino/go-sessions v1.0.8 // indirect
+	github.com/juan-carlos-trimino/gposu v1.0.1 // indirect
+	github.com/juan-carlos-trimino/gpsessions v1.0.1 // indirect
+	github.com/redis/go-redis/v9 v9.22.0 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 )
 
-//To debug code inside a dependency module (moduleA) while running your main module, you need to point the Go  compiler to a local copy
-//of moduleA instead of its cached, read-only version in $GOPATH/pkg/mod.
-//
-//Use a replace Directive
-// You can explicitly force your main module to look at your local file system for moduleA.
-// 1. Edit the Main go.mod
-// 2. Add a replace directive at the bottom of your main module's go.mod file pointing to the relative or absolute path of your local dependency:
-//
-// module main-module
-//
-// go 1.26
-//
-// require github.com/xxx/moduleA v1.1.0
-//
-// Force Go to use your local copy for compiling and debugging.
-// replace github.com/xxx/moduleA => ../moduleA
-//
-// 3. Run Delve or your IDE Debugger
-// Run your debugger from the main module. You can now open files from ../moduleA, insert breakpoints, and step into them. The folder path
-// specified in your replace directive must exactly match the folder path you have open in your IDE.
-//
-// (Note: Remember to remove this line before pushing your go.mod file to production.)
-// replace github.com/juan-carlos-trimino/go-middlewares => ../../../go-middlewares/
+replace github.com/juan-carlos-trimino/go-middlewares => ../../../gp-meta-repo/go-middlewares/
+replace github.com/juan-carlos-trimino/go-sessions => ../../../gp-meta-repo/go-sessions/
