@@ -8,7 +8,6 @@ import (
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/go-os"
-  "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
   "os"
   "strconv"
@@ -113,28 +112,16 @@ var misc_notes = [...]string {
 type WfMiscellaneousPages struct {}
 
 func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.MiscellaneousPages.", correlationId)
-  //Guard Clause 1: Validate HTTP Method.
-  if req.Method != http.MethodPost && req.Method != http.MethodGet {
-    errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, correlationId)
-    panic(errString)
-  }
-  //Guard Clause 2: Validate Session Token.
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-    return
-  }
-  userName := sessions.GetUserName(sessionToken)
-  fields := getMiscellaneousFields(userName)
+  sessInfo, _ := ck.GetSessionInfo(req.Context())
+  fields := getMiscellaneousFields(sessInfo.UserName)
   //Every time a web request processes data for a user, update the timestamp under a lock.
   currentFieldsLock.Lock()
-  if session, exists := currentFields[userName]; exists {
+  if session, exists := currentFields[sessInfo.UserName]; exists {
     session.LastAccessed = time.Now()
   }
   currentFieldsLock.Unlock()
@@ -164,8 +151,6 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     if req.Method == http.MethodPost {
       mp.processUi1Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "nominalrate.html"
     templateData = struct{
       LayoutType string
@@ -183,7 +168,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd1Nominal,
       fields.Fd1Compound,
       fields.Fd1Result,
@@ -193,8 +178,6 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     if req.Method == http.MethodPost {
       mp.processUi2Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "effectiveannualrate.html"
     templateData = struct{
       LayoutType string
@@ -212,7 +195,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd2Effective,
       fields.Fd2Compound,
       fields.Fd2Result,
@@ -222,8 +205,6 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     if req.Method == http.MethodPost {
       mp.processUi3Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "nominalratevs.html"
     templateData = struct{
       LayoutType string
@@ -241,7 +222,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd3Nominal,
       fields.Fd3Inflation,
       fields.Fd3Result,
@@ -251,8 +232,6 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     if req.Method == http.MethodPost {
       mp.processUi4Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "compfrequencyconv.html"
     templateData = struct{
       LayoutType string
@@ -271,7 +250,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd4CurrentRate,
       fields.Fd4CurrentCompound,
       fields.Fd4NewCompound,
@@ -282,8 +261,6 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     if req.Method == http.MethodPost {
       mp.processUi5Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "growthdecay.html"
     templateData = struct{
       LayoutType string
@@ -302,7 +279,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd5Interest,
       fields.Fd5Compound,
       fields.Fd5Factor,
@@ -313,8 +290,6 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     if req.Method == http.MethodPost {
       mp.processUi6Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "averagerate.html"
     templateData = struct{
       LayoutType string
@@ -331,7 +306,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd6Values,
       fields.Fd6Result,
     }
@@ -340,8 +315,6 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
     if req.Method == http.MethodPost {
       mp.processUi7Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "depreciation.html"
     templateData = struct{
       LayoutType string
@@ -362,7 +335,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd7Time,
       fields.Fd7TimePeriod,
       fields.Fd7Rate,
@@ -389,7 +362,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
   data, err := json.Marshal(fields) //Preserve current choices.
   if err != nil {
     //Don't crash the server (panic), but log it clearly so you can debug the serialization.
-    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", userName, err), correlationId)
+    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
   } else {
     go func(userData []byte, uName, cId string) {
       filePath := fmt.Sprintf("%s/%s/miscellaneous.txt", mainDir, uName)
@@ -401,7 +374,7 @@ func (mp WfMiscellaneousPages) MiscellaneousPages(res http.ResponseWriter, req *
         return
       }
       logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
-    }(data, userName, correlationId) // Pass variables into the closure to prevent scope races
+    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

@@ -41,7 +41,7 @@ import (
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/go-os"
   "github.com/juan-carlos-trimino/go-s3storage"
-  "github.com/juan-carlos-trimino/go-sessions"
+  sess "github.com/juan-carlos-trimino/go-sessions"
   "golang.org/x/crypto/acme/autocert"
   "github.com/redis/go-redis/v9"
   "os"
@@ -223,12 +223,35 @@ func main() {
     redis_addr = "localhost:6379"
   }
   //Connect to the Redis. Using a non-nil completely empty context.Context.
-  err = sessions.StartRedisServer(context.Background(), &redis.Options{
+  sess.GetRedisClient(&redis.Options{
     Addr: redis_addr,  //Redis Server address.
-    Password: "",  //No password for local development.
     DB: 0,  //Default DB.
+    Password: "",  //No password for local development.
+    //Assign a custom name to the connection, making debugging easier when running CLIENT LIST on the Redis server.
+    ClientName: "redis-finances",
+    DialTimeout: 5 * time.Second,  //Maximum time allowed to establish a new TCP socket connection.
+    ReadTimeout: 3 * time.Second,  //Maximum time allowed to wait for a command response.
+    WriteTimeout: 3 * time.Second,  //Maximum time allowed to send a command packet.
+    //The absolute maximum number of open socket connections allowed in the pool. Default is 10 connections per CPU core as
+    //reported by runtime.GOMAXPROCS.
+    PoolSize: 100,
+    //The minimum number of idle connections to keep open and active in the background, even when traffic drops. This prevents
+    //latency spikes caused by reconnecting under sudden bursts of requests.
+    MinIdleConns: 30,
+    MaxIdleConns: 70,  //The maximum number of idle connections allowed to sit inactive in the pool.
+    //Amount of time after which an idle connection will be automatically reaped and closed by the driver.
+    ConnMaxIdleTime: 5 * time.Minute,
+    //The maximum age of a connection. Once reached, the connection is closed and rotated out, preventing stale socket memory issues.
+    ConnMaxLifetime: 30 * time.Minute,
+    //The number of times a failed command will automatically attempt to execute again before failing completely. Default is 3.
+    //Pass -1 to turn off retries.
+    MaxRetries: 3,
+    //Minimum randomized pause duration between command retries (defaults to 8 * time.Millisecond).
+    MinRetryBackoff: 10 * time.Millisecond,
+    //Maximum randomized pause duration between command retries (defaults to 512 * time.Millisecond).
+    MaxRetryBackoff: 530 * time.Millisecond,
   })
-  if err != nil {
+  if err := sess.VerifyHealth(); err != nil {
     panic(err)
   }
   logger.LogInfo("Connected to the Redis Server.", falseCorrelationId)
@@ -237,7 +260,7 @@ func main() {
   Check every 5 minutes, evict users idle for longer than 30 minutes.
   ***/
   //jct webfinances.StartSessionJanitor(/*30*/11 * time.Minute, 5 * time.Minute, falseCorrelationId)]
-  logger.LogInfo(fmt.Sprintf("The session timeout is %s.", sessions.GetSessionTimeoutString()), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("The session timeout is %s.", sess.GetSessionTimeoutString()), falseCorrelationId)
   /***
   When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return ErrServerClosed.
   Make sure the program doesn't exit and waits instead for Shutdown to return.
@@ -359,7 +382,21 @@ func main() {
 }
 
 func faviconHandler(res http.ResponseWriter, req *http.Request) {
-  http.NotFound(res, req)  //404 - page not found.
+  // res.WriteHeader(http.StatusNoContent)  //Silence the request with a 204 No Content.
+
+
+  //Serve an emoji or a blank icon directly from Go
+  //If you want to give the browser a valid icon without uploading a physical file, you can write a tiny inline SVG image directly to the response writer.
+res.Header().Set("Content-Type", "image/svg+xml")
+    // Serves a small globe emoji as the favicon
+    svg := `<svg xmlns="http://w3.org" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌐</text></svg>`
+    res.Write([]byte(svg))
+
+
+    // http.ServeFile(res, req, "./public/assets/favicon.ico")  //Standard Static File Serving.
+
+
+
 }
 
 func makeHandlers() *handlers {

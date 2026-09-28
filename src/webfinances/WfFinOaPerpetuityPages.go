@@ -8,7 +8,6 @@ import (
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/go-os"
-  "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
   "os"
   "strconv"
@@ -63,28 +62,16 @@ func getOaPerpetuityFields(userName string) *oaPerpetuityFields {
 type WfOaPerpetuityPages struct{}
 
 func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.OaPerpetuityPages.", correlationId)
-  //Guard Clause 1: Validate HTTP Method.
-  if req.Method != http.MethodPost && req.Method != http.MethodGet {
-    errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, correlationId)
-    panic(errString)
-  }
-  //Guard Clause 2: Validate Session Token.
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-    return
-  }
-  userName := sessions.GetUserName(sessionToken)
-  fields := getOaPerpetuityFields(userName)
+  sessInfo, _ := ck.GetSessionInfo(req.Context())
+  fields := getOaPerpetuityFields(sessInfo.UserName)
   //Every time a web request processes data for a user, update the timestamp under a lock.
   currentFieldsLock.Lock()
-  if session, exists := currentFields[userName]; exists {
+  if session, exists := currentFields[sessInfo.UserName]; exists {
     session.LastAccessed = time.Now()
   }
   currentFieldsLock.Unlock()
@@ -114,8 +101,6 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
     if req.Method == http.MethodPost {
       o.processUi1Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "p.html"
     templateData = struct{
       LayoutType string
@@ -134,7 +119,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd1Interest,
       fields.Fd1Compound,
       fields.Fd1Pmt,
@@ -145,8 +130,6 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
     if req.Method == http.MethodPost {
       o.processUi2Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "gp.html"
     templateData = struct{
       LayoutType string
@@ -166,7 +149,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd2Interest,
       fields.Fd2Compound,
       fields.Fd2Grow,
@@ -192,7 +175,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
   data, err := json.Marshal(fields)  //Preserve current choices.
   if err != nil {
     //Don't crash the server (panic), but log it clearly so you can debug the serialization.
-    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", userName, err), correlationId)
+    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
   } else {
     go func(userData []byte, uName, cId string) {
       filePath := fmt.Sprintf("%s/%s/oaperpetuity.txt", mainDir, uName)
@@ -204,7 +187,7 @@ func (o WfOaPerpetuityPages) OaPerpetuityPages(res http.ResponseWriter, req *htt
         return
       }
       logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
-    }(data, userName, correlationId) // Pass variables into the closure to prevent scope races
+    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

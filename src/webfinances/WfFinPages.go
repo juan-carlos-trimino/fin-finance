@@ -44,9 +44,9 @@ func invalidSession(res http.ResponseWriter, correlationId string) {
 type WfPages struct{}
 
 func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.IndexPage.", correlationId)
   templatesNeeded := []string{
@@ -63,9 +63,9 @@ func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.LoginPage.", correlationId)
   templatesNeeded := []string{
@@ -83,9 +83,9 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.VerifyLogin.", correlationId)
   un := req.PostFormValue("uname")
@@ -132,9 +132,9 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.LogoutPage.", correlationId)
   cookie, _ := req.Cookie("session_token")
@@ -148,9 +148,9 @@ func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.WelcomePage.", correlationId)
   templatesNeeded := []string{
@@ -173,9 +173,9 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.ContactPage.", correlationId)
   templatesNeeded := []string{
@@ -198,9 +198,9 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.AboutPage.", correlationId)
   //Explicitly map out the entire structural block stack for this page.
@@ -224,9 +224,9 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
 }
 
 func (p WfPages) ServeFinancePages(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo(fmt.Sprintf("Entering webfinances.ServeFinancesPage for path: %s", req.URL.Path), correlationId)
   //Declare dynamic variables based on the URL path.

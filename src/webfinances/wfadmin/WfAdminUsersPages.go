@@ -9,7 +9,6 @@ import (
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-os"
-  "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
   "os"
   "strings"
@@ -76,152 +75,109 @@ func getUsersFields(userName string) *usersFields {
 type WfAdminUsersPages struct {}
 
 func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering wfadmin.AdminUsersPage.", correlationId)
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-    return
+  sessInfo, _ := ck.GetSessionInfo(req.Context())
+  fields := getUsersFields(sessInfo.UserName)
+  /***
+  The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
+  MultipartForm fields; the data are in the form of key-value pairs.
+
+  If the form and the URL have the same key name, both of them will be placed in a slice, with the form value always prioritized
+  before the URL value.
+
+  Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm field provides key-value pairs only
+  for the form and not the URL. The PostForm field supports only application/x-www-form-urlencoded.
+
+  The FormValue method lets you access the key-value pairs just like the Form field, except that it's for a specific key and there
+  is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
+  except that it's for the PostForm field instead of the Form field.
+  ***/
+  if ui := req.FormValue("db"); ui != "" {  //Values from form and URL.
+    fields.CurrentPage = ui
   }
-  //
-  if req.Method == http.MethodPost || req.Method == http.MethodGet {
-    userName := sessions.GetUserName(sessionToken)
-    fields := getUsersFields(userName)
-    /***
-    The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
-    MultipartForm fields; the data are in the form of key-value pairs.
-
-    If the form and the URL have the same key name, both of them will be placed in a slice, with the form value always prioritized
-    before the URL value.
-
-    Since we want the form key-value pairs, we can ignore the URL key-value pairs. The PostForm field provides key-value pairs only
-    for the form and not the URL. The PostForm field supports only application/x-www-form-urlencoded.
-
-    The FormValue method lets you access the key-value pairs just like the Form field, except that it's for a specific key and there
-    is no need to call the ParseForm method beforehand -- the FormValue method does it. The PostFormValue method does the same thing,
-    except that it's for the PostForm field instead of the Form field.
-    ***/
-    if ui := req.FormValue("db"); ui != "" {  //Values from form and URL.
-      fields.CurrentPage = ui
+  //Dynamic variables determined by the routing route condition.
+  var partialTemplate string
+  var templateData interface{}
+  var templatesToAdd []string
+  //Core application state splitting via explicit page mapping.
+  switch strings.ToLower(fields.CurrentPage) {
+  case "rhs-ui1":
+    fields.CurrentButton = "lhs-button1"
+    td := struct{  //Default values.
+      LayoutType string
+      Header string
+      Datetime string
+      CurrentButton string
+      CsrfToken string
+      Username string
+      Password string
+      Fname string
+      Mname string
+      Lname string
+      Gender string
+      Bdate string
+      Marketing string
+      Address1 string
+      Address2 string
+      City string
+      State string
+      Country string
+      Zip_Code string
+      Email string
+      Phone string
+      ErrMsg string
+    }{ "std-wo-nav-menu", "Register User - Admin", logger.DatetimeFormat(), fields.CurrentButton, "", "", "", "", "", "", "male",
+          time.Now().Format("2006-01-02"), "false", "", "", "", "", "", "", "", "", "" }
+    if req.Method == http.MethodPost {
+      c := bank.Customer{}
+      err := u.processUi1Form(req, &c)
+      if err != nil {
+        logger.LogError(err.Error(), correlationId)
+      } else {
+        err = bank.DbAddCustomer(&c, context.Background(), correlationId)  //Db logs its own error.
+      }
+      //
+      if err != nil {
+        td.Username = c.User_name
+        td.Password = c.Password
+        td.Fname = c.First_name
+        td.Mname = bank.PtrString(c.Middle_name)
+        td.Lname = c.Last_name
+        td.Gender = c.Gender
+        td.Bdate = c.Birth_date.Format("2006-01-02")
+        if c.Marketing {
+          td.Marketing = "true"
+        } else {
+          td.Marketing = "false"
+        }
+        td.Address1 = c.Address1
+        td.Address2 = bank.PtrString(c.Address2)
+        td.City = c.City
+        td.State = c.State
+        td.Country = c.Country
+        td.Zip_Code = bank.PtrString(c.Zip_code)
+        td.Email = c.Email
+        td.Phone = c.Phone
+        td.ErrMsg = fmt.Sprintf("%v", err)
+      }
     }
-    //
-    if strings.EqualFold(fields.CurrentPage, "rhs-ui1") {
-      fields.CurrentButton = "lhs-button1"
-      pd := struct{
-        LayoutType string
-        Header string
-        Datetime string
-        CurrentButton string
-        CsrfToken string
-        Username string
-        Password string
-        Fname string
-        Mname string
-        Lname string
-        Gender string
-        Bdate string
-        Marketing string
-        Address1 string
-        Address2 string
-        City string
-        State string
-        Country string
-        Zip_Code string
-        Email string
-        Phone string
-        ErrMsg string
-        } { "std-wo-nav-menu", "Register User - Admin", logger.DatetimeFormat(), fields.CurrentButton, "", "", "", "", "", "", "male",
-            time.Now().Format("2006-01-02"), "false", "", "", "", "", "", "", "", "", "" }
-      if req.Method == http.MethodPost {
-        c := bank.Customer {
-          User_name: req.PostFormValue("uname"),
-          Password: req.PostFormValue("pwd"),
-          First_name: req.PostFormValue("fname"),
-          Last_name: req.PostFormValue("lname"),
-          Gender: req.PostFormValue("gender"),
-          Address1: req.PostFormValue("address1"),
-          City: req.PostFormValue("city"),
-          State: req.PostFormValue("state"),
-          Country: req.PostFormValue("country"),
-          Email: req.PostFormValue("email"),
-          Phone: req.PostFormValue("phone"),
-        }
-        marketing := req.PostFormValue("marketing")
-        if strings.EqualFold(marketing, "true") {
-          c.Marketing = true
-        } else {
-          c.Marketing = false
-        }
-        middle_name := req.PostFormValue("mname")
-        c.Middle_name = bank.StringPtr(middle_name)
-        address2 := req.PostFormValue("address2")
-        c.Address2 = bank.StringPtr(address2)
-        zip_code := req.PostFormValue("zip_code")
-        c.Zip_code = bank.StringPtr(zip_code)
-        originalDate := req.PostFormValue("bdate")
-        /***
-        Go's time formatting uses a reference date and time: Mon Jan 2 15:04:05 MST 2006. Each component of this reference time (e.g.,
-        02 for the day, 01 for the month, 2006 for the year) is used as a placeholder in the layout string to match the input format;
-        e.g., "dd/mm/yyyy" is "02/01/2006".
-        ***/
-        newDate, err := time.Parse("2006-01-02", originalDate)
-        if err != nil {
-          logger.LogError(err.Error(), correlationId)
-          /***
-          On error, time.Parse returns a zero time value (0001-01-01 00:00:00 +0000 UTC).
-          ***/
-          c.Birth_date = bank.TimePtr(newDate)
-        } else {
-          c.Birth_date = bank.TimePtr(newDate)
-          err = bank.DbAddCustomer(&c, context.Background(), correlationId)
-        }
-        //
-        if err != nil {
-          pd.Username = c.User_name
-          pd.Password = c.Password
-          pd.Fname = c.First_name
-          pd.Mname = bank.PtrString(c.Middle_name)
-          pd.Lname = c.Last_name
-          pd.Gender = c.Gender
-          pd.Bdate = c.Birth_date.Format("2006-01-02")
-          if c.Marketing {
-            pd.Marketing = "true"
-          } else {
-            pd.Marketing = "false"
-          }
-          pd.Address1 = c.Address1
-          pd.Address2 = bank.PtrString(c.Address2)
-          pd.City = c.City
-          pd.State = c.State
-          pd.Country = c.Country
-          pd.Zip_Code = bank.PtrString(c.Zip_code)
-          pd.Email = c.Email
-          pd.Phone = c.Phone
-          pd.ErrMsg = fmt.Sprintf("%v", err)
-        }
-      }
-      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-      cookie := sessions.CreateCookie(newSessionToken)
-      http.SetCookie(res, cookie)
-      templatesNeeded := []string{
-        "webfinances/templates/layout.html",
-        "webfinances/templates/admin/users/users.html",
-        "webfinances/templates/admin/users/register.html",
-        "webfinances/templates/title.html",
-        "webfinances/templates/datetime.html",
-        "webfinances/templates/footer.html",
-      }
-      pd.CsrfToken = newSession.GetCsrfToken()
-      /***
-      Do not read or write sensitive information from the disk; use the database exclusively.
-      ***/
-      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{ Data: pd})
-    } else if strings.EqualFold(fields.CurrentPage, "rhs-ui2") {
-      fields.CurrentButton = "lhs-button2"
-
+    partialTemplate = "register.html"
+    templateData = td
+  case "rhs-ui2":
+    fields.CurrentButton = "lhs-button2"
+    partialTemplate = "unregister.html"
+    //When you provide only the length, the capacity automatically matches it. All elements initialize to their zero values.
+    templatesToAdd = make([]string, 0, 8)
+    //Setting the length to 0 ensures that append starts inserting at index 0.
+    templatesToAdd = append(templatesToAdd,
+      "webfinances/templates/helpers/slider-alphabet-container.html",
+      "webfinances/templates/helpers/scroll-container.html",
+      "webfinances/templates/helpers/pagination-container.html",
+    )
 
       /*
 Using the last selected range (or defaulting to the first range on a fresh login) is an excellent usability pattern. In UX design, this is called Smart Defaults.By predicting what the user wants to see, you eliminate a mandatory extra click every time they visit the page, while still giving them full control to change the range using the slider whenever they want.
@@ -290,7 +246,6 @@ Using the last selected range (or defaulting to the first range on a fresh login
 
 
 
-
       //Extract the page from form body (POST) or URL query string (GET)
       pageStr := req.FormValue("page")
       currentPage, err := strconv.Atoi(pageStr)
@@ -323,7 +278,6 @@ Using the last selected range (or defaulting to the first range on a fresh login
         paginatedItems = rows[offset:end]
       }
       //
-
       if req.Method == http.MethodPost {
         //Go is designed to look at the request, realize the body hasn't been parsed yet, and automatically call ParseForm() for you under the hood.
 
@@ -350,73 +304,117 @@ Using the last selected range (or defaulting to the first range on a fresh login
         // alpharange := req.PostFormValue("alphabet-range")
         // fields.SelectedRange = SelectedRange
       }
-      newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-      cookie := sessions.CreateCookie(newSessionToken)
-      http.SetCookie(res, cookie)
-      templatesNeeded := []string{
-        "webfinances/templates/layout.html",
-        "webfinances/templates/admin/users/users.html",
-        "webfinances/templates/admin/users/unregister.html",
-        "webfinances/templates/helpers/slider-alphabet-container.html",
-        "webfinances/templates/helpers/scroll-container.html",
-        "webfinances/templates/helpers/pagination-container.html",
-        "webfinances/templates/title.html",
-        "webfinances/templates/datetime.html",
-        "webfinances/templates/footer.html",
-      }
 
-labels := []string{"A - G", "H - N", "O - T", "U - Z"}
+    labels := []string{"A - G", "H - N", "O - T", "U - Z"}
 
-      /***
-      Do not read or write sensitive information from the disk; use the database exclusively.
-      ***/
-      renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-        Data: struct{
-          LayoutType string
-          Header string
-          Datetime string
-          CurrentButton string
-          CsrfToken string
-          SelectedRange string
-          ////
-//            Items       []string
-            Fd2Result       []Row
-  CurrentPage int
-  TotalPages  int
-  PrevPage    int
-  NextPage    int
-  HasPrev     bool
-  HasNext     bool
-  RangeLabels   []string
-  SliderMax     int
-
-        } { "std-wo-nav-menu", "Unregister User - Admin", logger.DatetimeFormat(), fields.CurrentButton, newSession.GetCsrfToken(),
-            fields.SelectedRange,
-paginatedItems, currentPage, totalPages, currentPage - 1, currentPage + 1, currentPage > 1, currentPage < totalPages,
-  labels, len(labels)         },
-      })
-    } else {
-      errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
-      logger.LogError(errString, correlationId)
-      panic(errString)
+    templateData = struct{
+      LayoutType string
+      Header string
+      Datetime string
+      CurrentButton string
+      SelectedRange string
+      Fd2Result []Row
+      CurrentPage int
+      TotalPages int
+      PrevPage int
+      NextPage int
+      HasPrev bool
+      HasNext bool
+      RangeLabels []string
+      SliderMax int
+    }{
+      "std-wo-nav-menu",
+      "Unregister User - Admin",
+      logger.DatetimeFormat(),
+      fields.CurrentButton,
+      fields.SelectedRange,
+      paginatedItems,
+      currentPage,
+      totalPages,
+      currentPage - 1,
+      currentPage + 1,
+      currentPage > 1,
+      currentPage < totalPages,
+      labels,
+      len(labels),
     }
-    //
-    if req.Context().Err() == context.DeadlineExceeded {
-      logger.LogWarning("*** Request timeout ***", correlationId)
-    }
-    //
-    if data, err := json.Marshal(fields); err != nil {
-      logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-    } else {
-      filePath := fmt.Sprintf("%s/%s/users.txt", mainDir, userName)
-      if _, err := osu.WriteAllExclusiveLock1(filePath, data, os.O_CREATE | os.O_RDWR | os.O_TRUNC, 0o600); err != nil {
-        logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-      }
-    }
-  } else {
-    errString := fmt.Sprintf("Unsupported method: %s", req.Method)
+  default:
+    errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
     logger.LogError(errString, correlationId)
     panic(errString)
   }
+  //Unified execution of templates.
+  templatesNeeded := []string{
+    "webfinances/templates/layout.html",
+    "webfinances/templates/admin/users/users.html",
+    "webfinances/templates/admin/users/" + partialTemplate,
+    "webfinances/templates/title.html",
+    "webfinances/templates/datetime.html",
+    "webfinances/templates/footer.html",
+  }
+  //Add if there are additional elements.
+  if templatesToAdd != nil {
+    /***
+    In Go, the three dots (...) are called the unpack operator (or variadic operator). They are needed here because of how Go's
+    built-in append function is designed. It does not accept a slice as its second argument; it expects a list of individual elements.
+    ***/
+    templatesNeeded = append(templatesNeeded, templatesToAdd...)
+  }
+  //Do not read or write sensitive information from the disk; use the database exclusively.
+  renderer.Render(res, "layout", templatesNeeded, renderer.PageData{Data: templateData})
+  data, err := json.Marshal(fields) //Preserve current choices.
+  if err != nil {
+    //Don't crash the server (panic), but log it clearly so you can debug the serialization.
+    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
+  } else {
+    go func(userData []byte, uName, cId string) {
+      filePath := fmt.Sprintf("%s/%s/users.txt", mainDir, uName)
+      //The exclusive OS file lock handles goroutine collisions.
+      _, err := osu.WriteAllExclusiveLock1(filePath, userData, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o600)
+      //Check the error returned from the lock-writing function.
+      if err != nil {
+        logger.LogError(fmt.Sprintf("Goroutine file system error writing state to %s: %+v", filePath, err), cId)
+        return
+      }
+      logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
+    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
+  }
   logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
+}
+
+//Extraction helper for UI-1 calculations.
+func (u WfAdminUsersPages) processUi1Form(req *http.Request, c *bank.Customer) error {
+  c.User_name = req.PostFormValue("uname")
+  c.Password = req.PostFormValue("pwd")
+  c.First_name = req.PostFormValue("fname")
+  c.Last_name = req.PostFormValue("lname")
+  c.Gender = req.PostFormValue("gender")
+  c.Address1 = req.PostFormValue("address1")
+  c.City = req.PostFormValue("city")
+  c.State = req.PostFormValue("state")
+  c.Country = req.PostFormValue("country")
+  c.Email = req.PostFormValue("email")
+  c.Phone = req.PostFormValue("phone")
+  marketing := req.PostFormValue("marketing")
+  if strings.EqualFold(marketing, "true") {
+    c.Marketing = true
+  } else {
+    c.Marketing = false
+  }
+  middle_name := req.PostFormValue("mname")
+  c.Middle_name = bank.StringPtr(middle_name)
+  address2 := req.PostFormValue("address2")
+  c.Address2 = bank.StringPtr(address2)
+  zip_code := req.PostFormValue("zip_code")
+  c.Zip_code = bank.StringPtr(zip_code)
+  originalDate := req.PostFormValue("bdate")
+  /***
+  Go's time formatting uses a reference date and time: Mon Jan 2 15:04:05 MST 2006. Each component of this reference time (e.g.,
+  02 for the day, 01 for the month, 2006 for the year) is used as a placeholder in the layout string to match the input format;
+  e.g., "dd/mm/yyyy" is "02/01/2006".
+  ***/
+  newDate, err := time.Parse("2006-01-02", originalDate)
+  //On error, time.Parse returns a zero time value (0001-01-01 00:00:00 +0000 UTC).
+  c.Birth_date = bank.TimePtr(newDate)
+  return err
 }

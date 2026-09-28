@@ -8,7 +8,6 @@ import (
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/go-os"
-  "github.com/juan-carlos-trimino/go-sessions"
   "math"
   "net/http"
   "os"
@@ -138,28 +137,16 @@ var bond_notes = [...]string {
 type WfBondsPages struct {}
 
 func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.BondsPages.", correlationId)
-  //Guard Clause 1: Validate HTTP Method.
-  if req.Method != http.MethodPost && req.Method != http.MethodGet {
-    errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, correlationId)
-    panic(errString)
-  }
-  //Guard Clause 2: Validate Session Token.
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-    return
-  }
-  userName := sessions.GetUserName(sessionToken)
-  fields := getBondsFields(userName)
+  sessInfo, _ := ck.GetSessionInfo(req.Context())
+  fields := getBondsFields(sessInfo.UserName)
   //Every time a web request processes data for a user, update the timestamp under a lock.
   currentFieldsLock.Lock()
-  if session, exists := currentFields[userName]; exists {
+  if session, exists := currentFields[sessInfo.UserName]; exists {
     session.LastAccessed = time.Now()
   }
   currentFieldsLock.Unlock()
@@ -189,8 +176,6 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     if req.Method == http.MethodPost {
       b.processUi1Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "taxfree.html"
     templateData = struct{
       LayoutType string
@@ -210,7 +195,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd1TaxFree,
       fields.Fd1CityTax,
       fields.Fd1StateTax,
@@ -222,8 +207,6 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     if req.Method == http.MethodPost {
       b.processUi2Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "currentprice.html"
     templateData = struct{
       LayoutType string
@@ -246,7 +229,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd2FaceValue,
       fields.Fd2Time,
       fields.Fd2TimePeriod,
@@ -261,8 +244,6 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     if req.Method == http.MethodPost {
       b.processUi3Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "yieldtocall.html"
     templateData = struct{
       LayoutType string
@@ -285,7 +266,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd3FaceValue,
       fields.Fd3TimeCall,
       fields.Fd3TimePeriod,
@@ -300,8 +281,6 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     if req.Method == http.MethodPost {
       b.processUi4Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "yieldtomaturity.html"
     templateData = struct{
       LayoutType string
@@ -325,7 +304,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd4FaceValue,
       fields.Fd4Time,
       fields.Fd4TimePeriod,
@@ -341,8 +320,6 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
     if req.Method == http.MethodPost {
       b.processUi5Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "duration.html"
     templateData = struct{
       LayoutType string
@@ -365,7 +342,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd5FaceValue,
       fields.Fd5Time,
       fields.Fd5TimePeriod,
@@ -394,7 +371,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
   data, err := json.Marshal(fields)  //Preserve current choices.
   if err != nil {
     //Don't crash the server (panic), but log it clearly so you can debug the serialization.
-    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", userName, err), correlationId)
+    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
   } else {
     go func(userData []byte, uName, cId string) {
       filePath := fmt.Sprintf("%s/%s/bonds.txt", mainDir, uName)
@@ -406,7 +383,7 @@ func (b WfBondsPages) BondsPages(res http.ResponseWriter, req *http.Request) {
         return
       }
       logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
-    }(data, userName, correlationId) // Pass variables into the closure to prevent scope races
+    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

@@ -13,7 +13,6 @@ import (
   "github.com/juan-carlos-trimino/go-middlewares"
   osu "github.com/juan-carlos-trimino/go-os"
   logger "github.com/juan-carlos-trimino/go-logger"
-  sessions "github.com/juan-carlos-trimino/go-sessions"
 )
 
 type adEppFields struct {
@@ -69,28 +68,16 @@ func getAdEppFields(userName string) *adEppFields {
 type WfAdEppPages struct{}
 
 func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.AdEppPages.", correlationId)
-  //Guard Clause 1: Validate HTTP Method.
-  if req.Method != http.MethodPost && req.Method != http.MethodGet {
-    errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, correlationId)
-    panic(errString)
-  }
-  //Guard Clause 2: Validate Session Token.
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-    return
-  }
-  userName := sessions.GetUserName(sessionToken)
-  fields := getAdEppFields(userName)
+  sessInfo, _ := ck.GetSessionInfo(req.Context())
+  fields := getAdEppFields(sessInfo.UserName)
   //Every time a web request processes data for a user, update the timestamp under a lock.
   currentFieldsLock.Lock()
-  if session, exists := currentFields[userName]; exists {
+  if session, exists := currentFields[sessInfo.UserName]; exists {
     session.LastAccessed = time.Now()
   }
   currentFieldsLock.Unlock()
@@ -120,8 +107,6 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
     if req.Method == http.MethodPost {
       a.processUi1Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "n-i-FV.html"
     templateData = struct {
       LayoutType    string
@@ -142,7 +127,7 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd1N,
       fields.Fd1TimePeriod,
       fields.Fd1Interest,
@@ -154,8 +139,6 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
     if req.Method == http.MethodPost {
       a.processUi2Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "n-i-PV.html"
     templateData = struct {
       LayoutType    string
@@ -176,7 +159,7 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd1N,
       fields.Fd1TimePeriod,
       fields.Fd1Interest,
@@ -203,7 +186,7 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
   data, err := json.Marshal(fields) //Preserve current choices.
   if err != nil {
     //Don't crash the server (panic), but log it clearly so you can debug the serialization.
-    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", userName, err), correlationId)
+    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
   } else {
     go func(userData []byte, uName, cId string) {
       filePath := fmt.Sprintf("%s/%s/adepp.txt", mainDir, uName)
@@ -215,7 +198,7 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
         return
       }
       logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
-    }(data, userName, correlationId) // Pass variables into the closure to prevent scope races
+    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

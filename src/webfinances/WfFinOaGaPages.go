@@ -8,7 +8,6 @@ import (
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/go-os"
-  "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
   "os"
   "strconv"
@@ -69,28 +68,16 @@ func getOaGaFields(userName string) *oaGaFields {
 type WfOaGaPages struct{}
 
 func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.OaGaPages.", correlationId)
-  //Guard Clause 1: Validate HTTP Method.
-  if req.Method != http.MethodPost && req.Method != http.MethodGet {
-    errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, correlationId)
-    panic(errString)
-  }
-  //Guard Clause 2: Validate Session Token.
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-    return
-  }
-  userName := sessions.GetUserName(sessionToken)
-  fields := getOaGaFields(userName)
+  sessInfo, _ := ck.GetSessionInfo(req.Context())
+  fields := getOaGaFields(sessInfo.UserName)
   //Every time a web request processes data for a user, update the timestamp under a lock.
   currentFieldsLock.Lock()
-  if session, exists := currentFields[userName]; exists {
+  if session, exists := currentFields[sessInfo.UserName]; exists {
     session.LastAccessed = time.Now()
   }
   currentFieldsLock.Unlock()
@@ -120,8 +107,6 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
     if req.Method == http.MethodPost {
       o.processUi1Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "FV.html"
     templateData = struct{
       LayoutType string
@@ -142,7 +127,7 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd1N,
       fields.Fd1Interest,
       fields.Fd1Compound,
@@ -155,8 +140,6 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
     if req.Method == http.MethodPost {
       o.processUi2Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "PV.html"
     templateData = struct{
       LayoutType string
@@ -177,7 +160,7 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd2N,
       fields.Fd2Interest,
       fields.Fd2Compound,
@@ -204,7 +187,7 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
   data, err := json.Marshal(fields)  //Preserve current choices.
   if err != nil {
     //Don't crash the server (panic), but log it clearly so you can debug the serialization.
-    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", userName, err), correlationId)
+    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
   } else {
     go func(userData []byte, uName, cId string) {
       filePath := fmt.Sprintf("%s/%s/oaga.txt", mainDir, uName)
@@ -216,7 +199,7 @@ func (o WfOaGaPages) OaGaPages(res http.ResponseWriter, req *http.Request) {
         return
       }
       logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
-    }(data, userName, correlationId) // Pass variables into the closure to prevent scope races
+    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

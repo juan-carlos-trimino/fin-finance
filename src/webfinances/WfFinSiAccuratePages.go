@@ -8,7 +8,6 @@ import (
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/go-os"
-  "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
   "os"
   "strconv"
@@ -95,28 +94,16 @@ func getSiAccurateFields(userName string) *siAccurateFields {
 type WfSiAccuratePages struct{}
 
 func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, req *http.Request) {
-  ctxKey := middlewares.MwContextKey{}
-  correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
+  ck := middlewares.MwContextKey{}
+  correlationId, _ := ck.GetCorrelationId(req.Context())
+  startTime, _ := ck.GetStartTime(req.Context())
   logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.SimpleInterestAccuratePages.", correlationId)
-  //Guard Clause 1: Validate HTTP Method.
-  if req.Method != http.MethodPost && req.Method != http.MethodGet {
-    errString := fmt.Sprintf("Unsupported method: %s", req.Method)
-    logger.LogError(errString, correlationId)
-    panic(errString)
-  }
-  //Guard Clause 2: Validate Session Token.
-  sessionToken, _ := ctxKey.GetSessionToken(req.Context())
-  if sessionToken == "" {
-    invalidSession(res, correlationId)
-    return
-  }
-  userName := sessions.GetUserName(sessionToken)
-  fields := getSiAccurateFields(userName)
+  sessInfo, _ := ck.GetSessionInfo(req.Context())
+  fields := getSiAccurateFields(sessInfo.UserName)
   //Every time a web request processes data for a user, update the timestamp under a lock.
   currentFieldsLock.Lock()
-  if session, exists := currentFields[userName]; exists {
+  if session, exists := currentFields[sessInfo.UserName]; exists {
     session.LastAccessed = time.Now()
   }
   currentFieldsLock.Unlock()
@@ -146,8 +133,6 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
     if req.Method == http.MethodPost {
       s.processUi1Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "amountofinterest.html"
     templateData = struct{
       LayoutType string
@@ -169,7 +154,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd1Time,
       fields.Fd1Leap,
       fields.Fd1TimePeriod,
@@ -183,8 +168,6 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
     if req.Method == http.MethodPost {
       s.processUi2Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "interestrate.html"
     templateData = struct{
       Layout string
@@ -204,7 +187,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd2Time,
       fields.Fd2TimePeriod,
       fields.Fd2Amount,
@@ -216,8 +199,6 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
     if req.Method == http.MethodPost {
       s.processUi3Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "principal.html"
     templateData = struct{
       LayoutType string
@@ -238,7 +219,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd3Time,
       fields.Fd3TimePeriod,
       fields.Fd3Interest,
@@ -251,8 +232,6 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
     if req.Method == http.MethodPost {
       s.processUi4Form(req, fields, correlationId)
     }
-    newSessionToken, newSession := sessions.UpdateEntryInSessions(sessionToken)
-    http.SetCookie(res, sessions.CreateCookie(newSessionToken))
     partialTemplate = "time.html"
     templateData = struct{
       LayoutType string
@@ -272,7 +251,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
       logger.DatetimeFormat(),
       financesMenuPage,
       fields.CurrentButton,
-      newSession.GetCsrfToken(),
+      sessInfo.CSRFToken,
       fields.Fd4Interest,
       fields.Fd4Compound,
       fields.Fd4Amount,
@@ -298,7 +277,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
   data, err := json.Marshal(fields)  //Preserve current choices.
   if err != nil {
     //Don't crash the server (panic), but log it clearly so you can debug the serialization.
-    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", userName, err), correlationId)
+    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
   } else {
     go func(userData []byte, uName, cId string) {
       filePath := fmt.Sprintf("%s/%s/siaccurate.txt", mainDir, uName)
@@ -310,7 +289,7 @@ func (s WfSiAccuratePages) SimpleInterestAccuratePages(res http.ResponseWriter, 
         return
       }
       logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
-    }(data, userName, correlationId) // Pass variables into the closure to prevent scope races
+    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
   }
   logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
