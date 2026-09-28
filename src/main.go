@@ -383,20 +383,23 @@ func main() {
 
 func faviconHandler(res http.ResponseWriter, req *http.Request) {
   // res.WriteHeader(http.StatusNoContent)  //Silence the request with a 204 No Content.
-
-
-  //Serve an emoji or a blank icon directly from Go
-  //If you want to give the browser a valid icon without uploading a physical file, you can write a tiny inline SVG image directly to the response writer.
-res.Header().Set("Content-Type", "image/svg+xml")
-    // Serves a small globe emoji as the favicon
-    svg := `<svg xmlns="http://w3.org" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌐</text></svg>`
-    res.Write([]byte(svg))
-
-
-    // http.ServeFile(res, req, "./public/assets/favicon.ico")  //Standard Static File Serving.
-
-
-
+  /***
+  If you want to give the browser a valid icon without uploading a physical file, you can write a tiny inline SVG image
+  directly to the response writer.
+  ***/
+  res.Header().Set("Content-Type", "image/svg+xml")
+  /***
+  The xmlns string must always be exactly http://www.w3.org/2000/svg, no matter what symbol, emoji, shape, or text you decide
+  to place inside the <svg> tags.
+  ***/
+  svg := `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <!-- Rounded rectangle backdrop -->
+    <rect width="100%" height="100%" rx="20" fill="#bbf7d0"/>
+    <text x="50%" y="53%" font-size="105" font-family="Georgia, 'Times New Roman', serif" font-weight="900" text-anchor="middle"
+    dominant-baseline="middle" fill="#15803d">$</text>
+    </svg>`
+  res.Write([]byte(svg))
+  // http.ServeFile(res, req, "change to correct path: ./public/assets/favicon.ico")  //Standard Static File Serving.
 }
 
 func makeHandlers() *handlers {
