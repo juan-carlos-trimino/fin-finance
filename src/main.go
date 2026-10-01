@@ -453,28 +453,25 @@ func makeHandlers() *handlers {
   h.mux = make(map[string]http.HandlerFunc, 128)
   h.mux["/readiness"] = func (res http.ResponseWriter, req *http.Request) {
     res.WriteHeader(http.StatusOK)
-    ctxKey := middlewares.MwContextKey{}
-    correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+    ck := middlewares.MwContextKey{}
+    correlationId, _ := ck.GetCorrelationId(req.Context())
     if !config.GetPreventProbesOutput(correlationId) {
-      startTime, _ := ctxKey.GetStartTime(req.Context())
-      logger.LogInfo(fmt.Sprintf("Readiness probe. Request took %vms\n", time.Since(startTime).Microseconds()),
-        correlationId)
+      startTime := time.Now()
+      logger.LogInfo(fmt.Sprintf("Readiness probe. Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)  //jct
     }
   }
   h.mux["/liveness"] = func (res http.ResponseWriter, req *http.Request) {
-    ctxKey := middlewares.MwContextKey{}
-    correlationId, _ := ctxKey.GetCorrelationId(req.Context())
+    ck := middlewares.MwContextKey{}
+    correlationId, _ := ck.GetCorrelationId(req.Context())
     prevent_probes := !config.GetPreventProbesOutput(correlationId)
     if prevent_probes {
-      startTime, _ := ctxKey.GetStartTime(req.Context())
-      logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)),
-        correlationId)
+      startTime := time.Now()
+      logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)  //jct
     }
     res.WriteHeader(http.StatusOK)
     if prevent_probes {
-      startTime, _ := ctxKey.GetStartTime(req.Context())
-      logger.LogInfo(fmt.Sprintf("Liveness probe. Request took %vms\n", time.Since(startTime).Microseconds()),
-        correlationId)
+      startTime := time.Now()
+      logger.LogInfo(fmt.Sprintf("Liveness probe. Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)  //jct
     }
   }
   /***
