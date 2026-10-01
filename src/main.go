@@ -44,6 +44,7 @@ import (
   sess "github.com/juan-carlos-trimino/go-sessions"
   "golang.org/x/crypto/acme/autocert"
   "github.com/redis/go-redis/v9"
+  "mime"
   "os"
   "os/signal"
   "path/filepath"
@@ -140,6 +141,19 @@ func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
     return
   }
   http.NotFound(res, req)  //404 - page not found.
+}
+
+func init() {
+  /***
+  On certain server environments (especially Linux docker containers or Windows), Go cannot find the system's database of file
+  extensions. When that happens, Go falls back to guessing, sees text inside your .js or .css files, and serves them with a header
+  of Content-Type: text/plain.
+
+  The moment a browser sees text/plain combined with nosniff, it completely blocks the JavaScript from running for security
+  reasons. To fix the Go MIME registry on startup, force Go to map the extensions correctly once at server startup.
+  ***/
+  _ = mime.AddExtensionType(".js", "text/javascript; charset=UTF-8")
+  _ = mime.AddExtensionType(".css", "text/css; charset=UTF-8")
 }
 
 func main() {
