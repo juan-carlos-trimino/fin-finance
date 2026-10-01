@@ -5,14 +5,15 @@ import (
   "finance/finances"
   "finance/renderer"
   "fmt"
+  bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-os"
+  sess "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
   "os"
   "strconv"
   "strings"
-  "time"
 )
 
 type adCpFields struct {
@@ -78,17 +79,54 @@ type WfAdCpPages struct {}
 func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.AdCpPages.", correlationId)
   sessInfo, _ := ck.GetSessionInfo(req.Context())
-  fields := getAdCpFields(sessInfo.UserName)
-  //Every time a web request processes data for a user, update the timestamp under a lock.
-  currentFieldsLock.Lock()
-  if session, exists := currentFields[sessInfo.UserName]; exists {
-    session.LastAccessed = time.Now()
+
+
+  redisKey := "user:data:" + sessInfo.UserName
+  partitionName := "adcp_fields"
+  var fields adCpFields
+  var jsonBytes []byte
+  //Check Redis Cache First.
+  jsonStr, err := sess.HGetRedis(req.Context(), redisKey, partitionName)
+  if err == nil || jsonStr != "" {
+    //Cache Hit! Convert string to bytes.
+    jsonBytes = []byte(jsonStr)
+  } else {
+    //Cache Miss: Fall back to PostgreSQL database.
+    logger.LogInfo(fmt.Sprintf("Redis miss for partition %s. Fetching from PostgreSQL...", partitionName), correlationId)
+    jsonBytes, err = bank.DbFetchUserData(req.Context(), sessInfo.UserName, partitionName, correlationId)
+    if err != nil {
+      //use default
+    }
   }
-  currentFieldsLock.Unlock()
+
+
+  /***
+  In Go, a struct instance is never nil, and it does not have a length (len). Instead, a freshly declared struct contains its
+  zero-value (where all its internal fields are set to their respective zero-values, like 0, "", or nil).
+  ***/
+  if fields == (adCpFields{}) {  // The struct is empty (all fields are at their zero-value)
+    err = json.Unmarshal(jsonBytes, &fields)
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("Error unmarshalling partition (%s) JSON payload: %v", err), correlationId)
+      //use default values
+    }
+  }
+
+
+
+
+  // fields := getAdCpFields(sessInfo.UserName)
+  // //Every time a web request processes data for a user, update the timestamp under a lock.
+  // currentFieldsLock.Lock()
+  // if session, exists := currentFields[sessInfo.UserName]; exists {
+  //   session.LastAccessed = time.Now()
+  // }
+  // currentFieldsLock.Unlock()
+
+
+
   /***
   The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
   MultipartForm fields; the data are in the form of key-value pairs.
@@ -114,7 +152,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   case "rhs-ui2":
     fields.CurrentButton = "lhs-button2"
     if req.Method == http.MethodPost {
-      a.processUi2Form(req, fields, correlationId)
+      a.processUi2Form(req, &fields, correlationId)
     }
     partialTemplate = "i-PMT-PV.html"
     templateData = struct{
@@ -145,7 +183,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   case "rhs-ui3":
     fields.CurrentButton = "lhs-button3"
     if req.Method == http.MethodPost {
-      a.processUi3Form(req, fields, correlationId)
+      a.processUi3Form(req, &fields, correlationId)
     }
     partialTemplate = "i-PMT-FV.html"
     templateData = struct{
@@ -217,7 +255,6 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
     }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
 
 //Extraction helper for UI-2 calculations.

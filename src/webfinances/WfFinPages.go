@@ -1,19 +1,21 @@
 package webfinances
 
 import (
-  // "errors"
-  bank "finance/databases/banking" //Importing a package and assigning it a local alias.
-  "finance/renderer"
-  admin "finance/webfinances/wfadmin"
-  banking "finance/webfinances/wfbanking"
-  "fmt"
-  "github.com/juan-carlos-trimino/go-logger"
-  "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/go-sessions"
-  "net/http"
-  "path/filepath"
-  "strings"
-  "time"
+	"context"
+	bank "finance/databases/banking" //Importing a package and assigning it a local alias.
+	"finance/renderer"
+	admin "finance/webfinances/wfadmin"
+	banking "finance/webfinances/wfbanking"
+	"fmt"
+	"net/http"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/juan-carlos-trimino/go-logger"
+	"github.com/juan-carlos-trimino/go-middlewares"
+	"github.com/juan-carlos-trimino/go-sessions"
+	sess "github.com/juan-carlos-trimino/go-sessions"
 )
 
 var (
@@ -46,8 +48,6 @@ type WfPages struct{}
 func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.IndexPage.", correlationId)
   templatesNeeded := []string{
     "webfinances/templates/layout.html",
@@ -59,14 +59,11 @@ func (p WfPages) IndexPage(res http.ResponseWriter, req *http.Request) {
       Header string
     } { "std-wo-headers", "Welcome to Investments" },
   })
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.LoginPage.", correlationId)
   templatesNeeded := []string{
     "webfinances/templates/layout.html",
@@ -79,14 +76,11 @@ func (p WfPages) LoginPage(res http.ResponseWriter, req *http.Request) {
       ErrMsg string
     } { "std-wo-headers", "Login", "" },
   })
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.VerifyLogin.", correlationId)
   un := req.PostFormValue("uname")
   pw := req.PostFormValue("pwd")
@@ -96,7 +90,7 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
     invalidSession(res, correlationId)
   } else {
     logger.LogInfo(fmt.Sprintf("User %s successfully logged in.", un), correlationId)
-    cookie, err := sessions.SaveRedis(req.Context(), un)
+    cookie, err := sessions.SetRedis(req.Context(), un)
     /***
     Once a cookie is set on a client, it is sent along with every subsequent request. Cookies store
     historical information (including user login information) on the client's computer. The
@@ -109,16 +103,16 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
     identity.
     ***/
     http.SetCookie(res, cookie)
-    tokenString, err := middlewares.GenerateJwtToken(isAdmin)
+    tokenString, err := sess.GenerateJwtToken(isAdmin)
     if err != nil {
       logger.LogError(fmt.Sprintf("Error signing token: %v+", err), correlationId)
       http.Error(res, "Internal Server Error", http.StatusInternalServerError)
       return
     }
-    http.SetCookie(res, &http.Cookie{
-      Name: "admin_token",
-      Value: tokenString,
-    })
+    adminCookie := sess.CreateCookie("admin_token", tokenString)
+    adminCookie.MaxAge = 0  //Zero-value: Omits Max-Age from header.
+    adminCookie.Expires = time.Time{}  //Zero-value: Omits Expires from header.
+    http.SetCookie(res, adminCookie)
     if isAdmin {
       admin.AddSessionDataPerUser(un, correlationId)
       http.Redirect(res, req, "/admin/welcome", http.StatusSeeOther)
@@ -128,30 +122,50 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
       http.Redirect(res, req, "/welcome", http.StatusSeeOther)
     }
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
+/***
+While it is true that Redis TTL will eventually clean up both keys automatically if the user abandons the app, explicit deletion
+on an active logout is a security and resource management necessity for two major reasons:
+1. Immediate Invalidation (Security): If you don't call DelRedis, the session key remains valid in Redis until its remaining TTL
+   counts down to zero. If a malicious actor intercepted or stole the session_token cookie before logout, they could still make
+   valid API requests using that token until the remaining x-minute window closes. Explicitly deleting it closes the window instantly.
+2. Instant Memory Cleanup (Optimization): The code deletes a second key: "user:data:" + sessionInfo.UserName. User data hashes or
+   structs can be significantly larger than a small session token payload. By purging it the moment a user purposefully clicks
+   "Logout," you immediately free up that RAM instead of making Redis hold onto it for an extra x minutes.
+***/
 func (p WfPages) LogoutPage(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.LogoutPage.", correlationId)
+  //The cookie exists because the middleware verified it.
   cookie, _ := req.Cookie("session_token")
-  count, _ := sessions.DelRedis(req.Context(), strings.Split(cookie.Value, "|")[0])
+  sessionKey := "session:" + strings.Split(cookie.Value, "|")[0]
+  //Use context.Background() for terminal network operations to guarantee teardown execution;
+  //see the function ValidateSessions in the middleware package for more information.
+  bgCtx := context.Background()
+  //Delete the session token instantly for explicit security.
+  count, err := sessions.DelRedis(bgCtx, sessionKey)
   //Continue with or without error to ensure the client-side cookie is deleted.
+  if err != nil {
+    logger.LogInfo(fmt.Sprintf("Error deleting the active session id: %v", err), correlationId)
+  }
   logger.LogInfo(fmt.Sprintf("%d session(s) deleted.", count), correlationId)
-  cookie.MaxAge = -1  //Instruct the browser to delete immediately.
-  http.SetCookie(res, cookie)
+  sessInfo, _ := ck.GetSessionInfo(req.Context())
+  //EVICT data from Redis memory; safe because the master copy is in Postgres.
+  count, err = sessions.DelRedis(bgCtx, "user:data:" + sessInfo.UserName)
+  //Continue with or without error to ensure the client-side cookie is deleted.
+  if err != nil {
+    logger.LogInfo(fmt.Sprintf("Error deleting user data: %v", err), correlationId)
+  }
+  logger.LogInfo(fmt.Sprintf("%d user data deleted.", count), correlationId)
+  http.SetCookie(res, sess.CreateCookie("session_token", ""))
   http.Redirect(res, req, "/", http.StatusSeeOther)
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.WelcomePage.", correlationId)
   templatesNeeded := []string{
     "webfinances/templates/layout.html",
@@ -169,14 +183,11 @@ func (p WfPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
       MenuPage string
     } { "standard", "Investments", logger.DatetimeFormat(), financesMenuPage },
   })
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.ContactPage.", correlationId)
   templatesNeeded := []string{
     "webfinances/templates/layout.html",
@@ -194,14 +205,11 @@ func (p WfPages) ContactPage(res http.ResponseWriter, req *http.Request) {
       MenuPage string
     } { "standard", "Contact Us", logger.DatetimeFormat(), "contact" },
   })
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.AboutPage.", correlationId)
   //Explicitly map out the entire structural block stack for this page.
   templatesNeeded := []string{
@@ -220,14 +228,11 @@ func (p WfPages) AboutPage(res http.ResponseWriter, req *http.Request) {
       MenuPage string
     } { "standard", "About Us", logger.DatetimeFormat(), aboutMenupage },
   })
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) ServeFinancePages(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo(fmt.Sprintf("Entering webfinances.ServeFinancesPage for path: %s", req.URL.Path), correlationId)
   //Declare dynamic variables based on the URL path.
   var bodyTemplate string
@@ -273,14 +278,11 @@ func (p WfPages) ServeFinancePages(res http.ResponseWriter, req *http.Request) {
       financesMenuPage,
     },
   })
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (p WfPages) ServeStaticFiles(res http.ResponseWriter, req *http.Request) {
   ctxKey := middlewares.MwContextKey{}
   correlationId, _ := ctxKey.GetCorrelationId(req.Context())
-  startTime, _ := ctxKey.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo(fmt.Sprintf("Entering webfinances.ServeStaticFiles for path: %s", req.URL.Path), correlationId)
   /***
   Automatically looks at the browser request (e.g., "/public/css/components/base-button.css") and maps it to the
@@ -291,5 +293,4 @@ func (p WfPages) ServeStaticFiles(res http.ResponseWriter, req *http.Request) {
   localPath = filepath.Clean(localPath)
   //Serve the file dynamically based on the exact path requested.
   http.ServeFile(res, req, localPath)
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }

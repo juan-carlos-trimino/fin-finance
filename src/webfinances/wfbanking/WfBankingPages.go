@@ -2,13 +2,11 @@ package wfbanking
 
 import (
   "finance/renderer"
-  "fmt"
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
   //Package template (html/template) implements data-driven templates for generating HTML output safe against code injection. It
   //provides the same interface as text/template and should be used instead of text/template whenever the output is HTML.
   "net/http"
-  "time"
 )
 
 var bankingMenuPage string = "home"
@@ -28,8 +26,6 @@ type WfBankingPages struct{}
 func (p WfBankingPages) BankingPage(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering wfbanking.BankingPage.", correlationId)
   //Declare dynamic variables based on the URL path.
   var bodyTemplate string
@@ -65,5 +61,4 @@ func (p WfBankingPages) BankingPage(res http.ResponseWriter, req *http.Request) 
       bankingMenuPage,
     },
   })
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }

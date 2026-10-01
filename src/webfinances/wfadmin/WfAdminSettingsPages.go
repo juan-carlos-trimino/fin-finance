@@ -11,7 +11,6 @@ import (
   "net/http"
   "os"
   "strings"
-  "time"
 )
 
 type settingsFields struct{
@@ -59,8 +58,6 @@ type WfAdminSettingsPages struct{}
 func (s WfAdminSettingsPages) AdminSettingsPages(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering wfadmin.AdminSettingsPages.", correlationId)
   sessInfo, _ := ck.GetSessionInfo(req.Context())
   fields := getSettingsFields(sessInfo.UserName)
@@ -105,7 +102,7 @@ func (s WfAdminSettingsPages) AdminSettingsPages(res http.ResponseWriter, req *h
       "Settings - Admin",
       logger.DatetimeFormat(),
       fields.CurrentButton,
-      "",
+      sessInfo.CSRFToken,
       "",
       "",
       "",
@@ -128,7 +125,7 @@ func (s WfAdminSettingsPages) AdminSettingsPages(res http.ResponseWriter, req *h
       } else {
         td.ErrMsg = "New password and confirmation password do not match."
       }
-      td.CsrfToken = sessInfo.CSRFToken
+      // td.CsrfToken = sessInfo.CSRFToken
       logger.LogInfo(fmt.Sprintf("%s", td.ErrMsg), correlationId)
     }
     templateData = td
@@ -164,5 +161,4 @@ func (s WfAdminSettingsPages) AdminSettingsPages(res http.ResponseWriter, req *h
       logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
     }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }

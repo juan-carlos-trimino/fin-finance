@@ -77,8 +77,6 @@ type WfAdminUsersPages struct {}
 func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering wfadmin.AdminUsersPage.", correlationId)
   sessInfo, _ := ck.GetSessionInfo(req.Context())
   fields := getUsersFields(sessInfo.UserName)
@@ -312,6 +310,7 @@ Using the last selected range (or defaulting to the first range on a fresh login
       Header string
       Datetime string
       CurrentButton string
+      CsrfToken string
       SelectedRange string
       Fd2Result []Row
       CurrentPage int
@@ -327,6 +326,7 @@ Using the last selected range (or defaulting to the first range on a fresh login
       "Unregister User - Admin",
       logger.DatetimeFormat(),
       fields.CurrentButton,
+      sessInfo.CSRFToken,
       fields.SelectedRange,
       paginatedItems,
       currentPage,
@@ -379,7 +379,6 @@ Using the last selected range (or defaulting to the first range on a fresh login
       logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
     }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 //Extraction helper for UI-1 calculations.

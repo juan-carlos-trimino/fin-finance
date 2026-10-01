@@ -2,11 +2,9 @@ package wfadmin
 
 import (
   "finance/renderer"
-  "fmt"
   "github.com/juan-carlos-trimino/go-middlewares"
   "github.com/juan-carlos-trimino/go-logger"
   "net/http"
-  "time"
 )
 
 type WfAdminPages struct{}
@@ -14,8 +12,6 @@ type WfAdminPages struct{}
 func (s WfAdminPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering wfadmin.WelcomePage.", correlationId)
   templatesNeeded := []string{
     "webfinances/templates/layout.html",
@@ -35,14 +31,11 @@ func (s WfAdminPages) WelcomePage(res http.ResponseWriter, req *http.Request) {
       logger.DatetimeFormat(),
     },
   })
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }
 
 func (s WfAdminPages) AdminSettingsPage(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering wfadmin.AdminSettingsPage.", correlationId)
   templatesNeeded := []string{
     "webfinances/templates/layout.html",
@@ -62,5 +55,4 @@ func (s WfAdminPages) AdminSettingsPage(res http.ResponseWriter, req *http.Reque
       logger.DatetimeFormat(),
     },
   })
-  logger.LogInfo(fmt.Sprintf("Request took %vms", time.Since(startTime).Microseconds()), correlationId)
 }

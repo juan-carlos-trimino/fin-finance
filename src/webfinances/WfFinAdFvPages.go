@@ -70,8 +70,6 @@ type WfAdFvPages struct {}
 func (a WfAdFvPages) AdFvPages(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
-  startTime, _ := ck.GetStartTime(req.Context())
-  logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
   logger.LogInfo("Entering webfinances.AdFvPages.", correlationId)
   sessInfo, _ := ck.GetSessionInfo(req.Context())
   fields := getAdFvFields(sessInfo.UserName)
@@ -168,7 +166,6 @@ func (a WfAdFvPages) AdFvPages(res http.ResponseWriter, req *http.Request) {
       logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
     }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
   }
-  logger.LogInfo(fmt.Sprintf("Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)
 }
 
 //Extraction helper for UI-2 calculations.
