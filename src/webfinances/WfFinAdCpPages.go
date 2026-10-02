@@ -74,6 +74,37 @@ func getAdCpFields(userName string) *adCpFields {
   })
 }
 
+
+
+
+
+
+func defaultAdCpFields() *adCpFields {
+  return &adCpFields{
+    MenuPage: "",
+    CurrentPage: "rhs-ui2",
+    CurrentButton: "lhs-button2",
+    //
+    Fd1Interest: "1.00",
+    Fd1Compound: "annually",
+    Fd1PV: "1.00",
+    Fd1FV: "1.00",
+    Fd1Result: "",
+    //
+    Fd2Interest: "1.00",
+    Fd2Compound: "annually",
+    Fd2Payment: "1.00",
+    Fd2PV: "1.00",
+    Fd2Result: "",
+    //
+    Fd3Interest: "1.00",
+    Fd3Compound: "annually",
+    Fd3Payment: "1.00",
+    Fd3FV: "1.00",
+    Fd3Result: "",
+  }
+}
+
 type WfAdCpPages struct {}
 
 func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
@@ -81,52 +112,30 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ck.GetCorrelationId(req.Context())
   logger.LogInfo("Entering webfinances.AdCpPages.", correlationId)
   sessInfo, _ := ck.GetSessionInfo(req.Context())
-
-
   redisKey := "user:data:" + sessInfo.UserName
-  partitionName := "adcp_fields"
-  var fields adCpFields
+  partitionName := "annuity_due_compounding_periods"
+  var fields *adCpFields = nil
   var jsonBytes []byte
   //Check Redis Cache First.
   jsonStr, err := sess.HGetRedis(req.Context(), redisKey, partitionName)
-  if err == nil || jsonStr != "" {
+  if err == nil && jsonStr != "" {
     //Cache Hit! Convert string to bytes.
     jsonBytes = []byte(jsonStr)
   } else {
     //Cache Miss: Fall back to PostgreSQL database.
     logger.LogInfo(fmt.Sprintf("Redis miss for partition %s. Fetching from PostgreSQL...", partitionName), correlationId)
-    jsonBytes, err = bank.DbFetchUserData(req.Context(), sessInfo.UserName, partitionName, correlationId)
-    if err != nil {
-      //use default
+    jsonBytes = bank.DbFetchUserData(req.Context(), sessInfo.UserName, partitionName, correlationId)
+    if len(jsonBytes) == 0 {  //On error (nil) or not found (len() == 0), use default values.
+      logger.LogInfo(fmt.Sprintf("Database did not return partition (%s). Using default values.", partitionName), correlationId)
+      fields = defaultAdCpFields()
+    } else {  //Use the values from the db.
+      err = json.Unmarshal(jsonBytes, fields)
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("Error unmarshalling partition (%s). Using default values: %v", partitionName, err), correlationId)
+        fields = defaultAdCpFields()
+      }
     }
   }
-
-
-  /***
-  In Go, a struct instance is never nil, and it does not have a length (len). Instead, a freshly declared struct contains its
-  zero-value (where all its internal fields are set to their respective zero-values, like 0, "", or nil).
-  ***/
-  if fields == (adCpFields{}) {  // The struct is empty (all fields are at their zero-value)
-    err = json.Unmarshal(jsonBytes, &fields)
-    if err != nil {
-      logger.LogInfo(fmt.Sprintf("Error unmarshalling partition (%s) JSON payload: %v", err), correlationId)
-      //use default values
-    }
-  }
-
-
-
-
-  // fields := getAdCpFields(sessInfo.UserName)
-  // //Every time a web request processes data for a user, update the timestamp under a lock.
-  // currentFieldsLock.Lock()
-  // if session, exists := currentFields[sessInfo.UserName]; exists {
-  //   session.LastAccessed = time.Now()
-  // }
-  // currentFieldsLock.Unlock()
-
-
-
   /***
   The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
   MultipartForm fields; the data are in the form of key-value pairs.
@@ -152,7 +161,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   case "rhs-ui2":
     fields.CurrentButton = "lhs-button2"
     if req.Method == http.MethodPost {
-      a.processUi2Form(req, &fields, correlationId)
+      a.processUi2Form(req, fields, correlationId)
     }
     partialTemplate = "i-PMT-PV.html"
     templateData = struct{
@@ -183,7 +192,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   case "rhs-ui3":
     fields.CurrentButton = "lhs-button3"
     if req.Method == http.MethodPost {
-      a.processUi3Form(req, &fields, correlationId)
+      a.processUi3Form(req, fields, correlationId)
     }
     partialTemplate = "i-PMT-FV.html"
     templateData = struct{

@@ -309,7 +309,7 @@ CREATE TABLE IF NOT EXISTS fin.customers_contact_details(
   updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS  fin.customers_credentials(
+CREATE TABLE IF NOT EXISTS fin.customers_credentials(
   id               INT PRIMARY KEY,
                    CONSTRAINT fk_customers_credentials_to_customers
                      FOREIGN KEY(id)
@@ -327,8 +327,31 @@ CREATE TABLE IF NOT EXISTS  fin.customers_credentials(
   failed_attempts  INT NOT NULL DEFAULT 0,
   -- When tracking the last attempt time for a task, the initial value should generally be set to
   -- NULL to represent that an attempt has not yet occurred.
+  created_at       TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   last_attempt     TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
+
+
+
+CREATE TABLE IF NOT EXISTS fin.user_data_vault(
+  user_name       TEXT NOT NULL,
+  partition_name  TEXT NOT NULL,
+  blog            JSONB NOT NULL,
+  created_at      TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_name, partition_name) -- Composite Primary Key
+);
+
+-- Index to optimize querying inside the JSONB payload
+CREATE INDEX idx_user_data_vault
+  ON user_data_vault
+  USING gin(data_value);
+ANALYZE fin.user_data_vault;
+
+
+
+
+
 
 /**************************************************************************************************
                *** DATABASE ROLES AND PRIVILEGES (Table-level privileges) ***

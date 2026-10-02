@@ -7,6 +7,7 @@ package banking
 
 import (
   "context"
+  "errors"
   "fmt"
   "github.com/jackc/pgx/v5"
   "github.com/juan-carlos-trimino/go-logger"
@@ -28,6 +29,19 @@ const (
   SP_AUTHENTICATE_USER = "CALL fin.authenticate_user($1, $2, $3, null, null)"
   //Change password.
   SP_CHANGE_PASSWORD = "CALL fin.change_password($1, $2, $3, $4, null)"
+
+  QR_UPSERT_USER_DATA =
+    `INSERT INTO fin.user_data_vault(user_name, partition_name, data_value)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (user_name, partition_name)
+    DO UPDATE SET
+      data_value = EXCLUDED.data_value;`
+
+  QR_SELECT_USER_DATA =
+    `SELECT data_value
+     FROM fin.user_data_vault
+     WHERE user_name = $1 AND partition_name = $2;`
+
 )
 
 type Customer struct {
@@ -97,7 +111,7 @@ func DbAuthenticateUser(ctx context.Context, userName, password, correlationId s
   var ok bool = true
   err := db.bsPool.QueryRow(ctx, SP_AUTHENTICATE_USER, userName, password, correlationId).Scan(&status, &isAdmin)
   if err != nil {
-    logger.LogError(fmt.Sprintf("Error on DbAuthenticateUser: %v", err), correlationId)
+    logger.LogError(fmt.Sprintf("DbAuthenticateUser: %v", err), correlationId)
     ok = false
   } else if status < 0 {
     ok = false
@@ -108,17 +122,17 @@ func DbAuthenticateUser(ctx context.Context, userName, password, correlationId s
 func DbGetCustomersContactDetails(ctx context.Context, correlationId string) bool {
   db := GetBsInstance()
   var ok bool = true
-  //Call the function returning SETOF/TABLE.
+  //Call the function returning SETOF/TABLE. Use to read data and inspect rows.
   rows, err := db.bsPool.Query(ctx, "SELECT * FROM fin.get_customers_contact_details()")
   if err != nil {
-    logger.LogError(fmt.Sprintf("Error on DbGetCustomersContactDetails: %v", err), correlationId)
+    logger.LogError(fmt.Sprintf("DbGetCustomersContactDetails: %v", err), correlationId)
     ok = false
   } else {
     var users []CustomersContactDetails
     //Automatically scans all rows into a slice of User structs.
     users, err := pgx.CollectRows(rows, pgx.RowToStructByName[CustomersContactDetails])
     if err != nil {
-      logger.LogError(fmt.Sprintf("Error on DbGetCustomersContactDetails: %v", err), correlationId)
+      logger.LogError(fmt.Sprintf("DbGetCustomersContactDetails: %v", err), correlationId)
       ok = false
     } else {
       for _, user := range users {
@@ -134,13 +148,42 @@ func DbChangePassword(ctx context.Context, userName, oldPassword, newPassword, c
   var ok bool = true
   err := db.bsPool.QueryRow(ctx, SP_CHANGE_PASSWORD, userName, oldPassword, newPassword, correlationId).Scan(&ok)
   if err != nil {
-    logger.LogError(fmt.Sprintf("Error on DbGetCustomersContactDetails: %v", err), correlationId)
+    logger.LogError(fmt.Sprintf("DbGetCustomersContactDetails: %v", err), correlationId)
     ok = false
   }
   return ok
 }
 
 
+
+func DbSaveUserData(ctx context.Context, userName, partitionName, correlationId string, jsonBytes []byte) bool {
+  db := GetBsInstance()
+  //Use to modify data or database state.
+  result, err := db.bsPool.Exec(ctx, QR_UPSERT_USER_DATA, userName, partitionName, jsonBytes)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("DbSaveUserData: %v", err), correlationId)
+    return false
+  }
+  logger.LogInfo(fmt.Sprintf("DbSaveUserData: Succeeded. Rows affected %d", result.RowsAffected()), correlationId)
+  return true
+}
+
+
+func DbFetchUserData(ctx context.Context, userName, partitionName, correlationId string) []byte {
+  db := GetBsInstance()
+  var jsonBytes []byte
+  //Use if expecting exactly one row (or zero if not found).
+  err := db.bsPool.QueryRow(ctx, QR_SELECT_USER_DATA, userName, partitionName).Scan(&jsonBytes)
+  if err != nil {
+    if errors.Is(err, pgx.ErrNoRows) {
+      logger.LogInfo("DbFetchUserData: Succeeded. No record found.", correlationId)
+      return []byte{}  //Empty slice.
+    }
+    logger.LogError(fmt.Sprintf("DbFetchUserData: %v", err), correlationId)
+    return nil
+  }
+  return jsonBytes
+}
 
 //////////////////////
 
@@ -177,3 +220,108 @@ func retryWithExponentialBackoff(retries int, randomFactor float64, baseTime tim
 //     // Add more password validation rules as needed
 //     return nil
 // }
+
+
+/*
+-- 1. Fetch the entire nested JSONB block
+SELECT data_value
+FROM user_data_vault
+WHERE user_name = 'trimino'
+  AND partition_name = 'finance_settings';
+
+-- 2. Extract a distinct item property value (e.g., getting "USD") using ->>
+SELECT data_value ->> 'currency' AS active_currency
+FROM user_data_vault
+WHERE user_name = 'trimino'
+  AND partition_name = 'finance_settings';
+
+
+
+package main
+
+import (
+  "context"
+  "encoding/json"
+  "fmt"
+  "log"
+  "time"
+
+  "://github.com"
+)
+
+// VaultData matches the JSONB structure you want to save
+type VaultData struct {
+  Theme       string   `json:"theme"`
+  Currency    string   `json:"currency"`
+  MaxAccounts int      `json:"max_accounts"`
+  Languages   []string `json:"languages"`
+}
+
+// ExecuteVaultOperations demonstrates both the UPSERT and SELECT queries
+func ExecuteVaultOperations(ctx context.Context, conn *pgx.Conn) {
+  userName := "trimino"
+  partitionName := "finance_settings"
+
+  // Create our structured data object
+  myConfig := VaultData{
+    Theme:       "dark",
+    Currency:    "USD",
+    MaxAccounts: 5,
+    Languages:   []string{"en", "es"},
+  }
+
+  // 1. Marshall the Go struct directly into JSON bytes
+  jsonData, err := json.Marshal(myConfig)
+  if err != nil {
+    log.Fatalf("Failed to marshal JSON: %v", err)
+  }
+
+  // ==========================================
+  // 2. THE UPSERT QUERY
+  // ==========================================
+  upsertQuery := `
+    INSERT INTO user_data_vault (user_name, partition_name, data_value)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (user_name, partition_name)
+    DO UPDATE SET
+      data_value = EXCLUDED.data_value,
+      updated_at = CURRENT_TIMESTAMP;
+  `
+
+  _, err = conn.Exec(ctx, upsertQuery, userName, partitionName, jsonData)
+  if err != nil {
+    log.Fatalf("Upsert failed: %v", err)
+  }
+  fmt.Println("Successfully upserted data!")
+
+  // ==========================================
+  // 3. THE SELECT QUERY (Retrieving full JSONB)
+  // ==========================================
+  selectQuery := `
+    SELECT data_value
+    FROM user_data_vault
+    WHERE user_name = $1 AND partition_name = $2;
+  `
+
+  var rawJSON []byte
+  err = conn.QueryRow(ctx, selectQuery, userName, partitionName).Scan(&rawJSON)
+  if err != nil {
+    if err == pgx.ErrNoRows {
+      fmt.Println("No record found matching those keys.")
+      return
+    }
+    log.Fatalf("Select failed: %v", err)
+  }
+
+  // 4. Unmarshal database bytes back into your Go struct
+  var savedConfig VaultData
+  if err := json.Unmarshal(rawJSON, &savedConfig); err != nil {
+    log.Fatalf("Failed to unmarshal row JSON: %v", err)
+  }
+
+  // Output your recovered data fields
+  fmt.Printf("Retrieved Config - Theme: %s, Currency: %s\n", savedConfig.Theme, savedConfig.Currency)
+}
+
+
+*/

@@ -265,7 +265,7 @@ func main() {
     //Maximum randomized pause duration between command retries (defaults to 512 * time.Millisecond).
     MaxRetryBackoff: 530 * time.Millisecond,
   })
-  if err := sess.VerifyHealth(); err != nil {
+  if err := sess.VerifyHealthRedis(); err != nil {
     panic(err)
   }
   logger.LogInfo("Connected to the Redis Server.", falseCorrelationId)
