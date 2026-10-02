@@ -39,7 +39,8 @@ require (
 	github.com/juan-carlos-trimino/go-middlewares v1.1.7
 	github.com/juan-carlos-trimino/go-os v1.1.2
 	github.com/juan-carlos-trimino/go-s3storage v1.0.4
-	github.com/juan-carlos-trimino/go-sessions v1.0.16
+	github.com/juan-carlos-trimino/go-sessions v1.0.17-0.20260924021518-f17c0f9e6126
+	github.com/redis/go-redis/v9 v9.22.0
 	golang.org/x/crypto v0.57.0
 )
 
@@ -52,10 +53,7 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/juan-carlos-trimino/gposu v1.0.1 // indirect
-	github.com/juan-carlos-trimino/gpsessions v1.0.1 // indirect
-	github.com/redis/go-redis/v9 v9.22.0 // indirect
-	go.uber.org/atomic v1.11.0 // indirect
+	go.uber.org/atomic v1.12.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
@@ -63,4 +61,5 @@ require (
 )
 
 replace github.com/juan-carlos-trimino/go-middlewares => ../../../gp-meta-repo/go-middlewares/
+
 replace github.com/juan-carlos-trimino/go-sessions => ../../../gp-meta-repo/go-sessions/
