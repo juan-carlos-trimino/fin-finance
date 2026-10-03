@@ -31,14 +31,14 @@ const (
   SP_CHANGE_PASSWORD = "CALL fin.change_password($1, $2, $3, $4, null)"
 
   QR_UPSERT_USER_DATA =
-    `INSERT INTO fin.user_data_vault(user_name, partition_name, data_value)
-    VALUES ($1, $2, $3)
-    ON CONFLICT (user_name, partition_name)
+    `INSERT INTO fin.user_data_vault(user_name, partition_name, partition_data)
+    VALUES($1, $2, $3)
+    ON CONFLICT(user_name, partition_name)
     DO UPDATE SET
-      data_value = EXCLUDED.data_value;`
+      partition_data = EXCLUDED.partition_data;`
 
   QR_SELECT_USER_DATA =
-    `SELECT data_value
+    `SELECT partition_data
      FROM fin.user_data_vault
      WHERE user_name = $1 AND partition_name = $2;`
 
@@ -220,108 +220,3 @@ func retryWithExponentialBackoff(retries int, randomFactor float64, baseTime tim
 //     // Add more password validation rules as needed
 //     return nil
 // }
-
-
-/*
--- 1. Fetch the entire nested JSONB block
-SELECT data_value
-FROM user_data_vault
-WHERE user_name = 'trimino'
-  AND partition_name = 'finance_settings';
-
--- 2. Extract a distinct item property value (e.g., getting "USD") using ->>
-SELECT data_value ->> 'currency' AS active_currency
-FROM user_data_vault
-WHERE user_name = 'trimino'
-  AND partition_name = 'finance_settings';
-
-
-
-package main
-
-import (
-  "context"
-  "encoding/json"
-  "fmt"
-  "log"
-  "time"
-
-  "://github.com"
-)
-
-// VaultData matches the JSONB structure you want to save
-type VaultData struct {
-  Theme       string   `json:"theme"`
-  Currency    string   `json:"currency"`
-  MaxAccounts int      `json:"max_accounts"`
-  Languages   []string `json:"languages"`
-}
-
-// ExecuteVaultOperations demonstrates both the UPSERT and SELECT queries
-func ExecuteVaultOperations(ctx context.Context, conn *pgx.Conn) {
-  userName := "trimino"
-  partitionName := "finance_settings"
-
-  // Create our structured data object
-  myConfig := VaultData{
-    Theme:       "dark",
-    Currency:    "USD",
-    MaxAccounts: 5,
-    Languages:   []string{"en", "es"},
-  }
-
-  // 1. Marshall the Go struct directly into JSON bytes
-  jsonData, err := json.Marshal(myConfig)
-  if err != nil {
-    log.Fatalf("Failed to marshal JSON: %v", err)
-  }
-
-  // ==========================================
-  // 2. THE UPSERT QUERY
-  // ==========================================
-  upsertQuery := `
-    INSERT INTO user_data_vault (user_name, partition_name, data_value)
-    VALUES ($1, $2, $3)
-    ON CONFLICT (user_name, partition_name)
-    DO UPDATE SET
-      data_value = EXCLUDED.data_value,
-      updated_at = CURRENT_TIMESTAMP;
-  `
-
-  _, err = conn.Exec(ctx, upsertQuery, userName, partitionName, jsonData)
-  if err != nil {
-    log.Fatalf("Upsert failed: %v", err)
-  }
-  fmt.Println("Successfully upserted data!")
-
-  // ==========================================
-  // 3. THE SELECT QUERY (Retrieving full JSONB)
-  // ==========================================
-  selectQuery := `
-    SELECT data_value
-    FROM user_data_vault
-    WHERE user_name = $1 AND partition_name = $2;
-  `
-
-  var rawJSON []byte
-  err = conn.QueryRow(ctx, selectQuery, userName, partitionName).Scan(&rawJSON)
-  if err != nil {
-    if err == pgx.ErrNoRows {
-      fmt.Println("No record found matching those keys.")
-      return
-    }
-    log.Fatalf("Select failed: %v", err)
-  }
-
-  // 4. Unmarshal database bytes back into your Go struct
-  var savedConfig VaultData
-  if err := json.Unmarshal(rawJSON, &savedConfig); err != nil {
-    log.Fatalf("Failed to unmarshal row JSON: %v", err)
-  }
-
-  // Output your recovered data fields
-  fmt.Printf("Retrieved Config - Theme: %s, Currency: %s\n", savedConfig.Theme, savedConfig.Currency)
-}
-
-
-*/

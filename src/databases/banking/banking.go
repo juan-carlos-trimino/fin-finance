@@ -6,7 +6,10 @@ package banking
 //  Ctrl+K and Ctrl+J
 
 import (
-  // "context"
+  "regexp"
+  "strings"
+
+
   // "fmt"
   // "github.com/google/uuid"
   // "github.com/jackc/pgx/v5"
@@ -166,3 +169,46 @@ func (bs *bankingSystem) GetAllCustomerInfo(ctx context.Context, correlationId s
   return customers
 }
 **/
+
+
+
+
+/***
+SanitizeDbName converts a raw username into a valid, safe Postgres database name.
+
+Because we are building a multi-tenant architecture using a database-per-tenant pattern, we would like to use the username as the
+database name, but Postgres has strict rules for database identifiers. Hence, the username cannot be used directly as the
+database name. For example, if a user registers with characters that violate these rules, the CREATE DATABASE statement will
+crash; furthermore,
+* Length Limit: By default, Postgres limits database name identifiers to 63 characters (NAMEDATALEN - 1). Any characters past this limit are silently truncated.
+* Character Set Restrictions: Database names must start with a lowercase letter or an underscore. They can only contain lowercase letters, numbers, and underscores. They cannot contain spaces, dashes (-), upper-case letters, or special characters (like symbols or punctuation).
+* Reserved Words: A user name cannot conflict with Postgres reserved keywords (like SELECT, USER, or DATABASE).
+
+To make the design reliable, a sanitization function is required. This function converts usernames to lowercase, replaces forbidden characters with underscores, ensures they don't start with a number, and truncates them safely to 63 characters.
+***/
+func SanitizeDbName(userName string) string {
+  //Force lowercase.
+  name := strings.ToLower(userName)
+  //Replace all non-alphanumeric characters (like spaces or dashes) with underscores.
+  reg := regexp.MustCompile(`[^a-z0-9_]`)
+  name = reg.ReplaceAllString(name, "_")
+  //Trim any trailing or leading underscores that resulted from cleaning.
+  name = strings.Trim(name, "_")
+  //Force a clean, uniform prefix.
+  //This automatically handles usernames starting with numbers or reserved keywords.
+  if !strings.HasPrefix(name, "usr_") {
+    name = "usr_" + name
+  }
+  //Truncate to the PostgreSQL limit of 63 characters.
+  if len(name) > 63 {
+    name = name[:63]
+  }
+  /***
+  How usernames are processed:
+  * If input is Trimino --> Becomes usr_trimino
+  * If input is 12345 --> Becomes usr_12345 (Safely starts with an ASCII letter u)
+  * If input is usr_finance --> Becomes usr_finance (Leaves the prefix alone and avoids duplication)
+  * If input is select --> Becomes usr_select (Safely bypasses SQL keyword collisions)
+  ***/
+  return name
+}

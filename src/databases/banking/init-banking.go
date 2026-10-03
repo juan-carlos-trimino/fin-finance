@@ -109,6 +109,145 @@ func GetBsInstance() (*banking) {
   }
 }
 
+
+
+/***
+Implement an Advisory Lock in Go
+
+If the pods must all trigger this check from their Go main() functions on startup, we can use Postgres' built-in Distributed
+Advisory Locks. Before a pod even looks at the SQL script, it asks the central database for a cluster-wide "lock" tied to a
+random 64-bit number. Only one pod can hold the lock at a time. The other pods will wait automatically until the first pod
+finishes creating the database.
+
+Using a PostgreSQL Distributed Advisory Lock is the cleanest, industry-standard way to solve this architecture problem. Because advisory locks are managed entirely by the central PostgreSQL engine, they act as a cluster-wide mutex wrapper.
+When your pods boot up simultaneously in Kubernetes:
+1. Pod 1 acquires the lock and enters your script execution function.
+2. Pod 2 and Pod 3 reach the lock statement, pause, and wait cleanly.
+3. Pod 1 checks if the database exists (it doesn't), executes psql, creates the user's database layout, and releases the lock.
+4. Pod 2 immediately wakes up, takes the lock, checks if the database exists (it now does), skips running the script, and safely proceeds to start your web server.
+
+--------------------
+Update your startup logic by adding an existence check and wrapping your ExecuteSqlScript function with a pg_advisory_lock.
+---------------------
+package db
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"strings"
+	"://github.com"
+)
+
+// ProvisionDatabaseWithLock locks the cluster before checking/running your psql script
+func ProvisionDatabaseWithLock(ctx context.Context, adminConn *pgx.Conn, targetDb, host, user, password, defaultDb, sslmode string, port, connect_timeout int, pathToScript, correlationId string) bool {
+
+	// 1. Define a unique 64-bit integer lock key for your app provisioning system
+	const provisionLockID int64 = 8492049103
+
+	log.Printf("[%s] Waiting to acquire cluster-wide advisory lock...", correlationId)
+
+	// 2. This statement will block all secondary pods cleanly until the lock is available
+	_, err := adminConn.Exec(ctx, "SELECT pg_advisory_lock($1);", provisionLockID)
+	if err != nil {
+		log.Printf("[%s] ERROR: Failed to acquire advisory lock: %v", correlationId, err)
+		return false
+	}
+
+	// 3. CRITICAL: Release the lock when this pod completes, waking up the next waiting pod
+	defer func() {
+		_, err := adminConn.Exec(ctx, "SELECT pg_advisory_unlock($1);", provisionLockID)
+		if err != nil {
+			log.Printf("[%s] WARNING: Failed to release advisory lock: %v", correlationId, err)
+		} else {
+			log.Printf("[%s] Released cluster-wide advisory lock.", correlationId)
+		}
+	}()
+
+	// 4. Check if the database has already been created by a previous pod
+	exists, err := CheckIfDatabaseExists(ctx, adminConn, targetDb, correlationId)
+	if err != nil {
+		log.Printf("[%s] ERROR: Database existence check failed: %v", correlationId, err)
+		return false
+	}
+
+	// 5. If it already exists, skip running the script entirely!
+	if exists {
+		log.Printf("[%s] Database '%s' already initialized by another pod. Skipping execution.", correlationId, targetDb)
+		return true
+	}
+
+	log.Printf("[%s] Database '%s' not found. Launching psql script runner...", correlationId, targetDb)
+
+	// 6. Run your existing psql execution command safely
+	return ExecuteSqlScript(host, user, password, defaultDb, targetDb, sslmode, port, connect_timeout, pathToScript, correlationId)
+}
+
+// CheckIfDatabaseExists verifies if the dynamic target database is in the pg_database catalog
+func CheckIfDatabaseExists(ctx context.Context, adminConn *pgx.Conn, dbName string, correlationId string) (bool, error) {
+	var exists bool
+
+	// Enforce lowercase lookups since SanitizeDbName structures identifiers as lowercase
+	cleanDbName := strings.ToLower(dbName)
+
+	query := "SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1);"
+	err := adminConn.QueryRow(ctx, query, cleanDbName).Scan(&exists)
+
+	return exists, err
+}
+
+Why this is a resilient production design:
+• No Resource Deadlocks: pg_advisory_lock ties the lock context strictly to the connection session. If a pod drops dead or hits an unexpected out-of-memory error mid-script, PostgreSQL will automatically release the lock, ensuring your other cluster pods don't hang indefinitely.
+• Deterministic Deployment Log Profiles: Your logs will clearly show Pod 1 processing the execution block, while Pod 2 and 3 output clear Skipping execution messages, keeping your metrics legible.
+
+
+
+
+Yes, you are 100% correct. This design works beautifully and equally well with concurrent goroutines running inside the same application.
+Whether the competition is coming from completely separate servers (Kubernetes pods), separate processes on your local machine, or multiple goroutines spinning inside a single Go binary, the central PostgreSQL database acts as the single source of truth.
+Why it works for both Pods and Goroutines
+Because pg_advisory_lock is executed at the database connection layer, PostgreSQL assigns the lock to the specific database connection session (the TCP socket network connection).
+• With Pods: Each pod opens its own connection and competes for the lock.
+• With Goroutines: If your goroutines are each opening their own independent database connections (or grabbing a fresh connection from a pgxpool.Pool), PostgreSQL treats them exactly like separate pods. It safely blocks the secondary goroutine connections until the first goroutine releases the lock.
+
+
+
+A Crucial Performance Optimization for Goroutines
+If you are using this strategy heavily inside goroutines, you can optimize your code to avoid hitting the network database engine unnecessarily.
+Network calls to PostgreSQL take milliseconds. Go memory operations take nanoseconds. To keep your application running fast, you can add a local sync.Mutex directly inside your Go code as a first line of defense:
+
+package db
+
+import (
+	"context"
+	"sync"
+	"://github.com"
+)
+
+// A local mutex to block goroutines inside the SAME application immediately
+var localProvisionMutex sync.Mutex
+
+func ProvisionDatabaseWithLock(ctx context.Context, adminConn *pgx.Conn, targetDb string, ...) bool {
+
+	// 1. FIRST DEFENSE: Block other internal goroutines instantly without hitting the network
+	localProvisionMutex.Lock()
+	defer localProvisionMutex.Unlock()
+
+	// 2. SECOND DEFENSE: Block other external Kubernetes Pods across the network cluster
+	const provisionLockID int64 = 8492049103
+	_, _ = adminConn.Exec(ctx, "SELECT pg_advisory_lock($1);", provisionLockID)
+	defer adminConn.Exec(ctx, "SELECT pg_advisory_unlock($1);", provisionLockID)
+
+	// 3. Check and run your script safely...
+	return true
+}
+
+
+By combining Go’s local sync.Mutex with PostgreSQL’s pg_advisory_lock, you build an architecture that is optimized for goroutines locally, while remaining completely bulletproof against multi-pod scale-outs in production.
+
+***/
+
+
 func ExecuteSqlScript(host, user, password, defaultDb, targetDb, sslmode string, port, connect_timeout int, pathToScript,
      correlationId string) bool {
   for _, str := range strings.Split(osu.ShowPermissions(pathToScript, false), "\n") {
@@ -130,6 +269,31 @@ func ExecuteSqlScript(host, user, password, defaultDb, targetDb, sslmode string,
   //Using key-value pairs.
   connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password,
     defaultDb, connect_timeout, sslmode)
+
+
+
+  db := GetBsInstance()
+  //Choose a unique, random 64-bit ID for the application's setup lock.
+  const clusterLockID = 9876543210    //???????????????????????????????????????????????
+  //This blocks all other pods until the lock is acquired.
+  _, err := db.bsPool.Exec(context.Background(), "SELECT pg_advisory_lock($1);", clusterLockID)
+  if err != nil {
+    panic(fmt.Sprintf("Failed to acquire cluster lock from Postgres: %v", err))
+  }
+  //Ensure the lock is released when this pod finishes, allowing the next pod to proceed.
+  defer db.bsPool.Exec(context.Background(), "SELECT pg_advisory_unlock($1);", clusterLockID)   ///????????????
+  //Now it is safe to check and run the script.
+  //Pod 2 will wait here until Pod 1 has fully created the database.
+  if !databaseExists(db, targetDb) {
+    //ExecuteSqlScript(db, defaultDb)
+  }
+
+
+
+
+
+
+
   // logger.LogInfo(fmt.Sprintf("Connection string: %s", connString), correlationId)
   //psql accepts two distinct connection string formats: URIs and Key-Value.
   cmd := exec.Command("psql", connString, "-f", pathToScript,
@@ -149,6 +313,21 @@ func ExecuteSqlScript(host, user, password, defaultDb, targetDb, sslmode string,
   }
   return true
 }
+
+
+
+
+//Simple helper to safely check if the DB exists while under the lock.
+func databaseExists(db *banking, dbName string) bool {
+  var exists bool
+  query := "SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1);"
+  _ = db.bsPool.QueryRow(context.Background(), query, dbName).Scan(&exists)
+  return exists
+}
+
+
+
+
 
 //StringPtr is a helper function to return a pointer to a string.
 func StringPtr(s string) *string {
