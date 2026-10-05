@@ -458,7 +458,7 @@ IaC-app/utilities/postgres/configs/*
 IaC-app/utilities/postgres/sql/*
 !IaC-app/utilities/postgres/sql/baseline/
 IaC-app/utilities/postgres/sql/baseline/*
-!IaC-app/utilities/postgres/sql/baseline/admin.sql
+!IaC-app/utilities/postgres/sql/baseline/000_admin.sql
 !IaC-app/utilities/postgres/sql/baseline/banking-system.sql
 !IaC-app/utilities/postgres/sql/.gitkeep
 !IaC-app/utilities/postgres/scripts/
