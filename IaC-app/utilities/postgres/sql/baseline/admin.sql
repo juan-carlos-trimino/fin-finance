@@ -40,6 +40,14 @@ Notes (Indexes)
 SELECT CONCAT('*** Output from script, run began at: ', NOW(), ' ***') AS msg \gset
 \qecho :msg
 
+/***
+Because Postgres advisory locks are strictly scoped to the database they are run inside, an advisory lock inside the 'postgres'
+default database and an advisory lock inside the 'finances' database live in entirely different namespaces.
+***/
+-- LOCK 1: Protect Cluster Actions (Roles & Database Creation)
+SET lock_timeout = '5s';
+SELECT pg_advisory_lock(9876543210);
+
 SELECT CONCAT('*** PostgreSQL version: ', (SELECT version()), ' ***') AS msg \gset
 \qecho :msg
 
@@ -161,8 +169,16 @@ of the newly created roles would be able to do much.
 -- Revoke all privileges that are granted by default to the 'public' role.
 REVOKE ALL ON DATABASE finances FROM public;
 
--- Connect to the database.
+-- Connect to the database; instantly unlocks Lock 1.
 \c finances
+
+-- LOCK 2: Protect Schema Actions (Tables, Indexes, Procedures).
+/***
+When \c executed, Lock 1 was destroyed. We must instantly acquire a new lock inside the 'finances'
+database connection context.
+***/
+SET lock_timeout = '5s';
+SELECT pg_advisory_lock(9876543210);
 
 /***
 Set the session to the new role. The role that is in force at the time of an object creation will
@@ -703,3 +719,16 @@ EXECUTE FUNCTION fin.customers_credentials_block_row_deletion();
 -- BEGIN
 -- END;
 -- $$;
+
+/**************************************************************************************************
+                    *** SYSTEM MIGRATION TRACKING TABLE (Run Inside Lock 2) ***
+**************************************************************************************************/
+CREATE TABLE IF NOT EXISTS schema_migrations(
+  version    TEXT PRIMARY KEY,
+  applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Register this baseline script version so future upgrades know the base layout is present.
+INSERT INTO schema_migrations(version)
+  VALUES('001_initial_bootstrap')
+ON CONFLICT(version) DO NOTHING;
