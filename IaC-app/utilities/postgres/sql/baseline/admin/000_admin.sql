@@ -82,7 +82,7 @@ To pass a boolean parameter into a psql script, pass the literal string "true" o
 Because psql substitutes variables as raw text directly into the script, the script must either wrap the variable in single quotes
 or cast it explicitly to a boolean data type.
 **/
-SELECT (:db_exists AND NOT :'ALWAYS_DB_ADMIN') AS run_script \gset
+SELECT (:db_exists AND NOT :ALWAYS_DB_ADMIN) AS run_script \gset
 \if :run_script
   \qecho Database :'DB_NAME' exists. Halting script execution...
   \q
@@ -134,7 +134,7 @@ $$;
 /**************************************************************************************************
                                             *** DATABASE ***
 **************************************************************************************************/
-CREATE DATABASE finances
+CREATE DATABASE :DB_NAME
 WITH
   OWNER = admin_role
   ALLOW_CONNECTIONS = TRUE

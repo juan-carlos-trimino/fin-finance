@@ -8,10 +8,10 @@ SET lock_timeout = '5s';
 SELECT pg_advisory_lock(9876543210);
 
 -- Evaluate if this specific migration script version has already been run.
-SELECT (SELECT COUNT(*) FROM fin.schema_migrations WHERE version = '001_add_users') > 0 AS migration_exists \gset
+SELECT (SELECT COUNT(*) FROM fin.schema_migrations WHERE version = :'MIGRATION_NAME') > 0 AS migration_exists \gset
 
 \if :migration_exists
-  \qecho Migration '002_add_audit_logs' already applied. Exiting...
+  \qecho Migration :'MIGRATION_NAME' already applied. Exiting...
   \q
 \else
   /******************************************************************************************************************************
@@ -22,8 +22,8 @@ SELECT (SELECT COUNT(*) FROM fin.schema_migrations WHERE version = '001_add_user
   ******************************************************************************************************************************/
 
   CREATE TABLE IF NOT EXISTS fin.schema_migrations(
-    version    TEXT PRIMARY KEY,
-    applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    migration   TEXT PRIMARY KEY,
+    applied_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS fin.user_data_vault(
@@ -58,16 +58,11 @@ Using the default GIN index
                                        *** APPLY THE NEW UPGRADE HERE (END) ***
   ******************************************************************************************************************************/
 
-
-
   -- Log the upgrade execution into the history table matrix so it never runs again.
-  INSERT INTO fin.schema_migrations(version)
-    VALUES('001_initial_bootstrap')
-    ON CONFLICT(version) DO NOTHING;
+  INSERT INTO fin.schema_migrations(migration)
+    VALUES(:'MIGRATION_NAME')
+    ON CONFLICT(migration) DO NOTHING;
 
-  -- Log the upgrade execution into your history matrix
-  INSERT INTO schema_migrations (version) VALUES ('002_add_audit_logs');
-
-  \qecho Migration '002_add_audit_logs' applied successfully.
+  \qecho Migration :'MIGRATION_NAME' applied successfully.
 \endif
 -- When psql finishes executing this file, the connection drops, causing Postgres to automatically release the advisory lock.
