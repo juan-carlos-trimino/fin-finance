@@ -12,10 +12,13 @@ import (
   "github.com/jackc/pgx/v5"
   "github.com/jackc/pgx/v5/pgconn"
   "github.com/jackc/pgx/v5/pgxpool"
-  "github.com/juan-carlos-trimino/go-os"
   "github.com/juan-carlos-trimino/go-logger"
+  "github.com/juan-carlos-trimino/go-os"
+  "os"
   "os/exec"
+  "path/filepath"
   "regexp"
+  "sort"
   "strconv"
   "strings"
   "sync"
@@ -257,45 +260,112 @@ Because sql.DB manages a connection pool automatically, calling an advisory lock
 ***/
 
 
-func ExecuteSqlScript(host, user, password, defaultDb, targetDb, sslmode string, port, connect_timeout int, pathToScript, correlationId string) bool {
-  for _, str := range strings.Split(osu.ShowPermissions(pathToScript, false), "\n") {
+func ExecuteSqlScript(dirPath, host, user, password, defaultDb, targetDb, sslmode string, port, connect_timeout int, correlationId string) bool {
+
+  for _, str := range strings.Split(osu.ShowPermissions(dirPath, false), "\n") {
     if str != "" {
       logger.LogInfo(str, correlationId)
     }
   }
+
+
   //Strict input validation: Allow only letters, numbers, and underscores.
   //It stops malicious SQL characters (like ';', '--', '"') completely (preventing SQL injection).
   isValidName := regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
   if !isValidName(targetDb) {
     logger.LogInfo(fmt.Sprintf("Invalid database name %q: Names must only contain alphanumeric characters or underscores", targetDb), correlationId)
     return false
-  }
-  //Using a connection URI (recommended).
-  //postgresql://[user[:password]@][host[:port]]/[dbname][?option1=value1&option2=value2]
-  // var connString string = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", user, password, host, port, dbname)
-  //Using key-value pairs.
-  connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password,
-    defaultDb, connect_timeout, sslmode)
-  cmd := exec.Command("psql", connString,
-    "-f", pathToScript,
-    "-v", fmt.Sprintf("ALWAYS_DB_ADMIN=%s", strconv.FormatBool(config.GetAlwaysDbAdmin(correlationId))),
-    "-v", fmt.Sprintf("DB_NAME=%s", targetDb))
-  //Run the command and returns its combined standard output and standard error.
-  out, err := cmd.CombinedOutput()
-  if err != nil {
-    //Catch if the failure was specifically due to the 5s lock timeout.
-    if strings.Contains(string(out), "55P03") || strings.Contains(strings.ToLower(string(out)), "lock timeout") {
-      logger.LogError("[DB Session] Postgres aborted: Could not acquire lock within 5 seconds via psql.", correlationId)
-      return false
-    }
-    //Optimization: Log the raw psql output alongside the error so you can see compile syntax errors.
-    logger.LogError(fmt.Sprintf("SQL script failed: %v\nOutput: %s", err, string(out)), correlationId)
+  } else if !isValidName(defaultDb) {
+    logger.LogInfo(fmt.Sprintf("Invalid database name %q: Names must only contain alphanumeric characters or underscores", defaultDb), correlationId)
     return false
   }
-  //
-  for _, str := range strings.Split(string(out), "\n") {  //Convert []byte to string.
-    if str != "" {
-      logger.LogInfo(str, correlationId)
+  //Read all items in the target migration directory.
+  entries, err := os.ReadDir(dirPath)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("Failed to read directory %s: %v", dirPath, err), correlationId)
+    return false
+  }
+  //Filter out non-SQL files and collect file names.
+  var sqlFiles []string
+  var hasBootstrapFile bool = false
+  for _, entry := range entries {
+    if !entry.IsDir() && strings.HasSuffix(strings.ToLower(entry.Name()), ".sql") {
+      sqlFiles = append(sqlFiles, entry.Name())
+      if (!hasBootstrapFile && entry.Name() == "000_admin.sql") {  //The string comparison only triggers until the file is found.
+        hasBootstrapFile = true
+      }
+    }
+  }
+  //Handle empty or missing update file situations safely.
+  if !hasBootstrapFile {
+    //Check if the target database already exists on the server.
+    checkConnString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s",
+      host, port, user, password, defaultDb, connect_timeout, sslmode)
+    //Query pg_database. If it returns text, the database exists.
+    checkCmd := exec.Command("psql", checkConnString, "-tA", "-c", fmt.Sprintf("SELECT 1 FROM pg_database WHERE datname='%s';", targetDb))
+    dbCheckOut, checkErr := checkCmd.CombinedOutput()
+    dbExists := strings.TrimSpace(string(dbCheckOut)) == "1"
+    if checkErr != nil {
+      logger.LogError(fmt.Sprintf("Failed to verify database existence during fallback check: %v", checkErr), correlationId)
+      return false
+    }
+    //
+    if !dbExists {
+      //CRITICAL ROADBLOCK: The ecosystem is missing and we don't have the bootstrap script to build it.
+      logger.LogError(fmt.Sprintf("CRITICAL ERROR: The target database %q does not exist, and the bootstrap script '000_admin.sql' was not found in %s. Execution halted.", targetDb, dirPath), correlationId)
+      return false
+    }
+    //If the database already exists, having no new migration files is perfectly safe.
+    if len(sqlFiles) == 0 {
+      logger.LogInfo(fmt.Sprintf("Target database %q exists and no new migration files are pending.", targetDb), correlationId)
+      return true
+    }
+  }
+  //CRUCIAL: Sort files alphabetically so 000_admin_xxx runs before 001_admin_xxx.
+  sort.Strings(sqlFiles)
+  //Iterate over the sorted files sequentially.
+  for idx, fileName := range sqlFiles {
+    fullPath := filepath.Join(dirPath, fileName)
+    //Resolve the active target name purely for explicit log reporting clarity.
+    activeDb := defaultDb
+    if idx > 0 {
+      activeDb = targetDb
+    }
+    logger.LogInfo(fmt.Sprintf("Executing migration step [%d/%d]: %s against DB: %s", idx + 1, len(sqlFiles), fileName, activeDb), correlationId)
+    //Using key-value pairs.
+    var cmd *exec.Cmd
+    if idx == 0 {
+      connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password,
+        defaultDb, connect_timeout, sslmode)
+      cmd = exec.Command("psql", connString,
+        "-f", fullPath,
+        "-v", fmt.Sprintf("ALWAYS_DB_ADMIN=%s", strconv.FormatBool(config.GetAlwaysDbAdmin(correlationId))),
+        "-v", fmt.Sprintf("DB_NAME=%s", targetDb))
+    } else {
+      connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password,
+        targetDb, connect_timeout, sslmode)
+      //We automatically strip out the extension to pass a clean text variable tag down to the psql layer context environment.
+      cmd = exec.Command("psql", connString,
+        "-f", fullPath,
+        "-v", fmt.Sprintf("MIGRATION_NAME=%s", strings.TrimSuffix(fileName, ".sql")))
+    }
+    //Run the command and returns its combined standard output and standard error.
+    out, err := cmd.CombinedOutput()
+    if err != nil {
+      //Catch if the failure was specifically due to the 5s lock timeout.
+      if strings.Contains(string(out), "55P03") || strings.Contains(strings.ToLower(string(out)), "lock timeout") {
+        logger.LogError(fmt.Sprintf("[DB Session] Postgres aborted: Could not acquire lock within 5 seconds via psql on step %s.", fileName), correlationId)
+        return false
+      }
+      //Optimization: Log the raw psql output alongside the error so you can see compile syntax errors.
+      logger.LogError(fmt.Sprintf("SQL script failed at step %s: %v\nOutput: %s", fileName, err, string(out)), correlationId)
+      return false
+    }
+    //
+    for _, str := range strings.Split(string(out), "\n") {  //Convert []byte to string.
+      if str != "" {
+        logger.LogInfo(str, correlationId)
+      }
     }
   }
   return true

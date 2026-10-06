@@ -7,11 +7,18 @@ SET lock_timeout = '5s';
 -- Using the same global 64-bit ID. This forces concurrent pods to wait.
 SELECT pg_advisory_lock(9876543210);
 
+
+-- SCHEMA SCOPING: Route all default queries directly into the 'fin' schema.
+-- Ensure the custom schema physically exists first.
+CREATE SCHEMA IF NOT EXISTS fin;
+-- Point this active database connection session to search 'fin' before 'public'.
+SET search_path = fin, public;
+
 -- Evaluate if this specific migration script version has already been run.
-SELECT (SELECT COUNT(*) FROM fin.schema_migrations WHERE version = '001_add_users') > 0 AS migration_exists \gset
+SELECT (SELECT COUNT(*) FROM fin.schema_migrations WHERE version = 'xxx_admin_migration_template') > 0 AS migration_exists \gset
 
 \if :migration_exists
-  \qecho Migration '002_add_audit_logs' already applied. Exiting...
+  \qecho Migration 'xxx_admin_migration_template' already applied. Exiting...
   \q
 \else
   /******************************************************************************************************************************
@@ -23,7 +30,7 @@ SELECT (SELECT COUNT(*) FROM fin.schema_migrations WHERE version = '001_add_user
 
   CREATE TABLE IF NOT EXISTS fin.schema_migrations(
     version    TEXT PRIMARY KEY,
-    applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
   );
 
   CREATE TABLE IF NOT EXISTS fin.user_data_vault(
@@ -49,11 +56,14 @@ Using the default GIN index
 
 ***/
 
+
   -- Index to optimize querying inside the JSONB payload
-  CREATE INDEX IF NOT EXISTS idx_user_data_vault
+  CREATE INDEX idx_user_data_vault
     ON fin.user_data_vault
     USING gin(partition_data);
   ANALYZE fin.user_data_vault;
+
+
   /******************************************************************************************************************************
                                        *** APPLY THE NEW UPGRADE HERE (END) ***
   ******************************************************************************************************************************/
@@ -62,12 +72,12 @@ Using the default GIN index
 
   -- Log the upgrade execution into the history table matrix so it never runs again.
   INSERT INTO fin.schema_migrations(version)
-    VALUES('001_initial_bootstrap')
+    VALUES('xxx_admin_migration_template')
     ON CONFLICT(version) DO NOTHING;
 
   -- Log the upgrade execution into your history matrix
-  INSERT INTO schema_migrations (version) VALUES ('002_add_audit_logs');
+  INSERT INTO schema_migrations (version) VALUES ('xxx_admin_migration_template');
 
-  \qecho Migration '002_add_audit_logs' applied successfully.
+  \qecho Migration 'xxx_admin_migration_template' applied successfully.
 \endif
 -- When psql finishes executing this file, the connection drops, causing Postgres to automatically release the advisory lock.

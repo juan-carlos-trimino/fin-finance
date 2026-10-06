@@ -347,44 +347,6 @@ CREATE TABLE IF NOT EXISTS fin.customers_credentials(
   last_attempt     TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
-
-
-CREATE TABLE IF NOT EXISTS fin.user_data_vault(
-  user_name       TEXT NOT NULL,
-  partition_name  TEXT NOT NULL,
-  partition_data  JSONB NOT NULL,
-  created_at      TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at      TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  --PK ensures the uniqueness of user & partition.
-  PRIMARY KEY(user_name, partition_name) -- Composite Primary Key
-);
-
-
-/***
-Indexing JSON data
-The more indexes Postgres has, the more time it takes to maintain and update them, which can affect the latency of certain queries and overall application performance.
-
-The B-tree data structure is used by Postgres by default to store and access indexed data internally.
-
-Using GIN Indexes
-By using GIN as the underlying data structure, an application can create a regular single-column index on JSON data to enable efficient searches across the nested JSON structure. Postgres supports two types of GIN indexes for JSON objects, each storing indexed data differently and supporting distinct operator classes for data access. The first type is the default GIN index, which extracts all the keys, values, and array elements from the original JSON object and adds them as distinct items to the index structure. The second type indexes only paths from the root of the JSON document down to each value and array element.
-
-Using the default GIN index
-
-***/
-
-
--- Index to optimize querying inside the JSONB payload
-CREATE INDEX idx_user_data_vault
-  ON fin.user_data_vault
-  USING gin(partition_data);
-ANALYZE fin.user_data_vault;
-
-
-
-
-
-
 /**************************************************************************************************
                *** DATABASE ROLES AND PRIVILEGES (Table-level privileges) ***
 **************************************************************************************************/
@@ -719,16 +681,3 @@ EXECUTE FUNCTION fin.customers_credentials_block_row_deletion();
 -- BEGIN
 -- END;
 -- $$;
-
-/**************************************************************************************************
-                    *** SYSTEM MIGRATION TRACKING TABLE (Run Inside Lock 2) ***
-**************************************************************************************************/
-CREATE TABLE IF NOT EXISTS schema_migrations(
-  version    TEXT PRIMARY KEY,
-  applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Register this baseline script version so future upgrades know the base layout is present.
-INSERT INTO schema_migrations(version)
-  VALUES('001_initial_bootstrap')
-ON CONFLICT(version) DO NOTHING;

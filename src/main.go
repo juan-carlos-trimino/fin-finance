@@ -74,7 +74,7 @@ const (
   admin_dbname = "finances"
   sslmode = "disable"  //Or "require", "prefer", etc., depending on your setup.
   connect_timeout = 4  //Maximum time to wait while connecting, in seconds.
-  pathToScript = "../IaC-app/utilities/postgres/sql/baseline/admin.sql"
+  pathToScript = "../IaC-app/utilities/postgres/sql/baseline/admin/"
 //////////////////////////
 ////////////////////////////
 ////////////////////////////
@@ -212,8 +212,8 @@ func main() {
   admin.SetupDirStructure(dataDir)
   //Database.
   if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
-    if ok := bank.ExecuteSqlScript(host, default_user, default_password, default_dbname, admin_dbname, sslmode,
-       port, connect_timeout, pathToScript, falseCorrelationId); !ok {
+    if ok := bank.ExecuteSqlScript(pathToScript, host, default_user, default_password, default_dbname, admin_dbname, sslmode,
+       port, connect_timeout, falseCorrelationId); !ok {
       panic("Call to ExecuteSqlScript failed.")
     }
   }

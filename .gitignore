@@ -462,6 +462,7 @@ IaC-app/utilities/postgres/sql/baseline/*
 IaC-app/utilities/postgres/sql/baseline/admin/*
 !IaC-app/utilities/postgres/sql/baseline/admin/000_admin.sql
 !IaC-app/utilities/postgres/sql/baseline/admin/001_add_test_table.sql
+!IaC-app/utilities/postgres/sql/baseline/admin/xxx_admin_migration_template.xsql
 !IaC-app/utilities/postgres/sql/.gitkeep
 !IaC-app/utilities/postgres/scripts/
 IaC-app/utilities/postgres/scripts/*
