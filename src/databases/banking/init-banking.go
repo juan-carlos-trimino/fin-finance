@@ -6,7 +6,9 @@ package banking
 //  Ctrl+K and Ctrl+J
 
 import (
+  "bytes"
   "context"
+  "errors"
   "fmt"
   "finance/config"
   "github.com/jackc/pgx/v5"
@@ -36,6 +38,12 @@ type banking struct {
 }
 
 var (
+  // Global package level scope (compiled exactly once at startup)
+  //Strict input validation: Allow only letters, numbers, and underscores.
+  //It stops malicious SQL characters (like ';', '--', '"') completely (preventing SQL injection).
+  isDbNameValid = regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
+
+
   /***
   To avoid creating multiple connection pools, use the Singleton pattern.
   poolInstance holds the single instance of the singleton; it is initialized to nil.
@@ -116,18 +124,17 @@ func GetBsInstance() (*banking) {
 
 /***
 
-Yes, you are 100% correct. This design works beautifully and equally well with concurrent goroutines running inside the same application.
-Whether the competition is coming from completely separate servers (Kubernetes pods), separate processes on your local machine, or multiple goroutines spinning inside a single Go binary, the central PostgreSQL database acts as the single source of truth.
+This design works well with concurrent goroutines running inside the same application.
+
+Whether the competition is coming from completely separate servers (Kubernetes pods), separate processes on your local machine, or multiple goroutines spinning inside a single Go binary, the central Postgres database acts as the single source of truth.
 Why it works for both Pods and Goroutines
-Because pg_advisory_lock is executed at the database connection layer, PostgreSQL assigns the lock to the specific database connection session (the TCP socket network connection).
-• With Pods: Each pod opens its own connection and competes for the lock.
-• With Goroutines: If your goroutines are each opening their own independent database connections (or grabbing a fresh connection from a pgxpool.Pool), PostgreSQL treats them exactly like separate pods. It safely blocks the secondary goroutine connections until the first goroutine releases the lock.
-
-
+Because pg_advisory_lock is executed at the database connection layer, Postgres assigns the lock to the specific database connection session (the TCP socket network connection).
+* With Pods: Each pod opens its own connection and competes for the lock.
+* With Goroutines: If your goroutines are each opening their own independent database connections (or grabbing a fresh connection from a pgxpool.Pool), Postgres treats them exactly like separate pods. It safely blocks the secondary goroutine connections until the first goroutine releases the lock.
 
 A Crucial Performance Optimization for Goroutines
 If you are using this strategy heavily inside goroutines, you can optimize your code to avoid hitting the network database engine unnecessarily.
-Network calls to PostgreSQL take milliseconds. Go memory operations take nanoseconds. To keep your application running fast, you can add a local sync.Mutex directly inside your Go code as a first line of defense:
+Network calls to Postgres take milliseconds. Go memory operations take nanoseconds. To keep your application running fast, you can add a local sync.Mutex directly inside your Go code as a first line of defense.
 
 package db
 
@@ -137,26 +144,57 @@ import (
   "://github.com"
 )
 
-// A local mutex to block goroutines inside the SAME application immediately
-var localProvisionMutex sync.Mutex
+A Crucial Performance Optimization for Goroutines
 
-func ProvisionDatabaseWithLock(ctx context.Context, adminConn *pgx.Conn, targetDb string, ...) bool {
 
-  // 1. FIRST DEFENSE: Block other internal goroutines instantly without hitting the network
-  localProvisionMutex.Lock()
-  defer localProvisionMutex.Unlock()
+If a user tries to access tenant_alpha and it triggers the provisioning sequence, the global mutex locks down. If a completely different user tries to access tenant_beta a millisecond later, Tenant Beta is forced to wait in line behind Tenant Alpha, even though they are completely unrelated databases! In a production system under heavy load, one slow tenant provisioning script could cause timeouts across your entire platform.
+To fix this, you need to lock per tenant database name, rather than locking the entire function.
 
-  // 2. SECOND DEFENSE: Block other external Kubernetes Pods across the network cluster
-  const provisionLockID int64 = 8492049103
-  _, _ = adminConn.Exec(ctx, "SELECT pg_advisory_lock($1);", provisionLockID)
+Instead of a single global lock and a standard map, you can use a thread-safe sync.Map to dynamically manage individual, lightweight locks for each specific tenant database.
+
+package main
+
+import (
+  "context"
+  "fmt"
+  "sync"
+)
+
+// 1. A thread-safe registry to store individual locks per tenant database
+var tenantLockRegistry sync.Map
+
+func ProvisionDatabaseWithLock(ctx context.Context, adminConn *pgx.Conn, targetDb string) bool {
+  // 2. Fetch or create a specific mutex JUST for this targetDb name
+  actualLock, _ := tenantLockRegistry.LoadOrStore(targetDb, &sync.Mutex{})
+  tenantMutex := actualLock.(*sync.Mutex)
+
+  // 3. FIRST DEFENSE: Only block goroutines targeting the SAME tenant database
+  tenantMutex.Lock()
+  defer tenantMutex.Unlock()
+
+  // 4. SECOND DEFENSE: Double-Check Database Existence locally before touching the network.
+  // (If a previous internal goroutine just finished building it, exit immediately)
+  if checkIfDbExistsLocallyCached(targetDb) {
+    return true
+  }
+
+  // 5. THIRD DEFENSE: Block other external Kubernetes Pods for this tenant across the network cluster
+  // Use a deterministic hash of the targetDb string as the advisory lock ID
+  provisionLockID := int64(hashStringToInt(targetDb))
+  _, err := adminConn.Exec(ctx, "SELECT pg_advisory_lock($1);", provisionLockID)
+  if err != nil {
+    return false
+  }
   defer adminConn.Exec(ctx, "SELECT pg_advisory_unlock($1);", provisionLockID)
 
-  // 3. Check and run your script safely...
+  // 6. Final Re-verification on Postgres (in case a separate server pod provisioned it)
+  if !checkIfDbExistsOnCluster(ctx, adminConn, targetDb) {
+    runMigrationScripts(targetDb)
+    markDbAsLocallyCached(targetDb)
+  }
+
   return true
 }
-
-
-By combining Go’s local sync.Mutex with PostgreSQL’s pg_advisory_lock, you build an architecture that is optimized for goroutines locally, while remaining completely bulletproof against multi-pod scale-outs in production.
 
 
 
@@ -171,80 +209,169 @@ Because sql.DB manages a connection pool automatically, calling an advisory lock
 
 
 func ExecuteSqlScript(dirPath, host, user, password, defaultDb, targetDb, sslmode string, port, connect_timeout int, correlationId string) bool {
-
   for _, str := range strings.Split(osu.ShowPermissions(dirPath, false), "\n") {
     if str != "" {
       logger.LogInfo(str, correlationId)
     }
   }
-
-
-  //Strict input validation: Allow only letters, numbers, and underscores.
-  //It stops malicious SQL characters (like ';', '--', '"') completely (preventing SQL injection).
-  isValidName := regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
-  if !isValidName(targetDb) {
+  //
+  if !isDbNameValid(targetDb) {
     logger.LogInfo(fmt.Sprintf("Invalid database name %q: Names must only contain alphanumeric characters or underscores", targetDb), correlationId)
     return false
-  } else if !isValidName(defaultDb) {
+  } else if !isDbNameValid(defaultDb) {
     logger.LogInfo(fmt.Sprintf("Invalid database name %q: Names must only contain alphanumeric characters or underscores", defaultDb), correlationId)
     return false
   }
   //Read all items in the target migration directory.
-  entries, err := os.ReadDir(dirPath)
+  files, err := os.ReadDir(dirPath)
   if err != nil {
-    logger.LogError(fmt.Sprintf("Failed to read directory %s: %v", dirPath, err), correlationId)
+    logger.LogError(fmt.Sprintf("Failed to read directory %q: %v", dirPath, err), correlationId)
     return false
   }
+  //Pre-allocate slice capacity based on the directory size to prevent resize-copy loops.
+  var sqlFiles []string = make([]string, 0, len(files))
+  var does000AdminExist bool = false
   //Filter out non-SQL files and collect file names.
-  var sqlFiles []string
-  var hasBootstrapFile bool = false
-  for _, entry := range entries {
-    if !entry.IsDir() && strings.HasSuffix(strings.ToLower(entry.Name()), ".sql") {
-      sqlFiles = append(sqlFiles, entry.Name())
-      if (!hasBootstrapFile && entry.Name() == "000_admin.sql") {  //The string comparison only triggers until the file is found.
-        hasBootstrapFile = true
+  for _, file := range files {
+    if file.IsDir() {
+      continue
+    }
+    //Return a read-only reference to the already-existing string block in memory (no new allocations).
+    name := file.Name()
+    strLen := len(name)
+    /***
+    Ensure the filename is long enough to have a 4-character extension. If a file name is exactly 4 characters long and matches
+    the condition, its name would literally be ".sql". A file named just ".sql" is a hidden file with no actual base name, which
+    is almost certainly a user error or temporary system file -- not a valid migration script.
+
+    Slicing a string in Go does not copy string data or allocate memory. It simply constructs a new lightweight header window
+    pointing to the end of the existing string data.
+    ***/
+    if strLen > 4 && strings.EqualFold(name[strLen - 4:], ".sql") {
+      sqlFiles = append(sqlFiles, name)
+      //The string comparison only triggers until the file is found; case-insensitive check with 0 allocations.
+      if (!does000AdminExist && strings.EqualFold(name, "000_admin.sql")) {
+        does000AdminExist = true
       }
     }
   }
-  //Handle empty or missing update file situations safely.
-  if !hasBootstrapFile {
-    //Check if the target database already exists on the server.
-    checkConnString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s",
-      host, port, user, password, defaultDb, connect_timeout, sslmode)
-    //Query pg_database. If it returns text, the database exists.
-    checkCmd := exec.Command("psql", checkConnString, "-tA", "-c", fmt.Sprintf("SELECT 1 FROM pg_database WHERE datname='%s';", targetDb))
-    dbCheckOut, checkErr := checkCmd.CombinedOutput()
-    dbExists := strings.TrimSpace(string(dbCheckOut)) == "1"
-    if checkErr != nil {
-      logger.LogError(fmt.Sprintf("Failed to verify database existence during fallback check: %v", checkErr), correlationId)
+  /***
+  Why Mandating the Bootstrap/Migration Files be Present
+  1. It Guarantees "Idempotency" and Reproducibility
+     In modern DevOps (CI/CD pipelines, Kubernetes, local staging), you need to be able to tear down a database and recreate it
+     exactly the same way every single time. If 000_admin.sql is missing, you can never spin up a fresh local development
+     environment or a temporary preview environment. Your code becomes dependent on a manual state (someone having created the
+     database ahead of time).
+  2. It Eliminates the "Ghost Migration" Danger
+     If 000_admin.sql is missing but the database exists, your program assumes everything is fine and proceeds to run the remaining
+     migration files. However, you have no guarantee that the pre-existing database matches the state 000_admin.sql was supposed to
+     create (it might be missing required schemas, extensions, or system roles).
+  3. It Enforces Directory Integrity
+     A migration directory should be treated as a single, immutable unit of truth. If individual .sql files are missing, it usually
+     means a deployment failed, a git merge went wrong, or a developer forgot to commit a file. Silent fallbacks can accidentally
+     mask serious human errors.
+  ***/
+  if !does000AdminExist {  //Enforce directory completeness up front.
+    logger.LogError(fmt.Sprintf("CRITICAL CONFIGURATION ERROR: The bootstrap script '000_admin.sql' is missing from %s. " +
+      "Migrations cannot be safely verified or executed without the root bootstrap file.", dirPath), correlationId)
+    return false
+  }
+  //CRUCIAL: Sort files alphabetically so 000_admin runs before 001_admin_xxx.
+  sort.Strings(sqlFiles)
+  db := GetBsInstance()
+  ctx := context.Background()
+  //Query all applied migrations from the database in order.
+  rows, err := db.bsPool.Query(ctx, "SELECT migration_name FROM migration_history ORDER BY migration_name ASC;")//????????????????????
+  if err != nil {
+    //Zero-Allocation Type Assertion to extract native Postgres Error codes.
+    var pgErr *pgconn.PgError
+    /***
+    Check native structural errors without any string conversions or memory allocations.
+    * If the database does not exist, Postgres returns error code 3D000 (invalid_catalog_name).
+    * If the database exists but the table is missing, Postgres returns code 42P01 (undefined_table).
+    ***/
+    if errors.As(err, &pgErr) && (pgErr.Code == "42P01" || pgErr.Code == "3D000") {
+      logger.LogInfo("No migration history table found or database does not exist. Proceeding with setup.", correlationId)
+    } else {
+      // 2. Performance optimization: Only use fmt.Sprintf inside the failure block
+      // where the application is crashing/returning false anyway.
+      logger.LogError(fmt.Sprintf("Failed to query database migration history: %v", err), correlationId)
       return false
     }
-    //
-    if !dbExists {
-      //CRITICAL ROADBLOCK: The ecosystem is missing and we don't have the bootstrap script to build it.
-      logger.LogError(fmt.Sprintf("CRITICAL ERROR: The target database %q does not exist, and the bootstrap script '000_admin.sql' was not found in %s. Execution halted.", targetDb, dirPath), correlationId)
+  } else {
+
+    // 1. Pre-allocate a string slice matching your maximum possible local files.
+    // By passing 0 for length and len(sqlFiles) for capacity, the slice starts empty
+    // but guarantees ZERO heap allocations from resizing as it populates.
+
+        // 1. Allocate a string slice with zero length but pre-defined upper capacity.
+    // This creates an initial underlying backing array large enough to hold all potential files,
+    // guaranteeing ZERO data-copying or array-doubling overhead as the rows stream in.
+
+    preAllocatedSlice := make([]string, 0, len(sqlFiles))
+
+        // 2. Append directly to our pre-sized buffer space.
+    // AppendRows automatically handles loop iterations, column parsing, and connection safety cleanup.
+//pgx.AppendRows behaves identically to pgx.CollectRows in how it iterates, scans, and automatically closes rows. However, it takes an existing slice as its first argument and appends rows directly to that slice.
+    //Collect the database rows into a clean string slice.
+    dbMigrations, err := pgx.AppendRows(preAllocatedSlice, rows, pgx.RowTo[string])
+    if err != nil {
+      logger.LogError(fmt.Sprintf("Failed to parse migration history rows: %v", err), correlationId)
       return false
     }
-    //If the database already exists, having no new migration files is perfectly safe.
-    if len(sqlFiles) == 0 {
-      logger.LogInfo(fmt.Sprintf("Target database %q exists and no new migration files are pending.", targetDb), correlationId)
+
+
+
+
+    /***
+    Check once up front if the database records exceed the disk files. We use (len(sqlFiles) - 1) to account for the unlogged
+    000_admin.sql.
+    ***/
+    if len(dbMigrations) > (len(sqlFiles) - 1) {
+      logger.LogError("CRITICAL INTEGRITY FAILURE: The database has more migrations recorded than files found on disk!", correlationId)
+      return false
+    }
+    //Direct Slice Comparison (Skipping index 0 because 000_admin isn't in migrations).
+    for idx, dbMig := range dbMigrations {
+      //Offset the index by +1 because sqlFiles[0] is 000_admin.sql.
+      fileIdx := idx + 1
+      //Strip the .sql extension so it matches the string stored in the database; using zero-allocation.
+      strLen := len(sqlFiles[fileIdx])
+      //Compare the file names at the exact same position.
+      if !strings.EqualFold(dbMig, sqlFiles[fileIdx][: strLen - 4]) {
+        logger.LogError(fmt.Sprintf("CRITICAL FILE MISMATCH: Database expected %q at position %d, but disk has %q. A file is missing!",
+          dbMig, fileIdx, sqlFiles[fileIdx]), correlationId)
+        return false
+      }
+    }
+    /***
+    Check if the environment is fully caught up with no new files pending; we add 1 to dbMigrations to account for 000_admin.sql
+    which isn't logged in the migrations table.
+    ***/
+    if len(sqlFiles) == (len(dbMigrations) + 1) {
+      logger.LogInfo("Database is fully up-to-date. No new migrations to process.", correlationId)
       return true
     }
   }
-  //CRUCIAL: Sort files alphabetically so 000_admin_xxx runs before 001_admin_xxx.
-  sort.Strings(sqlFiles)
   //Iterate over the sorted files sequentially.
   for idx, fileName := range sqlFiles {
     fullPath := filepath.Join(dirPath, fileName)
-    //Resolve the active target name purely for explicit log reporting clarity.
-    activeDb := defaultDb
-    if idx > 0 {
-      activeDb = targetDb
-    }
-    logger.LogInfo(fmt.Sprintf("Executing migration step [%d/%d]: %s against DB: %s", idx + 1, len(sqlFiles), fileName, activeDb), correlationId)
+    // //Default to the target database for all normal migration updates.
+    // activeDb := targetDb
+    // if idx == 0 {
+    //   //Database may need to be created so let's use defaultDb (postgres).
+    //   activeDb = defaultDb
+    // }
+    logger.LogInfo(fmt.Sprintf("Executing migration step [%d/%d]: %s against DB: %s", idx + 1, len(sqlFiles), fileName, targetDb), correlationId)
     //Using key-value pairs.
     var cmd *exec.Cmd
     if idx == 0 {
+      /***
+      Scenario A (First Deploy / New Environment):
+      The database does not exist. 000_admin.sql runs entirely. It creates the database shell and executes every single standard
+      table layout or stored procedure inside it. It finishes successfully. Go then proceeds to look at your incremental patches
+      (001_xxx.sql onwards).
+      ***/
       connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password,
         defaultDb, connect_timeout, sslmode)
       cmd = exec.Command("psql", connString,
@@ -252,6 +379,13 @@ func ExecuteSqlScript(dirPath, host, user, password, defaultDb, targetDb, sslmod
         "-v", fmt.Sprintf("ALWAYS_DB_ADMIN=%s", strconv.FormatBool(config.GetAlwaysDbAdmin(correlationId))),
         "-v", fmt.Sprintf("DB_NAME=%s", targetDb))
     } else {
+      /***
+      Scenario B (Subsequent Application Boots):
+      The database is already fully intact. Because it's alive, it implies that the baseline snapshot has already run completely on
+      a previous startup. Running 000_admin.sql again would be a waste of time and would error out trying to recreate existing
+      tables. It hits the \q statement, exits gracefully with code 0, and allows Go to jump instantly to parsing the incremental
+      patches.
+      ***/
       connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password,
         targetDb, connect_timeout, sslmode)
       //We automatically strip out the extension to pass a clean text variable tag down to the psql layer context environment.
@@ -263,19 +397,27 @@ func ExecuteSqlScript(dirPath, host, user, password, defaultDb, targetDb, sslmod
     out, err := cmd.CombinedOutput()
     if err != nil {
       //Catch if the failure was specifically due to the 5s lock timeout.
-      if strings.Contains(string(out), "55P03") || strings.Contains(strings.ToLower(string(out)), "lock timeout") {
+      if bytes.Contains(out, []byte("55P03")) || bytes.Contains(bytes.ToLower(out), []byte("lock timeout")) {
         logger.LogError(fmt.Sprintf("[DB Session] Postgres aborted: Could not acquire lock within 5 seconds via psql on step %s.", fileName), correlationId)
         return false
       }
+      /***
+      When psql throws an error, it doesn't print a clean, single line. It outputs a multi-line stack trace. Modern log aggregators
+      (like Datadog, AWS CloudWatch, Splunk, or Grafana Loki) assume that "one log line = one distinct event". Hence, when they see
+      the newlines inside the psql error output, they slice the single error report into multiple separate log messages in the
+      dashboard. The first line gets tied to the correlationId, the other lines do not get timestamp, correlationId, etc.
+
+      Replace actual newlines with a string representation so it stays on one physical line.
+      ***/
+      singleLineOutput := strings.ReplaceAll(string(out), "\n", " | ")
       //Optimization: Log the raw psql output alongside the error so you can see compile syntax errors.
-      logger.LogError(fmt.Sprintf("SQL script failed at step %s: %v\nOutput: %s", fileName, err, string(out)), correlationId)
+      logger.LogError(fmt.Sprintf("SQL script failed at step %s: %v | Output: %s", fileName, err, singleLineOutput), correlationId)
       return false
     }
-    //
-    for _, str := range strings.Split(string(out), "\n") {  //Convert []byte to string.
-      if str != "" {
-        logger.LogInfo(str, correlationId)
-      }
+    temp := strings.TrimSpace(string(out))
+    if temp != "" {
+      singleLineOutput := strings.ReplaceAll(temp, "\n", " | ")
+      logger.LogInfo(fmt.Sprintf("Migration step %s completed output: %s", fileName, singleLineOutput), correlationId)
     }
   }
   return true
@@ -345,3 +487,81 @@ func (bs *banking) Ping(ctx context.Context) error {
 func (bs *banking) Close() {
   bs.bsPool.Close()
 }
+
+
+/***
+
+package main
+
+import (
+  "context"
+  "fmt"
+  "os/exec"
+  "strings"
+  "sync"
+)
+
+// 1. Thread-safe registry to store memory mutexes per tenant database
+var tenantLockRegistry sync.Map
+
+// 2. Thread-safe registry to cache which tenants are fully built
+var provisionedTenants sync.Map
+
+func ProvisionTenantDatabase(ctx context.Context, connectionString string, targetDb string, sqlFilePath string) bool {
+  // ----------------------------------------------------
+  // STEP 1: FAST LOCAL EARLY EXIT
+  // ----------------------------------------------------
+  // If this Go app already fully built this tenant, exit immediately.
+  // Zero mutex contention, zero OS forks, zero network calls.
+  if _, alreadyDone := provisionedTenants.Load(targetDb); alreadyDone {
+    return true
+  }
+
+  // ----------------------------------------------------
+  // STEP 2: SCOPED MUTEX (No cross-tenant bottlenecks)
+  // ----------------------------------------------------
+  // Fetch or create a specific mutex JUST for this tenant database string.
+  actualLock, _ := tenantLockRegistry.LoadOrStore(targetDb, &sync.Mutex{})
+  tenantMutex := actualLock.(*sync.Mutex)
+
+  tenantMutex.Lock()
+  // Re-verify the check under the safety of the lock (Double-Checked Locking)
+  if _, alreadyDone := provisionedTenants.Load(targetDb); alreadyDone {
+    tenantMutex.Unlock()
+    return true
+  }
+  defer tenantMutex.Unlock()
+
+  // ----------------------------------------------------
+  // STEP 3: RUN THE PSQL COMMAND (Postgres takes the wheel)
+  // ----------------------------------------------------
+  // Go spins up the migration script. The script itself will execute
+  // its lock logic (e.g., SET lock_timeout = '5s'; SELECT pg_advisory_lock(hash);)
+  cmd := exec.Command("psql", connectionString, "-f", sqlFilePath)
+  out, err := cmd.CombinedOutput()
+
+  if err != nil {
+    outStr := string(out)
+    outLower := strings.ToLower(outStr)
+
+    // Catch your 5s lock timeout string or error code returned by the script
+    if strings.Contains(outStr, "55P03") || strings.Contains(outLower, "lock_timeout") || strings.Contains(outLower, "lock timeout") {
+      logger.LogError(fmt.Sprintf("[DB Session] Postgres aborted: Script could not acquire advisory lock for %s.", targetDb), correlationId)
+      return false
+    }
+
+    logger.LogError(fmt.Sprintf("Migration failed for tenant %s: %v\nOutput: %s", targetDb, err, outStr), correlationId)
+    return false
+  }
+
+  // ----------------------------------------------------
+  // STEP 4: MARK AS DONE LOCALLY
+  // ----------------------------------------------------
+  // Save to memory cache so subsequent goroutines bypass this entire process.
+  provisionedTenants.Store(targetDb, true)
+  return true
+}
+
+
+
+***/
