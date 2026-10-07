@@ -212,9 +212,9 @@ func main() {
   admin.SetupDirStructure(dataDir)
   //Database.
   if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
-    if ok := bank.ExecuteSqlScript(pathToScript, host, default_user, default_password, default_dbname, admin_dbname, sslmode,
+    if ok := bank.ExecuteSqlScripts(pathToScript, host, default_user, default_password, default_dbname, admin_dbname, sslmode,
        port, connect_timeout, falseCorrelationId); !ok {
-      panic("Call to ExecuteSqlScript failed.")
+      panic("Call to ExecuteSqlScripts failed.")
     }
   }
   connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port,
