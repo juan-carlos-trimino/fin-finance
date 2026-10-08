@@ -7,24 +7,27 @@ SET lock_timeout = '5s';
 -- Using the same global 64-bit ID. This forces concurrent pods to wait.
 SELECT pg_advisory_lock(9876543210);
 
--- Evaluate if this specific migration script version has already been run.
-SELECT (SELECT COUNT(*) FROM fin.schema_migrations WHERE version = :'MIGRATION_NAME') > 0 AS migration_exists \gset
+-- SCHEMA SCOPING: Route all default queries directly into the 'fin' schema.
+-- Ensure the custom schema physically exists first.
+CREATE SCHEMA IF NOT EXISTS fin;
+-- Point this active database connection session to search 'fin' before 'public'.
+SET search_path = fin, public;
+
+SELECT EXISTS(
+  SELECT 1 FROM fin.migration_history WHERE migration_name = :'MIGRATION_NAME'
+) AS migration_exists \gset
 
 \if :migration_exists
-  \qecho Migration :'MIGRATION_NAME' already applied. Exiting...
+  \qecho Migration :'MIGRATION_NAME' already applied, skipping...
   \q
 \else
+  \qecho Applying migration :'MIGRATION_NAME'...
   /******************************************************************************************************************************
                                       *** APPLY THE NEW UPGRADE HERE (BEGIN) ***
   *******************************************************************************************************************************
   Keep the upgrade immutable: Once a migration script is deployed to production, never modify its contents. If you need to
   make a change (like altering a column), create a brand new upgrade  using this same template.
   ******************************************************************************************************************************/
-
-  CREATE TABLE IF NOT EXISTS fin.schema_migrations(
-    migration   TEXT PRIMARY KEY,
-    applied_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-  );
 
   CREATE TABLE IF NOT EXISTS fin.user_data_vault(
     user_name       TEXT NOT NULL,
@@ -54,14 +57,24 @@ Using the default GIN index
     ON fin.user_data_vault
     USING gin(partition_data);
   ANALYZE fin.user_data_vault;
+
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA fin
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO admin_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA fin
+GRANT USAGE, SELECT ON SEQUENCES TO admin_role;
+
+
+
   /******************************************************************************************************************************
                                        *** APPLY THE NEW UPGRADE HERE (END) ***
   ******************************************************************************************************************************/
 
+  -- Using the conflict safety clause so these commands can be safely re-run without throwing an error.
   -- Log the upgrade execution into the history table matrix so it never runs again.
-  INSERT INTO fin.schema_migrations(migration)
+  INSERT INTO fin.migration_history(migration_name)
     VALUES(:'MIGRATION_NAME')
-    ON CONFLICT(migration) DO NOTHING;
+    ON CONFLICT(migration_name) DO NOTHING;
 
   \qecho Migration :'MIGRATION_NAME' applied successfully.
 \endif

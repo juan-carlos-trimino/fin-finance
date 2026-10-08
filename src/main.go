@@ -74,7 +74,7 @@ const (
   admin_dbname = "finances"
   sslmode = "disable"  //Or "require", "prefer", etc., depending on your setup.
   connect_timeout = 4  //Maximum time to wait while connecting, in seconds.
-  pathToScript = "../IaC-app/utilities/postgres/sql/baseline/admin/"
+  pathToScripts = "../IaC-app/utilities/postgres/sql/baseline/admin/"
 //////////////////////////
 ////////////////////////////
 ////////////////////////////
@@ -210,13 +210,7 @@ func main() {
   webfinances.SetupDirStructure(dataDir)
   banking.SetupDirStructure(dataDir)
   admin.SetupDirStructure(dataDir)
-  //Database.
-  if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
-    if ok := bank.ExecuteSqlScripts(pathToScript, host, default_user, default_password, default_dbname, admin_dbname, sslmode,
-       port, connect_timeout, falseCorrelationId); !ok {
-      panic("Call to ExecuteSqlScripts failed.")
-    }
-  }
+  //Connection pool.
   connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port,
     admin_user, admin_password, admin_dbname, connect_timeout, sslmode)
   //logger.LogInfo(fmt.Sprintf("Connection string: %s", psqlInfo), falseCorrelationId)
@@ -226,6 +220,13 @@ func main() {
   }
   defer dbInstance.Close()
   dbInstance.VerifyConnection(context.Background(), falseCorrelationId)
+  //Database.
+  if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
+    if ok := bank.ExecuteSqlScripts(pathToScripts, host, default_user, default_password, default_dbname, admin_dbname, sslmode,
+       port, connect_timeout, falseCorrelationId); !ok {
+      panic("Call to ExecuteSqlScripts failed.")
+    }
+  }
   /***
   Compile all templates from all sub-directories into memory.
   Pass the root virtual filesystem into te renderer initialization function.

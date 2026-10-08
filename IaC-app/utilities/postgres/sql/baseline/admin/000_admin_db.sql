@@ -403,6 +403,11 @@ CREATE TABLE IF NOT EXISTS fin.customers_credentials(
   last_attempt     TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
+CREATE TABLE IF NOT EXISTS fin.migration_history(
+  migration_name  TEXT PRIMARY KEY,
+  applied_at      TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 /**************************************************************************************************
                *** DATABASE ROLES AND PRIVILEGES (Table-level privileges) ***
 **************************************************************************************************/

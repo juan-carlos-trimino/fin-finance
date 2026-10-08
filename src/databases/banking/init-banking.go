@@ -203,13 +203,17 @@ func ExecuteSqlScripts(dirPath, host, user, password, defaultDb, targetDb, sslmo
   if err != nil {
     //Zero-Allocation Type Assertion to extract native Postgres Error codes.
     var pgErr *pgconn.PgError
+    errExists := errors.As(err, &pgErr)
     /***
     Check native structural errors without any string conversions or memory allocations.
     * If the database does not exist, Postgres returns error code 3D000 (invalid_catalog_name).
     * If the database exists but the table is missing, Postgres returns code 42P01 (undefined_table).
     ***/
-    if errors.As(err, &pgErr) && (pgErr.Code == "42P01" || pgErr.Code == "3D000") {
-      logger.LogInfo("No migration history table found OR database does not exist. Proceeding with setup.", correlationId)
+    if errExists && pgErr.Code == "3D000" {
+      logger.LogInfo("Database does not exist. Proceeding with setup.", correlationId)
+    } else if errExists && pgErr.Code == "42P01" {
+      unappliedMigrations = 1  //Move pass the 000_admin_db.sql file.
+      logger.LogInfo("No migration history table found in the database. Proceeding with setup.", correlationId)
     } else {
       //Performance optimization: Only use fmt.Sprintf inside the failure block where the application is crashing/returning false anyway.
       logger.LogError(fmt.Sprintf("Cannot query database migration history: %v", err), correlationId)
@@ -330,8 +334,24 @@ func ExecuteSqlScripts(dirPath, host, user, password, defaultDb, targetDb, sslmo
     }
     out = bytes.TrimSpace(out)
     if len(out) > 0 {
-      out = bytes.ReplaceAll(out, []byte("\n"), []byte(" | "))
-      logger.LogInfo(fmt.Sprintf("Migration step %s completed output: %s", fileName, out), correlationId)
+      //The commented lines output one long line.
+      // out = bytes.ReplaceAll(out, []byte("\n"), []byte(" | "))
+      // logger.LogInfo(fmt.Sprintf("Migration step %s completed output: %s", fileName, out), correlationId)
+      sep := []byte("\n")
+      for {
+        idx := bytes.Index(out, sep)
+        if idx == -1 {
+          //It prevents the system from emitting an empty log line if the output happened to end right on a trailing
+          //newline character.
+          if len(out) > 0 {
+            logger.LogInfo(string(out), correlationId)
+          }
+          break
+        }
+        logger.LogInfo(string(out[:idx]), correlationId)
+        //Advance past the separator.
+        out = out[idx + len(sep):]
+      }
     }
   }
   return true
