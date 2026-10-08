@@ -41,7 +41,6 @@ var (
   //It stops malicious SQL characters (like ';', '--', '"') completely (preventing SQL injection).
   isDbNameValid = regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
 
-
   /***
   To avoid creating multiple connection pools, use the Singleton pattern.
   poolInstance holds the single instance of the singleton; it is initialized to nil.
@@ -53,6 +52,18 @@ var (
   ***/
   bsOnce sync.Once
 )
+
+const (
+  // Define a globally unique 64-bit constant for this service's migrations.
+// Any random 64-bit integer fits, up to 9223372036854775807.
+ MigrationLockValue int64 = 4829103948572019384
+)
+
+
+func GetMigrationLockID() string {
+	return strconv.FormatInt(MigrationLockValue, 10)
+}
+
 
 //Initialize the connection pool.
 func InitializeBsPool(ctx context.Context, connString, correlationId string) *banking {
@@ -291,8 +302,10 @@ func ExecuteSqlScripts(dirPath, host, user, password, defaultDb, targetDb, sslmo
       ***/
       connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password,
         defaultDb, connect_timeout, sslmode)
-      cmd = exec.Command("psql", connString,
+      cmd = exec.Command("psql", "--quiet", "--tuples-only", "--no-align", connString,
         "-f", fileName,
+        "-v", fmt.Sprintf("LOCK_ID=%s", GetMigrationLockID()),
+        "-v", "LOCK_TIMEOUT='5s'",  //Keep the single quotes in the string value.
         "-v", fmt.Sprintf("ALWAYS_DB_ADMIN=%s", strconv.FormatBool(config.GetAlwaysDbAdmin(correlationId))),
         "-v", fmt.Sprintf("DB_NAME=%s", targetDb))
     } else {
@@ -305,8 +318,10 @@ func ExecuteSqlScripts(dirPath, host, user, password, defaultDb, targetDb, sslmo
       ***/
       connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password,
         targetDb, connect_timeout, sslmode)
-      cmd = exec.Command("psql", connString,
+      cmd = exec.Command("psql", "--quiet", "--tuples-only", "--no-align", connString,
         "-f", fileName,
+        "-v", fmt.Sprintf("LOCK_ID=%s", GetMigrationLockID()),
+        "-v", "LOCK_TIMEOUT='5s'",  //Keep the single quotes in the string value.
         "-v", fmt.Sprintf("MIGRATION_NAME=%s", fileName[: len(fileName) - 4]))
     }
     //Tell the OS to run the psql process INSIDE the migration directory (0 new heap allocations).
@@ -332,6 +347,12 @@ func ExecuteSqlScripts(dirPath, host, user, password, defaultDb, targetDb, sslmo
       logger.LogError(fmt.Sprintf("SQL script failed at step %s: %v | Output: %s", fileName, err, out), correlationId)
       return false
     }
+    /***
+    In Go, sub-slicing a byte slice (slice[start:end]) merely creates a tiny 24-byte header containing a pointer, a length,
+    and a capacity. It points right back to the exact same underlying memory block that was already allocated.
+
+    The only line that allocates heap memory inside the loop is the conversion to a string for the logger.
+    ***/
     out = bytes.TrimSpace(out)
     if len(out) > 0 {
       //The commented lines output one long line.
@@ -343,12 +364,17 @@ func ExecuteSqlScripts(dirPath, host, user, password, defaultDb, targetDb, sslmo
         if idx == -1 {
           //It prevents the system from emitting an empty log line if the output happened to end right on a trailing
           //newline character.
+          out = bytes.TrimSpace(out)
           if len(out) > 0 {
             logger.LogInfo(string(out), correlationId)
           }
           break
         }
-        logger.LogInfo(string(out[:idx]), correlationId)
+        line := out[:idx]
+        line = bytes.TrimSpace(line)
+        if len(line) > 0 {
+          logger.LogInfo(string(line), correlationId)
+        }
         //Advance past the separator.
         out = out[idx + len(sep):]
       }

@@ -37,7 +37,15 @@ Notes (Indexes)
    a query.
 **************************************************************************************************/
 -- Online Banking System.
+
+-- FORCE psql to immediately exit and close the session if ANY error occurs.
+-- This ensures the session lock is never left hanging on a dead connection!
+\set ON_ERROR_STOP on
+
 SELECT CONCAT('*** Output from script, run began at: ', NOW(), ' ***') AS msg \gset
+\qecho :msg
+
+SELECT CONCAT('*** PostgreSQL version: ', (SELECT version()), ' ***') AS msg \gset
 \qecho :msg
 
 /***
@@ -102,10 +110,10 @@ gold standard of reliability.
 ***/
 -- LOCK 1: Protect Cluster Actions (Roles & Database Creation)
 SET lock_timeout = '5s';
-SELECT pg_advisory_lock(9876543210);
+SELECT 'Confirmation: lock_timeout is set to ' || current_setting('lock_timeout') || '.';
+SELECT pg_advisory_lock(:'LOCK_ID'::bigint);
 
-SELECT CONCAT('*** PostgreSQL version: ', (SELECT version()), ' ***') AS msg \gset
-\qecho :msg
+\qecho Lock (:LOCK_ID) successfully acquired.
 
 -- Define a temporary function in the pg_temp schema.
 CREATE OR REPLACE FUNCTION pg_temp.does_db_exist(db_name TEXT)

@@ -2,14 +2,17 @@
 SELECT CONCAT('*** Output from script, run began at: ', NOW(), ' ***') AS msg \gset
 \qecho :msg
 
+SELECT CONCAT('*** PostgreSQL version: ', (SELECT version()), ' ***') AS msg \gset
+\qecho :msg
+
 -- LOCK: Protect Migration Application Sequence
 SET lock_timeout = '5s';
+SELECT 'Confirmation: lock_timeout is set to ' || current_setting('lock_timeout') || '.';
 -- Using the same global 64-bit ID. This forces concurrent pods to wait.
-SELECT pg_advisory_lock(9876543210);
+SELECT pg_advisory_lock(:'LOCK_ID'::bigint);
 
--- SCHEMA SCOPING: Route all default queries directly into the 'fin' schema.
--- Ensure the custom schema physically exists first.
-CREATE SCHEMA IF NOT EXISTS fin;
+\qecho Lock (:LOCK_ID) successfully acquired.
+
 -- Point this active database connection session to search 'fin' before 'public'.
 SET search_path = fin, public;
 
