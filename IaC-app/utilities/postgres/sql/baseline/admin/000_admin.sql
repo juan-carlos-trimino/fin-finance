@@ -41,8 +41,64 @@ SELECT CONCAT('*** Output from script, run began at: ', NOW(), ' ***') AS msg \g
 \qecho :msg
 
 /***
-Because Postgres advisory locks are strictly scoped to the database they are run inside, an advisory lock inside the 'postgres'
-default database and an advisory lock inside the 'finances' database live in entirely different namespaces.
+If the advisory lock statement SELECT pg_advisory_lock(9876543210); is located right inside the SQL script file, every single
+goroutine or external pod executing that script will see and respect the exact same global lock.
+
+However, because the migration tool executes these scripts via an external psql shell, there are a couple of crucial behaviors
+we should know about how this lock functions:
+1. It acts as a Global Barrier Across Pods/Nodes
+   Since the lock key (9876543210) is a hardcoded 64-bit integer, Postgres enforces this block across the entire database cluster.
+   * If Goroutine A spawns psql and starts executing 001_add_users.sql, it will successfully acquire lock 9876543210.
+   * If Goroutine B (or an entirely separate microservice container on Kubernetes) tries to run 001_add_users.sql at the exact
+     same microsecond, its psql process will hit that line, see that the lock is held, and block/wait.
+2. The Lock Scope is Tied to the psql Lifetime
+   Because we are calling SELECT pg_advisory_lock(...) (which is a session-level advisory lock) inside a script via
+   exec.Command("psql", ...), the lock behaves in a highly secure, crash-safe way:
+   * The lock is tied directly to that specific psql shell's network session.
+   * As long as that specific script is running, the lock stays tightly held.
+   * Automatic Cleanup: The moment the script finishes executing and the psql process exits, the underlying database connection
+     closes. Postgres immediately and automatically destroys the session and releases the lock. Even if a script crashes halfway
+     through due to a syntax error or a network drop, Postgres safely releases the lock.
+
+One Important Trap: Goroutines vs. the pgxpool
+If we were acquiring this advisory lock natively inside Go code using the main connection pool (e.g.,
+db.bsPool.Exec(ctx, "SELECT pg_advisory_lock(9876543210)")), different goroutines would not reliably see each other's locks.
+This is because a connection pool dynamically shuffles database connections across different goroutines. Goroutine A might
+acquire the lock on Connection #1, and then Goroutine B might run its query on Connection #1 as well, meaning Goroutine B
+would bypass the lock entirely because it's sharing the same session.
+
+Why our setup is immune to this trap: Because our code completely bypasses the Go connection pool for execution and spawns a
+brand-new, isolated psql OS process for every single file, each file gets its own dedicated, exclusive database session. Our
+architecture guarantees that different goroutines will always compete for the lock correctly.
+
+Whether Postgres advisory locks count as a distributed lock depends entirely on our architectural perspective.
+1. From our Go Application's Perspective: Yes, it IS a Distributed Lock
+   If we have 10 completely separate server pods running our Go microservice across a Kubernetes cluster, they cannot use Go's
+   standard sync.Mutex or channels to coordinate because their memory space is isolated.
+
+   When those 10 isolated server pods all compete for SELECT pg_advisory_lock(9876543210);, they are using a centralized state
+   manager to coordinate concurrency across distributed network nodes. In the world of application architecture, this satisfies
+   the exact definition of a distributed lock.
+2. From our Database Infrastructure's Perspective: No, it is Centralized
+   Postgres advisory locks are fundamentally centralized inside a single primary database instance.
+   * The Centralized Bottleneck: The lock state lives in the memory of the single, primary Postgres master node. Read replicas
+     do not replicate or share advisory lock states.
+   * The Namespace Boundary: Furthermore, advisory locks are scoped strictly per database within that instance. If our Postgres
+     instance hosts a database named finances and another named analytics, an advisory lock on key 9876543210 in finances will
+     not block a lock on key 9876543210 inside analytics.
+
+Summary: The Trade-off
+Because Postgres advisory locks rely on a single, centralized database engine rather than a true distributed consensus algorithm
+(like Raft or Paxos used by tools like etcd), they have clear pros and cons:
+* The Risk (Single Point of Failure): If our primary database crashes or undergoes a failover to a replica, all held advisory
+  locks instantly disappear during the reconnection window.
+* The Reward (No Ghost Locks): Because they are tied directly to active TCP database sessions, if a Go pod crashes or suffers a
+  network partition, the Postgres engine detects the dropped connection and instantly destroys the lock. This means we never
+  have to manage or tune artificial Time-to-Live (TTL) expiration scripts like we would if we built a distributed lock using
+  Redis (SET NX EX).
+
+For a database schema migration engine, using the primary Postgres engine as our centralized coordinator is considered the
+gold standard of reliability.
 ***/
 -- LOCK 1: Protect Cluster Actions (Roles & Database Creation)
 SET lock_timeout = '5s';
