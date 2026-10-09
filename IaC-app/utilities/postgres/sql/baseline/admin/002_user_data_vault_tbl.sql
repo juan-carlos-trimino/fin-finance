@@ -53,13 +53,17 @@ By using GIN as the underlying data structure, an application can create a regul
 
 Using the default GIN index
 
+Because the index is ordered (user_name, partition_name), it will perfectly optimize your current query (WHERE user_name = $1 AND partition_name = $2). As a bonus, it will also optimize queries that only filter by user_name (e.g., WHERE user_name = $1).
+ PostgreSQL always automatically creates a unique B-Tree index behind the scenes for any table whenever you define a PRIMARY KEY (or a UNIQUE) constraint.
+
+The GIN (Generalized Inverted Index) you created is designed for searching inside the JSON structural keys and values. It will only wake up and optimize your queries if you use PostgreSQL JSONB containment or existence operators (like @>, ?, ?&, ?|).
 ***/
 
   -- Index to optimize querying inside the JSONB payload
-  CREATE INDEX IF NOT EXISTS idx_user_data_vault
-    ON fin.user_data_vault
-    USING gin(partition_data);
-  ANALYZE fin.user_data_vault;
+  -- CREATE INDEX IF NOT EXISTS idx_user_data_vault
+  --   ON fin.user_data_vault
+  --   USING gin(partition_data);
+  -- ANALYZE fin.user_data_vault;
 
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA fin
