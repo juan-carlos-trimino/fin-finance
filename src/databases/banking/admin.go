@@ -29,14 +29,12 @@ const (
   SP_AUTHENTICATE_USER = "CALL fin.authenticate_user($1, $2, $3, null, null)"
   //Change password.
   SP_CHANGE_PASSWORD = "CALL fin.change_password($1, $2, $3, $4, null)"
-
   QR_UPSERT_USER_DATA =
     `INSERT INTO fin.user_data_vault(user_name, partition_name, partition_data)
     VALUES($1, $2, $3)
     ON CONFLICT(user_name, partition_name)
     DO UPDATE SET
       partition_data = EXCLUDED.partition_data;`
-
   QR_SELECT_USER_DATA =
     `SELECT partition_data
      FROM fin.user_data_vault
@@ -154,8 +152,6 @@ func DbChangePassword(ctx context.Context, userName, oldPassword, newPassword, c
   return ok
 }
 
-
-
 func DbSaveUserData(ctx context.Context, userName, partitionName, correlationId string, jsonBytes []byte) bool {
   db := GetBsInstance()
   //Use to modify data or database state.
@@ -167,7 +163,6 @@ func DbSaveUserData(ctx context.Context, userName, partitionName, correlationId 
   logger.LogInfo(fmt.Sprintf("DbSaveUserData: Succeeded. Rows affected %d", result.RowsAffected()), correlationId)
   return true
 }
-
 
 func DbFetchUserData(ctx context.Context, userName, partitionName, correlationId string) []byte {
   db := GetBsInstance()
