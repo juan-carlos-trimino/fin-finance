@@ -1,19 +1,18 @@
 package webfinances
 
 import (
+  "context"
   "encoding/json"
+  bank "finance/databases/banking" //Importing a package and assigning it a local alias.
   "finance/finances"
   "finance/renderer"
   "fmt"
-  bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
-  "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/go-logger"
-  "github.com/juan-carlos-trimino/go-os"
-  sess "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
-  "os"
   "strconv"
   "strings"
+  "github.com/juan-carlos-trimino/go-logger"
+  "github.com/juan-carlos-trimino/go-middlewares"
+  sess "github.com/juan-carlos-trimino/go-sessions"
 )
 
 type adCpFields struct {
@@ -113,25 +112,28 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   logger.LogInfo("Entering webfinances.AdCpPages.", correlationId)
   sessInfo, _ := ck.GetSessionInfo(req.Context())
   redisKey := "user:data:" + sessInfo.UserName
-  partitionName := "annuity_due_compounding_periods"
+  partitionName := "ad_compounding_periods"
   var fields *adCpFields = nil
   var jsonBytes []byte
   //Check Redis Cache First.
   jsonStr, err := sess.HGetRedis(req.Context(), redisKey, partitionName)
   if err == nil && jsonStr != "" {
+    logger.LogInfo(fmt.Sprintf("Redis does have partition %s. Using its values...", partitionName), correlationId)
     //Cache Hit! Convert string to bytes.
     jsonBytes = []byte(jsonStr)
   } else {
     //Cache Miss: Fall back to PostgreSQL database.
-    logger.LogInfo(fmt.Sprintf("Redis miss for partition %s. Fetching from PostgreSQL...", partitionName), correlationId)
+    logger.LogInfo(fmt.Sprintf("Redis does not have partition %s. Fetching from PostgreSQL...", partitionName), correlationId)
     jsonBytes = bank.DbFetchUserData(req.Context(), sessInfo.UserName, partitionName, correlationId)
     if len(jsonBytes) == 0 {  //On error (nil) or not found (len() == 0), use default values.
-      logger.LogInfo(fmt.Sprintf("Database did not return partition (%s). Using default values.", partitionName), correlationId)
+      logger.LogInfo(fmt.Sprintf("Database does not have partition %s. Using default values.", partitionName), correlationId)
       fields = defaultAdCpFields()
     } else {  //Use the values from the db.
-      err = json.Unmarshal(jsonBytes, fields)
+      logger.LogInfo(fmt.Sprintf("Database does have partition %s. Using its values.", partitionName), correlationId)
+      //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
+      err = json.Unmarshal(jsonBytes, &fields)
       if err != nil {
-        logger.LogInfo(fmt.Sprintf("Error unmarshalling partition (%s). Using default values: %v", partitionName, err), correlationId)
+        logger.LogInfo(fmt.Sprintf("Error unmarshalling partition %s. Using default values: %v", partitionName, err), correlationId)
         fields = defaultAdCpFields()
       }
     }
@@ -239,30 +241,21 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   data, err := json.Marshal(fields)  //Preserve current choices.
   if err != nil {
     //Don't crash the server (panic), but log it clearly so you can debug the serialization.
-    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
-  } else {
+    logger.LogError(fmt.Sprintf("Error marshalling partition %s, user %s: %+v", partitionName, sessInfo.UserName, err), correlationId)
+  } else if req.Method == http.MethodPost {
     /***
-    Pass arguments explicitly into the goroutine closure: Notice the func(userData []byte, ...) signature followed by (data,
-    userName, correlationId) at the end. In Go, passing variables into a goroutine as parameters ensures they are copied,
-    preventing the background thread from accidentally reading shifting pointers from the main routine.
+    Pass arguments explicitly into the goroutine closure: In Go, passing variables into a goroutine as parameters ensures they
+    are copied, preventing the background thread from accidentally reading shifting pointers from the main routine.
 
     Never use the fields pointer inside the goroutine: The fields object must never cross the boundary into the go func block.
     Only the finalized, immutable data byte slice should be touched by the background thread.
-
-    Your OS lock is still required: Even in a background thread, osu.WriteAllExclusiveLock1 is vital because it stops multiple
-    background goroutines from corrupting the same physical file on disk.
     ***/
-    go func(userData []byte, uName, cId string) {
-      filePath := fmt.Sprintf("%s/%s/adcp.txt", mainDir, uName)
-      //The exclusive OS file lock handles goroutine collisions.
-      _, err := osu.WriteAllExclusiveLock1(filePath, userData, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o600)
-      //Check the error returned from the lock-writing function.
-      if err != nil {
-        logger.LogError(fmt.Sprintf("Goroutine file system error writing state to %s: %+v", filePath, err), cId)
-        return
+    go func(userData []byte, uName, pName, cId string) {
+      ok := bank.DbSaveUserData(context.Background(), uName, pName, cId, userData)
+      if ok {
+        logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state for user name %s, partition name %s.", uName, pName), cId)
       }
-      logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
-    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
+    }(data, sessInfo.UserName, partitionName, correlationId)
   }
 }
 
