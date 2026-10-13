@@ -207,7 +207,7 @@ func main() {
     logger.LogInfo("The current user is not running as root.", falseCorrelationId)
   }
   //Directories.
-  webfinances.SetupDirStructure(dataDir)
+  // webfinances.SetupDirStructure(dataDir)
   banking.SetupDirStructure(dataDir)
   admin.SetupDirStructure(dataDir)
   //Connection pool.
