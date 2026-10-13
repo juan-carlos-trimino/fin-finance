@@ -4,8 +4,6 @@ import (
 	"context"
 	bank "finance/databases/banking" //Importing a package and assigning it a local alias.
 	"finance/renderer"
-	admin "finance/webfinances/wfadmin"
-	banking "finance/webfinances/wfbanking"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -114,11 +112,8 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
     adminCookie.Expires = time.Time{}  //Zero-value: Omits Expires from header.
     http.SetCookie(res, adminCookie)
     if isAdmin {
-      admin.AddSessionDataPerUser(un, correlationId)
       http.Redirect(res, req, "/admin/welcome", http.StatusSeeOther)
     } else {
-      // AddSessionDataPerUser(un, correlationId)
-      banking.AddSessionDataPerUser(un, correlationId)
       http.Redirect(res, req, "/welcome", http.StatusSeeOther)
     }
   }

@@ -1,14 +1,15 @@
 package wfbanking
 
 import (
+  bank "finance/databases/banking" //Importing a package and assigning it a local alias.
+  "context"
   "encoding/json"
   "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/go-os"
   "net/http"
-  "os"
+  sess "github.com/juan-carlos-trimino/go-sessions"
   "strings"
 )
 
@@ -17,39 +18,11 @@ type manageAccountsFields struct {
   CurrentPage string  `json:"currentPage"`
 }
 
-func newManageAccountsFields(dir1, dir2, correlationId string) *manageAccountsFields {
-  dir, err := osu.CreateDirs(0o077, 0o777, dir1, dir2)
-  if err != nil {
-    panic("Cannot create directory '" + dir + "': " + err.Error())
-  }
-  //Default values returned if file is missing, empty, or JSON is corrupt.
-  m := manageAccountsFields{
+func defaultManageAccountsFields() *manageAccountsFields {
+  return &manageAccountsFields{
     CurrentButton: "lhs-button1",
     CurrentPage: "rhs-ui1",
   }
-  obj, err := readFields(dir + "manageaccounts.txt")
-  if obj != nil {
-    /***
-    When a file is empty, the readFields function successfully returns a valid slice, but it contains zero bytes. Checking the
-    length ensures parsing only files that actually contain data.
-    ***/
-    if len(obj) != 0 {  //Check if the file contains no data (empty)
-      err = json.Unmarshal(obj, &m)
-      if err != nil {
-        //Write error, but continue with default values.
-        logger.LogInfo(fmt.Sprintf("%+v", err), correlationId)
-      }
-    }
-  } else if err != nil {
-    logger.LogError(fmt.Sprintf("%+v", err), correlationId)
-  } else {
-    logger.LogInfo(fmt.Sprintf("File %s does not exit.", dir + "manageaccounts.txt"), correlationId)
-  }
-  return &m
-}
-
-func getManageAccountsFields(userName string) *manageAccountsFields {
-  return currentFields[userName].manageAccounts
 }
 
 type WfBankingMngAcctsPages struct {}
@@ -72,7 +45,37 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
   correlationId, _ := ck.GetCorrelationId(req.Context())
   logger.LogInfo("Entering wfbanking.ManageAccountsPages.", correlationId)
   sessInfo, _ := ck.GetSessionInfo(req.Context())
-  fields := getManageAccountsFields(sessInfo.UserName)
+  redisKey := "user:data:" + sessInfo.UserName
+  partitionName := "manage_accounts"
+  var fields *manageAccountsFields = nil
+  var jsonBytes []byte
+  //Check Redis Cache First.
+  jsonBytes, err := sess.HGetRedis(req.Context(), redisKey, partitionName)
+  if err == nil {
+    logger.LogInfo(fmt.Sprintf("Redis found key(%s)/partition(%s)...", redisKey, partitionName), correlationId)
+    //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
+    err = json.Unmarshal(jsonBytes, &fields)
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("Error (Redis) unmarshalling key(%s)/partition(%s): %v. Using default values.", redisKey, partitionName, err), correlationId)
+      fields = defaultManageAccountsFields()
+    }
+  } else {
+    //Cache Miss: Fall back to PostgreSQL database.
+    logger.LogInfo(fmt.Sprintf("Redis does not have key(%s)/partition(%s): %v. Fetching from PostgreSQL...", redisKey, partitionName, err), correlationId)
+    jsonBytes = bank.DbFetchUserData(req.Context(), sessInfo.UserName, partitionName, correlationId)
+    if len(jsonBytes) == 0 {  //On error (nil) or not found (len() == 0), use default values.
+      logger.LogInfo(fmt.Sprintf("Database did not find user(%s)/partition(%s). Using default values.", sessInfo.UserName, partitionName), correlationId)
+      fields = defaultManageAccountsFields()
+    } else {  //Use the values from the db.
+      logger.LogInfo(fmt.Sprintf("Database found user(%s)/partition(%s)...", sessInfo.UserName, partitionName), correlationId)
+      //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
+      err = json.Unmarshal(jsonBytes, &fields)
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("Error (db) unmarshalling user(%s)/partition(%s): %v. Using default values.", sessInfo.UserName, partitionName, err), correlationId)
+        fields = defaultManageAccountsFields()
+      }
+    }
+  }
   /***
   The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
   MultipartForm fields; the data are in the form of key-value pairs.
@@ -197,22 +200,22 @@ func (b WfBankingMngAcctsPages) ManageAccountsPages(res http.ResponseWriter, req
     "webfinances/templates/footer.html",
   }
   renderer.Render(res, "layout", templatesNeeded, renderer.PageData{Data: templateData})
-
   data, err := json.Marshal(fields)
   if err != nil {
-    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
+    //Don't crash the server (panic), but log it clearly so you can debug the serialization.
+    logger.LogError(fmt.Sprintf("Error marshalling user(%s)/partition(%s): %v", sessInfo.UserName, partitionName, err), correlationId)
   } else {
-    go func(userData []byte, uName, cId string) {
-      filePath := fmt.Sprintf("%s/%s/manageaccounts.txt", mainDir, uName)
-      //The exclusive OS file lock handles goroutine collisions.
-      _, err := osu.WriteAllExclusiveLock1(filePath, userData, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o600)
-      //Check the error returned from the lock-writing function.
+    go func(userData []byte, uName, redisKey, pName, cId string) {
+      ctx := context.Background()
+      err := sess.HSetRedis(ctx, uName, pName, userData)
       if err != nil {
-        logger.LogError(fmt.Sprintf("Goroutine file system error writing state to %s: %+v", filePath, err), cId)
-        return
+        logger.LogInfo(fmt.Sprintf("Error (Redis) writing state for key(%s)/partition(%s).", redisKey, pName), cId)
       }
-      logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
-    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
+      ok := bank.DbSaveUserData(ctx, uName, pName, cId, userData)
+      if ok {
+        logger.LogInfo(fmt.Sprintf("Db successfully persisted state for user(%s)/partition(%s).", uName, pName), cId)
+      }
+    }(data, sessInfo.UserName, redisKey, partitionName, correlationId)
   }
 }
 

@@ -206,10 +206,6 @@ func main() {
   } else {
     logger.LogInfo("The current user is not running as root.", falseCorrelationId)
   }
-  //Directories.
-  // webfinances.SetupDirStructure(dataDir)
-  banking.SetupDirStructure(dataDir)
-  admin.SetupDirStructure(dataDir)
   //Connection pool.
   connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port,
     admin_user, admin_password, admin_dbname, connect_timeout, sslmode)

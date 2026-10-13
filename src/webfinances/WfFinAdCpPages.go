@@ -1,9 +1,9 @@
 package webfinances
 
 import (
+  bank "finance/databases/banking" //Importing a package and assigning it a local alias.
   "context"
   "encoding/json"
-  bank "finance/databases/banking" //Importing a package and assigning it a local alias.
   "finance/finances"
   "finance/renderer"
   "fmt"
