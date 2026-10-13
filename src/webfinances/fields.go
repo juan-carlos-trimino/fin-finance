@@ -33,16 +33,16 @@ var (
 
 type fields struct {
   //Make the pointers unexported so that clients can't interact with them directly but only via exported methods.
-  miscellaneous *miscellaneousFields
-  mortgage *mortgageFields
-  bonds *bondsFields
+  // miscellaneous *miscellaneousFields
+  // mortgage *mortgageFields
+  // bonds *bondsFields
   // adFv *adFvFields
   // adPv *adPvFields
   // adCp *adCpFields
   // adEpp *adEppFields
-  oaCp *oaCpFields
-  oaEpp *oaEppFields
-  oaFv *oaFvFields
+  // oaCp *oaCpFields
+  // oaEpp *oaEppFields
+  // oaFv *oaFvFields
   oaGa *oaGaFields
   oaInterestRate *oaInterestRateFields
   oaPerpetuity *oaPerpetuityFields
@@ -193,16 +193,16 @@ func AddSessionDataPerUser(userName, correlationId string) {
   //Release the lock while doing heavy file/directory creation operations so other users aren't blocked from accessing their sessions.
   currentFieldsLock.Unlock()
   fd := &fields{  //The newXxxFields functions are thread-safe.
-    miscellaneous: newMiscellaneousFields(mainDir, userName, correlationId),
-    mortgage: newMortgageFields(mainDir, userName, correlationId),
-    bonds: newBondsFields(mainDir, userName, correlationId),
+    // miscellaneous: newMiscellaneousFields(mainDir, userName, correlationId),
+    // mortgage: newMortgageFields(mainDir, userName, correlationId),
+    // bonds: newBondsFields(mainDir, userName, correlationId),
     // adFv: newAdFvFields(mainDir, userName, correlationId),
     // adPv: newAdPvFields(mainDir, userName, correlationId),
     // adCp: newAdCpFields(mainDir, userName, correlationId),
     // adEpp: newAdEppFields(mainDir, userName, correlationId),
-    oaCp: newOaCpFields(mainDir, userName, correlationId),
-    oaEpp: newOaEppFields(mainDir, userName, correlationId),
-    oaFv: newOaFvFields(mainDir, userName, correlationId),
+    // oaCp: newOaCpFields(mainDir, userName, correlationId),
+    // oaEpp: newOaEppFields(mainDir, userName, correlationId),
+    // oaFv: newOaFvFields(mainDir, userName, correlationId),
     oaGa: newOaGaFields(mainDir, userName, correlationId),
     oaInterestRate: newOaInterestRateFields(mainDir, userName, correlationId),
     oaPerpetuity: newOaPerpetuityFields(mainDir, userName, correlationId),

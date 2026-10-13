@@ -1,18 +1,18 @@
 package webfinances
 
 import (
+  bank "finance/databases/banking" //Importing a package and assigning it a local alias.\
+  "context"
   "encoding/json"
   "finance/finances"
   "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/go-os"
+  sess "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
-  "os"
   "strconv"
   "strings"
-  "time"
 )
 
 type oaFvFields struct{
@@ -35,9 +35,8 @@ type oaFvFields struct{
   Fd2Result string `json:"fd2Result"`
 }
 
-func newOaFvFields(dir1, dir2, correlationId string) *oaFvFields {
-  //Default values returned if file is missing, empty, or JSON is corrupt.
-  defaults := oaFvFields{
+func defaultOaFvFields() *oaFvFields {
+  return &oaFvFields{
     MenuPage: "",
     CurrentPage: "rhs-ui1",
     CurrentButton: "lhs-button1",
@@ -56,13 +55,6 @@ func newOaFvFields(dir1, dir2, correlationId string) *oaFvFields {
     Fd2PMT: "1.00",
     Fd2Result: "",
   }
-  return loadFieldsFromDisk(dir1, dir2, "oafv.txt", correlationId, &defaults)
-}
-
-func getOaFvFields(userName string) *oaFvFields {
-  return getFieldsGeneric(userName, func(s *UserSession) *oaFvFields {
-    return s.Fields.oaFv
-  })
 }
 
 type WfOaFvPages struct{}
@@ -72,13 +64,37 @@ func (o WfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ck.GetCorrelationId(req.Context())
   logger.LogInfo("Entering webfinances.OaFvPages.", correlationId)
   sessInfo, _ := ck.GetSessionInfo(req.Context())
-  fields := getOaFvFields(sessInfo.UserName)
-  //Every time a web request processes data for a user, update the timestamp under a lock.
-  currentFieldsLock.Lock()
-  if session, exists := currentFields[sessInfo.UserName]; exists {
-    session.LastAccessed = time.Now()
+  redisKey := "user:data:" + sessInfo.UserName
+  partitionName := "oa_future_value"
+  var fields *oaFvFields = nil
+  var jsonBytes []byte
+  //Check Redis Cache First.
+  jsonBytes, err := sess.HGetRedis(req.Context(), redisKey, partitionName)
+  if err == nil {
+    logger.LogInfo(fmt.Sprintf("Redis found key(%s)/partition(%s)...", redisKey, partitionName), correlationId)
+    //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
+    err = json.Unmarshal(jsonBytes, &fields)
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("Error (Redis) unmarshalling key(%s)/partition(%s): %v. Using default values.", redisKey, partitionName, err), correlationId)
+      fields = defaultOaFvFields()
+    }
+  } else {
+    //Cache Miss: Fall back to PostgreSQL database.
+    logger.LogInfo(fmt.Sprintf("Redis did not find key(%s)/partition(%s): %v. Fetching from PostgreSQL...", redisKey, partitionName, err), correlationId)
+    jsonBytes = bank.DbFetchUserData(req.Context(), sessInfo.UserName, partitionName, correlationId)
+    if len(jsonBytes) == 0 {  //On error (nil) or not found (len() == 0), use default values.
+      logger.LogInfo(fmt.Sprintf("Database did not find user(%s)/partition(%s). Using default values.", sessInfo.UserName, partitionName), correlationId)
+      fields = defaultOaFvFields()
+    } else {  //Use the values from the db.
+      logger.LogInfo(fmt.Sprintf("Database found user(%s)/partition(%s)...", sessInfo.UserName, partitionName), correlationId)
+      //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
+      err = json.Unmarshal(jsonBytes, &fields)
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("Error (db) unmarshalling user(%s)/partition(%s): %v. Using default values.", sessInfo.UserName, partitionName, err), correlationId)
+        fields = defaultOaFvFields()
+      }
+    }
   }
-  currentFieldsLock.Unlock()
   /***
   The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
   MultipartForm fields; the data are in the form of key-value pairs.
@@ -185,19 +201,19 @@ func (o WfOaFvPages) OaFvPages(res http.ResponseWriter, req *http.Request) {
   data, err := json.Marshal(fields)  //Preserve current choices.
   if err != nil {
     //Don't crash the server (panic), but log it clearly so you can debug the serialization.
-    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
+    logger.LogError(fmt.Sprintf("Error marshalling user(%s)/partition(%s): %v", sessInfo.UserName, partitionName, err), correlationId)
   } else {
-    go func(userData []byte, uName, cId string) {
-      filePath := fmt.Sprintf("%s/%s/oafv.txt", mainDir, uName)
-      //The exclusive OS file lock handles goroutine collisions.
-      _, err := osu.WriteAllExclusiveLock1(filePath, userData, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o600)
-      //Check the error returned from the lock-writing function.
+    go func(userData []byte, uName, redisKey, pName, cId string) {
+      ctx := context.Background()
+      err := sess.HSetRedis(ctx, uName, pName, userData)
       if err != nil {
-        logger.LogError(fmt.Sprintf("Goroutine file system error writing state to %s: %+v", filePath, err), cId)
-        return
+        logger.LogInfo(fmt.Sprintf("Error (Redis) writing state for key(%s)/partition(%s).", redisKey, pName), cId)
       }
-      logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
-    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
+      ok := bank.DbSaveUserData(ctx, uName, pName, cId, userData)
+      if ok {
+        logger.LogInfo(fmt.Sprintf("Db successfully persisted state for user(%s)/partition(%s).", uName, pName), cId)
+      }
+    }(data, sessInfo.UserName, redisKey, partitionName, correlationId)
   }
 }
 
