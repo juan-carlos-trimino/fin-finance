@@ -5,13 +5,14 @@ import (
   "github.com/juan-carlos-trimino/go-logger"
   "os"
   "strconv"
+  "time"
 )
 
 func GetServer() string {
   if ev, exists := os.LookupEnv("SERVER"); exists {
     return ev
   }
-  return ""  //Default value.
+  return "localhost"  //Default value.
 }
 
 func GetHttp(correlationId string) bool {
@@ -74,16 +75,17 @@ func GetK8s(correlationId string) bool {
   return false
 }
 
-func GetShutDownTimeout(correlationId string) int {
-  if ev, exists := os.LookupEnv("SHUTDOWN_TIMEOUT"); exists {
-    v, err := strconv.Atoi(ev)
+func GetServerShutdownTimeout(correlationId string) time.Duration {
+  //Enforce a timeout during the Shutdown call.
+  if ev, exists := os.LookupEnv("SERVER_SHUTDOWN_TIMEOUT"); exists {
+    v, err := strconv.ParseInt(ev, 10/*base*/, 64/*size*/)
     if err == nil {
-      return v
+      return time.Duration(v) * time.Second
     } else {
-      logger.LogInfo(fmt.Sprintf("%s - (Default: 15 seconds).", err), correlationId)
+      logger.LogInfo(fmt.Sprintf("SERVER_SHUTDOWN_TIMEOUT parsing error: %v", err), correlationId)
     }
   }
-  return 15  //Seconds.
+  return 15 * time.Second  //Seconds.
 }
 
 func GetPprof(correlationId string) bool {

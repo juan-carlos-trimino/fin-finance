@@ -171,7 +171,8 @@ func main() {
   if config.GetHttps(falseCorrelationId) {
     logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %d", config.GetHttpsPort(falseCorrelationId)), falseCorrelationId)
   }
-  logger.LogInfo(fmt.Sprintf("Using SHUTDOWN_TIMEOUT: %d", config.GetShutDownTimeout(falseCorrelationId)), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("To enforce a timeout during the Shutdown call, using SERVER_SHUTDOWN_TIMEOUT: %v",
+    config.GetServerShutdownTimeout(falseCorrelationId)), falseCorrelationId)
   logger.LogInfo(fmt.Sprintf("OS: %s", osu.GetOS()), falseCorrelationId)
   homeDir, err := os.UserHomeDir()
   if err != nil {
@@ -705,8 +706,7 @@ func Timeout(res http.ResponseWriter, req *http.Request) {
 //////////////////////////
 
 func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.WaitGroup) {
-  logger.LogInfo(fmt.Sprintf("Waiting for notification to shut down the server at %s.",
-    server.Addr), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("Waiting for notification to shut down the server at %s.", server.Addr), falseCorrelationId)
   /***
   signal.Notify disables the default behavior for a given set of asynchronous signals and instead
   delivers them over one or more registered channels.
@@ -717,8 +717,7 @@ func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.Wait
     syscall.SIGTERM, //Kubernetes sends a SIGTERM.
   )
   <- signalChan //Waiting for the signal; signal is discarded.
-  ctx, cancel := context.WithTimeout(context.Background(),
-   time.Duration(config.GetShutDownTimeout(falseCorrelationId)) * time.Second)
+  ctx, cancel := context.WithTimeout(context.Background(), config.GetServerShutdownTimeout(falseCorrelationId))
   defer func() {
     //Extra handling goes here...
     close(signalChan)
