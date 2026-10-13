@@ -1,10 +1,11 @@
-//go:build linux && !windows
-// +build linux,!windows
-//
 //To fold all block comments:
 //  Ctrl+K and Ctrl+/
 //To unfold all block comments:
 //  Ctrl+K and Ctrl+J
+//
+//Build constraint: Only include this file in the build if the target OS is Linux and NOT Windows.
+//Note: There must be a blank line between the build constraints and the 'package' keyword.
+//go:build linux && !windows
 
 // HTTP server.
 package main
@@ -173,7 +174,7 @@ func main() {
   }
   logger.LogInfo(fmt.Sprintf("To enforce a timeout during the Shutdown call, using SERVER_SHUTDOWN_TIMEOUT: %v",
     config.GetServerShutdownTimeout(falseCorrelationId)), falseCorrelationId)
-  logger.LogInfo(fmt.Sprintf("OS: %s", osu.GetOS()), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("Host OS: %s", osu.GetOS()), falseCorrelationId)
   homeDir, err := os.UserHomeDir()
   if err != nil {
     panic("home" + err.Error())
@@ -181,7 +182,7 @@ func main() {
   buffer := strings.Builder{}
   //Grow to a larger size to reduce future resizes of the buffer.
   buffer.Grow(1024)
-  logger.LogInfo(fmt.Sprintf("Home directory: %s", homeDir), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("Host OS home directory: %s", homeDir), falseCorrelationId)
   if homeDir[len(homeDir) - 1] != '/' {
     buffer.WriteString(homeDir)
     buffer.WriteByte('/')
@@ -189,16 +190,16 @@ func main() {
     buffer.WriteString(homeDir)
   }
   dataDir := buffer.String() + dataDirName
-  logger.LogInfo(fmt.Sprintf("Data directory: %s", dataDir), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("Host OS data directory: %s", dataDir), falseCorrelationId)
   numCpus, maxProcs := osu.CpusAvailable()
-  logger.LogInfo(fmt.Sprintf("Number of CPUs: %d", numCpus), falseCorrelationId)
-  logger.LogInfo(fmt.Sprintf("GOMAXPROCS: %d", maxProcs), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("Number of Logical CPU cores: %d", numCpus), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("Number of OS threads (GOMAXPROCS): %d", maxProcs), falseCorrelationId)
   if userName, err := osu.GetUsername(); err != nil {
     logger.LogError(fmt.Sprintf("%+v", err), falseCorrelationId)
   } else {
-    logger.LogInfo(fmt.Sprintf("Username: %s", userName), falseCorrelationId)
+    logger.LogInfo(fmt.Sprintf("Currently logged-in OS user: %s", userName), falseCorrelationId)
   }
-  logger.LogInfo(fmt.Sprintf("Username: %s", config.GetUser()), falseCorrelationId)
+  logger.LogInfo(fmt.Sprintf("Process' environment variable user: %s", config.GetEnvironmentVariableUser()), falseCorrelationId)
   //
   if ok, err := osu.IsRoot(); err != nil {
     logger.LogError(fmt.Sprintf("%+v", err), falseCorrelationId)

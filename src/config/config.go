@@ -112,7 +112,8 @@ func GetLetsEncryptCert(correlationId string) bool {
   return false
 }
 
-func GetUser() string {
+func GetEnvironmentVariableUser() string {
+  //Read the process' environment variable.
   if ev, exists := os.LookupEnv("USER"); exists {
     return ev
   }
