@@ -6,18 +6,18 @@ package webfinances
 //  Ctrl+K and Ctrl+J
 
 import (
+  bank "finance/databases/banking" //Importing a package and assigning it a local alias.\
+  "context"
   "encoding/json"
   "finance/finances"
   "finance/renderer"
   "fmt"
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/go-os"
   "net/http"
-  "os"
+  sess "github.com/juan-carlos-trimino/go-sessions"
   "strconv"
   "strings"
-  "time"
 )
 
 type siOrdinaryFields struct{
@@ -52,9 +52,8 @@ type siOrdinaryFields struct{
   Fd4Result string `json:"fd4Result"`
 }
 
-func newSiOrdinaryFields(dir1, dir2, correlationId string) *siOrdinaryFields {
-  //Default values returned if file is missing, empty, or JSON is corrupt.
-  defaults := siOrdinaryFields{
+func defaultSiOrdinaryFields() *siOrdinaryFields {
+  return &siOrdinaryFields{
     MenuPage: "",
     CurrentPage: "rhs-ui1",
     CurrentButton: "lhs-button1",
@@ -85,13 +84,6 @@ func newSiOrdinaryFields(dir1, dir2, correlationId string) *siOrdinaryFields {
     Fd4PV: "1.00",
     Fd4Result: "",
   }
-  return loadFieldsFromDisk(dir1, dir2, "siordinary.txt", correlationId, &defaults)
-}
-
-func getSiOrdinaryFields(userName string) *siOrdinaryFields {
-  return getFieldsGeneric(userName, func(s *UserSession) *siOrdinaryFields {
-    return s.Fields.siOrdinary
-  })
 }
 
 type WfSiOrdinaryPages struct{}
@@ -101,13 +93,37 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
   correlationId, _ := ck.GetCorrelationId(req.Context())
   logger.LogInfo("Entering webfinances.SimpleInterestOrdinaryPages.", correlationId)
   sessInfo, _ := ck.GetSessionInfo(req.Context())
-  fields := getSiOrdinaryFields(sessInfo.UserName)
-  //Every time a web request processes data for a user, update the timestamp under a lock.
-  currentFieldsLock.Lock()
-  if session, exists := currentFields[sessInfo.UserName]; exists {
-    session.LastAccessed = time.Now()
+  redisKey := "user:data:" + sessInfo.UserName
+  partitionName := "si_ordinary"
+  var fields *siOrdinaryFields = nil
+  var jsonBytes []byte
+  //Check Redis Cache First.
+  jsonBytes, err := sess.HGetRedis(req.Context(), redisKey, partitionName)
+  if err == nil {
+    logger.LogInfo(fmt.Sprintf("Redis found key(%s)/partition(%s)...", redisKey, partitionName), correlationId)
+    //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
+    err = json.Unmarshal(jsonBytes, &fields)
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("Error (Redis) unmarshalling key(%s)/partition(%s): %v. Using default values.", redisKey, partitionName, err), correlationId)
+      fields = defaultSiOrdinaryFields()
+    }
+  } else {
+    //Cache Miss: Fall back to PostgreSQL database.
+    logger.LogInfo(fmt.Sprintf("Redis did not find key(%s)/partition(%s): %v. Fetching from PostgreSQL...", redisKey, partitionName, err), correlationId)
+    jsonBytes = bank.DbFetchUserData(req.Context(), sessInfo.UserName, partitionName, correlationId)
+    if len(jsonBytes) == 0 {  //On error (nil) or not found (len() == 0), use default values.
+      logger.LogInfo(fmt.Sprintf("Database did not find user(%s)/partition(%s). Using default values.", sessInfo.UserName, partitionName), correlationId)
+      fields = defaultSiOrdinaryFields()
+    } else {  //Use the values from the db.
+      logger.LogInfo(fmt.Sprintf("Database found user(%s)/partition(%s)...", sessInfo.UserName, partitionName), correlationId)
+      //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
+      err = json.Unmarshal(jsonBytes, &fields)
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("Error (db) unmarshalling user(%s)/partition(%s): %v. Using default values.", sessInfo.UserName, partitionName, err), correlationId)
+        fields = defaultSiOrdinaryFields()
+      }
+    }
   }
-  currentFieldsLock.Unlock()
   /***
   The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
   MultipartForm fields; the data are in the form of key-value pairs.
@@ -276,19 +292,19 @@ func (s WfSiOrdinaryPages) SimpleInterestOrdinaryPages(res http.ResponseWriter, 
   data, err := json.Marshal(fields)  //Preserve current choices.
   if err != nil {
     //Don't crash the server (panic), but log it clearly so you can debug the serialization.
-    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
+    logger.LogError(fmt.Sprintf("Error marshalling user(%s)/partition(%s): %v", sessInfo.UserName, partitionName, err), correlationId)
   } else {
-    go func(userData []byte, uName, cId string) {
-      filePath := fmt.Sprintf("%s/%s/siordinary.txt", mainDir, uName)
-      //The exclusive OS file lock handles goroutine collisions.
-      _, err := osu.WriteAllExclusiveLock1(filePath, userData, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o600)
-      //Check the error returned from the lock-writing function.
+    go func(userData []byte, uName, redisKey, pName, cId string) {
+      ctx := context.Background()
+      err := sess.HSetRedis(ctx, uName, pName, userData)
       if err != nil {
-        logger.LogError(fmt.Sprintf("Goroutine file system error writing state to %s: %+v", filePath, err), cId)
-        return
+        logger.LogInfo(fmt.Sprintf("Error (Redis) writing state for key(%s)/partition(%s).", redisKey, pName), cId)
       }
-      logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
-    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
+      ok := bank.DbSaveUserData(ctx, uName, pName, cId, userData)
+      if ok {
+        logger.LogInfo(fmt.Sprintf("Db successfully persisted state for user(%s)/partition(%s).", uName, pName), cId)
+      }
+    }(data, sessInfo.UserName, redisKey, partitionName, correlationId)
   }
 }
 

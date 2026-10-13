@@ -117,7 +117,7 @@ func (p WfPages) VerifyLogin(res http.ResponseWriter, req *http.Request) {
       admin.AddSessionDataPerUser(un, correlationId)
       http.Redirect(res, req, "/admin/welcome", http.StatusSeeOther)
     } else {
-      AddSessionDataPerUser(un, correlationId)
+      // AddSessionDataPerUser(un, correlationId)
       banking.AddSessionDataPerUser(un, correlationId)
       http.Redirect(res, req, "/welcome", http.StatusSeeOther)
     }

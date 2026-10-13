@@ -9,8 +9,8 @@ import (
   "fmt"
   "github.com/juan-carlos-trimino/go-logger"
   "github.com/juan-carlos-trimino/go-middlewares"
-  sess "github.com/juan-carlos-trimino/go-sessions"
   "net/http"
+  sess "github.com/juan-carlos-trimino/go-sessions"
   "strconv"
   "strings"
 )
