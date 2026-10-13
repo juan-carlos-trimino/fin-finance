@@ -36,10 +36,10 @@ type fields struct {
   miscellaneous *miscellaneousFields
   mortgage *mortgageFields
   bonds *bondsFields
-  adFv *adFvFields
-  adPv *adPvFields
-  adCp *adCpFields
-  adEpp *adEppFields
+  // adFv *adFvFields
+  // adPv *adPvFields
+  // adCp *adCpFields
+  // adEpp *adEppFields
   oaCp *oaCpFields
   oaEpp *oaEppFields
   oaFv *oaFvFields
@@ -196,10 +196,10 @@ func AddSessionDataPerUser(userName, correlationId string) {
     miscellaneous: newMiscellaneousFields(mainDir, userName, correlationId),
     mortgage: newMortgageFields(mainDir, userName, correlationId),
     bonds: newBondsFields(mainDir, userName, correlationId),
-    adFv: newAdFvFields(mainDir, userName, correlationId),
-    adPv: newAdPvFields(mainDir, userName, correlationId),
-    adCp: newAdCpFields(mainDir, userName, correlationId),
-    adEpp: newAdEppFields(mainDir, userName, correlationId),
+    // adFv: newAdFvFields(mainDir, userName, correlationId),
+    // adPv: newAdPvFields(mainDir, userName, correlationId),
+    // adCp: newAdCpFields(mainDir, userName, correlationId),
+    // adEpp: newAdEppFields(mainDir, userName, correlationId),
     oaCp: newOaCpFields(mainDir, userName, correlationId),
     oaEpp: newOaEppFields(mainDir, userName, correlationId),
     oaFv: newOaFvFields(mainDir, userName, correlationId),

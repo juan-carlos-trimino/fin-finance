@@ -1,18 +1,18 @@
 package webfinances
 
 import (
+  "context"
   "encoding/json"
+  bank "finance/databases/banking" //Importing a package and assigning it a local alias.
   "finance/finances"
   "finance/renderer"
   "fmt"
   "net/http"
-  "os"
   "strconv"
   "strings"
-  "time"
   "github.com/juan-carlos-trimino/go-middlewares"
-  osu "github.com/juan-carlos-trimino/go-os"
   logger "github.com/juan-carlos-trimino/go-logger"
+  sess "github.com/juan-carlos-trimino/go-sessions"
 )
 
 type adEppFields struct {
@@ -35,9 +35,8 @@ type adEppFields struct {
   Fd2Result     string `json:"fd2Result"`
 }
 
-func newAdEppFields(dir1, dir2, correlationId string) *adEppFields {
-  //Default values returned if file is missing, empty, or JSON is corrupt.
-  defaults := adEppFields{
+func defaultAdEppFields() *adEppFields {
+  return &adEppFields{
     MenuPage:      "",
     CurrentPage:   "rhs-ui1",
     CurrentButton: "lhs-button1",
@@ -56,13 +55,6 @@ func newAdEppFields(dir1, dir2, correlationId string) *adEppFields {
     Fd2PV:         "1.00",
     Fd2Result:     "",
   }
-  return loadFieldsFromDisk(dir1, dir2, "adepp.txt", correlationId, &defaults)
-}
-
-func getAdEppFields(userName string) *adEppFields {
-  return getFieldsGeneric(userName, func(s *UserSession) *adEppFields {
-    return s.Fields.adEpp
-  })
 }
 
 type WfAdEppPages struct{}
@@ -72,13 +64,37 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
   correlationId, _ := ck.GetCorrelationId(req.Context())
   logger.LogInfo("Entering webfinances.AdEppPages.", correlationId)
   sessInfo, _ := ck.GetSessionInfo(req.Context())
-  fields := getAdEppFields(sessInfo.UserName)
-  //Every time a web request processes data for a user, update the timestamp under a lock.
-  currentFieldsLock.Lock()
-  if session, exists := currentFields[sessInfo.UserName]; exists {
-    session.LastAccessed = time.Now()
+  redisKey := "user:data:" + sessInfo.UserName
+  partitionName := "ad_equal_prdc_pmnts"
+  var fields *adEppFields = nil
+  var jsonBytes []byte
+  //Check Redis Cache First.
+  jsonBytes, err := sess.HGetRedis(req.Context(), redisKey, partitionName)
+  if err == nil {
+    logger.LogInfo(fmt.Sprintf("Redis found key(%s)/partition(%s)...", redisKey, partitionName), correlationId)
+    //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
+    err = json.Unmarshal(jsonBytes, &fields)
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("Error (Redis) unmarshalling key(%s)/partition(%s): %v. Using default values.", redisKey, partitionName, err), correlationId)
+      fields = defaultAdEppFields()
+    }
+  } else {
+    //Cache Miss: Fall back to PostgreSQL database.
+    logger.LogInfo(fmt.Sprintf("Redis does not have key(%s)/partition(%s): %v. Fetching from PostgreSQL...", redisKey, partitionName, err), correlationId)
+    jsonBytes = bank.DbFetchUserData(req.Context(), sessInfo.UserName, partitionName, correlationId)
+    if len(jsonBytes) == 0 {  //On error (nil) or not found (len() == 0), use default values.
+      logger.LogInfo(fmt.Sprintf("Database did not find user(%s)/partition(%s). Using default values.", sessInfo.UserName, partitionName), correlationId)
+      fields = defaultAdEppFields()
+    } else {  //Use the values from the db.
+      logger.LogInfo(fmt.Sprintf("Database found user(%s)/partition(%s)...", sessInfo.UserName, partitionName), correlationId)
+      //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
+      err = json.Unmarshal(jsonBytes, &fields)
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("Error (db) unmarshalling user(%s)/partition(%s): %v. Using default values.", sessInfo.UserName, partitionName, err), correlationId)
+        fields = defaultAdEppFields()
+      }
+    }
   }
-  currentFieldsLock.Unlock()
   /***
   The functions in Request that allow to extract data from the URL and/or the body revolve around the Form, PostForm, and
   MultipartForm fields; the data are in the form of key-value pairs.
@@ -184,19 +200,19 @@ func (a WfAdEppPages) AdEppPages(res http.ResponseWriter, req *http.Request) {
   data, err := json.Marshal(fields) //Preserve current choices.
   if err != nil {
     //Don't crash the server (panic), but log it clearly so you can debug the serialization.
-    logger.LogError(fmt.Sprintf("Failed to marshal fields to JSON for user %s: %+v", sessInfo.UserName, err), correlationId)
+    logger.LogError(fmt.Sprintf("Error marshalling user(%s)/partition(%s): %v", sessInfo.UserName, partitionName, err), correlationId)
   } else {
-    go func(userData []byte, uName, cId string) {
-      filePath := fmt.Sprintf("%s/%s/adepp.txt", mainDir, uName)
-      //The exclusive OS file lock handles goroutine collisions.
-      _, err := osu.WriteAllExclusiveLock1(filePath, userData, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o600)
-      //Check the error returned from the lock-writing function.
+    go func(userData []byte, uName, redisKey, pName, cId string) {
+      ctx := context.Background()
+      err := sess.HSetRedis(ctx, uName, pName, userData)
       if err != nil {
-        logger.LogError(fmt.Sprintf("Goroutine file system error writing state to %s: %+v", filePath, err), cId)
-        return
+        logger.LogInfo(fmt.Sprintf("Error (Redis) writing state for key(%s)/partition(%s).", redisKey, pName), cId)
       }
-      logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state to %s.", filePath), cId)
-    }(data, sessInfo.UserName, correlationId) // Pass variables into the closure to prevent scope races
+      ok := bank.DbSaveUserData(ctx, uName, pName, cId, userData)
+      if ok {
+        logger.LogInfo(fmt.Sprintf("Db successfully persisted state for user(%s)/partition(%s).", uName, pName), cId)
+      }
+    }(data, sessInfo.UserName, redisKey, partitionName, correlationId)
   }
 }
 

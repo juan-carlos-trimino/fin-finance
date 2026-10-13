@@ -39,45 +39,6 @@ type adCpFields struct {
   Fd3Result string `json:"fd3Result"`
 }
 
-func newAdCpFields(dir1, dir2, correlationId string) *adCpFields {
-  //Default values returned if file is missing, empty, or JSON is corrupt.
-  defaults := adCpFields{
-    MenuPage: "",
-    CurrentPage: "rhs-ui2",
-    CurrentButton: "lhs-button2",
-    //
-    Fd1Interest: "1.00",
-    Fd1Compound: "annually",
-    Fd1PV: "1.00",
-    Fd1FV: "1.00",
-    Fd1Result: "",
-    //
-    Fd2Interest: "1.00",
-    Fd2Compound: "annually",
-    Fd2Payment: "1.00",
-    Fd2PV: "1.00",
-    Fd2Result: "",
-    //
-    Fd3Interest: "1.00",
-    Fd3Compound: "annually",
-    Fd3Payment: "1.00",
-    Fd3FV: "1.00",
-    Fd3Result: "",
-  }
-  return loadFieldsFromDisk(dir1, dir2, "adcp.txt", correlationId, &defaults)
-}
-
-func getAdCpFields(userName string) *adCpFields {
-  return getFieldsGeneric(userName, func(s *UserSession) *adCpFields {
-    return s.Fields.adCp
-  })
-}
-
-
-
-
-
-
 func defaultAdCpFields() *adCpFields {
   return &adCpFields{
     MenuPage: "",
@@ -116,24 +77,28 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   var fields *adCpFields = nil
   var jsonBytes []byte
   //Check Redis Cache First.
-  jsonStr, err := sess.HGetRedis(req.Context(), redisKey, partitionName)
-  if err == nil && jsonStr != "" {
-    logger.LogInfo(fmt.Sprintf("Redis does have partition %s. Using its values...", partitionName), correlationId)
-    //Cache Hit! Convert string to bytes.
-    jsonBytes = []byte(jsonStr)
+  jsonBytes, err := sess.HGetRedis(req.Context(), redisKey, partitionName)
+  if err == nil {
+    logger.LogInfo(fmt.Sprintf("Redis found key(%s)/partition(%s)...", redisKey, partitionName), correlationId)
+    //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
+    err = json.Unmarshal(jsonBytes, &fields)
+    if err != nil {
+      logger.LogInfo(fmt.Sprintf("Error (Redis) unmarshalling key(%s)/partition(%s): %v. Using default values.", redisKey, partitionName, err), correlationId)
+      fields = defaultAdCpFields()
+    }
   } else {
     //Cache Miss: Fall back to PostgreSQL database.
-    logger.LogInfo(fmt.Sprintf("Redis does not have partition %s. Fetching from PostgreSQL...", partitionName), correlationId)
+    logger.LogInfo(fmt.Sprintf("Redis does not have key(%s)/partition(%s): %v. Fetching from PostgreSQL...", redisKey, partitionName, err), correlationId)
     jsonBytes = bank.DbFetchUserData(req.Context(), sessInfo.UserName, partitionName, correlationId)
     if len(jsonBytes) == 0 {  //On error (nil) or not found (len() == 0), use default values.
-      logger.LogInfo(fmt.Sprintf("Database does not have partition %s. Using default values.", partitionName), correlationId)
+      logger.LogInfo(fmt.Sprintf("Database did not find user(%s)/partition(%s). Using default values.", sessInfo.UserName, partitionName), correlationId)
       fields = defaultAdCpFields()
     } else {  //Use the values from the db.
-      logger.LogInfo(fmt.Sprintf("Database does have partition %s. Using its values.", partitionName), correlationId)
+      logger.LogInfo(fmt.Sprintf("Database found user(%s)/partition(%s)...", sessInfo.UserName, partitionName), correlationId)
       //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
       err = json.Unmarshal(jsonBytes, &fields)
       if err != nil {
-        logger.LogInfo(fmt.Sprintf("Error unmarshalling partition %s. Using default values: %v", partitionName, err), correlationId)
+        logger.LogInfo(fmt.Sprintf("Error (db) unmarshalling user(%s)/partition(%s): %v. Using default values.", sessInfo.UserName, partitionName, err), correlationId)
         fields = defaultAdCpFields()
       }
     }
@@ -241,7 +206,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   data, err := json.Marshal(fields)  //Preserve current choices.
   if err != nil {
     //Don't crash the server (panic), but log it clearly so you can debug the serialization.
-    logger.LogError(fmt.Sprintf("Error marshalling partition %s, user %s: %+v", partitionName, sessInfo.UserName, err), correlationId)
+    logger.LogError(fmt.Sprintf("Error marshalling user(%s)/partition(%s): %v", sessInfo.UserName, partitionName, err), correlationId)
   } else if req.Method == http.MethodPost {
     /***
     Pass arguments explicitly into the goroutine closure: In Go, passing variables into a goroutine as parameters ensures they
@@ -250,12 +215,17 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     Never use the fields pointer inside the goroutine: The fields object must never cross the boundary into the go func block.
     Only the finalized, immutable data byte slice should be touched by the background thread.
     ***/
-    go func(userData []byte, uName, pName, cId string) {
-      ok := bank.DbSaveUserData(context.Background(), uName, pName, cId, userData)
-      if ok {
-        logger.LogInfo(fmt.Sprintf("Goroutine successfully persisted state for user name %s, partition name %s.", uName, pName), cId)
+    go func(userData []byte, uName, redisKey, pName, cId string) {
+      ctx := context.Background()
+      err := sess.HSetRedis(ctx, uName, pName, userData)
+      if err != nil {
+        logger.LogInfo(fmt.Sprintf("Error (Redis) writing state for key(%s)/partition(%s).", redisKey, pName), cId)
       }
-    }(data, sessInfo.UserName, partitionName, correlationId)
+      ok := bank.DbSaveUserData(ctx, uName, pName, cId, userData)
+      if ok {
+        logger.LogInfo(fmt.Sprintf("Db successfully persisted state for user(%s)/partition(%s).", uName, pName), cId)
+      }
+    }(data, sessInfo.UserName, redisKey, partitionName, correlationId)
   }
 }
 
