@@ -63,3 +63,5 @@ require (
 replace github.com/juan-carlos-trimino/go-middlewares => ../../../gp-meta-repo/go-middlewares/
 
 replace github.com/juan-carlos-trimino/go-sessions => ../../../gp-meta-repo/go-sessions/
+
+replace github.com/juan-carlos-trimino/go-logger => ../../../gp-meta-repo/go-logger/

@@ -158,6 +158,11 @@ func init() {
 }
 
 func main() {
+  //Initialize the async logger infrastructure immediately
+// Initialize the logging infrastructure channel allocations
+  logger.InitLogger()
+// Ensure everything left inside the ring buffer drains completely if the app terminates
+  defer logger.CloseLogger()  //Ensure all logs flush gracefully on shutdown.
   if !config.GetHttp(falseCorrelationId) && !config.GetHttps(falseCorrelationId) {
     fmt.Println("You can run only HTTP (default), only HTTPS (set environment variables to:" +
                 " HTTP=false and HTTPS=true), or both (set environment variable to: HTTPS=true).")
@@ -165,16 +170,15 @@ func main() {
   }
   //
   if config.GetHttp(falseCorrelationId) {
-    logger.LogInfo(fmt.Sprintf("Using HTTP PORT: %d", config.GetHttpPort(falseCorrelationId)),
-     falseCorrelationId)
+    logger.LogInfo(fmt.Sprintf("Using HTTP PORT: %d", config.GetHttpPort(falseCorrelationId)), falseCorrelationId)
   }
-  logger.LogInfo(fmt.Sprintf("Server: %s", config.GetServer()), falseCorrelationId)
+  logger.LogInfo("Server: " + config.GetServer(), falseCorrelationId)
   if config.GetHttps(falseCorrelationId) {
     logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %d", config.GetHttpsPort(falseCorrelationId)), falseCorrelationId)
   }
   logger.LogInfo(fmt.Sprintf("To enforce a timeout during the Shutdown call, using SERVER_SHUTDOWN_TIMEOUT: %v",
     config.GetServerShutdownTimeout(falseCorrelationId)), falseCorrelationId)
-  logger.LogInfo(fmt.Sprintf("Host OS: %s", osu.GetOS()), falseCorrelationId)
+  logger.LogInfo("Host OS: " + osu.GetOS(), falseCorrelationId)
   homeDir, err := os.UserHomeDir()
   if err != nil {
     panic("home" + err.Error())
@@ -182,7 +186,7 @@ func main() {
   buffer := strings.Builder{}
   //Grow to a larger size to reduce future resizes of the buffer.
   buffer.Grow(1024)
-  logger.LogInfo(fmt.Sprintf("Host OS home directory: %s", homeDir), falseCorrelationId)
+  logger.LogInfo("Host OS home directory: " + homeDir, falseCorrelationId)
   if homeDir[len(homeDir) - 1] != '/' {
     buffer.WriteString(homeDir)
     buffer.WriteByte('/')
@@ -190,16 +194,16 @@ func main() {
     buffer.WriteString(homeDir)
   }
   dataDir := buffer.String() + dataDirName
-  logger.LogInfo(fmt.Sprintf("Host OS data directory: %s", dataDir), falseCorrelationId)
+  logger.LogInfo("Host OS data directory: " + dataDir, falseCorrelationId)
   numCpus, maxProcs := osu.CpusAvailable()
   logger.LogInfo(fmt.Sprintf("Number of Logical CPU cores: %d", numCpus), falseCorrelationId)
   logger.LogInfo(fmt.Sprintf("Number of OS threads (GOMAXPROCS): %d", maxProcs), falseCorrelationId)
   if userName, err := osu.GetUsername(); err != nil {
     logger.LogError(fmt.Sprintf("%+v", err), falseCorrelationId)
   } else {
-    logger.LogInfo(fmt.Sprintf("Currently logged-in OS user: %s", userName), falseCorrelationId)
+    logger.LogInfo("Currently logged-in OS user: " + userName, falseCorrelationId)
   }
-  logger.LogInfo(fmt.Sprintf("Process' environment variable user: %s", config.GetEnvironmentVariableUser()), falseCorrelationId)
+  logger.LogInfo("Process' environment variable user: " + config.GetEnvironmentVariableUser(), falseCorrelationId)
   //
   if ok, err := osu.IsRoot(); err != nil {
     logger.LogError(fmt.Sprintf("%+v", err), falseCorrelationId)
@@ -274,6 +278,7 @@ func main() {
   ***/
   //jct webfinances.StartSessionJanitor(/*30*/11 * time.Minute, 5 * time.Minute, falseCorrelationId)]
   logger.LogInfo(fmt.Sprintf("The session timeout is %s.", sess.GetSessionTimeoutString()), falseCorrelationId)
+  logger.LogInfo("The session timeout is " + sess.GetSessionTimeoutString(), falseCorrelationId)
   /***
   When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return ErrServerClosed.
   Make sure the program doesn't exit and waits instead for Shutdown to return.
@@ -579,9 +584,9 @@ func makeHandlers() *handlers {
     h.mux["/debug/pprof/trace"] = pprof.Trace
   }
   commonMiddlewares := []middlewares.Middleware{
+    middlewares.CorrelationId,
     middlewares.ValidateSessions,
     middlewares.SecurityHeaders,
-    middlewares.CorrelationId,
   }
   //
   for idx, f := range h.mux{

@@ -49,7 +49,7 @@ func (p WfBankingPages) BankingPage(res http.ResponseWriter, req *http.Request) 
     "webfinances/templates/footer.html",
   }
   renderer.Render(res, "layout", templatesNeeded, renderer.PageData{
-    Data: struct {
+    Data: struct{
       LayoutType string
       Header string
       Datetime string
