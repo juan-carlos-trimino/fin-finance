@@ -158,10 +158,8 @@ func init() {
 }
 
 func main() {
-  //Initialize the async logger infrastructure immediately
-// Initialize the logging infrastructure channel allocations
+  //Initialize the async logger infrastructure immediately.
   logger.InitLogger()
-// Ensure everything left inside the ring buffer drains completely if the app terminates
   defer logger.CloseLogger()  //Ensure all logs flush gracefully on shutdown.
   if !config.GetHttp(falseCorrelationId) && !config.GetHttps(falseCorrelationId) {
     fmt.Println("You can run only HTTP (default), only HTTPS (set environment variables to:" +

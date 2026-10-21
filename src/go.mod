@@ -53,15 +53,11 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/juan-carlos-trimino/gposu v1.0.1 // indirect
+	github.com/juan-carlos-trimino/gpsessions v1.0.1 // indirect
 	go.uber.org/atomic v1.12.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 )
-
-replace github.com/juan-carlos-trimino/go-middlewares => ../../../gp-meta-repo/go-middlewares/
-
-replace github.com/juan-carlos-trimino/go-sessions => ../../../gp-meta-repo/go-sessions/
-
-replace github.com/juan-carlos-trimino/go-logger => ../../../gp-meta-repo/go-logger/
