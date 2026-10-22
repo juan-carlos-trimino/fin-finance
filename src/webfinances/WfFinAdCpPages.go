@@ -79,7 +79,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
   //Check Redis Cache First.
   jsonBytes, err := sess.HGetRedis(req.Context(), redisKey, partitionName)
   if err == nil {
-    logger.LogInfo(fmt.Sprintf("Redis found key(%s)/partition(%s)...", redisKey, partitionName), correlationId)
+    logger.LogInfo("Redis found key(" + redisKey + ")/partition(" + partitionName + ")...", correlationId)
     //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
     err = json.Unmarshal(jsonBytes, &fields)
     if err != nil {
@@ -91,10 +91,10 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
     logger.LogInfo(fmt.Sprintf("Redis does not have key(%s)/partition(%s): %v. Fetching from PostgreSQL...", redisKey, partitionName, err), correlationId)
     jsonBytes = bank.DbFetchUserData(req.Context(), sessInfo.UserName, partitionName, correlationId)
     if len(jsonBytes) == 0 {  //On error (nil) or not found (len() == 0), use default values.
-      logger.LogInfo(fmt.Sprintf("Database did not find user(%s)/partition(%s). Using default values.", sessInfo.UserName, partitionName), correlationId)
+      logger.LogInfo("Database did not find user(" + sessInfo.UserName + ")/partition(" + partitionName + "). Using default values.", correlationId)
       fields = defaultAdCpFields()
     } else {  //Use the values from the db.
-      logger.LogInfo(fmt.Sprintf("Database found user(%s)/partition(%s)...", sessInfo.UserName, partitionName), correlationId)
+      logger.LogInfo("Database found user(" + sessInfo.UserName + ")/partition(" + partitionName + ")...", correlationId)
       //Unmarshal unmarshals the JSON into the value pointed at by v. If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
       err = json.Unmarshal(jsonBytes, &fields)
       if err != nil {
@@ -188,7 +188,7 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       fields.Fd3Result,
     }
   default:
-    errString := fmt.Sprintf("Unsupported page: %s", fields.CurrentPage)
+    errString := "Unsupported page: " + fields.CurrentPage
     logger.LogError(errString, correlationId)
     panic(errString)
   }
@@ -219,11 +219,11 @@ func (a WfAdCpPages) AdCpPages(res http.ResponseWriter, req *http.Request) {
       ctx := context.Background()
       err := sess.HSetRedis(ctx, uName, pName, userData)
       if err != nil {
-        logger.LogInfo(fmt.Sprintf("Error (Redis) writing state for key(%s)/partition(%s).", redisKey, pName), cId)
+        logger.LogInfo("Error (Redis) writing state for key(" + redisKey + ")/partition(" + pName + ").", cId)
       }
       ok := bank.DbSaveUserData(ctx, uName, pName, cId, userData)
       if ok {
-        logger.LogInfo(fmt.Sprintf("Db successfully persisted state for user(%s)/partition(%s).", uName, pName), cId)
+        logger.LogInfo("Db successfully persisted state for user(" + uName + ")/partition(" + pName + ").", cId)
       }
     }(data, sessInfo.UserName, redisKey, partitionName, correlationId)
   }

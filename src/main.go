@@ -476,7 +476,7 @@ func makeHandlers() *handlers {
     prevent_probes := !config.GetPreventProbesOutput(correlationId)
     if prevent_probes {
       startTime := time.Now()
-      logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
+      logger.LogInfo("Created correlationId at " + startTime.UTC().Format(time.RFC3339Nano), correlationId)
     }
     res.WriteHeader(http.StatusOK)
     if prevent_probes {
@@ -654,7 +654,7 @@ func makeTlsConfig() *tls.Config {
   //Generate the key/pair for the server.
   serverTlsCert, err := tls.X509KeyPair(serverCertPEM, serverPrivKeyPEM)
   if err != nil {
-    panic("Failed to generate X509KeyPair for the server.\n" + err.Error())
+    panic("Failed to generate X509KeyPair for the server." + err.Error())
   }
 
   // fmt.Println(string(serverTlsCert.Certificate[0]))
