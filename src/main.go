@@ -134,7 +134,7 @@ func (h *handlers) ServeHTTP(res http.ResponseWriter, req *http.Request) {
                             strings.EqualFold("/readiness", req.URL.Path)) && config.GetPreventProbesOutput(correlationId))
   if prevent_probes {
     logger.LogInfo("Entering ServeHTTP/main.", correlationId)
-    logger.LogInfo(fmt.Sprintf("Method: %s, Request URI: %s", req.Method, req.RequestURI), correlationId)
+    logger.LogInfo("Method: " + req.Method + ", Request URI: " + req.RequestURI, correlationId)
   }
   //Implement route forwarding.
   if handler, ok := h.mux[req.URL.Path]; ok {
@@ -162,17 +162,17 @@ func main() {
   logger.InitLogger()
   defer logger.CloseLogger()  //Ensure all logs flush gracefully on shutdown.
   if !config.GetHttp(falseCorrelationId) && !config.GetHttps(falseCorrelationId) {
-    fmt.Println("You can run only HTTP (default), only HTTPS (set environment variables to:" +
-                " HTTP=false and HTTPS=true), or both (set environment variable to: HTTPS=true).")
+    logger.LogInfo("You can run only HTTP (default), only HTTPS (set environment variables to:" +
+      " HTTP=false and HTTPS=true), or both (set environment variable to: HTTPS=true).", falseCorrelationId)
     return
   }
   //
   if config.GetHttp(falseCorrelationId) {
-    logger.LogInfo(fmt.Sprintf("Using HTTP PORT: %d", config.GetHttpPort(falseCorrelationId)), falseCorrelationId)
+    logger.LogInfo("Using HTTP PORT: " + strconv.Itoa(config.GetHttpPort(falseCorrelationId)), falseCorrelationId)
   }
   logger.LogInfo("Server: " + config.GetServer(), falseCorrelationId)
   if config.GetHttps(falseCorrelationId) {
-    logger.LogInfo(fmt.Sprintf("Using HTTPS PORT: %d", config.GetHttpsPort(falseCorrelationId)), falseCorrelationId)
+    logger.LogInfo("Using HTTPS PORT: " + strconv.Itoa(config.GetHttpsPort(falseCorrelationId)), falseCorrelationId)
   }
   logger.LogInfo(fmt.Sprintf("To enforce a timeout during the Shutdown call, using SERVER_SHUTDOWN_TIMEOUT: %v",
     config.GetServerShutdownTimeout(falseCorrelationId)), falseCorrelationId)
@@ -194,8 +194,8 @@ func main() {
   dataDir := buffer.String() + dataDirName
   logger.LogInfo("Host OS data directory: " + dataDir, falseCorrelationId)
   numCpus, maxProcs := osu.CpusAvailable()
-  logger.LogInfo(fmt.Sprintf("Number of Logical CPU cores: %d", numCpus), falseCorrelationId)
-  logger.LogInfo(fmt.Sprintf("Number of OS threads (GOMAXPROCS): %d", maxProcs), falseCorrelationId)
+  logger.LogInfo("Number of Logical CPU cores: " + strconv.Itoa(numCpus), falseCorrelationId)
+  logger.LogInfo("Number of OS threads (GOMAXPROCS): " + strconv.Itoa(maxProcs), falseCorrelationId)
   if userName, err := osu.GetUsername(); err != nil {
     logger.LogError(fmt.Sprintf("%+v", err), falseCorrelationId)
   } else {
@@ -270,12 +270,6 @@ func main() {
     panic(err)
   }
   logger.LogInfo("Connected to the Redis Server.", falseCorrelationId)
-  /***
-  Clean the user information kept on a global map.
-  Check every 5 minutes, evict users idle for longer than 30 minutes.
-  ***/
-  //jct webfinances.StartSessionJanitor(/*30*/11 * time.Minute, 5 * time.Minute, falseCorrelationId)]
-  logger.LogInfo(fmt.Sprintf("The session timeout is %s.", sess.GetSessionTimeoutString()), falseCorrelationId)
   logger.LogInfo("The session timeout is " + sess.GetSessionTimeoutString(), falseCorrelationId)
   /***
   When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS immediately return ErrServerClosed.
@@ -344,12 +338,12 @@ func main() {
         httpsServer.TLSConfig = makeTlsConfig()
       }
       go waitForServer(httpsServer, signalChan2, &wg)
-      logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpsServer.Addr), falseCorrelationId)
+      logger.LogInfo("Starting the server at port " + httpsServer.Addr + "...", falseCorrelationId)
       //Because the paths of the key and cert were set in the TLSConfig field, set the certFile and
       //keyFile arguments to empty strings.
       err := (*httpsServer).ListenAndServeTLS("", "")
       if errors.Is(err, http.ErrServerClosed) {
-        logger.LogInfo(fmt.Sprintf("Server has been closed at port %s.", httpsServer.Addr), falseCorrelationId)
+        logger.LogInfo("Server has been closed at port " + httpsServer.Addr, falseCorrelationId)
       } else if err != nil {
         logger.LogError(fmt.Sprintf("Server error: %+v", err), falseCorrelationId)
         signalChan2 <- syscall.SIGINT //Let the goroutine finish.
@@ -374,7 +368,7 @@ func main() {
     }
     fmt.Println("*********** env ***************")
     env ***/
-    logger.LogInfo(fmt.Sprintf("Starting the server at port %s...", httpServer.Addr), falseCorrelationId)
+    logger.LogInfo("Starting the server at port " + httpServer.Addr + "...", falseCorrelationId)
     /***
     ListenAndServe runs forever, or until the server fails (or fails to start) with an error, always non-nil,
     which it returns.
@@ -384,7 +378,7 @@ func main() {
     ***/
     err := (*httpServer).ListenAndServe()
     if errors.Is(err, http.ErrServerClosed) {
-      logger.LogInfo(fmt.Sprintf("Server has been closed at port %s.", httpServer.Addr), falseCorrelationId)
+      logger.LogInfo("Server has been closed at port " + httpServer.Addr, falseCorrelationId)
     } else if err != nil {
       logger.LogError(fmt.Sprintf("Server error: %+v", err), falseCorrelationId)
       signalChan1 <- syscall.SIGINT //Let the goroutine finish.
@@ -473,7 +467,7 @@ func makeHandlers() *handlers {
     correlationId, _ := ck.GetCorrelationId(req.Context())
     if !config.GetPreventProbesOutput(correlationId) {
       startTime := time.Now()
-      logger.LogInfo(fmt.Sprintf("Readiness probe. Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)  //jct
+      logger.LogInfo(fmt.Sprintf("Readiness probe. Request took %vms", time.Since(startTime).Microseconds()), correlationId)
     }
   }
   h.mux["/liveness"] = func (res http.ResponseWriter, req *http.Request) {
@@ -482,12 +476,12 @@ func makeHandlers() *handlers {
     prevent_probes := !config.GetPreventProbesOutput(correlationId)
     if prevent_probes {
       startTime := time.Now()
-      logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)  //jct
+      logger.LogInfo(fmt.Sprintf("Created correlationId at %s.", startTime.UTC().Format(time.RFC3339Nano)), correlationId)
     }
     res.WriteHeader(http.StatusOK)
     if prevent_probes {
       startTime := time.Now()
-      logger.LogInfo(fmt.Sprintf("Liveness probe. Request took %vms\n", time.Since(startTime).Microseconds()), correlationId)  //jct
+      logger.LogInfo(fmt.Sprintf("Liveness probe. Request took %vms", time.Since(startTime).Microseconds()), correlationId)
     }
   }
   /***
@@ -635,7 +629,7 @@ func makeHttpToHttpsRedirectHandler(port int) *handlers {
     u := req.URL
     u.Host = net.JoinHostPort(host, strconv.Itoa(port))
     u.Scheme = "https"
-    logger.LogInfo(fmt.Sprintf("Redirecting to %s", u.String()), falseCorrelationId)
+    logger.LogInfo("Redirecting to " + u.String(), falseCorrelationId)
     http.Redirect(res, req, u.String(), http.StatusMovedPermanently)
   }
   return h
@@ -710,7 +704,7 @@ func Timeout(res http.ResponseWriter, req *http.Request) {
 //////////////////////////
 
 func waitForServer(server *http.Server, signalChan chan os.Signal, wg *sync.WaitGroup) {
-  logger.LogInfo(fmt.Sprintf("Waiting for notification to shut down the server at %s.", server.Addr), falseCorrelationId)
+  logger.LogInfo("Waiting for notification to shut down the server at " + server.Addr + "...", falseCorrelationId)
   /***
   signal.Notify disables the default behavior for a given set of asynchronous signals and instead
   delivers them over one or more registered channels.
