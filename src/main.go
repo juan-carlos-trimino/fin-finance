@@ -392,7 +392,6 @@ func main() {
 }
 
 func faviconHandler(res http.ResponseWriter, req *http.Request) {
-  // res.WriteHeader(http.StatusNoContent)  //Silence the request with a 204 No Content.
   /***
   If you want to give the browser a valid icon without uploading a physical file, you can write a tiny inline SVG image
   directly to the response writer.
@@ -409,7 +408,6 @@ func faviconHandler(res http.ResponseWriter, req *http.Request) {
     dominant-baseline="middle" fill="#15803d">$</text>
     </svg>`
   res.Write([]byte(svg))
-  // http.ServeFile(res, req, "change to correct path: ./public/assets/favicon.ico")  //Standard Static File Serving.
 }
 
 func makeHandlers() *handlers {
