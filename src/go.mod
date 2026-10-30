@@ -34,30 +34,28 @@ module finance
 go 1.26.4
 
 require (
-	github.com/jackc/pgx/v5 v5.10.0
-	github.com/juan-carlos-trimino/go-logger v1.0.9
-	github.com/juan-carlos-trimino/go-middlewares v1.1.7
-	github.com/juan-carlos-trimino/go-os v1.1.2
-	github.com/juan-carlos-trimino/go-s3storage v1.0.4
-	github.com/juan-carlos-trimino/go-sessions v1.0.17-0.20260924021518-f17c0f9e6126
-	github.com/redis/go-redis/v9 v9.22.0
-	golang.org/x/crypto v0.57.0
+  github.com/jackc/pgx/v5 v5.10.0
+  github.com/juan-carlos-trimino/go-logger v0.0.0-20261030024803-de98fdc9cf37
+  github.com/juan-carlos-trimino/go-middlewares v0.0.0-20261030044854-5f55fbbedd4b
+  github.com/juan-carlos-trimino/go-os v0.0.0-20261030024837-88e533e42108
+  github.com/juan-carlos-trimino/go-s3storage v0.0.0-20261030024854-9ffd50f711ae
+  github.com/juan-carlos-trimino/go-sessions v0.0.0-20261030024906-3956e157ed9f
+  github.com/redis/go-redis/v9 v9.22.0
+  golang.org/x/crypto v0.57.0
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.55.8 // indirect
-	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
-	github.com/google/uuid v1.6.0 // indirect
-	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/juan-carlos-trimino/gposu v1.0.1 // indirect
-	github.com/juan-carlos-trimino/gpsessions v1.0.1 // indirect
-	go.uber.org/atomic v1.12.0 // indirect
-	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sync v0.23.0 // indirect
-	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/text v0.42.0 // indirect
+  github.com/aws/aws-sdk-go v1.55.8 // indirect
+  github.com/cespare/xxhash/v2 v2.3.0 // indirect
+  github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
+  github.com/google/uuid v1.6.0 // indirect
+  github.com/jackc/pgpassfile v1.0.0 // indirect
+  github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+  github.com/jackc/puddle/v2 v2.2.2 // indirect
+  github.com/jmespath/go-jmespath v0.4.0 // indirect
+  go.uber.org/atomic v1.12.0 // indirect
+  golang.org/x/net v0.58.0 // indirect
+  golang.org/x/sync v0.23.0 // indirect
+  golang.org/x/sys v0.48.0 // indirect
+  golang.org/x/text v0.42.0 // indirect
 )
