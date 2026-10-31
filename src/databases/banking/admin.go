@@ -9,12 +9,12 @@ import (
   "context"
   "errors"
   "fmt"
-  "github.com/jackc/pgx/v5"
-  "github.com/juan-carlos-trimino/go-logger"
-  "golang.org/x/crypto/bcrypt"
   "math"
   "math/rand"
   "time"
+  "github.com/jackc/pgx/v5"
+  "github.com/juan-carlos-trimino/go-logger"
+  "golang.org/x/crypto/bcrypt"
 )
 
 /***
@@ -39,7 +39,22 @@ const (
     `SELECT partition_data
      FROM fin.user_data_vault
      WHERE user_name = $1 AND partition_name = $2;`
-
+  QR_DELETE_USER =
+    `DELETE
+     FROM fin.customers_credentials
+     WHERE id = $1;`
+  QR_SELECT_USERS =
+    `SELECT
+      cc.user_name,
+      c.id,
+      c.first_name,
+      c.middle_name,
+      c.last_name
+     FROM fin.customers_credentials AS cc
+     -- Only rows that have matching values in both tables.
+     INNER JOIN fin.customers AS c
+     ON cc.id = c.id
+     WHERE cc.user_name ~* $1;`
 )
 
 type Customer struct {
@@ -48,6 +63,18 @@ type Customer struct {
   //Nullable types.
   Address2, Middle_name, Zip_code *string
   Birth_date *time.Time
+}
+
+type Users struct{
+  UserName string `db:"user_name"`
+  Id int `db:"id"`
+  LastName string `db:"last_name"`
+  /***
+  The most common and idiomatic way to handle nullable columns in Go is to use a pointer to a string (*string). If the value in the
+  database is NULL, Go will scan it as a nil pointer.
+  ***/
+  MiddleName *string `db:"middle_name"`
+  FirstName string `db:"first_name"`
 }
 
 type CustomersContactDetails struct {  //Struct tags.
@@ -179,6 +206,33 @@ func DbFetchUserData(ctx context.Context, userName, partitionName, correlationId
   }
   return jsonBytes
 }
+
+func DbFetchUsers(ctx context.Context, minLetter, maxLetter, correlationId string) []Users {
+  db := GetBsInstance()
+  /***
+  The industry-standard, most reliable way to implement this pattern with pgx is to pass the fully formed regular expression
+  string directly as a single argument from Go, rather than attempting string concatenation inside the database layer.
+  ***/
+  regexPattern := fmt.Sprintf("^[%s-%s]", minLetter, maxLetter)
+  //Zero, one, or many rows.
+  rows, err := db.bsPool.Query(ctx, QR_SELECT_USERS, regexPattern)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("DbFetchUsers: %v", err), correlationId)
+    return nil
+  }
+  /***
+  CollectRows infers the type, allocates the slice, and appends rows efficiently.
+  rows.Close() is automatically called by CollectRows.
+  ***/
+  users, err := pgx.CollectRows(rows, pgx.RowToStructByName[Users])
+  if err != nil {
+    logger.LogError(fmt.Sprintf("DbFetchUsers - collecting rows failed: %v", err), correlationId)
+    return nil
+  }
+  //Go always passes and returns slices by value, which means it copies and returns the slice header.
+  return users
+}
+
 
 //////////////////////
 
