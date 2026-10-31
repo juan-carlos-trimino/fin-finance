@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (savedRowId && allRows.length > 0) {
     //Find the row matching our saved localStorage item
     for (let i = 0; i < allRows.length; i++) {
-      if (allRows[i].getAttribute("data-id") === savedRowId) {
+      if (allRows[i].getAttribute("data-row") === savedRowId) {
         rowToSelect = allRows[i];
         break;
       }
@@ -44,8 +44,8 @@ document.addEventListener("DOMContentLoaded", function () {
     //Set new active highlight row selection
     clickedRow.classList.add("active-row");
     //Save selection to persistent memory
-    const currentId = clickedRow.getAttribute("data-id");
-    localStorage.setItem(STORAGE_KEY, currentId);
+    const currentRow = clickedRow.getAttribute("data-row");
+    localStorage.setItem(STORAGE_KEY, currentRow);
   });
   // =========================================================================
   // SECURE DATA SUBMISSION (Delete User Click Workflow)
@@ -58,17 +58,31 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Please select a row first.");
         return;
       }
+      const selectedRow = activeRow.getAttribute("data-row");
       const selectedId = activeRow.getAttribute("data-id");
-      const userConfirmed = confirm(`Are you sure you want to continue with id: "${selectedId}"?`);
+      //Verify that the data attributes actually exist before showing the confirm dialog
+      if (!selectedRow || !selectedId) {
+        console.error("The selected row is missing data-row or data-id attributes.");
+        return;
+      }
+      const userConfirmed = confirm(`Are you sure you want to continue with row: "${selectedRow}"?`);
       if (userConfirmed) {
-        const hiddenInputId = document.getElementById("table_row_id");
+        // const hiddenInputRow = document.getElementById("table_row_id");
         const hiddenInputStyle = document.getElementById("hidden_bttable");
-        if (hiddenInputId && hiddenInputStyle) {
-          //Sync runtime data to hidden inputs for backend delivery
-          hiddenInputId.value = selectedId;
-          hiddenInputStyle.value = saveButton.value;
-          //Dispatch secure payload to Go Backend
-          mainForm.submit();
+        const hiddenInputId = document.getElementById("hidden_id");
+        //Comprehensive safety check to ensure all elements exist in the DOM
+        if (/*hiddenInputRow &&*/ hiddenInputStyle && hiddenInputId) {
+          //Sync runtime data to hidden inputs for backend delivery.
+          // hiddenInputRow.value = selectedRow.trim();
+          hiddenInputStyle.value = saveButton.value.trim();
+          hiddenInputId.value = selectedId.trim();
+          //Guard: Ensure we aren't submitting empty identifier keys to Go
+          if (/*hiddenInputRow.value !== "" &&*/ hiddenInputId.value !== "") {
+            //Dispatch payload to Go Backend cleanly.
+            mainForm.submit();
+          } else {
+            console.warn("Form submission halted: row data or unique identifier is blank.");
+          }
         } else {
           console.error("Form target fields are completely missing from the HTML DOM.");
         }
