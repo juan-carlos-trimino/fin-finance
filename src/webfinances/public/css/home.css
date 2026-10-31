@@ -289,15 +289,17 @@ caption.custom-table-caption {
   text-align: center;
   padding: 12px 15px;
   border: none !important;
+  /* Layout safeguards to protect cells when column count changes */
+  width: auto !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-/* 65% / 35% Column Proportional Width Split */
-.custom-data-table th:nth-child(1),
-.custom-data-table td:nth-child(1) {
-  width: 65% !important;
-}
-.custom-data-table th:nth-child(2),
-.custom-data-table td:nth-child(2) {
-  width: 35% !important;
+/* Style headers to match the alignment and width distribution */
+.custom-data-table th {
+  font-size: 18px;
+  text-align: center;
+  padding: 12px 15px;
 }
 /* Sticky Footer */
 .custom-data-table tfoot th {
