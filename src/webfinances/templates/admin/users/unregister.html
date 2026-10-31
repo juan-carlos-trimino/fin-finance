@@ -6,17 +6,21 @@ Additionally, to keep your table structured cleanly within your global layout fi
 call your table-content template inside a standard <table> element tag.
 */}}
 {{define "table-content"}}
-<caption class="custom-table-caption">Accounts</caption>
+<caption class="custom-table-caption">Users</caption>
 <thead>
   <tr>
-    <th>Account Name</th>
-    <th>Account Type</th>
+    <th>User Name</th>
+    <th>Last Name</th>
+    <th>Middle Name</th>
+    <th>First Name</th>
   </tr>
 </thead>
 <tfoot>
   <tr>
-    <th>Account Name</th>
-    <th>Account Type</th>
+    <th>User Name</th>
+    <th>Last Name</th>
+    <th>Middle Name</th>
+    <th>First Name</th>
   </tr>
 </tfoot>
 <tbody id="tbody">
@@ -28,9 +32,11 @@ call your table-content template inside a standard <table> element tag.
     Putting tabindex="-1" on an element tells the browser: Do not let the user hit Tab to get here, but keep it programmatically
     focusable."
     -->
-    <tr class="clickable-row" data-id="{{.AccountName}}" tabindex="0"> <!-- Row -->
-      <td>{{.AccountName}}</td> <!-- Data -->
-      <td>{{.AccountType}}</td>
+    <tr class="clickable-row" data-row="{{.UserName}}" data-id="{{.Id}}" tabindex="0"> <!-- Row -->
+      <td>{{.UserName}}</td> <!-- Data -->
+      <td>{{.LastName}}</td>
+      <td>{{.MiddleName}}</td>
+      <td>{{.FirstName}}</td>
     </tr>
   {{end}}
 </tbody>
@@ -40,13 +46,15 @@ call your table-content template inside a standard <table> element tag.
 {{define "users-layout"}}
 <!-- rhs-ui2 -->
 <form id="table_id_form" method="post" action="/admin/users" enctype="application/x-www-form-urlencoded" autocomplete="off">
+  <!-- The user won't see these, but it will be sent with the POST body -->
   <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
   <!-- ----------------=====================================================
   These hidden inputs act as buckets for tableStylesheet.js to drop the selected row ID and button actions into before
   submitting the form context!
   ----------------===================================================== -->
-  <input type="hidden" id="table_row_id" name="selected_id" value=""/>
-  <input type="hidden" id="hidden_bttable" name="tablestyle" value=""/>
+  <!-- <input type="hidden" id="table_row_id" name="selected_row"/> -->
+  <input type="hidden" id="hidden_bttable" name="bttable"/>
+  <input type="hidden" id="hidden_id" name="id"/>
 
   {{template "slider-alphabet-container" .}}
 
@@ -63,8 +71,8 @@ call your table-content template inside a standard <table> element tag.
   {{template "pagination-controls" .Data}}
 
   <div class="button-back-style">
-    <button type="button" class="button" id="bttable" name="tablestyle" value="rhs-ui2"
-     {{if not .Data.Fd2Result}}disabled{{end}}>Delete User</button>
+    <button type="button" class="button" id="bttable" name="bttable" value="delete"
+      {{if not .Data.Fd2Result}}disabled{{end}}>Delete User</button>
   </div>
   <!-- <div class="button-back-style">
     <button type="submit" class="button" id="btdb" name="db" value="rhs-ui2">Get Users</button>
