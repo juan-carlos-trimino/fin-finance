@@ -1,26 +1,21 @@
 package wfadmin
 
 import (
-  bank "finance/databases/banking"  //Importing a package and assigning it a local alias.
-  "context"
-  "encoding/json"
-  "finance/renderer"
-  "fmt"
-  "github.com/juan-carlos-trimino/go-middlewares"
-  "github.com/juan-carlos-trimino/go-logger"
-  "net/http"
-  sess "github.com/juan-carlos-trimino/go-sessions"
-  "strings"
+	"context"
+	"encoding/json"
+	bank "finance/databases/banking" //Importing a package and assigning it a local alias.
+	"finance/renderer"
+	"fmt"
+	"math"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
-
-  "strconv"
-  "math"
-
-"time"
+	"github.com/juan-carlos-trimino/go-logger"
+	"github.com/juan-carlos-trimino/go-middlewares"
+	sess "github.com/juan-carlos-trimino/go-sessions"
 )
-
-
-
 
 type usersFields struct{
   CurrentButton string `json:"currentButton"`
@@ -38,9 +33,12 @@ func defaultUsersFields() *usersFields {
 
 type WfAdminUsersPages struct{}
 
-type Row struct{  //Rows for the accounts.
-  AccountName string
-  AccountType string
+type Rows struct{
+  UserName string `db:"user_name"`
+  Id int `db:"id"`
+  LastName string `db:"last_name"`
+  MiddleName string `db:"middle_name"`
+  FirstName string `db:"first_name"`
 }
 
 func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Request) {
@@ -176,27 +174,34 @@ func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Re
       "webfinances/templates/helpers/pagination-container.html",
     )
 
-      /*
-Using the last selected range (or defaulting to the first range on a fresh login) is an excellent usability pattern. In UX design, this is called Smart Defaults.By predicting what the user wants to see, you eliminate a mandatory extra click every time they visit the page, while still giving them full control to change the range using the slider whenever they want.
-      */
+    var minLetter, maxLetter string
+    var users []bank.Users
 
-
-      //Always parse the form up front so Go reads both URL query strings and POST bodies cleanly
-      if err := req.ParseForm(); err != nil {
-        // Handle error if necessary
-      }
-
-      // Check if the user explicitly dragged the slider (POST)
-      rangeInput := req.PostFormValue("alphabet-range")
-      if rangeInput != "" {
-        fields.SelectedRange = rangeInput
-      }
+    /***
+    Using the last selected range (or defaulting to the first range on a fresh login) is an excellent usability pattern. In UX
+    design, this is called Smart Defaults. By predicting what the user wants to see, you eliminate a mandatory extra click every
+    time they visit the page, while still giving them full control to change the range using the slider whenever they want.
+    ***/
+    if req.Method == http.MethodPost {
+      /***
+      Go is designed to look at the request, realize the body hasn't been parsed yet, and automatically call ParseForm() for
+      you under the hood.
+      ***/
+      delete := req.FormValue("bttable")
+      if delete == "delete" {
+logger.LogInfo("Delete", correlationId)
+      } else {
+        //Check if the user explicitly dragged the slider.
+        rangeInput := req.PostFormValue("alphabet-range")
+        if rangeInput != "" && fields.SelectedRange != rangeInput {
+          fields.SelectedRange = rangeInput
+        }
       // SMART DEFAULT: If the user just landed on the page (GET request)
       // and fields.SelectedRange is blank, automatically fall back to the first range ("1")
-      if fields.SelectedRange == "" {
-        fields.SelectedRange = "1"
-      }
-      var minLetter, maxLetter string
+      // if fields.SelectedRange == "" {
+        // fields.SelectedRange = "1"
+      // }
+
       switch fields.SelectedRange {
       case "1":
         minLetter, maxLetter = "A", "G"
@@ -207,103 +212,89 @@ Using the last selected range (or defaulting to the first range on a fresh login
       case "4":
         minLetter, maxLetter = "U", "Z"
       default:
-        minLetter, maxLetter = "A", "G" // Fallback safety
+        minLetter, maxLetter = "A", "G"  //Fallback safety.
       }
-      logger.LogInfo(fmt.Sprintf("min: %s,  max: %s", minLetter, maxLetter), correlationId)
+      users = bank.DbFetchUsers(req.Context(), minLetter, maxLetter, correlationId)
 
-      var rows []Row
-      numberOfRows := 80
-      rows = make([]Row, 0, numberOfRows + 1)
-      rows = append(rows,
-            Row {
-              AccountName: "--",
-              AccountType: "savings",
-            })
-          for idx := 0; idx < numberOfRows; idx++ {
-            rows = append(rows,
-              Row {
-                AccountName: fmt.Sprintf("account name%d", idx + 1),
-                AccountType: "checking",
-              })
-          }
-
-
-          rowId := req.PostFormValue("selected_id")
-
-          if rowId != "" {
-            logger.LogInfo(fmt.Sprintf("Account ID = %s", rowId), correlationId);
-            for i, r := range rows {
-                if r.AccountName == rowId {
-                    // Remove the element and maintain order
-                    rows = append(rows[:i], rows[i+1:]...)
-                    break // Stop searching after the first match
-                }
-            }
-          }
-
-
-
-      //Extract the page from form body (POST) or URL query string (GET)
-      pageStr := req.FormValue("page")
-      currentPage, err := strconv.Atoi(pageStr)
-      if err != nil || currentPage < 1 {
-        currentPage = 1
-      }
-      //Pagination Math Calculations
-      pageSize := 10  // Items per page
-      totalItems := len(rows)
-      totalPages := int(math.Ceil(float64(totalItems) / float64(pageSize)))
-      if totalPages < 1 {
-        totalPages = 1
 
       }
-      //
-      if currentPage > totalPages {
-        currentPage = totalPages
+
+
+
+
+      // 4. Pass these bounded letters into your SQL query execution
+      //query := "SELECT id, username FROM users WHERE username >= ? AND username <= ?"
+      // alpharange := req.PostFormValue("alphabet-range")
+      // fields.SelectedRange = SelectedRange
+    } else {  //GET
+      switch fields.SelectedRange {
+      case "1":
+        minLetter, maxLetter = "A", "G"
+      case "2":
+        minLetter, maxLetter = "H", "N"
+      case "3":
+        minLetter, maxLetter = "O", "T"
+      case "4":
+        minLetter, maxLetter = "U", "Z"
+      default:
+        minLetter, maxLetter = "A", "G"  //Fallback safety.
       }
-      //Calculate slicing boundaries
-      offset := (currentPage - 1) * pageSize
-      end := offset + pageSize
-      if end > totalItems {
-        end = totalItems
-      }
-      // Slice the data chunk safely
-//      var paginatedItems []string
-      var paginatedItems []Row
-      if offset < totalItems {
-//        paginatedItems = mockDatabase[offset:end]
-        paginatedItems = rows[offset:end]
-      }
-      //
-      if req.Method == http.MethodPost {
-        //Go is designed to look at the request, realize the body hasn't been parsed yet, and automatically call ParseForm() for you under the hood.
-
-        fields.SelectedRange = req.PostFormValue("alphabet-range")
-        var minLetter, maxLetter string
-        switch fields.SelectedRange {
-        case "1":
-          minLetter, maxLetter = "A", "G"
-        case "2":
-          minLetter, maxLetter = "H", "N"
-        case "3":
-          minLetter, maxLetter = "O", "T"
-        case "4":
-          minLetter, maxLetter = "U", "Z"
-        default:
-          minLetter, maxLetter = "A", "G" // Fallback safety
-        }
-        logger.LogInfo(fmt.Sprintf("min: %s,  max: %s", minLetter, maxLetter), correlationId)
-        // 4. Pass these bounded letters into your SQL query execution
-        //query := "SELECT id, username FROM users WHERE username >= ? AND username <= ?"
+      users = bank.DbFetchUsers(req.Context(), minLetter, maxLetter, correlationId)
+    }
 
 
-
-        // alpharange := req.PostFormValue("alphabet-range")
-        // fields.SelectedRange = SelectedRange
-      }
-
+    // switch fields.SelectedRange {
+    // case "1":
+    //   minLetter, maxLetter = "A", "G"
+    // case "2":
+    //   minLetter, maxLetter = "H", "N"
+    // case "3":
+    //   minLetter, maxLetter = "O", "T"
+    // case "4":
+    //   minLetter, maxLetter = "U", "Z"
+    // default:
+    //   minLetter, maxLetter = "A", "G"  //Fallback safety.
+    // }
+    // logger.LogInfo(fmt.Sprintf("min: %s,  max: %s", minLetter, maxLetter), correlationId)
+    /***
+    req.FormValue() retrieves values from BOTH GET and POST requests.
+    It is designed to be a universal fallback method. When you call req.FormValue(key), Go searches for the key in two distinct
+    places, checking them in a specific order of priority:
+    1. The Request Body (POST / PUT / PATCH): It checks the body payload first (data sent via application/x-www-form-urlencoded).
+       During a POST request: It automatically parses the body and returns the value from the form field. (If that field isn't
+       in the body, it checks the URL query string as a backup).
+    2. The URL Query String (GET): It checks the URL parameters second (data sent via ?key=value).
+       During a GET request: Because there is no request body, req.FormValue("key") safely checks the URL and returns the query
+       parameter value.
+    ***/
+    pageStr := req.FormValue("page")
+    currentPage, err := strconv.Atoi(pageStr)
+    if err != nil || currentPage < 1 {
+      currentPage = 1
+    }
+    //Pagination Math Calculations.
+    pageSize := 10  //Items per page.
+    totalItems := len(users)
+    totalPages := int(math.Ceil(float64(totalItems) / float64(pageSize)))
+    if totalPages < 1 {
+      totalPages = 1
+    }
+    //
+    if currentPage > totalPages {
+      currentPage = totalPages
+    }
+    //Calculate slicing boundaries.
+    offset := (currentPage - 1) * pageSize
+    end := offset + pageSize
+    if end > totalItems {
+      end = totalItems
+    }
+    //Slice the data chunk safely
+    var paginatedItems []bank.Users
+    if offset < totalItems {
+      paginatedItems = users[offset:end]
+    }
     labels := []string{"A - G", "H - N", "O - T", "U - Z"}
-
     templateData = struct{
       LayoutType string
       Header string
@@ -311,7 +302,7 @@ Using the last selected range (or defaulting to the first range on a fresh login
       CurrentButton string
       CsrfToken string
       SelectedRange string
-      Fd2Result []Row
+      Fd2Result []bank.Users
       CurrentPage int
       TotalPages int
       PrevPage int
