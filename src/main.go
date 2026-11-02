@@ -213,7 +213,7 @@ func main() {
   //Connection pool.
   connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port,
     admin_user, admin_password, admin_dbname, connect_timeout, sslmode)
-  //logger.LogInfo(fmt.Sprintf("Connection string: %s", psqlInfo), falseCorrelationId)
+  // logger.LogInfo(fmt.Sprintf("Connection string: %s", connString), falseCorrelationId)
   dbInstance := bank.InitializeBsPool(context.Background(), connString, falseCorrelationId)
   if dbInstance == nil {
     panic("Call to InitializeBsPool failed.")
