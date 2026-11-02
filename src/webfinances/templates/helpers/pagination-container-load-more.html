@@ -1,0 +1,7 @@
+{{define "pagination-controls-load-more"}}
+<div class="button-back-style">
+  <button type="button" class="button" id="load-more-btn" {{if not .PageInfo.HasNext}}disabled{{end}}>
+    Load More Records
+  </button>
+</div>
+{{end}}
