@@ -292,6 +292,7 @@ src/webfinances/templates/finances/simpleinterestordinary/*
 !src/webfinances/templates/helpers/
 src/webfinances/templates/helpers/*
 !src/webfinances/templates/helpers/pagination-container.html
+!src/webfinances/templates/helpers/pagination-container-load-more.html
 !src/webfinances/templates/helpers/scroll-container.html
 !src/webfinances/templates/helpers/slider-alphabet-container.html
 # ... and this directory and its file...
