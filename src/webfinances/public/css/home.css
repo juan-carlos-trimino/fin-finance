@@ -220,7 +220,6 @@ body {
 }
 
 
-
 /*** Table ***/
 /* =========================================================================
    TABLE CONTAINER & VIEWPORT
@@ -390,6 +389,42 @@ caption.custom-table-caption {
 ========================================================================= */
 #table_id_form {
   width: 100% !important;  /* Replace universal 'form' selector with precise page ID */
+}
+
+/* =========================================================================
+   BUTTON ACTIONS ALIGNMENT (Smart Auto-Centering Engine)
+========================================================================= */
+.table-actions-row {
+  display: grid !important;
+  align-items: center !important;
+
+  /* Mirror the footprint rules of your data table viewport */
+  width: 95% !important;
+  max-width: 1400px !important;
+  margin: 20px auto !important;
+  box-sizing: border-box !important;
+}
+
+/* --- TWO BUTTONS CONDITION --- */
+/* If there are two elements, create two equal columns */
+.table-actions-row:has(> :nth-child(2)) {
+  grid-template-columns: 1fr 1fr !important;
+}
+/* Center each button within its respective grid zone */
+.table-actions-row > * {
+  justify-self: center !important;
+}
+
+/* --- ONE BUTTON CONDITION --- */
+/* If there is only one element, make it take the full width and center it */
+.table-actions-row:not(:has(> :nth-child(2))) {
+  grid-template-columns: 1fr !important;
+}
+
+/* Force both action button texts to stay entirely on a single line */
+.table-actions-row button,
+.table-actions-row .button {
+  white-space: nowrap !important;
 }
 /*** Table ***/
 
