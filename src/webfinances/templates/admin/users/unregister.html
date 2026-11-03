@@ -15,6 +15,7 @@ call your table-content template inside a standard <table> element tag.
     <th>First Name</th>
   </tr>
 </thead>
+{{/*
 <tfoot>
   <tr>
     <th>User Name</th>
@@ -23,7 +24,14 @@ call your table-content template inside a standard <table> element tag.
     <th>First Name</th>
   </tr>
 </tfoot>
-<tbody id="tbody">
+*/}}
+<tbody id="tbody-users">
+  <!-- Call the row loop fragment for the initial page load -->
+  {{template "user-rows-fragment" .}}
+</tbody>
+{{end}}
+
+{{define "user-rows-fragment"}}
   {{range .Data.Fd2Result}}
     <!--
     By default, table rows (<tr>) cannot receive focus via the Tab key. If they are acting as clickable buttons in your application,
@@ -32,27 +40,33 @@ call your table-content template inside a standard <table> element tag.
     Putting tabindex="-1" on an element tells the browser: Do not let the user hit Tab to get here, but keep it programmatically
     focusable."
     -->
-    <tr class="clickable-row" data-row="{{.UserName}}" data-id="{{.Id}}" tabindex="0"> <!-- Row -->
+    <tr class="clickable-row" data-username="{{.UserName}}" data-id="{{.Id}}" tabindex="0"> <!-- Row -->
       <td>{{.UserName}}</td> <!-- Data -->
       <td>{{.LastName}}</td>
-      <td>{{.MiddleName}}</td>
+      <!-- Safe conditional rendering for your *string MiddleName pointer -->
+      <td>{{if .MiddleName}}{{.MiddleName}}{{else}}&mdash;{{end}}</td>
       <td>{{.FirstName}}</td>
     </tr>
   {{end}}
-</tbody>
+  <!-- The tracking marker MUST sit directly below the rows inside the fragment -->
+  <tr id="pagination-sentinel" class="hidden">
+    <td colspan="4"
+        data-next-cursor="{{.Data.PageInfo.NextCursor}}"
+        data-has-next="{{.Data.PageInfo.HasNext}}">
+    </td>
+  </tr>
 {{end}}
 
 <!-- Main users-layout -->
 {{define "users-layout"}}
 <!-- rhs-ui2 -->
-<form id="table_id_form" method="post" action="/admin/users" enctype="application/x-www-form-urlencoded" autocomplete="off">
+<form id="table_id_form" method="post" action="/admin/users" autocomplete="off">
   <!-- The user won't see these, but it will be sent with the POST body -->
   <input type="hidden" name="csrf_token" value="{{.Data.CsrfToken}}"/>
   <!-- ----------------=====================================================
   These hidden inputs act as buckets for tableStylesheet.js to drop the selected row ID and button actions into before
-  submitting the form context!
+  submitting the form context.
   ----------------===================================================== -->
-  <!-- <input type="hidden" id="table_row_id" name="selected_row"/> -->
   <input type="hidden" id="hidden_bttable" name="bttable"/>
   <input type="hidden" id="hidden_id" name="id"/>
 
@@ -68,15 +82,15 @@ call your table-content template inside a standard <table> element tag.
     </table>
   </div>
 
-  {{template "pagination-controls" .Data}}
-
-  <div class="button-back-style">
-    <button type="button" class="button" id="bttable" name="bttable" value="delete"
-      {{if not .Data.Fd2Result}}disabled{{end}}>Delete User</button>
+  <div class="table-actions-row">
+    <div>
+      {{template "pagination-controls-load-more" .Data}}
+    </div>
+    <div class="button-back-style">
+      <button type="submit" class="button" id="bttable" disabled>
+        Delete User
+      </button>
+    </div>
   </div>
-  <!-- <div class="button-back-style">
-    <button type="submit" class="button" id="btdb" name="db" value="rhs-ui2">Get Users</button>
-  </div> -->
 </form>
-<script type="text/javascript" src="/public/js/tableStylesheet.js"></script>
 {{end}}
