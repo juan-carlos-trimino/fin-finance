@@ -118,7 +118,9 @@ src/webfinances/public/css/*
 !src/webfinances/public/css/components/
 src/webfinances/public/css/components/*
 !src/webfinances/public/css/components/base-button.css
+!src/webfinances/public/css/components/label.css
 !src/webfinances/public/css/components/slider-alphabet.css
+!src/webfinances/public/css/components/table.css
 !src/webfinances/public/js/
 src/webfinances/public/js/*
 !src/webfinances/public/js/loadNextPage.js
