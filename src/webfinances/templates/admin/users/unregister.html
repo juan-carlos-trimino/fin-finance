@@ -25,7 +25,7 @@ call your table-content template inside a standard <table> element tag.
   </tr>
 </tfoot>
 */}}
-<tbody id="tbody-users">
+<tbody id="table-body">
   <!-- Call the row loop fragment for the initial page load -->
   {{template "user-rows-fragment" .}}
 </tbody>
@@ -67,7 +67,7 @@ call your table-content template inside a standard <table> element tag.
   These hidden inputs act as buckets for tableStylesheet.js to drop the selected row ID and button actions into before
   submitting the form context.
   ----------------===================================================== -->
-  <input type="hidden" id="hidden_bttable" name="bttable"/>
+  <input type="hidden" id="hidden_action-button" name="action-button"/>
   <input type="hidden" id="hidden_id" name="id"/>
 
   {{template "slider-alphabet-container" .}}
@@ -83,11 +83,26 @@ call your table-content template inside a standard <table> element tag.
   </div>
 
   <div class="table-actions-row">
-    <div>
+    <!-- Left Control: Items per page selector -->
+    <div class="page-size-selector">
+      <label page-size-selector="select" for="limit">Items per page:</label>
+      <select class="cnt-select" id="limit" name="limit" onchange="window.location.href='?limit=' + this.value;">
+        <option value="10" {{if eq .Data.PageInfo.Limit 10}}selected{{end}}>10</option>
+        <option value="25" {{if eq .Data.PageInfo.Limit 25}}selected{{end}}>25</option>
+        <option value="50" {{if eq .Data.PageInfo.Limit 50}}selected{{end}}>50</option>
+        <option value="75" {{if eq .Data.PageInfo.Limit 75}}selected{{end}}>50</option>
+        <option value="100" {{if eq .Data.PageInfo.Limit 100}}selected{{end}}>100</option>
+      </select>
+    </div>
+
+    <!-- Middle Control: Load More Button Template -->
+    <div class="pagination-buttons">
       {{template "pagination-controls-load-more" .Data}}
     </div>
+
+    <!-- Right Control: Secure Delete Action Button -->
     <div class="button-back-style">
-      <button type="submit" class="button" id="bttable" disabled>
+      <button type="submit" class="button" id="action-button" disabled>
         Delete User
       </button>
     </div>
