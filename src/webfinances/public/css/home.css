@@ -405,20 +405,9 @@ caption.custom-table-caption {
   box-sizing: border-box !important;
 }
 
-/* --- TWO BUTTONS CONDITION --- */
-/* If there are two elements, create two equal columns */
-.table-actions-row:has(> :nth-child(2)) {
-  grid-template-columns: 1fr 1fr !important;
-}
 /* Center each button within its respective grid zone */
 .table-actions-row > * {
   justify-self: center !important;
-}
-
-/* --- ONE BUTTON CONDITION --- */
-/* If there is only one element, make it take the full width and center it */
-.table-actions-row:not(:has(> :nth-child(2))) {
-  grid-template-columns: 1fr !important;
 }
 
 /* Force both action button texts to stay entirely on a single line */
@@ -426,9 +415,25 @@ caption.custom-table-caption {
 .table-actions-row .button {
   white-space: nowrap !important;
 }
+
+/* --- THREE ELEMENTS CONDITION --- */
+/* If there are three children, create three equal columns */
+.table-actions-row:has(> :nth-child(3)) {
+  grid-template-columns: 1fr 1fr 1fr !important;
+}
+
+/* --- TWO ELEMENTS CONDITION --- */
+/* If there are exactly two elements, create two equal columns */
+.table-actions-row:has(> :nth-child(2)):not(:has(> :nth-child(3))) {
+  grid-template-columns: 1fr 1fr !important;
+}
+
+/* --- ONE ELEMENT CONDITION --- */
+/* If there is only one element, make it take the full width */
+.table-actions-row:not(:has(> :nth-child(2))) {
+  grid-template-columns: 1fr !important;
+}
 /*** Table ***/
-
-
 
 /*** Input Buttons ***/
 /* --- Submit Button --- */
