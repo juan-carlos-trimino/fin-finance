@@ -11,11 +11,15 @@ async function loadNextPage() {
 
   const csrfInput = document.querySelector('input[name="csrf_token"]');
   const csrfToken = csrfInput ? csrfInput.value : '';
+  // Get the dropdown selector value to find out how many rows the user wants
+  const limitSelect = document.getElementById("limit");
+  const currentLimit = limitSelect ? limitSelect.value : "10"; //Falls back to default if element missing
 
   const requestBody = new URLSearchParams();
   requestBody.append("csrf_token", csrfToken);
-  requestBody.append("bttable", "load-more");
+  requestBody.append("action-button", "load-more");
   requestBody.append("cursor", cursor);
+  requestBody.append("limit", currentLimit);  //Inform the backend of the size choice
 
   // Target the exact URL path you are currently standing on
   const targetRoute = window.location.pathname;
@@ -42,7 +46,7 @@ async function loadNextPage() {
   const htmlFragment = await response.text();
   sentinel.remove();
 
-  const tbody = document.getElementById("tbody-users");
+  const tbody = document.getElementById("table-body");
   if (tbody) {
     tbody.insertAdjacentHTML("beforeend", htmlFragment);
   }
@@ -63,8 +67,8 @@ async function loadNextPage() {
   // =========================================================================
   // STATE PROTECTION: Reset form fields and disable Delete button on append
   // =========================================================================
-  const deleteBtn = document.getElementById('bttable');
-  const hiddenBtTable = document.getElementById("hidden_bttable");
+  const deleteBtn = document.getElementById('action-button');
+  const hiddenBtTable = document.getElementById("hidden_action-button");
   const hiddenId = document.getElementById("hidden_id");
 
   if (deleteBtn) deleteBtn.setAttribute("disabled", "true");
