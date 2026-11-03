@@ -121,6 +121,7 @@ src/webfinances/public/css/components/*
 !src/webfinances/public/css/components/slider-alphabet.css
 !src/webfinances/public/js/
 src/webfinances/public/js/*
+!src/webfinances/public/js/loadNextPage.js
 !src/webfinances/public/js/setPageUI.js
 !src/webfinances/public/js/slider-alphabet.js
 !src/webfinances/public/js/tabFullPage.js
