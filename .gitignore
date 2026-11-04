@@ -464,6 +464,7 @@ IaC-app/utilities/postgres/sql/baseline/admin/*
 !IaC-app/utilities/postgres/sql/baseline/admin/000_admin_db.sql
 !IaC-app/utilities/postgres/sql/baseline/admin/001_migration_tbl_test.sql
 !IaC-app/utilities/postgres/sql/baseline/admin/002_user_data_vault_tbl.sql
+!IaC-app/utilities/postgres/sql/baseline/admin/003_users_pagination.sql
 !IaC-app/utilities/postgres/sql/baseline/admin/templates/
 IaC-app/utilities/postgres/sql/baseline/admin/templates/*
 !IaC-app/utilities/postgres/sql/baseline/admin/templates/xxx_admin_migration_template.sql
