@@ -41,7 +41,7 @@ const (
      WHERE user_name = $1 AND partition_name = $2;`
   QR_DELETE_USER =
     `DELETE
-     FROM fin.customers_credentials
+     FROM fin.customers
      WHERE id = $1;`
   QR_SELECT_USERS =
     `SELECT
@@ -54,7 +54,32 @@ const (
      -- Only rows that have matching values in both tables.
      INNER JOIN fin.customers AS c
      ON cc.id = c.id
-     WHERE cc.user_name ~* $1;`
+     -- If using ~*, PostgreSQL automatically ignores case.
+     WHERE cc.user_name COLLATE "C" ~* $1
+     ORDER BY cc.user_name COLLATE "C" ASC,
+              cc.id ASC
+     LIMIT $2;`
+  QR_SELECT_USERS1 =
+    `SELECT
+      cc.user_name,
+      c.id,
+      c.first_name,
+      c.middle_name,
+      c.last_name
+     FROM fin.customers_credentials AS cc
+     INNER JOIN fin.customers AS c
+     ON cc.id = c.id
+     -- If using ~*, PostgreSQL automatically ignores case.
+     WHERE cc.user_name COLLATE "C" ~* $1
+     -- Explicitly unrolled keyset comparison preserving the "C" collation context.
+      AND (
+        (cc.user_name COLLATE "C" > $2)
+       OR
+        (cc.user_name COLLATE "C" = $2 AND cc.id > $3)
+      )
+     ORDER BY cc.user_name COLLATE "C" ASC,
+              cc.id ASC
+     LIMIT $4;`
 )
 
 type Customer struct {
@@ -173,7 +198,7 @@ func DbChangePassword(ctx context.Context, userName, oldPassword, newPassword, c
   var ok bool = true
   err := db.bsPool.QueryRow(ctx, SP_CHANGE_PASSWORD, userName, oldPassword, newPassword, correlationId).Scan(&ok)
   if err != nil {
-    logger.LogError(fmt.Sprintf("DbGetCustomersContactDetails: %v", err), correlationId)
+    logger.LogError(fmt.Sprintf("DbChangePassword: %v", err), correlationId)
     ok = false
   }
   return ok
@@ -207,15 +232,21 @@ func DbFetchUserData(ctx context.Context, userName, partitionName, correlationId
   return jsonBytes
 }
 
-func DbFetchUsers(ctx context.Context, minLetter, maxLetter, correlationId string) []Users {
+func DbFetchUsers(ctx context.Context, limit, lastId int, regexPattern, lastUserName, correlationId string) []Users {
   db := GetBsInstance()
+  var err error = nil
+  var rows pgx.Rows = nil
   /***
   The industry-standard, most reliable way to implement this pattern with pgx is to pass the fully formed regular expression
   string directly as a single argument from Go, rather than attempting string concatenation inside the database layer.
+  Completely case-insensitive: The database engine treats the range as case-blind automatically using the regex operator.
   ***/
-  regexPattern := fmt.Sprintf("^[%s-%s]", minLetter, maxLetter)
-  //Zero, one, or many rows.
-  rows, err := db.bsPool.Query(ctx, QR_SELECT_USERS, regexPattern)
+  if lastUserName == "" {
+    //Zero, one, or many rows.
+    rows, err = db.bsPool.Query(ctx, QR_SELECT_USERS, regexPattern, limit)
+  } else {
+    rows, err = db.bsPool.Query(ctx, QR_SELECT_USERS1, regexPattern, lastUserName, lastId, limit)
+  }
   if err != nil {
     logger.LogError(fmt.Sprintf("DbFetchUsers: %v", err), correlationId)
     return nil
@@ -233,6 +264,22 @@ func DbFetchUsers(ctx context.Context, minLetter, maxLetter, correlationId strin
   return users
 }
 
+func DbDeleteUser(ctx context.Context, primaryKey int, correlationId string) bool {
+  db := GetBsInstance()
+  //It executes the command and returns a command tag indicating how many rows were affected, without expecting a result set.
+  cmdTag, err := db.bsPool.Exec(ctx, QR_DELETE_USER, primaryKey)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("DbDeleteUser: %v", err), correlationId)
+    return false
+  }
+  //Optional: Verify that a row was actually found and deleted.
+  if cmdTag.RowsAffected() == 0 {
+    logger.LogInfo(fmt.Sprintf("DbDeleteUser: No customer found with id %d", primaryKey), correlationId)
+  } else {
+    logger.LogInfo(fmt.Sprintf("DbDeleteUser: Customer found with id %d", primaryKey), correlationId)
+  }
+  return true
+}
 
 //////////////////////
 
