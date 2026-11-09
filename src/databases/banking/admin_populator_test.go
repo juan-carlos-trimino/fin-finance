@@ -55,18 +55,29 @@ func TestGenerateMockData(t *testing.T) {
     t.Fatalf("Failed to bind target isolated search_path: %v", err)
   }
   //3. Define total generation count
-  rowCount := 15
+  rowCount := 150
   gofakeit.Seed(time.Now().UnixNano())
   specialChars := []string{"%", "#", "@", "!", "$", "_", "-"}
   digitChars := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
+  //Pool of common European accented/special characters to test ICU collation
+  euroChars := []string{"é", "è", "à", "ç", "ù", "ñ", "í", "ó", "á", "ü", "ö", "ä", "ß", "ø", "å", "æ"}
+  euroCaps := []string{"É", "È", "À", "Ç", "Ñ", "Í", "Ó", "Á", "Ü", "Ö", "Ä", "Ø", "Å", "Æ"}
   t.Logf("Executing stored procedure %s for %d rows...", SP_ADD_CUSTOMER, rowCount)
   for idx := 0; idx < rowCount; idx++ {
     //Generate standard name fields
     firstName := gofakeit.FirstName()
     lastName := gofakeit.LastName()
+    // 40% chance to inject European characters into the display names to test mixed-case persistence.
+    if rand.Float32() < 0.40 {
+      firstName = euroCaps[rand.Intn(len(euroCaps))] + firstName[1:]
+      lastName = lastName + euroChars[rand.Intn(len(euroChars))]
+    }
     var middleName *string
     if rand.Float32() > 0.30 {  //70% chance of middle name presence
       mName := gofakeit.FirstName()
+      if rand.Float32() < 0.40 {
+        mName = euroCaps[rand.Intn(len(euroCaps))] + mName[1:]
+      }
       middleName = &mName
     }
     //Generate a username that matches your slider rules
@@ -81,8 +92,12 @@ func TestGenerateMockData(t *testing.T) {
     case roll < 0.30:
       // 15% chance to strictly start with a digit character (e.g., "7john52")
       username = digitChars[rand.Intn(len(digitChars))] + username
+    case roll < 0.60:
+      // 30% chance to explicitly start with an international European letter (e.g., "ñatasha41")
+      // This directly validates that your "A-G", "H-N" slider code routes them correctly via ICU
+      username = euroChars[rand.Intn(len(euroChars))] + username
     default:
-      // Remaining 70% keep the normal alpha start character (e.g., "john52")
+      // Remaining 40% keep the normal alpha start character (e.g., "john52")
     }
 
     //Generate all realistic profile properties required by your SP
