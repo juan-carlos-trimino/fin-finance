@@ -44,42 +44,48 @@ const (
      FROM fin.customers
      WHERE id = $1;`
   QR_SELECT_USERS =
-    `SELECT
-      cc.user_name,
-      c.id,
-      c.first_name,
-      c.middle_name,
-      c.last_name
-     FROM fin.customers_credentials AS cc
-     -- Only rows that have matching values in both tables.
-     INNER JOIN fin.customers AS c
-     ON cc.id = c.id
-     -- If using ~*, PostgreSQL automatically ignores case.
-     WHERE cc.user_name COLLATE "C" ~* $1
-     ORDER BY cc.user_name COLLATE "C" ASC,
-              cc.id ASC
-     LIMIT $2;`
-  QR_SELECT_USERS1 =
-    `SELECT
-      cc.user_name,
-      c.id,
-      c.first_name,
-      c.middle_name,
-      c.last_name
-     FROM fin.customers_credentials AS cc
-     INNER JOIN fin.customers AS c
-     ON cc.id = c.id
-     -- If using ~*, PostgreSQL automatically ignores case.
-     WHERE cc.user_name COLLATE "C" ~* $1
-     -- Explicitly unrolled keyset comparison preserving the "C" collation context.
-      AND (
-        (cc.user_name COLLATE "C" > $2)
-       OR
-        (cc.user_name COLLATE "C" = $2 AND cc.id > $3)
-      )
-     ORDER BY cc.user_name COLLATE "C" ASC,
-              cc.id ASC
-     LIMIT $4;`
+  `SELECT
+    cc.user_name,
+    c.id,
+    c.first_name,
+    c.middle_name,
+    c.last_name
+   FROM fin.customers_credentials AS cc
+   INNER JOIN fin.customers AS c ON cc.id = c.id
+   -- Seamless international case-insensitive range checks
+   WHERE cc.user_name COLLATE fin.euro_case_insensitive >= $1  --Lower
+     AND ($2::text IS NULL OR cc.user_name COLLATE fin.euro_case_insensitive < $2::text)  --Upper
+   -- Sort linguistically across international alphabets
+   ORDER BY cc.user_name COLLATE fin.euro_case_insensitive ASC,
+   cc.user_name ASC,
+            cc.id ASC
+   LIMIT $3;`
+  /***
+   $1: Upper slider range bound (unchanged)
+   $2: Last seen user_name string from the previous page (used for the collation boundary evaluation)
+   $3: Last seen exact literal user_name from the previous page (handles raw byte tie-breaking)
+       Evaluates the exact same string ($2) using the standard binary/byte rules to break casing ties
+   $4: Last seen id integer from the previous page (handles absolute primary key tie-breaking)
+   $5: The page limit value
+  ***/
+  QR_SELECT_USERS_WITH_CURSOR =  // next-page keyset query
+  `SELECT
+    cc.user_name,
+    c.id,
+    c.first_name,
+    c.middle_name,
+    c.last_name
+   FROM fin.customers_credentials AS cc
+   INNER JOIN fin.customers AS c ON cc.id = c.id
+   WHERE ($1::text IS NULL OR cc.user_name COLLATE fin.euro_case_insensitive < $1::text)  -- upper slider range bound
+     -- Keyset pagination seek matching the composite index dimensions exactly
+     AND (
+       (cc.user_name COLLATE fin.euro_case_insensitive, cc.user_name, cc.id) > ($2, $3, $4)
+     )
+   ORDER BY cc.user_name COLLATE fin.euro_case_insensitive ASC,
+            cc.user_name ASC,
+            cc.id ASC
+   LIMIT $5;`
 )
 
 type Customer struct {
@@ -232,7 +238,7 @@ func DbFetchUserData(ctx context.Context, userName, partitionName, correlationId
   return jsonBytes
 }
 
-func DbFetchUsers(ctx context.Context, limit, lastId int, regexPattern, lastUserName, correlationId string) []Users {
+func DbFetchUsers(ctx context.Context, lowerBound string, upperBound *string, limit, lastId int, lastUserName , correlationId string) []Users {
   db := GetBsInstance()
   var err error = nil
   var rows pgx.Rows = nil
@@ -243,9 +249,9 @@ func DbFetchUsers(ctx context.Context, limit, lastId int, regexPattern, lastUser
   ***/
   if lastUserName == "" {
     //Zero, one, or many rows.
-    rows, err = db.bsPool.Query(ctx, QR_SELECT_USERS, regexPattern, limit)
+    rows, err = db.bsPool.Query(ctx, QR_SELECT_USERS, lowerBound, upperBound, limit)
   } else {
-    rows, err = db.bsPool.Query(ctx, QR_SELECT_USERS1, regexPattern, lastUserName, lastId, limit)
+    rows, err = db.bsPool.Query(ctx, QR_SELECT_USERS_WITH_CURSOR, upperBound, lastUserName, lastUserName, lastId, limit)
   }
   if err != nil {
     logger.LogError(fmt.Sprintf("DbFetchUsers: %v", err), correlationId)
