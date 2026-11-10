@@ -57,16 +57,19 @@ const (
      AND ($2::text IS NULL OR cc.user_name COLLATE fin.euro_case_insensitive < $2::text)  --Upper
    -- Sort linguistically across international alphabets
    ORDER BY cc.user_name COLLATE fin.euro_case_insensitive ASC,
-   cc.user_name ASC,
+            cc.user_name ASC,
             cc.id ASC
    LIMIT $3;`
   /***
-   $1: Upper slider range bound (unchanged)
-   $2: Last seen user_name string from the previous page (used for the collation boundary evaluation)
-   $3: Last seen exact literal user_name from the previous page (handles raw byte tie-breaking)
-       Evaluates the exact same string ($2) using the standard binary/byte rules to break casing ties
-   $4: Last seen id integer from the previous page (handles absolute primary key tie-breaking)
-   $5: The page limit value
+  $1: Upper slider range bound (unchanged)
+  $2: Last seen user_name string from the previous page (used for the collation boundary evaluation)
+  $3: Last seen exact literal user_name from the previous page (handles raw byte tie-breaking)
+      Evaluates the exact same string ($2) using the standard binary/byte rules to break casing ties
+  $4: Last seen id integer from the previous page (handles absolute primary key tie-breaking)
+  $5: The page limit value
+  The row-comparison syntax ((col1, col2, col3) > ($2, $2, $3)) and the explicit ORDER BY expression are perfectly aligned to
+  match the physical dimensions of the composite B-Tree index. This ensures Postgres can execute a pure Index Scan or Index Only
+  Scan, completely avoiding disastrous filesorts.
   ***/
   QR_SELECT_USERS_WITH_CURSOR =  // next-page keyset query
   `SELECT
@@ -79,13 +82,11 @@ const (
    INNER JOIN fin.customers AS c ON cc.id = c.id
    WHERE ($1::text IS NULL OR cc.user_name COLLATE fin.euro_case_insensitive < $1::text)  -- upper slider range bound
      -- Keyset pagination seek matching the composite index dimensions exactly
-     AND (
-       (cc.user_name COLLATE fin.euro_case_insensitive, cc.user_name, cc.id) > ($2, $3, $4)
-     )
+     AND ((cc.user_name COLLATE fin.euro_case_insensitive, cc.user_name, cc.id) > ($2, $2, $3))
    ORDER BY cc.user_name COLLATE fin.euro_case_insensitive ASC,
             cc.user_name ASC,
             cc.id ASC
-   LIMIT $5;`
+   LIMIT $4;`
 )
 
 type Customer struct {
@@ -251,7 +252,7 @@ func DbFetchUsers(ctx context.Context, lowerBound string, upperBound *string, li
     //Zero, one, or many rows.
     rows, err = db.bsPool.Query(ctx, QR_SELECT_USERS, lowerBound, upperBound, limit)
   } else {
-    rows, err = db.bsPool.Query(ctx, QR_SELECT_USERS_WITH_CURSOR, upperBound, lastUserName, lastUserName, lastId, limit)
+    rows, err = db.bsPool.Query(ctx, QR_SELECT_USERS_WITH_CURSOR, upperBound, lastUserName, lastId, limit)
   }
   if err != nil {
     logger.LogError(fmt.Sprintf("DbFetchUsers: %v", err), correlationId)
