@@ -34,6 +34,7 @@ module finance
 go 1.26.4
 
 require (
+	github.com/brianvoe/gofakeit/v7 v7.18.1
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/juan-carlos-trimino/go-logger v0.0.0-20261030024803-de98fdc9cf37
 	github.com/juan-carlos-trimino/go-middlewares v0.0.0-20261030044854-5f55fbbedd4b
@@ -46,7 +47,6 @@ require (
 
 require (
 	github.com/aws/aws-sdk-go v1.55.8 // indirect
-	github.com/brianvoe/gofakeit/v7 v7.18.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
