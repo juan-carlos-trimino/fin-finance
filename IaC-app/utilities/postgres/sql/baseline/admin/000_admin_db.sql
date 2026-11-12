@@ -164,15 +164,14 @@ DROP ROLE IF EXISTS admin_role;
 -- Restore default message logging.
 -- RESET client_min_messages;
 /***
-A Postgres cluster refers to the individual server/instance that's running and hosting (a cluster
-of) databases. It does not mean that multiple servers are setup in a multi-node environment.
+A Postgres cluster refers to the individual server/instance that's running and hosting (a cluster of) databases. It does not mean
+that multiple servers are setup in a multi-node environment.
 
-A ROLE exists at the cluster level. By convention, a ROLE that allows login is considered a user,
-and a role that is not allowed to login is a group.
+A ROLE exists at the cluster level. By convention, a ROLE that allows login is considered a user, and a role that is not allowed
+to login is a group.
 
-In highly concurrent environments, checking for a role's existence right before creating it can
-cause a race condition. You can instead try to create the user unconditionally and safely intercept
-the duplicate_object error.
+In highly concurrent environments, checking for a role's existence right before creating it can cause a race condition. You can
+instead try to create the user unconditionally and safely intercept the duplicate_object error.
 ***/
 DO $$  -- A DO block executes entirely on the PostgreSQL database server.
 BEGIN
@@ -214,10 +213,9 @@ WITH
 -- GRANT CONNECT ON DATABASE finances TO admin_role;
 -- GRANT ALL PRIVILEGES ON DATABASE finances TO admin_role;
 /***
-Every Postgres cluster has an implicit role called 'public' which cannot be deleted. All other
-roles are always granted membership in 'public' by default and inherit whatever privileges are
-currently assigned to it. Unless otherwise modified, the privileges granted to the 'public' role
-are as follows:
+Every Postgres cluster has an implicit role called 'public' which cannot be deleted. All other roles are always granted
+membership in 'public' by default and inherit whatever privileges are currently assigned to it. Unless otherwise modified,
+the privileges granted to the 'public' role are as follows:
 PostgreSQL 14 and below                   PostgreSQL 15 and above
 -----------------------------------------------------------------
 CONNECT                                   CONNECT
@@ -226,9 +224,8 @@ TEMPORARY                                 EXECUTE (functions and procedures)
 EXECUTE (functions and procedures)        USAGE (domains, languages, and types)
 USAGE (domains, languages, and types)
 
-Notice that the 'public' role always has the CONNECT privilege granted by default, which allows all
-roles to connect to a newly created database. Without the privilege to connect to a database, none
-of the newly created roles would be able to do much.
+Notice that the 'public' role always has the CONNECT privilege granted by default, which allows all roles to connect to a newly
+created database. Without the privilege to connect to a database, none of the newly created roles would be able to do much.
 ***/
 -- Revoke all privileges that are granted by default to the 'public' role.
 REVOKE ALL ON DATABASE finances FROM public;
@@ -238,24 +235,23 @@ REVOKE ALL ON DATABASE finances FROM public;
 
 -- LOCK 2: Protect Schema Actions (Tables, Indexes, Procedures).
 /***
-When \c executed, Lock 1 was destroyed. We must instantly acquire a new lock inside the 'finances'
-database connection context.
+When \c executed, Lock 1 was destroyed. We must instantly acquire a new lock inside the 'finances' database connection context.
 ***/
 SET lock_timeout = '5s';
 SELECT pg_advisory_lock(9876543210);
 
 /***
-Set the session to the new role. The role that is in force at the time of an object creation will
-own the object. Essentially, the owner of an object is analogous to a superuser of that object.
+Set the session to the new role. The role that is in force at the time of an object creation will own the object. Essentially,
+the owner of an object is analogous to a superuser of that object.
 ***/
 SET ROLE admin_role;
 
 /**************************************************************************************************
                                          *** EXTENSION ***
 ***************************************************************************************************
-To use bcrypt in Postgres, you can utilize the pgcrypto extension. This extension provides the
-crypt() and gen_salt() functions necessary for secure password hashing and verification within SQL.
-Enable the extension in your specific database by running the following SQL command.
+To use bcrypt in Postgres, you can utilize the pgcrypto extension. This extension provides the crypt() and gen_salt() functions
+necessary for secure password hashing and verification within SQL. Enable the extension in your specific database by running
+the following SQL command.
 ***/
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
@@ -268,26 +264,54 @@ CREATE SCHEMA IF NOT EXISTS fin;
 **************************************************************************************************/
 GRANT USAGE ON SCHEMA fin TO admin_role;
 /***
-Notice that you removed ALL privileges from 'public' at the database level, but not at the schema
-level of the database. If you remove all privileges from the schema as well, then normal Postgres
-commands would not work for many users without resetting additional privileges.
-Note that starting with Postgres 15 the 'public' role can NO longer create anything by default,
-regardless of the schema.
+Notice that you removed ALL privileges from 'public' at the database level, but not at the schema level of the database. If you
+remove all privileges from the schema as well, then normal Postgres commands would not work for many users without resetting
+additional privileges.
+Note that starting with Postgres 15 the 'public' role can NO longer create anything by default, regardless of the schema.
 ***/
 REVOKE CREATE ON SCHEMA public FROM public;
 
 /***
 Set the search path to look for objects in your schema.
-The role must have been granted USAGE privileges on your schema, otherwise the path will be
- ignored for your schema.
-Setting the search path at the role level will override the database-wide defaults set by
- ALTER DATABASE.
+The role must have been granted USAGE privileges on your schema, otherwise the path will be ignored for your schema.
+Setting the search path at the role level will override the database-wide defaults set by ALTER DATABASE.
 If you need all users in a group to share the same search_path, use the following:
- Set at the Database Level: Apply the search_path to the database itself, so every new connection
-                            defaults to it.
+ Set at the Database Level: Apply the search_path to the database itself, so every new connection defaults to it.
 ***/
 --ALTER ROLE admin_role SET search_path = fin;
 ALTER DATABASE finances SET search_path TO fin, public;
+
+/**************************************************************************************************
+                                        *** COLLATIONS ***
+**************************************************************************************************/
+/***
+It allows PostgreSQL to compare and sort text while completely ignoring both uppercase/lowercase differences and accent marks
+(like e, é, è, and Ê will all be treated as the exact same letter).
+
+-------------------
+Parameter Breakdown
+-------------------
+* PROVIDER = icu
+  This tells Postgres to use the ICU (International Components for Unicode) library instead of the standard operating system
+  (libc). ICU is required here because standard OS collations usually cannot handle complex rules like advanced case-and-accent
+  insensitivity.
+* LOCALE = 'und-u-ks-level1'
+  This is a special Unicode locale string that defines the sorting strength:
+    * und: Short for "undetermined" (or root). It means it uses generic, universal Unicode sorting rules rather than rules tied
+      to a specific country or language (like French or German).
+    * ks-level1: Sets the Collation Strength to Level 1 (Primary). At Level 1, ICU only looks at the base alphabet letters. It
+      ignores Level 2 (accents) and Level 3 (case).
+* DETERMINISTIC = false
+  By default, Postgres collations are deterministic, meaning strings are only equal if their exact byte-by-byte data is identical.
+  Setting this to false allows Postgres to say that 'Cafe' and 'café' are deterministically equal, even though their underlying
+  bytes are different. This is what enables you to use standard operators like = or LIKE for case/accent-insensitive matching.
+***/
+-- Create the non-deterministic ICU collation.
+CREATE COLLATION fin.euro_case_insensitive(
+  PROVIDER = icu,
+  LOCALE = 'und-u-ks-level1',  -- Ignore both case and accents.
+  DETERMINISTIC = false
+);
 
 /**************************************************************************************************
                                            *** TABLES ***
@@ -330,7 +354,7 @@ CREATE TABLE IF NOT EXISTS fin.customers(
   updated_at         TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_last_name
+CREATE INDEX IF NOT EXISTS fin.idx_last_name
   ON fin.customers
   USING btree(last_name DESC);
 ANALYZE fin.customers;
@@ -410,6 +434,13 @@ CREATE TABLE IF NOT EXISTS fin.customers_credentials(
   created_at       TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   last_attempt     TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
+
+CREATE INDEX IF NOT EXISTS fin.idx_users_slider_pagination
+  ON fin.customers_credentials
+  USING btree(user_name COLLATE fin.euro_case_insensitive ASC,
+              user_name ASC,
+              id ASC);
+ANALYZE fin.customers_credentials;
 
 CREATE TABLE IF NOT EXISTS fin.migration_history(
   migration_name  TEXT PRIMARY KEY,
