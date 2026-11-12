@@ -47,31 +47,6 @@ type PageInfo struct{
 
 type WfAdminUsersPages struct{}
 
-
-/***jct
-Cloud-Specific Architectural Considerations
-
-While the pattern is ideal, you need to account for how a cloud environment behaves:
-
-1. Always Order by an Indexed Partition Strategy
-
-In your multi-tenant setup, your queries likely include a tenant filter or user isolation boundary (e.g., WHERE user_id = $1). To ensure performance remains near-instant, you must create a composite B-Tree index that covers your partition keys and your sorting cursor keys together.
-
-2. Keep the Cursor Decoupled from Internal Data Types
-
-Cloud environments are dynamic. If you change your underlying database schema later, you don't want your UI or external mobile apps to break because they were storing raw database values.
-* Best Practice: Always stick to the opaque Base64-encoded string pattern. The UI just treats it as a text string, allowing you to rewrite how the backend parses or modifies the cursor internals later without updating your client applications.
-
-3. Handle Empty and Edge Payload States Gracefully
-
-In a distributed cloud setup, components need explicit contracts to prevent infinite loader loops on the front end. Ensure your API payload always handles edge cases cleanly:
-* First Page: The client sends no cursor (/api/feed). The backend returns the first batch and a next_cursor.
-* Middle Pages: The client passes the string (/api/feed?cursor=ZXleU0M4TW...).
-* Last Page: The backend finds no further rows during the look-ahead check. It returns data but sets has_next: false and next_cursor: "". The UI immediately unbinds scroll event listeners.
-***/
-
-
-
 func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Request) {
   ck := middlewares.MwContextKey{}
   correlationId, _ := ck.GetCorrelationId(req.Context())
@@ -345,7 +320,7 @@ func (u WfAdminUsersPages) AdminUsersPages(res http.ResponseWriter, req *http.Re
       hasNext = true
       users = users[:fields.Limit]  //Trim look-ahead item.
       lastVisibleUser := users[fields.Limit - 1]
-      nextCursor = encodeCursor(lastVisibleUser.UserName, lastVisibleUser.Id)  //////////////////////////////////////////jct
+      nextCursor = encodeCursor(lastVisibleUser.UserName, lastVisibleUser.Id)
     }
     var pageInfo = PageInfo{
       NextCursor: nextCursor,
