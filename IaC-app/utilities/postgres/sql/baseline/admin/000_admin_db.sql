@@ -155,9 +155,9 @@ SELECT (:db_exists AND NOT :ALWAYS_DB_ADMIN) AS run_script \gset
   DROP FUNCTION IF EXISTS pg_temp.does_db_exist;
 \endif
 
-/**************************************************************************************************
-                                 *** DATABASE ROLES AND PRIVILEGES ***
-**************************************************************************************************/
+/********************************************************************************************************************************
+                                            *** DATABASE ROLES AND PRIVILEGES ***
+********************************************************************************************************************************/
 -- Suppress notices and errors.
 -- SET client_min_messages = 'warning';
 DROP ROLE IF EXISTS admin_role;
@@ -194,9 +194,9 @@ EXCEPTION
 END
 $$;
 
-/**************************************************************************************************
-                                            *** DATABASE ***
-**************************************************************************************************/
+/********************************************************************************************************************************
+                                                     *** DATABASE ***
+********************************************************************************************************************************/
 CREATE DATABASE :DB_NAME
 WITH
   OWNER = admin_role
@@ -207,9 +207,9 @@ WITH
   LC_CTYPE = 'C.UTF8'  -- Define character classification rules.
   IS_TEMPLATE = FALSE  -- Only superusers or the database owner can clone the database.
   TEMPLATE = 'template0';
-/**************************************************************************************************
-                *** DATABASE ROLES AND PRIVILEGES (Database-level privileges) ***
-**************************************************************************************************/
+/********************************************************************************************************************************
+                             *** DATABASE ROLES AND PRIVILEGES (Database-level privileges) ***
+********************************************************************************************************************************/
 -- GRANT CONNECT ON DATABASE finances TO admin_role;
 -- GRANT ALL PRIVILEGES ON DATABASE finances TO admin_role;
 /***
@@ -246,22 +246,22 @@ the owner of an object is analogous to a superuser of that object.
 ***/
 SET ROLE admin_role;
 
-/**************************************************************************************************
-                                         *** EXTENSION ***
-***************************************************************************************************
+/********************************************************************************************************************************
+                                                       *** EXTENSION ***
+*********************************************************************************************************************************
 To use bcrypt in Postgres, you can utilize the pgcrypto extension. This extension provides the crypt() and gen_salt() functions
 necessary for secure password hashing and verification within SQL. Enable the extension in your specific database by running
 the following SQL command.
 ***/
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-/**************************************************************************************************
-                                           *** SCHEMAS ***
-**************************************************************************************************/
+/********************************************************************************************************************************
+                                                       *** SCHEMAS ***
+********************************************************************************************************************************/
 CREATE SCHEMA IF NOT EXISTS fin;
-/**************************************************************************************************
-                *** DATABASE ROLES AND PRIVILEGES (Schema-level privileges) ***
-**************************************************************************************************/
+/********************************************************************************************************************************
+                             *** DATABASE ROLES AND PRIVILEGES (Schema-level privileges) ***
+********************************************************************************************************************************/
 GRANT USAGE ON SCHEMA fin TO admin_role;
 /***
 Notice that you removed ALL privileges from 'public' at the database level, but not at the schema level of the database. If you
@@ -281,11 +281,11 @@ If you need all users in a group to share the same search_path, use the followin
 --ALTER ROLE admin_role SET search_path = fin;
 ALTER DATABASE finances SET search_path TO fin, public;
 
-/**************************************************************************************************
-                                        *** COLLATIONS ***
-**************************************************************************************************/
+/********************************************************************************************************************************
+                                                       *** COLLATIONS ***
+********************************************************************************************************************************/
 /***
-It allows PostgreSQL to compare and sort text while completely ignoring both uppercase/lowercase differences and accent marks
+It allows Postgres to compare and sort text while completely ignoring both uppercase/lowercase differences and accent marks
 (like e, é, è, and Ê will all be treated as the exact same letter).
 
 -------------------
@@ -299,6 +299,8 @@ Parameter Breakdown
   This is a special Unicode locale string that defines the sorting strength:
     * und: Short for "undetermined" (or root). It means it uses generic, universal Unicode sorting rules rather than rules tied
       to a specific country or language (like French or German).
+    * -u-: Signals the start of Unicode locale extensions. Everything that comes after -u- overrides the default sorting and
+       formatting behavior of the base locale.
     * ks-level1: Sets the Collation Strength to Level 1 (Primary). At Level 1, ICU only looks at the base alphabet letters. It
       ignores Level 2 (accents) and Level 3 (case).
 * DETERMINISTIC = false
@@ -313,9 +315,9 @@ CREATE COLLATION fin.euro_case_insensitive(
   DETERMINISTIC = false
 );
 
-/**************************************************************************************************
-                                           *** TABLES ***
-***************************************************************************************************
+/********************************************************************************************************************************
+                                                      *** TABLES ***
+*********************************************************************************************************************************
 customers-to-customer_contact_details Relationship: One-to-One
 customers-to-credentials Relationship: One-to-One
 URL: /register
@@ -447,18 +449,17 @@ CREATE TABLE IF NOT EXISTS fin.migration_history(
   applied_at      TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-/**************************************************************************************************
-               *** DATABASE ROLES AND PRIVILEGES (Table-level privileges) ***
-**************************************************************************************************/
+/********************************************************************************************************************************
+                             *** DATABASE ROLES AND PRIVILEGES (Table-level privileges) ***
+********************************************************************************************************************************/
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA fin TO admin_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA fin TO admin_role;
 
 /***
-Privileges are only granted/revoked for objects in existence at the time of the GRANT/REVOKE. ALTER
-DEFAULT PRIVILEGES allows you to set the privileges that will be applied to objects created in the
-future. (It does not affect privileges assigned to already-existing objects.) Privileges can be set
-globally (i.e., for all objects created in the current database), or just for objects created in
-specified schemas.
+Privileges are only granted/revoked for objects in existence at the time of the GRANT/REVOKE. ALTER DEFAULT PRIVILEGES allows you
+to set the privileges that will be applied to objects created in the future. (It does not affect privileges assigned to
+already-existing objects.) Privileges can be set globally (i.e., for all objects created in the current database), or just for
+objects created in specified schemas.
 ***/
 ALTER DEFAULT PRIVILEGES IN SCHEMA fin
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO admin_role;
@@ -490,9 +491,9 @@ SELECT
   TRUE
 FROM admin_customer;
 
-/**************************************************************************************************
-                                 *** FUNCTIONS/STORED PROCEDURES ***
-**************************************************************************************************/
+/********************************************************************************************************************************
+                                             *** FUNCTIONS/STORED PROCEDURES ***
+********************************************************************************************************************************/
 -- DROP PROCEDURE IF EXISTS fin.add_customer;
 CREATE OR REPLACE PROCEDURE fin.add_customer(
   IN p_user_name TEXT,
@@ -514,8 +515,7 @@ CREATE OR REPLACE PROCEDURE fin.add_customer(
 )
 LANGUAGE PLPGSQL
 /***
-This delimits the SP body using dollar-quoted string constants, which avoids the need to escape
-single quotes within the code.
+This delimits the SP body using dollar-quoted string constants, which avoids the need to escape single quotes within the code.
 ***/
 AS $$
 DECLARE
@@ -696,9 +696,9 @@ BEGIN
 END;
 $$;
 
-/**************************************************************************************************
-                            *** TRIGGER FUNCTIONS/STORED PROCEDURES ***
-**************************************************************************************************/
+/********************************************************************************************************************************
+                                        *** TRIGGER FUNCTIONS/STORED PROCEDURES ***
+********************************************************************************************************************************/
 CREATE OR REPLACE FUNCTION fin.customers_block_row_deletion()
 RETURNS TRIGGER
 LANGUAGE PLPGSQL
@@ -737,47 +737,3 @@ CREATE OR REPLACE TRIGGER trg_customers_credentials_prevent_delete
 BEFORE DELETE ON fin.customers_credentials
 FOR EACH ROW
 EXECUTE FUNCTION fin.customers_credentials_block_row_deletion();
-
-
-
-
-
-
-
-/*************************************************************************************************/
-
--- CREATE OR REPLACE FUNCTION fin.get_customers_contact_details()
--- RETURNS SETOF fin.customers_contact_details
--- LANGUAGE PLPGSQL
--- AS $$
--- BEGIN
---   RETURN QUERY SELECT * FROM fin.customers_contact_details;
--- END;
--- $$;
-
-
-
--- CREATE OR REPLACE PROCEDURE fin.customer_contact_details(
---   IN puser_name TEXT
--- )
--- LANGUAGE PLPGSQL
--- AS $$
--- BEGIN
--- END;
--- $$;
-
--- CREATE OR REPLACE PROCEDURE fin.customers_credentials()
--- LANGUAGE PLPGSQL
--- AS $$
--- BEGIN
--- END;
--- $$;
-
--- CREATE OR REPLACE PROCEDURE fin.customer_credentials(
---   IN puser_name TEXT
--- )
--- LANGUAGE PLPGSQL
--- AS $$
--- BEGIN
--- END;
--- $$;
