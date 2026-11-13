@@ -1,36 +1,52 @@
-###
-# How to Debug
-# If you are unsure which rule is blocking your subdirectory, you can ask Git exactly which line of which .gitignore file is responsible
-# by running this command in your terminal:
-# $ git check-ignore -v path/to/subdirectory/filename.txt
-# This will display the exact path and line number causing the issue.
-###
+# If you want to see the complete list of every file Git is currently tracking, run:
+# git ls-files
+#
+# And if you ever want to double-check whether a specific file inside <filepath> would be ignored if you created a new file there, run:
+# git check-ignore -v <filepath>
+# It is a test command that asks Git what it would do with a file path, even if that file does not exist yet on your computer. Git checks
+# <filepath> against your .gitignore file from top to bottom and gives you one of two results:
+# * Result 1: Blank output (No text returned)
+#   * What it means: The file is NOT ignored. Your ! rules worked, and Git will track this file when you create it.
+# * Result 2: Prints a file and line number (for example: .gitignore:2:*    <filepath>)
+#   * What it means: The file IS ignored. It tells you the exact file (.gitignore), line number (2), and rule (*) that is blocking it.
+#
+# You can test which files Git will track before committing by running:
+# git status --ignored -uall
+#
+# To stop Git from tracking a directory while keeping the files safe on your hard drive, remove it from Git's tracking index using
+# --cached:
+# git rm -r --cached <directory-name>/
+#
+#
+# Pattern     What It Matches                      Effect Under a Top-Level *
+# !folder/    The folder directory                 Unlocks the directory so Git can enter it, but
+#             container only                       keeps its contents ignored.
+# folder/*    All direct files and subfolders      Blocks everything inside folder so you can un-ignore
+#             inside folder                        specific files below it.
+# folder/*/   Direct subdirectories inside         Blocks all subfolders while leaving direct files inside
+#             folder only                          folder untouched.
+# !folder/*   All direct items inside folder       Includes all files and subfolders directly inside folder,
+#             (1 level deep)                       without nested contents.
+# !folder/**  Everything inside folder at          Includes every file and nested subdirectory while
+#             all depths                           preserving the directory structure.
+#
 #
 # Ignore everything.
-**
+*
 
-# But include these files...
+#############################
+# Application - Go and html #
+#############################
 !.dockerignore
 !.editorconfig
 !.gitignore
 !Dockerfile-prod
 !LICENSE
 !README.md
-# ... and these files under the 'src' directory...
-# !files/
-# files/*
-# ... and these files under the 'src' directory...
+#
 !.github/
-.github/*
-!.github/.gitkeep
-!.github/workflows/
-.github/workflows/*
-!.github/workflows/github-actions-demo.yml
-# ... and these files under the 'src' directory...
-# !.vscode/
-# .vscode/*
-# !.vscode/launch.json
-# ... and these files under the 'src' directory...
+!.github/**
+#
 !src/
 src/*
 !src/go.mod
@@ -39,323 +55,56 @@ src/*
 !src/psql-clean.txt
 !src/psql-list.txt
 !src/upgrade-pg.sh
-# ... and these files under the 'finances' directory...
+#
 !src/concurrency/
-src/concurrency/*
-!src/concurrency/barrier.go
-!src/concurrency/channel.go
-!src/concurrency/rpReadWriteLock.go
-!src/concurrency/semaphore.go
-!src/concurrency/waitGroup.go
-!src/concurrency/waitGroupL.go
-!src/concurrency/wpReadWriteLock.go
-# ... and this directory and its file...
+!src/concurrency/**
+#
 !src/config/
 src/config/*
 !src/config/config.go
-# ... and this directory and its file...
+#
 !src/databases/
-src/databases/*
-!src/databases/banking/
-src/databases/banking/*
-!src/databases/banking/init-banking.go
-!src/databases/banking/admin.go
-!src/databases/banking/admin_populator_test.go
-!src/databases/banking/banking.go
-!src/databases/.gitkeep
-# ... and this directory and its file...
+!src/databases/**
+#
 !src/finances/
-src/finances/*
-!src/finances/Annuities_test.go
-!src/finances/Annuities.go
-!src/finances/Bonds_test.go
-!src/finances/Bonds.go
-!src/finances/Mortgage.go
-!src/finances/Periods.go
-!src/finances/SimpleInterest_test.go
-!src/finances/SimpleInterest.go
-# ... and this directory and its file...
+!src/finances/**
+#
 !src/mathutil/
 src/mathutil/*
 !src/mathutil/mathutil_test.go
 !src/mathutil/mathutil.go
-# ... and this directory and its file...
+#
 !src/renderer/
 src/renderer/*
 !src/renderer/render.go
-# ... and this directory and its file...
+#
 !src/security/
 src/security/*
 !src/security/security.go
-# ... and this directory and its file...
+#
+# Enter the directory.
 !src/webfinances/
-src/webfinances/*
-!src/webfinances/WfAdminPages.go
-!src/webfinances/WfAdminSecurityPages.go
-!src/webfinances/WfFinBondsPages.go
-!src/webfinances/WfFinMiscellaneousPages.go
-!src/webfinances/WfFinMortgagePages.go
-!src/webfinances/WfFinAdCpPages.go
-!src/webfinances/WfFinAdEppPages.go
-!src/webfinances/WfFinAdFvPages.go
-!src/webfinances/WfFinAdPvPages.go
-!src/webfinances/WfFinOaInterestRatePages.go
-!src/webfinances/WfFinOaCpPages.go
-!src/webfinances/WfFinOaEppPages.go
-!src/webfinances/WfFinOaFvPages.go
-!src/webfinances/WfFinOaGaPages.go
-!src/webfinances/WfFinOaPerpetuityPages.go
-!src/webfinances/WfFinOaPvPages.go
-!src/webfinances/WfFinPages.go
-!src/webfinances/WfFinSiAccuratePages.go
-!src/webfinances/WfFinSiBankersPages.go
-!src/webfinances/WfFinSiOrdinaryPages.go
+# Un-ignore everything directly inside src/webfinances (files and folders).
+!src/webfinances/*
+# Re-ignore ONLY directories inside src/webfinances (trailing slash matches folders only).
+src/webfinances/*/
 !src/webfinances/public/
-src/webfinances/public/*
-!src/webfinances/public/css/
-src/webfinances/public/css/*
-!src/webfinances/public/css/home.css
-!src/webfinances/public/css/components/
-src/webfinances/public/css/components/*
-!src/webfinances/public/css/components/base-button.css
-!src/webfinances/public/css/components/label.css
-!src/webfinances/public/css/components/slider-alphabet.css
-!src/webfinances/public/css/components/table.css
-!src/webfinances/public/js/
-src/webfinances/public/js/*
-!src/webfinances/public/js/loadNextPage.js
-!src/webfinances/public/js/setPageUI.js
-!src/webfinances/public/js/slider-alphabet.js
-!src/webfinances/public/js/tabFullPage.js
-!src/webfinances/public/js/tableStylesheet.js
-!src/webfinances/public/js/tabSplitPage.js
+!src/webfinances/public/**
 !src/webfinances/templates/
-src/webfinances/templates/*
-!src/webfinances/templates/about.html
-!src/webfinances/templates/contact.html
-!src/webfinances/templates/datetime.html
-!src/webfinances/templates/footer.html
-!src/webfinances/templates/header.html
-!src/webfinances/templates/index.html
-!src/webfinances/templates/layout-no-navbar.html
-!src/webfinances/templates/layout-simple.html
-!src/webfinances/templates/layout.html
-!src/webfinances/templates/login.html
-!src/webfinances/templates/navbar.html
-!src/webfinances/templates/title.html
-!src/webfinances/templates/welcome.html
-# ... and this directory and its file...
-!src/webfinances/templates/admin/
-src/webfinances/templates/admin/*
-!src/webfinances/templates/admin/welcome.html
-!src/webfinances/templates/admin/settings/
-src/webfinances/templates/admin/settigs/*
-!src/webfinances/templates/admin/settings/settings.html
-!src/webfinances/templates/admin/settings/security/
-src/webfinances/templates/admin/settigs/security/*
-!src/webfinances/templates/admin/settings/security/password.html
-!src/webfinances/templates/admin/settings/security/security.html
-!src/webfinances/templates/admin/users/
-src/webfinances/templates/admin/users/*
-!src/webfinances/templates/admin/users/register.html
-!src/webfinances/templates/admin/users/unregister.html
-!src/webfinances/templates/admin/users/users.html
-# ... and this directory and its file...
-!src/webfinances/templates/banking/
-src/webfinances/templates/banking/*
-!src/webfinances/templates/banking/banking.html
-!src/webfinances/templates/banking/manageaccounts/
-src/webfinances/templates/banking/manageaccounts/*
-!src/webfinances/templates/banking/manageaccounts/createaccount.html
-!src/webfinances/templates/banking/manageaccounts/deleteaccount.html
-!src/webfinances/templates/banking/manageaccounts/manageaccounts.html
-# ... and this directory and its file...
-!src/webfinances/templates/finances/
-src/webfinances/templates/finances/*
-!src/webfinances/templates/finances/finances.html
-!src/webfinances/templates/finances/annuitydue.html
-!src/webfinances/templates/finances/ordinaryannuity.html
-!src/webfinances/templates/finances/simpleinterest.html
-# ... and this directory and its file...
-!src/webfinances/templates/finances/bonds/
-src/webfinances/templates/finances/bonds/*
-!src/webfinances/templates/finances/bonds/bonds.html
-!src/webfinances/templates/finances/bonds/taxfree.html
-!src/webfinances/templates/finances/bonds/convexity.html
-!src/webfinances/templates/finances/bonds/duration.html
-!src/webfinances/templates/finances/bonds/macaulayduration.html
-!src/webfinances/templates/finances/bonds/modifiedduration.html
-!src/webfinances/templates/finances/bonds/currentprice.html
-!src/webfinances/templates/finances/bonds/yieldtocall.html
-!src/webfinances/templates/finances/bonds/yieldtomaturity.html
-# ... and this directory and its file...
-!src/webfinances/templates/finances/mortgage/
-src/webfinances/templates/finances/mortgage/*
-!src/webfinances/templates/finances/mortgage/amortizationtable.html
-!src/webfinances/templates/finances/mortgage/costofmortgage.html
-!src/webfinances/templates/finances/mortgage/heloc.html
-!src/webfinances/templates/finances/mortgage/mortgage.html
-# ... and this directory and its file...
-!src/webfinances/templates/finances/ordinaryannuity/
-src/webfinances/templates/finances/ordinaryannuity/*
-!src/webfinances/templates/finances/ordinaryannuity/cp/
-src/webfinances/templates/finances/ordinaryannuity/cp/*
-!src/webfinances/templates/finances/ordinaryannuity/cp/cp.html
-!src/webfinances/templates/finances/ordinaryannuity/cp/i-PMT-FV.html
-!src/webfinances/templates/finances/ordinaryannuity/cp/i-PMT-PV.html
-!src/webfinances/templates/finances/ordinaryannuity/cp/i-PV-FV.html
-!src/webfinances/templates/finances/ordinaryannuity/epp/
-src/webfinances/templates/finances/ordinaryannuity/epp/*
-!src/webfinances/templates/finances/ordinaryannuity/epp/epp.html
-!src/webfinances/templates/finances/ordinaryannuity/epp/n-i-FV.html
-!src/webfinances/templates/finances/ordinaryannuity/epp/n-i-PV.html
-!src/webfinances/templates/finances/ordinaryannuity/ga/
-src/webfinances/templates/finances/ordinaryannuity/ga/*
-!src/webfinances/templates/finances/ordinaryannuity/ga/FV.html
-!src/webfinances/templates/finances/ordinaryannuity/ga/ga.html
-!src/webfinances/templates/finances/ordinaryannuity/ga/PV.html
-!src/webfinances/templates/finances/ordinaryannuity/interestrate/
-src/webfinances/templates/finances/ordinaryannuity/interestrate/*
-!src/webfinances/templates/finances/ordinaryannuity/interestrate/interestrate.html
-!src/webfinances/templates/finances/ordinaryannuity/interestrate/n-PV-FV.html
-!src/webfinances/templates/finances/ordinaryannuity/perpetuity/
-src/webfinances/templates/finances/ordinaryannuity/perpetuity/*
-!src/webfinances/templates/finances/ordinaryannuity/perpetuity/perpetuity.html
-!src/webfinances/templates/finances/ordinaryannuity/perpetuity/gp.html
-!src/webfinances/templates/finances/ordinaryannuity/perpetuity/p.html
-!src/webfinances/templates/finances/ordinaryannuity/fv/
-src/webfinances/templates/finances/ordinaryannuity/fv/*
-!src/webfinances/templates/finances/ordinaryannuity/fv/fv.html
-!src/webfinances/templates/finances/ordinaryannuity/fv/n-i-PMT.html
-!src/webfinances/templates/finances/ordinaryannuity/fv/n-i-PV.html
-!src/webfinances/templates/finances/ordinaryannuity/pv/
-src/webfinances/templates/finances/ordinaryannuity/pv/*
-!src/webfinances/templates/finances/ordinaryannuity/pv/n-i-FV.html
-!src/webfinances/templates/finances/ordinaryannuity/pv/n-i-PMT.html
-!src/webfinances/templates/finances/ordinaryannuity/pv/pv.html
-# ... and this directory and its file...
-!src/webfinances/templates/finances/annuitydue/
-src/webfinances/templates/finances/annuitydue/*
-!src/webfinances/templates/finances/annuitydue/cp/
-src/webfinances/templates/finances/annuitydue/cp/*
-!src/webfinances/templates/finances/annuitydue/cp/cp.html
-!src/webfinances/templates/finances/annuitydue/cp/i-PMT-FV.html
-!src/webfinances/templates/finances/annuitydue/cp/i-PMT-PV.html
-!src/webfinances/templates/finances/annuitydue/cp/i-PV-FV.html
-!src/webfinances/templates/finances/annuitydue/pv/
-src/webfinances/templates/finances/annuitydue/pv/*
-!src/webfinances/templates/finances/annuitydue/pv/n-i-FV.html
-!src/webfinances/templates/finances/annuitydue/pv/n-i-PMT.html
-!src/webfinances/templates/finances/annuitydue/pv/pv.html
-!src/webfinances/templates/finances/annuitydue/fv/
-src/webfinances/templates/finances/annuitydue/fv/*
-!src/webfinances/templates/finances/annuitydue/fv/fv.html
-!src/webfinances/templates/finances/annuitydue/fv/n-i-PMT.html
-!src/webfinances/templates/finances/annuitydue/fv/n-i-PV.html
-!src/webfinances/templates/finances/annuitydue/epp/
-src/webfinances/templates/finances/annuitydue/epp/*
-!src/webfinances/templates/finances/annuitydue/epp/epp.html
-!src/webfinances/templates/finances/annuitydue/epp/n-i-FV.html
-!src/webfinances/templates/finances/annuitydue/epp/n-i-PV.html
-# ... and this directory and its file...
-!src/webfinances/templates/finances/miscellaneous/
-src/webfinances/templates/finances/miscellaneous/*
-!src/webfinances/templates/finances/miscellaneous/averagerate.html
-!src/webfinances/templates/finances/miscellaneous/compfrequencyconv.html
-!src/webfinances/templates/finances/miscellaneous/depreciation.html
-!src/webfinances/templates/finances/miscellaneous/effectiveannualrate.html
-!src/webfinances/templates/finances/miscellaneous/growthdecay.html
-!src/webfinances/templates/finances/miscellaneous/miscellaneous.html
-!src/webfinances/templates/finances/miscellaneous/nominalrate.html
-!src/webfinances/templates/finances/miscellaneous/nominalratevs.html
-# ... and this directory and its file...
-!src/webfinances/templates/finances/simpleinterestaccurate/
-src/webfinances/templates/finances/simpleinterestaccurate/*
-!src/webfinances/templates/finances/simpleinterestaccurate/accurate.html
-!src/webfinances/templates/finances/simpleinterestaccurate/amountofinterest.html
-!src/webfinances/templates/finances/simpleinterestaccurate/interestrate.html
-!src/webfinances/templates/finances/simpleinterestaccurate/principal.html
-!src/webfinances/templates/finances/simpleinterestaccurate/time.html
-# ... and this directory and its file...
-!src/webfinances/templates/finances/simpleinterestbankers/
-src/webfinances/templates/finances/simpleinterestbankers/*
-!src/webfinances/templates/finances/simpleinterestbankers/bankers.html
-!src/webfinances/templates/finances/simpleinterestbankers/amountofinterest.html
-!src/webfinances/templates/finances/simpleinterestbankers/interestrate.html
-!src/webfinances/templates/finances/simpleinterestbankers/principal.html
-!src/webfinances/templates/finances/simpleinterestbankers/time.html
-# ... and this directory and its file...
-!src/webfinances/templates/finances/simpleinterestordinary/
-src/webfinances/templates/finances/simpleinterestordinary/*
-!src/webfinances/templates/finances/simpleinterestordinary/ordinary.html
-!src/webfinances/templates/finances/simpleinterestordinary/amountofinterest.html
-!src/webfinances/templates/finances/simpleinterestordinary/interestrate.html
-!src/webfinances/templates/finances/simpleinterestordinary/principal.html
-!src/webfinances/templates/finances/simpleinterestordinary/time.html
-# ... and this directory and its file...
-!src/webfinances/templates/helpers/
-src/webfinances/templates/helpers/*
-!src/webfinances/templates/helpers/pagination-container.html
-!src/webfinances/templates/helpers/pagination-container-load-more.html
-!src/webfinances/templates/helpers/scroll-container.html
-!src/webfinances/templates/helpers/slider-alphabet-container.html
-# ... and this directory and its file...
-!src/webfinances/wfbanking/
-src/webfinances/wfbanking/*
-!src/webfinances/wfbanking/WfBankingManageAccountsPages.go
-!src/webfinances/wfbanking/WfBankingPages.go
-# ... and this directory and its file...
+!src/webfinances/templates/**
 !src/webfinances/wfadmin/
-src/webfinances/wfadmin/*
-!src/webfinances/wfadmin/WfAdminPages.go
-!src/webfinances/wfadmin/WfAdminSettingsPages.go
-!src/webfinances/wfadmin/WfAdminUsersPages.go
-################################
-# Infrastructure as Code (IaC) #
-################################
-!IaC-K8s/
-IaC-K8s/*
-!IaC-K8s/.gitkeep
-!IaC-K8s/oracle/
-IaC-K8s/oracle/*
-!IaC-K8s/oracle/compartment.tf
-!IaC-K8s/oracle/data.tf
-!IaC-K8s/oracle/main.tf
-!IaC-K8s/oracle/node-port-nlb.tf
-!IaC-K8s/oracle/null-resource.tf
-!IaC-K8s/oracle/locals.tf
-!IaC-K8s/oracle/outputs.tf
-!IaC-K8s/oracle/providers.tf
-!IaC-K8s/oracle/ssh-key.tf
-!IaC-K8s/oracle/variables.tf
-!IaC-K8s/oracle/modules/
-IaC-K8s/oracle/modules/*
-!IaC-K8s/oracle/modules/cluster/
-IaC-K8s/oracle/modules/cluster/*
-!IaC-K8s/oracle/modules/cluster/main.tf
-!IaC-K8s/oracle/modules/igw/
-IaC-K8s/oracle/modules/igw/*
-!IaC-K8s/oracle/modules/igw/main.tf
-!IaC-K8s/oracle/modules/load-balancer/
-IaC-K8s/oracle/modules/load-balancer/*
-!IaC-K8s/oracle/modules/load-balancer/main.tf
-!IaC-K8s/oracle/modules/nat/
-IaC-K8s/oracle/modules/nat/*
-!IaC-K8s/oracle/modules/nat/main.tf
-!IaC-K8s/oracle/modules/network-load-balancer/
-IaC-K8s/oracle/modules/network-load-balancer/*
-!IaC-K8s/oracle/modules/network-load-balancer/main.tf
-!IaC-K8s/oracle/modules/node/
-IaC-K8s/oracle/modules/node/*
-!IaC-K8s/oracle/modules/node/main.tf
-!IaC-K8s/oracle/modules/subnet/
-IaC-K8s/oracle/modules/subnet/*
-!IaC-K8s/oracle/modules/subnet/main.tf
+!src/webfinances/wfadmin/**
+!src/webfinances/wfbanking/
+!src/webfinances/wfbanking/**
 ########################################
 # Infrastructure as Code (IaC) for app #
 ########################################
 !IaC-app/
 IaC-app/*
+!IaC-app/modules/
+!IaC-app/modules/**
+!IaC-app/utilities/
+!IaC-app/utilities/**
 !IaC-app/.terraform.lock.hcl
 !IaC-app/backend.tf
 !IaC-app/iac.sh
@@ -363,134 +112,28 @@ IaC-app/*
 !IaC-app/namespace.tf
 !IaC-app/providers.tf
 !IaC-app/variables.tf
-!IaC-app/modules/
-IaC-app/modules/*
-!IaC-app/modules/cronjob/
-IaC-app/modules/cronjob/*
-!IaC-app/modules/cronjob/main.tf
-!IaC-app/modules/deployment/
-IaC-app/modules/deployment/*
-!IaC-app/modules/deployment/main.tf
-!IaC-app/modules/statefulset/
-IaC-app/modules/statefulset/*
-!IaC-app/modules/statefulset/main.tf
-!IaC-app/modules/traefik/
-IaC-app/modules/traefik/*
-!IaC-app/modules/traefik/cert-manager/
-IaC-app/modules/traefik/cert-manager/*
-!IaC-app/modules/traefik/cert-manager/acme-issuer/
-IaC-app/modules/traefik/cert-manager/acme-issuer/*
-!IaC-app/modules/traefik/cert-manager/acme-issuer/main.tf
-!IaC-app/modules/traefik/cert-manager/cert-manager/
-IaC-app/modules/traefik/cert-manager/cert-manager/*
-!IaC-app/modules/traefik/cert-manager/cert-manager/main.tf
-!IaC-app/modules/traefik/cert-manager/certificates/
-IaC-app/modules/traefik/cert-manager/certificates/*
-!IaC-app/modules/traefik/cert-manager/certificates/main.tf
-!IaC-app/modules/traefik/error-page/
-IaC-app/modules/traefik/error-page/*
-!IaC-app/modules/traefik/error-page/main.tf
-!IaC-app/modules/traefik/ingress-route/
-IaC-app/modules/traefik/ingress-route/*
-!IaC-app/modules/traefik/ingress-route/main.tf
-!IaC-app/modules/traefik/middlewares/
-IaC-app/modules/traefik/middlewares/*
-!IaC-app/modules/traefik/middlewares/middleware-compress/
-IaC-app/modules/traefik/middlewares/middleware-compress/*
-!IaC-app/modules/traefik/middlewares/middleware-compress/main.tf
-!IaC-app/modules/traefik/middlewares/middleware-dashboard-basic-auth/
-IaC-app/modules/traefik/middlewares/middleware-dashboard-basic-auth/*
-!IaC-app/modules/traefik/middlewares/middleware-dashboard-basic-auth/main.tf
-!IaC-app/modules/traefik/middlewares/middleware-error-page/
-IaC-app/modules/traefik/middlewares/middleware-error-page/*
-!IaC-app/modules/traefik/middlewares/middleware-error-page/main.tf
-!IaC-app/modules/traefik/middlewares/middleware-gateway-basic-auth/
-IaC-app/modules/traefik/middlewares/middleware-gateway-basic-auth/*
-!IaC-app/modules/traefik/middlewares/middleware-gateway-basic-auth/main.tf
-!IaC-app/modules/traefik/middlewares/middleware-kibana-basic-auth/
-IaC-app/modules/traefik/middlewares/middleware-kibana-basic-auth/*
-!IaC-app/modules/traefik/middlewares/middleware-kibana-basic-auth/main.tf
-!IaC-app/modules/traefik/middlewares/middleware-rabbitmq-basic-auth/
-IaC-app/modules/traefik/middlewares/middleware-rabbitmq-basic-auth/*
-!IaC-app/modules/traefik/middlewares/middleware-rabbitmq-basic-auth/main.tf
-!IaC-app/modules/traefik/middlewares/middleware-rate-limit/
-IaC-app/modules/traefik/middlewares/middleware-rate-limit/*
-!IaC-app/modules/traefik/middlewares/middleware-rate-limit/main.tf
-!IaC-app/modules/traefik/middlewares/middleware-redirect-https/
-IaC-app/modules/traefik/middlewares/middleware-redirect-https/*
-!IaC-app/modules/traefik/middlewares/middleware-redirect-https/main.tf
-!IaC-app/modules/traefik/middlewares/middleware-security-headers/
-IaC-app/modules/traefik/middlewares/middleware-security-headers/*
-!IaC-app/modules/traefik/middlewares/middleware-security-headers/main.tf
-!IaC-app/modules/traefik/tlsoptions/
-IaC-app/modules/traefik/tlsoptions/*
-!IaC-app/modules/traefik/tlsoptions/main.tf
-!IaC-app/modules/traefik/tlsstore/
-IaC-app/modules/traefik/tlsstore/*
-!IaC-app/modules/traefik/tlsstore/main.tf
-!IaC-app/modules/traefik/traefik/
-IaC-app/modules/traefik/traefik/*
-!IaC-app/modules/traefik/traefik/util/
-IaC-app/modules/traefik/traefik/util/*
-!IaC-app/modules/traefik/traefik/util/traefik-scc.yaml
-!IaC-app/modules/traefik/traefik/util/values.yaml
-!IaC-app/modules/traefik/traefik/main.tf
-!IaC-app/modules/.gitkeep
-#
-!IaC-app/utilities/
-IaC-app/utilities/*
-!IaC-app/utilities/general/
-IaC-app/utilities/general/*
-!IaC-app/utilities/general/scripts/
-IaC-app/utilities/general/scripts/*
-!IaC-app/utilities/general/scripts/health-check.sh
-!IaC-app/utilities/general/scripts/inspect-pod-node.sh
-!IaC-app/utilities/general/yaml/
-IaC-app/utilities/general/yaml/*
-!IaC-app/utilities/general/yaml/pvc-inspector-pod.yaml
-!IaC-app/utilities/postgres/
-IaC-app/utilities/postgres/*
-!IaC-app/utilities/postgres/configs/
-IaC-app/utilities/postgres/configs/*
-!IaC-app/utilities/postgres/configs/pg_hba.conf
-!IaC-app/utilities/postgres/configs/pg_ident.conf
-!IaC-app/utilities/postgres/configs/postgresql.conf
-!IaC-app/utilities/postgres/sql/
-IaC-app/utilities/postgres/sql/*
-!IaC-app/utilities/postgres/sql/baseline/
-IaC-app/utilities/postgres/sql/baseline/*
-!IaC-app/utilities/postgres/sql/baseline/admin/
-IaC-app/utilities/postgres/sql/baseline/admin/*
-!IaC-app/utilities/postgres/sql/baseline/admin/000_admin_db.sql
-!IaC-app/utilities/postgres/sql/baseline/admin/002_user_data_vault_tbl.sqlx
-!IaC-app/utilities/postgres/sql/baseline/admin/README.md
-!IaC-app/utilities/postgres/sql/baseline/admin/templates/
-IaC-app/utilities/postgres/sql/baseline/admin/templates/*
-!IaC-app/utilities/postgres/sql/baseline/admin/templates/xxx_admin_migration_template.sql
-!IaC-app/utilities/postgres/sql/.gitkeep
-!IaC-app/utilities/postgres/scripts/
-IaC-app/utilities/postgres/scripts/*
-!IaC-app/utilities/postgres/scripts/banking-system.sh
-!IaC-app/utilities/postgres/scripts/create-replication-user.sh
-!IaC-app/utilities/postgres/scripts/postgres-backup.sh
-!IaC-app/utilities/postgres/.gitkeep
-!IaC-app/utilities/.gitkeep
+################################
+# Infrastructure as Code (IaC) #
+################################
+!IaC-K8s/
+IaC-K8s/*
+!IaC-K8s/oracle/modules/
+!IaC-K8s/oracle/modules/**
+!IaC-K8s/oracle/
+IaC-K8s/oracle/*
+!IaC-K8s/oracle/.terraform.lock.hcl
+!IaC-K8s/oracle/compartment.tf
+!IaC-K8s/oracle/data.tf
+!IaC-K8s/oracle/locals.tf
+!IaC-K8s/oracle/main.tf
+!IaC-K8s/oracle/null-resource.tf
+!IaC-K8s/oracle/outputs.tf
+!IaC-K8s/oracle/providers.tf
+!IaC-K8s/oracle/ssh-key.tf
+!IaC-K8s/oracle/variables.tf
+!IaC-K8s/.gitkeep
 ###########
 # Storage #
 ###########
 !IaC-storage/
-IaC-storage/*
-!IaC-storage/.gitkeep
-#
-!IaC-storage/oracle/
-IaC-storage/oracle/*
-!IaC-storage/oracle/modules/
-IaC-storage/oracle/modules/*
-!IaC-storage/oracle/modules/bucket/
-IaC-storage/oracle/modules/bucket/*
-!IaC-storage/oracle/modules/bucket/main.tf
-!IaC-storage/oracle/modules/.gitkeep
-!IaC-storage/oracle/data.tf
-!IaC-storage/oracle/main.tf
-!IaC-storage/oracle/providers.tf
-!IaC-storage/oracle/variables.tf
+!IaC-storage/**
