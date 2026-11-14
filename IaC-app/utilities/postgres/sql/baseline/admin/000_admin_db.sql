@@ -1,18 +1,4 @@
 /**************************************************************************************************
-Notes
- * By default, Postgres ignores case and always turns every identifier into lowercase. Postgres
-   preserves case only when the identifier is double quoted (e.g., "id"), and double-quoted
-   identifiers, known as 'delimited identifiers', are case sensitive.
- * In Postgres, you can CAST between types with the :: shorthand.
- * In PostgreSQL, stored procedures are not atomic by default but can manage their own transactions
-   explicitly to ensure atomicity. This is a key difference from PostgreSQL functions, which are
-   always atomic and run within a single, implicit transaction.
- * Postgres executes a function atomically and transactionally; i.e, if the function fails at any
-   step during its execution, all previous changes made within that function are rolled back,
-   ensuring data integrity and consistency.
- * After a COMMIT or ROLLBACK is issued inside a procedure, a new transaction is automatically
-   started; you do not need a separate START TRANSACTION command.
- * END is a Postgres extension to the SQL language that is equivalent to COMMIT.
 Notes (Backup)
  To perform a dump.
  $ pg_dump finances > /tmp/finances.dump
@@ -20,21 +6,6 @@ Notes (Backup)
  $ psql finances < /tmp/finances.dump
  To time how long it takes to restore.
  $ time psql finances < /tmp/finances.dump
-Notes (Indexes)
- * Postgres defaults to a B-tree index unless another data strcuture is specified. B-tree supports
-   a wide range of data types and can be used for both equality searches (=) and range queries
-   using greater than (>, >=), less than (<, <=), and BETWEEN operators.
- * It's good practice to run the ANALYZE command after creating an index.
-   When a new index is created, the query planner may not take advantage of it immediately and may
-   continue relying on previously collected statistics. Running ANALYZE updates the table
-   statistics, allowing the planner to take full advantage of the new index.
- * Postgres automatically creates an index for the primary key column.
- * Indexes can significantly optimize query performance, but they don't come for free. Each time we
-   create a new index, Postgres must maintain it by updating its structure whenever the value of an
-   indexed column changes in the primary table.
-   Apart from the index maintenance aspects, the more indexes Postgres has, the more time it will
-   spend in the planning phase while selecting and generating the most efficient execution plan for
-   a query.
 **************************************************************************************************/
 -- Online Banking System.
 
@@ -212,21 +183,6 @@ WITH
 ********************************************************************************************************************************/
 -- GRANT CONNECT ON DATABASE finances TO admin_role;
 -- GRANT ALL PRIVILEGES ON DATABASE finances TO admin_role;
-/***
-Every Postgres cluster has an implicit role called 'public' which cannot be deleted. All other roles are always granted
-membership in 'public' by default and inherit whatever privileges are currently assigned to it. Unless otherwise modified,
-the privileges granted to the 'public' role are as follows:
-PostgreSQL 14 and below                   PostgreSQL 15 and above
------------------------------------------------------------------
-CONNECT                                   CONNECT
-CREATE                                    TEMPORARY
-TEMPORARY                                 EXECUTE (functions and procedures)
-EXECUTE (functions and procedures)        USAGE (domains, languages, and types)
-USAGE (domains, languages, and types)
-
-Notice that the 'public' role always has the CONNECT privilege granted by default, which allows all roles to connect to a newly
-created database. Without the privilege to connect to a database, none of the newly created roles would be able to do much.
-***/
 -- Revoke all privileges that are granted by default to the 'public' role.
 REVOKE ALL ON DATABASE finances FROM public;
 
@@ -309,7 +265,7 @@ Parameter Breakdown
   bytes are different. This is what enables you to use standard operators like = or LIKE for case/accent-insensitive matching.
 ***/
 -- Create the non-deterministic ICU collation.
-CREATE COLLATION fin.euro_case_insensitive(
+CREATE COLLATION IF NOT EXISTS fin.euro_case_insensitive(
   PROVIDER = icu,
   LOCALE = 'und-u-ks-level1',  -- Ignore both case and accents.
   DETERMINISTIC = false
@@ -323,7 +279,17 @@ customers-to-credentials Relationship: One-to-One
 URL: /register
 ***/
 CREATE TABLE IF NOT EXISTS fin.customers(
-  id                 INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  /***
+  Do Not Duplicate the Primary Key: If id is already your PRIMARY KEY, Postgres automatically maintains a unique B-tree index
+  on (id).
+  Upgrade Instead of Duplicating: Instead of keeping both a plain PRIMARY KEY (id) index and a separate covering index on
+  (id) INCLUDE (col1, col2), you can define the INCLUDE columns directly on the primary key constraint so Postgres only
+  maintains one index for both lookups and deletes, updates, inserts:
+  ***/
+  id                 INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY
+                       CONSTRAINT customer_pkey
+                         PRIMARY KEY (id)
+                         INCLUDE(first_name, middle_name, last_name),
   /***
   A column defined with a DEFAULT value and a CHECK constraint still needs an explicit NOT NULL
   constraint if you want to prevent NULL values.
@@ -355,11 +321,6 @@ CREATE TABLE IF NOT EXISTS fin.customers(
   created_at         TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at         TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE INDEX IF NOT EXISTS fin.idx_last_name
-  ON fin.customers
-  USING btree(last_name DESC);
-ANALYZE fin.customers;
 
 CREATE TABLE IF NOT EXISTS fin.customers_contact_details(
   /***
@@ -437,7 +398,7 @@ CREATE TABLE IF NOT EXISTS fin.customers_credentials(
   last_attempt     TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 
-CREATE INDEX IF NOT EXISTS fin.idx_users_slider_pagination
+CREATE INDEX IF NOT EXISTS idx_users_slider_pagination
   ON fin.customers_credentials
   USING btree(user_name COLLATE fin.euro_case_insensitive ASC,
               user_name ASC,
