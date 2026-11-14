@@ -38,8 +38,17 @@ SELECT EXISTS(
     partition_data  JSONB NOT NULL,
     created_at      TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    --PK ensures the uniqueness of user & partition.
+    /***
+    One Index Total: Postgres creates a single B-tree index that enforces uniqueness on (user_name, partition_name) and stores
+    partition_data directly in the leaf pages.
+    ***/
     PRIMARY KEY(user_name, partition_name) -- Composite Primary Key
+      /***
+      Caveat for Large JSONB Payloads: If partition_data routinely exceeds ~2 KB per row, Postgres compresses and moves it
+      out-of-line into a TOAST table. While INCLUDE (partition_data) still works, fetching TOASTed values requires an extra
+      pointer lookup, and large payloads will bloat the primary key index size.
+      ***/
+      INCLUDE(partition_data)
   );
 
 /***
