@@ -776,6 +776,12 @@ PostgreSQL is a multiprocess system with a `process per user` model; i.e., every
 2. In Postgres, the statement `TABLE <table-name>;` can be used as a shorthand for the SQL statement `SELECT * FROM <table-name>;`. Other variants are `TABLE <table-name> LIMIT <number-of-rows>;`, `TABLE <table-name> ORDER BY <column-name>;`, etc. The `WHERE` clause cannot be used with the standalone `TABLE` statement.
 3. In Postgres, the operator `::` is a shorthand for the standard SQL `CAST()` function. The function `pg_typeof()` returns the Postgres data type of the provided value.
 
+#### Index
+1. Postgres defaults to a `B-tree index` unless another data structure is specified. `B-tree` supports a wide range of data types and can be used for both equality searches (`=`) and range queries using greater than (`>`, `>=`), less than (`<`, `<=`), and `BETWEEN` operators.
+2. It's good practice to run the `ANALYZE` command after creating an index. When a new index is created, the query planner may not take advantage of it immediately and may continue relying on previously collected statistics. Running `ANALYZE` updates the table statistics, allowing the planner to take full advantage of the new index.
+3. Postgres `automatically` creates an index for the `primary key` column.
+4. Indexes can significantly optimize query performance, but they don't come for free. Each time we create a new index, Postgres must maintain it by updating its structure whenever the value of an indexed column changes in the primary table. Apart from the index maintenance aspects, the more indexes Postgres has, the more time it will spend in the planning phase while selecting and generating the most efficient execution plan for a query.
+
 #### Locks
 1. In Postgres, `advisory locks` are application-defined, cooperative locks stored entirely in memory, whereas `standard locks` (table, row, and page locks) are automatically managed by the database engine to protect physical database objects and maintain `ACID` compliance.
 2. If the advisory lock statement `SELECT pg_advisory_lock(9876543210);` is located right inside the `SQL` script file, every single goroutine or external pod executing that script will see and respect the exact same global lock.
@@ -813,25 +819,12 @@ we should know about how this lock functions:
         * The Namespace Boundary: Furthermore, advisory locks are scoped strictly **per database within that instance**. If our Postgres instance hosts a database named `finances` and another named `analytics`, an advisory lock on key 9876543210 in `finances` will not block a lock on key 9876543210 inside `analytics`.
 
    Summary: The Trade-off
+
    Because Postgres advisory locks rely on **a single, centralized database engine** rather than a true distributed consensus algorithm (like Raft or Paxos used by tools like etcd), they have clear pros and cons:
      * The Risk (Single Point of Failure): If our primary database crashes or undergoes a failover to a replica, all held advisory locks instantly disappear during the reconnection window.
      * The Reward (No Ghost Locks): Because they are tied directly to active TCP database sessions, if a Go pod crashes or suffers a network partition, the Postgres engine detects the dropped connection and instantly destroys the lock. This means we never have to manage or tune artificial Time-to-Live (TTL) expiration scripts like we would if we built a distributed lock using Redis (SET NX EX).
 
    For a database schema migration engine, using the primary Postgres engine as our centralized coordinator is considered the gold standard of reliability.
-
-#### Transaction
-1. By default, `PostgreSQL` operates in `autocommit` mode, where each individual SQL statement is treated as its own transaction, implicitly committed upon success or rolled back upon failure.
-2. To group multiple statements into a single transaction, you use the `BEGIN` or `START TRANSACTION` command to initiate the transaction block. If all operations within the transaction are successful and you want to save the changes permanently, you use the `COMMIT` command. If an error occurs or you decide to discard the changes made within a transaction, you use the `ROLLBACK` command.
-3. `END` is a Postgres extension to the SQL language that is equivalent to `COMMIT`.
-4. In Postgres, `stored procedures are not atomic by default` but can manage their own transactions explicitly to ensure atomicity. This is a key difference from Postgres functions, which are always atomic and run within a single, implicit transaction.
-5. After a `COMMIT` or `ROLLBACK` is issued inside a procedure, a new transaction is automatically started; you do not need a separate START TRANSACTION command.
-6. `Postgres executes a function atomically and transactionally`; i.e, if the function fails at any step during its execution, all previous changes made within that function are rolled back, ensuring data integrity and consistency.
-
-#### Index
-1. Postgres defaults to a `B-tree index` unless another data structure is specified. `B-tree` supports a wide range of data types and can be used for both equality searches (`=`) and range queries using greater than (`>`, `>=`), less than (`<`, `<=`), and `BETWEEN` operators.
-2. It's good practice to run the `ANALYZE` command after creating an index. When a new index is created, the query planner may not take advantage of it immediately and may continue relying on previously collected statistics. Running `ANALYZE` updates the table statistics, allowing the planner to take full advantage of the new index.
-3. Postgres `automatically` creates an index for the `primary key` column.
-4. Indexes can significantly optimize query performance, but they don't come for free. Each time we create a new index, Postgres must maintain it by updating its structure whenever the value of an indexed column changes in the primary table. Apart from the index maintenance aspects, the more indexes Postgres has, the more time it will spend in the planning phase while selecting and generating the most efficient execution plan for a query.
 
 #### Roles and Access Control
 1. In Postgres, roles are used to define and manage database-level access permissions. You can think of a `role` as either a database user or a group of users, depending on how the role is configured.
@@ -847,6 +840,19 @@ we should know about how this lock functions:
    USAGE (domains, languages, and types)     USAGE (domains, languages, and types)
    ```
    Notice that the `public` role always has the `CONNECT` privilege granted by default, which allows all roles to connect to a newly created database. Without the privilege to connect to a database, none of the newly created roles would be able to do much.
+
+#### Schema
+1. A `schema` is a named collection of various database objects. It's the next-level abstraction after databases for grouping tables, views, stored procedures, and other objects at a more granular level.
+2. Postgres creates one schema named `public` for every new database. Unless you create and use a different schema, database objects will be grouped under the `public` schema by default.
+3. Once you have more than one schema in the database, it's important to understand the concept of the `current schema`. The `current schema` is the one that Postgres uses implicitly if no specific schema is mentioned in a command that requires it.
+
+#### Transaction
+1. By default, `PostgreSQL` operates in `autocommit` mode, where each individual SQL statement is treated as its own transaction, implicitly committed upon success or rolled back upon failure.
+2. To group multiple statements into a single transaction, you use the `BEGIN` or `START TRANSACTION` command to initiate the transaction block. If all operations within the transaction are successful and you want to save the changes permanently, you use the `COMMIT` command. If an error occurs or you decide to discard the changes made within a transaction, you use the `ROLLBACK` command.
+3. `END` is a Postgres extension to the SQL language that is equivalent to `COMMIT`.
+4. In Postgres, `stored procedures are not atomic by default` but can manage their own transactions explicitly to ensure atomicity. This is a key difference from Postgres functions, which are always atomic and run within a single, implicit transaction.
+5. After a `COMMIT` or `ROLLBACK` is issued inside a procedure, a new transaction is automatically started; you do not need a separate START TRANSACTION command.
+6. `Postgres executes a function atomically and transactionally`; i.e, if the function fails at any step during its execution, all previous changes made within that function are rolled back, ensuring data integrity and consistency.
 
 ### Useful Commands
 Meta-commands (starting with `\`) are processed by `psql`, not sent to `PostgreSQL`.
@@ -893,6 +899,14 @@ Show the source code/definition of a specific function or procedure. If `+` is a
 \sf[+] <procedure-or-function-name>
 ```
 
+#### Include
+To execute `SQL` statements and `psql` meta-commands from an external file, use the `include` meta-command from inside an active `psql` session.<br>
+Files ending in `.txt`, `.psql`, `.sql`, or having no extension at all will execute identically when passed to `\i`.<br>
+`psql` resolves file paths **relative to the current working directory** where you launched the `psql` command, unless you provide an absolute path.
+```
+\i ./path/to/your_file.txt
+```
+
 #### Indexes
 List all indexes in the current database (names, types, tables).
 ```
@@ -901,6 +915,27 @@ postgres=# \di
 List all indexes in the current database schema with extra details, including their physical disk size.
 ```
 postgres=# \di+
+```
+Total number of indexes in a table.
+```
+SELECT count(*)
+FROM pg_indexes
+WHERE schemaname='schema-name' AND tablename='table-name';
+```
+Definition of an index attached to a table.
+```
+SELECT indexname, indexdef
+FROM pg_indexes
+WHERE schemaname = 'schema-name'
+      AND tablename = 'table-name'
+      AND indexname = 'idx_name';
+```
+Definition of all indexes attached to a table.
+```
+SELECT indexname, indexdef
+FROM pg_indexes
+WHERE schemaname = 'schema-name'
+      AND tablename = 'table-name';
 ```
 
 #### Privileges, Users, and Roles
@@ -980,6 +1015,14 @@ postgres=# \watch 2
 Display all the database schemas.
 ```
 postgres=# \dn
+```
+To check which schema is currently set, run
+```
+SHOW search_path;
+```
+To set the current schema to `fin`, run
+```
+SET search_path TO fin;
 ```
 
 #### Tables
