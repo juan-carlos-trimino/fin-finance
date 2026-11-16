@@ -34,7 +34,9 @@ const (
     VALUES($1, $2, $3)
     ON CONFLICT(user_name, partition_name)
     DO UPDATE SET
-      partition_data = EXCLUDED.partition_data;`
+      -- The EXCLUDED pseudo-table holds the values that would have been inserted.
+      partition_data = EXCLUDED.partition_data,
+      updated_at = CURRENT_TIMESTAMP;`
   QR_SELECT_USER_DATA =
     `SELECT partition_data
      FROM fin.user_data_vault
