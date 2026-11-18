@@ -226,10 +226,7 @@ CREATE TABLE IF NOT EXISTS fin.customers(
   (id) INCLUDE (col1, col2), you can define the INCLUDE columns directly on the primary key constraint so Postgres only
   maintains one index for both lookups and deletes, updates, inserts:
   ***/
-  id                 INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY
-                       CONSTRAINT customer_pkey
-                         PRIMARY KEY (id)
-                         INCLUDE(first_name, middle_name, last_name),
+  id                 INT GENERATED ALWAYS AS IDENTITY,
   /***
   A column defined with a DEFAULT value and a CHECK constraint still needs an explicit NOT NULL constraint if you want to prevent
   NULL values.
@@ -258,7 +255,10 @@ CREATE TABLE IF NOT EXISTS fin.customers(
   Postgres applies DEFAULT CURRENT_TIMESTAMP exclusively during INSERT statements and never re-evaluates it on UPDATE.
   ***/
   created_at         TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at         TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  updated_at         TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                     CONSTRAINT idx_customer_covering
+                       PRIMARY KEY(id)
+                       INCLUDE(first_name, middle_name, last_name)
 );
 
 CREATE TABLE IF NOT EXISTS fin.customers_contact_details(
