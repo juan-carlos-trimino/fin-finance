@@ -13,6 +13,7 @@ import (
   "math/rand"
   "time"
   "github.com/jackc/pgx/v5"
+  "github.com/jackc/pgx/v5/pgconn"
   "github.com/juan-carlos-trimino/go-logger"
   "golang.org/x/crypto/bcrypt"
 )
@@ -30,38 +31,43 @@ const (
   //Change password.
   SP_CHANGE_PASSWORD = "CALL fin.change_password($1, $2, $3, $4, null)"
   QR_UPSERT_USER_DATA =
-    `INSERT INTO fin.user_data_vault(user_name, partition_name, partition_data)
+   `INSERT INTO fin.user_data_vault(user_name, partition_name, partition_data)
     VALUES($1, $2, $3)
     ON CONFLICT(user_name, partition_name)
     DO UPDATE SET
       -- The EXCLUDED pseudo-table holds the values that would have been inserted.
       partition_data = EXCLUDED.partition_data,
       updated_at = CURRENT_TIMESTAMP;`
+  QR_SELECT_MIGRATION_NAME =
+   `SELECT migration_name
+    FROM fin.migration_history
+    ORDER BY migration_name ASC;`
+  QR_SELECT_DB_EXISTS = "SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1);"
   QR_SELECT_USER_DATA =
-    `SELECT partition_data
-     FROM fin.user_data_vault
-     WHERE user_name = $1 AND partition_name = $2;`
+   `SELECT partition_data
+    FROM fin.user_data_vault
+    WHERE user_name = $1 AND partition_name = $2;`
   QR_DELETE_USER =
-    `DELETE
-     FROM fin.customers
-     WHERE id = $1;`
+   `DELETE
+    FROM fin.customers
+    WHERE id = $1;`
   QR_SELECT_USERS =
-  `SELECT
-    cc.user_name,
-    c.id,
-    c.first_name,
-    c.middle_name,
-    c.last_name
-   FROM fin.customers_credentials AS cc
-   INNER JOIN fin.customers AS c ON cc.id = c.id
-   -- Seamless international case-insensitive range checks
-   WHERE cc.user_name COLLATE fin.euro_case_insensitive >= $1  --Lower
-     AND ($2::text IS NULL OR cc.user_name COLLATE fin.euro_case_insensitive < $2::text)  --Upper
-   -- Sort linguistically across international alphabets
-   ORDER BY cc.user_name COLLATE fin.euro_case_insensitive ASC,
-            cc.user_name ASC,
-            cc.id ASC
-   LIMIT $3;`
+   `SELECT
+     cc.user_name,
+     c.id,
+     c.first_name,
+     c.middle_name,
+     c.last_name
+    FROM fin.customers_credentials AS cc
+    INNER JOIN fin.customers AS c ON cc.id = c.id
+    -- Seamless international case-insensitive range checks
+    WHERE cc.user_name COLLATE fin.euro_case_insensitive >= $1  --Lower
+      AND ($2::text IS NULL OR cc.user_name COLLATE fin.euro_case_insensitive < $2::text)  --Upper
+    -- Sort linguistically across international alphabets
+    ORDER BY cc.user_name COLLATE fin.euro_case_insensitive ASC,
+             cc.user_name ASC,
+             cc.id ASC
+    LIMIT $3;`
   /***
   $1: Upper slider range bound (unchanged)
   $2: Last seen user_name string from the previous page (used for the collation boundary evaluation)
@@ -74,21 +80,21 @@ const (
   Scan, completely avoiding disastrous filesorts.
   ***/
   QR_SELECT_USERS_WITH_CURSOR =  // next-page keyset query
-  `SELECT
-    cc.user_name,
-    c.id,
-    c.first_name,
-    c.middle_name,
-    c.last_name
-   FROM fin.customers_credentials AS cc
-   INNER JOIN fin.customers AS c ON cc.id = c.id
-   WHERE ($1::text IS NULL OR cc.user_name COLLATE fin.euro_case_insensitive < $1::text)  -- upper slider range bound
-     -- Keyset pagination seek matching the composite index dimensions exactly
-     AND ((cc.user_name COLLATE fin.euro_case_insensitive, cc.user_name, cc.id) > ($2, $2, $3))
-   ORDER BY cc.user_name COLLATE fin.euro_case_insensitive ASC,
-            cc.user_name ASC,
-            cc.id ASC
-   LIMIT $4;`
+   `SELECT
+     cc.user_name,
+     c.id,
+     c.first_name,
+     c.middle_name,
+     c.last_name
+    FROM fin.customers_credentials AS cc
+    INNER JOIN fin.customers AS c ON cc.id = c.id
+    WHERE ($1::text IS NULL OR cc.user_name COLLATE fin.euro_case_insensitive < $1::text)  -- upper slider range bound
+      -- Keyset pagination seek matching the composite index dimensions exactly
+      AND ((cc.user_name COLLATE fin.euro_case_insensitive, cc.user_name, cc.id) > ($2, $2, $3))
+    ORDER BY cc.user_name COLLATE fin.euro_case_insensitive ASC,
+             cc.user_name ASC,
+             cc.id ASC
+    LIMIT $4;`
 )
 
 type Customer struct {
@@ -289,6 +295,72 @@ func DbDeleteUser(ctx context.Context, primaryKey int, correlationId string) boo
   }
   return true
 }
+
+func DbSelectMigrationNames(sqlFiles int, defaultUser, defaultPw, defaultDb, correlationId string) (bool, []string) {
+  db := GetBsInstance()
+  ctx := context.Background()
+  //Get a copy of the config from the already-initialized pool.
+  cfg := db.bsPool.Config()
+  //Capture the target database name the pool is configured to use.
+  targetDb := cfg.ConnConfig.Database
+  //Point the copied connection config to the "postgres" database.
+  cfg.ConnConfig.Database = defaultDb  //postgres.
+  cfg.ConnConfig.User = defaultUser
+  cfg.ConnConfig.Password = defaultPw
+  //Open a temporary connection to "postgres" and run the check.
+  conn, err := pgx.ConnectConfig(ctx, cfg.ConnConfig)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("DbSelectMigrationNames: Error connecting to %s: %v", defaultDb, err), correlationId)
+    return false, nil
+  }
+  defer conn.Close(ctx)
+  var exists bool = false
+  err = conn.QueryRow(ctx, QR_SELECT_DB_EXISTS, targetDb).Scan(&exists)
+  if err != nil {
+    logger.LogError(fmt.Sprintf("DbSelectMigrationNames: Error querying pg_database: %v", err), correlationId)
+    return false, nil
+  } else if !exists {
+    return exists, []string{}  //len = cap = 0
+  }
+  var dbMigrations []string = nil
+  //Query all applied migrations from the database in ASC order.
+  rows, err := db.bsPool.Query(ctx, QR_SELECT_MIGRATION_NAME)
+  if err != nil {
+    //Zero-Allocation Type Assertion to extract native Postgres Error codes.
+    var pgErr *pgconn.PgError
+    errExists := errors.As(err, &pgErr)
+    /***
+    Check native structural errors without any string conversions or memory allocations.
+    * If the database does not exist, Postgres returns error code 3D000 (invalid_catalog_name).
+    * If the database exists but the table is missing, Postgres returns code 42P01 (undefined_table).
+    ***/
+    if errExists && pgErr.Code == "42P01" {
+      logger.LogError("DbSelectMigrationNames: Migration history table missing.", correlationId)
+      return false, nil
+    } else {
+      //Performance optimization: Only use fmt.Sprintf inside the failure block where the application is crashing/returning false anyway.
+      logger.LogError(fmt.Sprintf("DbSelectMigrationNames: Query failed: %v", err), correlationId)
+      return false, nil
+    }
+  } else {
+    /***
+    Pre-allocate a string slice matching the maximum possible local files. By passing 0 for length and len(sqlFiles) for capacity,
+    the slice starts empty but guarantees ZERO heap allocations from resizing as it populates.
+    ***/
+    dbMigrations = make([]string, 0, sqlFiles)
+    /***
+    AppendRows automatically handles loop iterations, column parsing, and connection cleanup. Instead of creating a fresh slice
+    from scratch, it takes an already allocated slice, fills it directly from the database row stream, and returns the result.
+    ***/
+    dbMigrations, err = pgx.AppendRows(dbMigrations, rows, pgx.RowTo[string])
+    if err != nil {
+      logger.LogError(fmt.Sprintf("DbSelectMigrationNames: Cannot parse migration history rows: %v", err), correlationId)
+      return false, nil
+    }
+  }
+  return true, dbMigrations
+}
+
 
 //////////////////////
 
