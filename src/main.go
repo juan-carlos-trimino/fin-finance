@@ -222,8 +222,8 @@ func main() {
   dbInstance.VerifyConnection(context.Background(), falseCorrelationId)
   //Database.
   if !config.GetK8s(falseCorrelationId) {  //If we are not using K8s, set up the database.
-    if ok := bank.ExecuteSqlScripts(pathToScripts, host, default_user, default_password, default_dbname, admin_dbname, sslmode,
-       port, connect_timeout, falseCorrelationId); !ok {
+    if ok := bank.ExecuteSqlScripts(pathToScripts, host, default_user, default_password, default_dbname, admin_user,
+       admin_password, admin_dbname, sslmode, port, connect_timeout, falseCorrelationId); !ok {
       panic("Call to ExecuteSqlScripts failed.")
     }
   }
