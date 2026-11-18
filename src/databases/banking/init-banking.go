@@ -8,7 +8,6 @@ package banking
 import (
   "bytes"
   "context"
-  "errors"
   "fmt"
   "finance/config"
   "github.com/jackc/pgx/v5"
@@ -54,16 +53,13 @@ var (
 )
 
 const (
-  // Define a globally unique 64-bit constant for this service's migrations.
-// Any random 64-bit integer fits, up to 9223372036854775807.
- MigrationLockValue int64 = 4829103948572019384
+  //Any random 64-bit integer, up to 9223372036854775807.
+  migrationLockValue int64 = 4829103948572019384
 )
 
-
-func GetMigrationLockID() string {
-	return strconv.FormatInt(MigrationLockValue, 10)
+func getMigrationLockID() string {
+  return strconv.FormatInt(migrationLockValue, 10)
 }
-
 
 //Initialize the connection pool.
 func InitializeBsPool(ctx context.Context, connString, correlationId string) *banking {
@@ -129,12 +125,12 @@ func GetBsInstance() (*banking) {
   }
 }
 
-func ExecuteSqlScripts(dirPath, host, user, password, defaultDb, targetDb, sslmode string, port, connect_timeout int, correlationId string) bool {
+func ExecuteSqlScripts(dirPath, host, defaultUser, defaultPw, defaultDb, targetUser, targetPw, targetDb, sslmode string, port, connect_timeout int, correlationId string) bool {
   if !isDbNameValid(targetDb) {
-    logger.LogInfo(fmt.Sprintf("Invalid database name %q.", targetDb), correlationId)
+    logger.LogInfo("Invalid database name " + targetDb, correlationId)
     return false
   } else if !isDbNameValid(defaultDb) {
-    logger.LogInfo(fmt.Sprintf("Invalid database name %q.", defaultDb), correlationId)
+    logger.LogInfo("Invalid database name " + defaultDb, correlationId)
     return false
   }
   //Read all items in the target migration directory.
@@ -207,44 +203,11 @@ func ExecuteSqlScripts(dirPath, host, user, password, defaultDb, targetDb, sslmo
   var unappliedMigrations int = 0
   //CRUCIAL: Sort files alphabetically so 000_admin_db runs before 001_admin_xxx.
   sort.Strings(sqlFiles)
-  db := GetBsInstance()
-  ctx := context.Background()
   //Query all applied migrations from the database in ASC order.
-  rows, err := db.bsPool.Query(ctx, "SELECT migration_name FROM fin.migration_history ORDER BY migration_name ASC;")
-  if err != nil {
-    //Zero-Allocation Type Assertion to extract native Postgres Error codes.
-    var pgErr *pgconn.PgError
-    errExists := errors.As(err, &pgErr)
-    /***
-    Check native structural errors without any string conversions or memory allocations.
-    * If the database does not exist, Postgres returns error code 3D000 (invalid_catalog_name).
-    * If the database exists but the table is missing, Postgres returns code 42P01 (undefined_table).
-    ***/
-    if errExists && pgErr.Code == "3D000" {
-      logger.LogInfo("Database does not exist. Proceeding with setup.", correlationId)
-    } else if errExists && pgErr.Code == "42P01" {
-      unappliedMigrations = 1  //Move pass the 000_admin_db.sql file.
-      logger.LogInfo("No migration history table found in the database. Proceeding with setup.", correlationId)
-    } else {
-      //Performance optimization: Only use fmt.Sprintf inside the failure block where the application is crashing/returning false anyway.
-      logger.LogError(fmt.Sprintf("Cannot query database migration history: %v", err), correlationId)
-      return false
-    }
-  } else {
-    /***
-    Pre-allocate a string slice matching the maximum possible local files. By passing 0 for length and len(sqlFiles) for capacity,
-    the slice starts empty but guarantees ZERO heap allocations from resizing as it populates.
-    ***/
-    expectedMigrations := make([]string, 0, len(sqlFiles))
-    /***
-    AppendRows automatically handles loop iterations, column parsing, and connection cleanup. Instead of creating a fresh slice
-    from scratch, it takes an already allocated slice, fills it directly from the database row stream, and returns the result.
-    ***/
-    dbMigrations, err := pgx.AppendRows(expectedMigrations, rows, pgx.RowTo[string])
-    if err != nil {
-      logger.LogError(fmt.Sprintf("Cannot parse migration history rows: %v", err), correlationId)
-      return false
-    }
+  dbExists, dbMigrations := DbSelectMigrationNames(len(sqlFiles), defaultUser, defaultPw, defaultDb, correlationId)
+  if !dbExists && dbMigrations == nil {  //Fatal error; exit app.
+    return false
+  } else if dbExists {  //Check for possible migrations.
     /***
     Check once up front if the database records exceed the disk files. We use (len(sqlFiles) - 1) to account for the unlogged
     000_admin_db.sql.
@@ -276,6 +239,52 @@ func ExecuteSqlScripts(dirPath, host, user, password, defaultDb, targetDb, sslmo
       logger.LogInfo("Database is fully up-to-date. No new migrations to process.", correlationId)
       return true
     }
+  } else {
+    //Initialize buffer with "001" right-aligned at the end of a 16-byte array.
+    var buf = [16]byte{13: '0', 14: '0', 15: '1'}
+    start := 13
+    //Can support 9,999,999,999,999,999 files (16 digits).
+    for idx, file := range sqlFiles {
+      if idx == 0 {  //Baseline.
+        continue
+      }
+      prefix := buf[start:]
+      //Must be at least as long as prefix + '_'
+      matched := len(file) > len(prefix) && file[len(prefix)] == '_'
+      if matched {
+        //Compare byte-by-byte (0 allocations).
+        for i := range prefix {
+          if file[i] != prefix[i] {
+            matched = false
+            break
+          }
+        }
+      }
+      //
+      if !matched {
+        logger.LogError("Migration files are not in order. File \"" + file + "\" is out of order.", correlationId)
+        return false
+      }
+      //Increment the ASCII digits in-place for the next expected file.
+      for i := 15;; i-- {
+        if buf[i] < '9' {  //'9' has an ASCII value of 57.
+          /***
+          buf[i]++ adds 1 to the numeric ASCII code of the character stored at buf[i], turning a digit character into the next
+          digit character (for example, '0' becomes '1').
+          In Go, a byte is an alias for uint8 (an unsigned integer from 0 to 255), and ASCII digits '0' through '9' have
+          consecutive numeric values from 48 to 57.
+          ***/
+          buf[i]++
+          break
+        }
+        buf[i] = '0'
+        if i == start {
+          start--
+          buf[start] = '1'
+          break
+        }
+      }
+    }
   }
   //Track patches 1 to N separate from the root infrastructure bootstrap script.
   totalMigrations := len(sqlFiles) - 1
@@ -300,11 +309,12 @@ func ExecuteSqlScripts(dirPath, host, user, password, defaultDb, targetDb, sslmo
       table layout or stored procedure inside it. It finishes successfully. Go then proceeds to look at your incremental patches
       (001_xxx.sql onwards).
       ***/
-      connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password,
+      connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, defaultUser, defaultPw,
         defaultDb, connect_timeout, sslmode)
-      cmd = exec.Command("psql", "--quiet", "--tuples-only", "--no-align", connString,
+      cmd = exec.Command("psql", "--quiet", "--tuples-only", "--no-align", "--echo-errors", connString,
         "-f", fileName,
-        "-v", fmt.Sprintf("LOCK_ID=%s", GetMigrationLockID()),
+        "-v", "ON_ERROR_STOP=1",
+        "-v", fmt.Sprintf("LOCK_ID=%s", getMigrationLockID()),
         "-v", "LOCK_TIMEOUT='5s'",  //Keep the single quotes in the string value.
         "-v", fmt.Sprintf("ALWAYS_DB_ADMIN=%s", strconv.FormatBool(config.GetAlwaysDbAdmin(correlationId))),
         "-v", fmt.Sprintf("DB_NAME=%s", targetDb))
@@ -316,11 +326,12 @@ func ExecuteSqlScripts(dirPath, host, user, password, defaultDb, targetDb, sslmo
       tables. It hits the \q statement, exits gracefully with code 0, and allows Go to jump instantly to parsing the incremental
       patches.
       ***/
-      connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port, user, password,
-        targetDb, connect_timeout, sslmode)
-      cmd = exec.Command("psql", "--quiet", "--tuples-only", "--no-align", connString,
+      connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s connect_timeout=%d sslmode=%s", host, port,
+        targetUser, targetPw, targetDb, connect_timeout, sslmode)
+      cmd = exec.Command("psql", "--quiet", "--tuples-only", "--no-align", "--echo-errors", connString,
         "-f", fileName,
-        "-v", fmt.Sprintf("LOCK_ID=%s", GetMigrationLockID()),
+        "-v", "ON_ERROR_STOP=1",
+        "-v", fmt.Sprintf("LOCK_ID=%s", getMigrationLockID()),
         "-v", "LOCK_TIMEOUT='5s'",  //Keep the single quotes in the string value.
         "-v", fmt.Sprintf("MIGRATION_NAME=%s", fileName[: len(fileName) - 4]))
     }
