@@ -2,12 +2,21 @@
 SELECT 'Output from script, run began at: ' AS "Script Information",
   NOW() AS "Date and Time Executed";
 
--- *******************
--- Create the database
--- *******************
--- Important - You should back up the master database each time that you create, modify, or drop a
--- database.
-CREATE DATABASE check_register
+DROP ROLE IF EXISTS admin_user;
+-- Create individual users.
+DO $$  -- The anonymous block executes procedural logic directly on the server.
+BEGIN
+  CREATE ROLE tenant_admin WITH LOGIN INHERIT PASSWORD '12345' NOSUPERUSER NOCREATEROLE NOCREATEDB CONNECTION LIMIT 5 IN ROLE admin_role;
+EXCEPTION
+  WHEN duplicate_object THEN
+    RAISE NOTICE 'Role "tenant_admin" already exists, skipping...';
+END
+$$;
+
+/********************************************************************************************************************************
+                                                     *** DATABASE ***
+********************************************************************************************************************************/
+CREATE DATABASE check_registry
 WITH
   ALLOW_CONNECTIONS = TRUE
   CONNECTION_LIMIT = -1  -- Unlimited connections.
@@ -44,30 +53,26 @@ CREATE SCHEMA IF NOT EXISTS accounts;
 -- The PostgreSQL DO statement executes an anonymous code block in a procedural language, such as
 -- PL/pgSQL. This is useful for running one-off, transient code blocks that do not need to be
 -- stored permanently as a function or stored procedure.
-DO $$
-BEGIN
-  CREATE ROLE trimino WITH LOGIN PASSWORD 'trimino';
-  EXCEPTION WHEN duplicate_object THEN
-    RAISE NOTICE '%, skipping', SQLERRM USING ERRCODE = SQLSTATE;
-END
-$$;
---CREATE ROLE trimino WITH LOGIN PASSWORD 'trimino';
+-- Any role with the explicitly granted LOGIN attribute can connect to the database; such roles are usually referred to as 'database users'.
 -- It allows the role to connect to the specified database.
-GRANT CONNECT ON DATABASE check_register TO trimino;
+GRANT CONNECT ON DATABASE check_register TO tenant_admin;
 -- It revokes the connect privilege for all other roles to the database. In Postgres, PUBLIC is a
 -- default role that includes all users.
 REVOKE CONNECT ON DATABASE check_register FROM PUBLIC;
---
-GRANT USAGE ON SCHEMA public TO trimino;
-GRANT USAGE ON SCHEMA customers TO trimino;
-GRANT USAGE ON SCHEMA accounts TO trimino;
---
+-- These statements allow the role to access public, xxxpublic, and other schemas in the tenant_check_registry database.
+GRANT USAGE ON SCHEMA public TO tenant_admin;
+GRANT USAGE ON SCHEMA customers TO tenant_admin;
+GRANT USAGE ON SCHEMA accounts TO tenant_admin;
+-- These statements allow the role to query and manipulate data in all tables across all schemas within the tenant_check_registry database.
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES
   IN SCHEMA public TO trimino;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES
   IN SCHEMA customers TO trimino;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES
   IN SCHEMA accounts TO trimino;
+-- These statements allow the role to generate IDs with sequences used by various tables.
+GRANT USAGE, SELECT ON ALL SEQUENCES
+  IN SCHEMA xxxpublic TO tenant_admin;
 
 -- Once connected, set the search path to look for objects in your schema first, and if not found,
 -- to fall back to the default public schema.
