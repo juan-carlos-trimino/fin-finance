@@ -121,13 +121,13 @@ WITH
 /********************************************************************************************************************************
                              *** DATABASE ROLES AND PRIVILEGES (Database-level privileges) ***
 ********************************************************************************************************************************/
--- GRANT CONNECT ON DATABASE finances TO admin_role;
+GRANT CONNECT ON DATABASE :DB_NAME TO admin_user;
 -- GRANT ALL PRIVILEGES ON DATABASE finances TO admin_role;
 -- Revoke all privileges that are granted by default to the 'public' role.
-REVOKE ALL ON DATABASE finances FROM public;
+REVOKE ALL ON DATABASE :DB_NAME FROM public;
 
 -- Connect to the database; instantly unlocks Lock 1.
-\c finances
+\c :DB_NAME
 
 -- LOCK 2: Protect Schema Actions (Tables, Indexes, Procedures).
 /***
@@ -175,7 +175,7 @@ If you need all users in a group to share the same search_path, use the followin
  Set at the Database Level: Apply the search_path to the database itself, so every new connection defaults to it.
 ***/
 --ALTER ROLE admin_role SET search_path = fin;
-ALTER DATABASE finances SET search_path TO fin, public;
+ALTER DATABASE :DB_NAME SET search_path TO fin, public;
 
 /********************************************************************************************************************************
                                                        *** COLLATIONS ***
@@ -637,3 +637,8 @@ CREATE OR REPLACE TRIGGER trg_customers_credentials_prevent_delete
 BEFORE DELETE ON fin.customers_credentials
 FOR EACH ROW
 EXECUTE FUNCTION fin.customers_credentials_block_row_deletion();
+
+\qecho Creation of the database :'DB_NAME' and its objects was successful.
+
+SELECT CONCAT('*** Output from script, run ended at: ', NOW(), ' ***') AS msg \gset
+\qecho :msg
