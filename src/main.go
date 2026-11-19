@@ -67,8 +67,8 @@ const (
   //https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
   host = "localhost"
   port = 5432
-  default_user = "trimino"
-  default_password = "trimino"
+  default_user = "postgres"
+  default_password = "postgres"
   default_dbname = "postgres"
   admin_user = "admin_user"
   admin_password = "12345"
