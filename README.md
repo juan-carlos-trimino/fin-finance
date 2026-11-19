@@ -866,7 +866,60 @@ Terminate the `psql` connection to `Postgres`.
 postgres=# \q
 ```
 
-#### Databases
+#### Connecting to a Postgres Database
+To connect to a Postgres database using command-line tools, such as `psql`, you specify connection flags or a connection URI. If you omit parameters, a tool like `psql` falls back to local defaults, such as your current operating system username and the default port `5432`.
+
+When connecting to Postgres using `psql`, it helps to separate the **connection transport** (how `psql` reaches the server) from the **authentication method** (how the server proves who you are). There are **two transport mechanisms -- Local Unix Domain Sockets and TCP/IP --** and **Peer authentication**, which is the default authentication method used on Unix sockets on Linux.
+
+1. Local Unix Domain Sockets (Often using Peer Auth)
+   * **How it connects:** `psql` communicates directly with the Postgres server through a special file on the local filesystem (e.g., `/var/run/postgresql/.s.PGSQL.5432`) without touching the network stack.
+   * **When it is used:** Whenever you omit the `-h` (`--host`) flag, or explicitly pass a directory path like `-h /var/run/postgresql`.
+   * **How authentication works:** On most Linux distributions, `pg_hba.conf` assigns **`peer`** authentication to `local` socket connections. Postgres asks the Linux kernel for the OS username running `psql` and checks if it matches the requested database username (`-U`), without checking any password.
+   * **Best use cases:** Local administrative tasks (`sudo -u postgres psql`), local cron jobs, and on-machine services where OS user isolation provides strong, passwordless security.
+2. TCP/IP Connections (Usually using Password Auth)
+   * **How it connects:** `psql` connects over the network stack using an IP address or hostname and a port (default `5432`), even when connecting to the same machine via 127.0.0.1 or localhost.
+   * **When it is used:** Whenever you pass a hostname or IP address with `-h` (such as `-h localhost`, `-h 127.0.0.1`, or `-h http://example.com`).
+   * **How authentication works:** Because network packets do not carry your local Linux OS user identity, `pg_hba.conf` assigns network authentication methods to `host` lines -- most commonly **scram-sha-256** (or older **md5**) password authentication, or SSL certificates.
+   * **Best use cases:** Application connection strings (like `pgxpool` or backend services), remote database access, Docker containers, and switching between multiple database roles (`admin_user`, `app_user`) from a single OS login.
+3. **Host lines** are configuration rules inside Postgres' client authentication file (`pg_hba.conf`) that begin with the keyword `host`. These lines tell Postgres how to authenticate connections arriving over a TCP/IP network, including local loopback addresses like `localhost`.
+
+For the following two commands, the core difference is the **network transport layer** used to reach the database, which directly controls how Postgres authenticates the login.<br>
+To connect over a **local Unix-domain socket** (an internal file-based pipe, usually at `/var/run/postgresql`)
+```
+psql -U postgres -d postgres
+```
+To connect over a **TCP/IP network connection** via the loopback address (`127.0.0.1` or `::1`), even though the server is on the same machine
+```
+psql -h localhost --username postgres -d postgres
+```
+The connection URI **`postgresql://[user[:password]@][host[:port]]/[dbname][?option1=value1&option2=value2]`** is the standard Postgres connection string template, where every bracketed [...] section is **optional**. You use it by filling in only the pieces required for your chosen transport (TCP/IP or Unix socket) and authentication method. Using `psql`, you can establish a TCP/IP connection like so:
+```
+psql postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
+```
+You may also establish a connection over a Local Unix socket; this assumes a database role exists for <OS-username>.
+```
+psql postgresql://<OS-username>@/postgres
+```
+**`Peer` authentication checks your active Linux operating system user against the requested Postgres role, and it rejects the connection if they do not match.** If your Linux terminal session is logged in as your personal OS user (`<OS-username>`) rather than the `postgres` OS user, requesting the `postgres` database role over a local Unix socket triggers a mismatch and fails.<br>
+To connect as the `postgres` OS user, run the command via `sudo` so the Linux kernel reports your OS user as `postgres` to match the database role.
+```
+sudo -u postgres psql postgres://postgres@/postgres
+```
+The command below *starts an interactive login shell as the* `postgres` *operating system user with full administrative environment settings*. It switches your terminal session into the dedicated Linux system account that owns the Postgres service. Your terminal prompt changes to indicate the new session (such as `postgres@hostname:~$`). Type `exit` or press `Ctrl+D` when you are finished to return to your normal Linux user account.
+
+Once you are logged in as the `postgres` Linux user, simply type `psql` and press `Enter`. This will log you in as the `postgres` system user and connect you to the `psql` shell without needing a password. Running `psql` with no arguments connects you to the default `postgres` maintenance database as the `postgres` superuser. To connect directly to a specific database, you enter `psql -d <database-name>` or `psql <database-name>`.
+```
+sudo -i -u postgres
+```
+The **sudo** password prompt (**[sudo] password for username:**) comes from the Linux operating system. It asks for the login password of the personal Linux account you are currently using to verify that you have administrative (`sudo`) permissions to switch users.
+
+Display information about the current database connection.
+```
+postgres=# \conninfo
+```
+
+Once inside the interactive `psql`, use backslash (\) meta-commands to navigate.
+
 Switch to a different database.
 ```
 postgres=# \c <database-name> <username> <host> <port>
@@ -875,10 +928,38 @@ Switch from the current database to another database using the current user.
 ```
 postgres=# \c <database-name>
 ```
-Display information about the current database connection.
+Switch from the current database to another database using a different user.
 ```
-postgres=# \conninfo
+postgres=# \c <database-name> <role-name>
 ```
+Switch the user without changing the database using **positional syntax**.
+```
+postgres=# \c - <role-name>
+```
+In `psql` and Postgres, **positional syntax** refers to *passing arguments or parameters based on their exact sequence rather than identifying them with flags or names*. Hence, when connecting to a database from the command line or switching databases inside `psql`, you can pass connection details in a strict order without using flags (`-d`, `-U`, `-h`, `-p`).
+  * **Command-line syntax:** `psql [database-name] [username]`
+  * **Meta-command syntax:** `\c [database-name] [username] [host] [port]`
+
+If you are currently logged in as a superuser or a member of `role`, you may change your active permissions inside the current database *without opening a new connection or asking for a password*.
+```
+SET ROLE <role-name>;
+```
+To check which Postgres `role` is currently active in your session, run the SQL statement.
+```
+SELECT current_user;
+```
+To verify if your `role` has changed mid-session.
+```
+SELECT session_user AS login_role, current_user AS active_role;
+```
+___
+**Note:**<br>
+**Specifying the `-W` or `--password` option is completely redundant!** If Postgres' authentication settings are configured to require a password to connect, the server will automatically ask for one even if you don't pass this option in the command line. However, if you pass `--password`, you are requesting whatever Postgres utility you are calling to prompt you for a password -- regardless of whether one is needed by the server. To elaborate, the database server **may be misconfigured** to accept incoming connections without requiring a password, in which case it simply ignores whatever password the client sends.
+
+As a result, **a DBA may be misled into a false sense of security**. Since the client is asking for a password, it's easy to assume that the server is running in password-protected mode, when in fact the server is exposed.
+___
+
+#### Databases
 List all databases.
 ```
 postgres=# \l
@@ -887,6 +968,10 @@ postgres=# \list
 List databases with size, tablespace, and description.
 ```
 postgres=# \l+
+```
+Display a full list of existing databases.
+```
+SELECT datname FROM pg_database;
 ```
 
 #### Functions and Procedures
