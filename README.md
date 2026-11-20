@@ -772,7 +772,26 @@ $ kubectl delete Certificate <certificate-name> -n finances
 PostgreSQL is a multiprocess system with a `process per user` model; i.e., every client connects to a backend process, and this is coordinated by the postmaster supervisor process. PostgreSQL's inter-process communication (IPC) is via semaphores and shared memory. Needless to say, if we have too many processes running in our system, this incurs operating system overhead and brings the risk of excessive CPU context switching (process thrashing).
 
 #### SQL
-1. By default, Postgres ignores case and turns every identifier into lowercase. Postgres preserves case only when the identifier is double quoted, and double-quoted identifiers, also known as `delimited identifiers`, are case sensitive.
+
+1. Postgres handles case sensitivity differently for **string data, SQL keywords,** and **object identifiers** (like table and column names):
+   1. **String Data & Values (Case-Sensitive)**<br>
+      Comparing text or string values inside a query is **case-sensitive** by default.
+      * **Example:** `WHERE status = 'active'` will **not** match rows where `status` is `'Active'` or `'ACTIVE'`.
+      * **Exception:** Using the `ILIKE` operator (`WHERE status ILIKE 'active'`) or case-insensitive regular expressions (`~*`) forces a case-insensitive match.
+   2. **SQL Keywords (Case-Insensitive)**<br>
+      Built-in SQL commands and keywords are **case-insensitive**.
+      * **Example:** `SELECT * FROM users` behaves identically to `select * from users` or `SeLeCt * FrOm users`.
+   3. **Identifiers: Tables, Columns, and Schemas (Case-Insensitive unless quoted)**<br>
+      Postgres folds all **unquoted** identifiers to lowercase automatically before executing the query.
+      * **Unquoted:** `SELECT FirstName FROM Customers` is automatically converted to `select firstname from customers`. Because both are folded to lowercase, unquoted names act case-insensitively.
+      * **Double-Quoted:** Wrapping an identifier in double quotes preserves its exact casing and makes it **case-sensitive**. `SELECT "FirstName" FROM "Customers"` would fail with a "relation does not exist" error if the table were created without quotes as `customers`.
+
+      | Query Component | Case-Sensitive by Default? | Example |
+      | :--- | :--- | :--- |
+      | **String literals/data** | **Yes** | 'admin' &ne; 'Admin' |
+      | **SQL keywords** | **No** | SELECT &equals; select |
+      | **Unquoted identifiers** | **No** (folded to lowercase)	| User_ID &equals; user_id |
+      | **Double-quoted identifiers** | **Yes** | "User_ID" &ne; "user_id" |
 2. In Postgres, the statement `TABLE <table-name>;` can be used as a shorthand for the SQL statement `SELECT * FROM <table-name>;`. Other variants are `TABLE <table-name> LIMIT <number-of-rows>;`, `TABLE <table-name> ORDER BY <column-name>;`, etc. The `WHERE` clause cannot be used with the standalone `TABLE` statement.
 3. In Postgres, the operator `::` is a shorthand for the standard SQL `CAST()` function. The function `pg_typeof()` returns the Postgres data type of the provided value.
 
