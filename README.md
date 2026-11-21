@@ -992,6 +992,42 @@ Display a full list of existing databases.
 ```
 SELECT datname FROM pg_database;
 ```
+Display the exact file system path on the server where Postgres stores all of its data and configuration files. For security, Postgres blocks regular database users from viewing it unless they belong to the `pg_read_all_settings` predefined role or are a `superuser`.
+```
+SHOW data_directory;
+```
+If you want your non-superuser role to be able to read server configurations without giving it full superuser rights, log in as a superuser and grant the predefined role.
+```
+GRANT pg_read_all_settings TO <your-role-name>;
+```
+
+#### Editor
+Check your active working directory.
+```
+\! pwd
+```
+Change directory.
+  * `\cd` produces no output when it succeeds so verify your current directory by running `\! pwd`.
+  * A path with spaces fails unless wrapped in single quotes (e.g., `\cd '/path/with spaces/folder'`).
+  * Depending on your OS and `psql` version, `~` may not expand to your home directory. Use the full absolute path or type `\cd` by itself to jump to your home directory.
+```
+\cd /home/user-dir/folder1/folder2
+```
+This meta-command opens your default external text editor (such as vim, nano, or emacs) so you can write or edit multi-line SQL queries comfortably instead of typing them directly into the terminal prompt.
+
+  * Without arguments, it opens a temporary file containing the **most recently executed SQL query** from your `psql` buffer (or a blank file if you haven't run a query yet). Once you save and exit the editor, `psql` automatically executes the query.
+  * With a filename, it opens that specific file in your editor. When you save and exit, `psql` executes the contents of the file immediately.
+    * You can pass either an *absolute path* or a *relative path* directly after `\e`, using standard Linux/Unix forward slashes (`/`) -- do not wrap the path in quotes unless it contains spaces.
+  * There is no built-in **cancel** button inside `psql` -- when the editor closes, `psql` unconditionally reads and executes whatever is saved in that file. For this reason, it is best to use `\! vim filename` to edit a file safely without risk of execution, and `\i filename` when you are ready to run it.
+```
+\e
+
+\e filename
+```
+Use the shell command (`\!`) to open your editor directly. This opens the editor normally, and when you save and exit, `psql` simply returns to the prompt without running anything.
+```
+\! vim /path/to/file/filename.txt
+```
 
 #### Functions and Procedures
 List functions and procedures.
@@ -1123,6 +1159,8 @@ postgres=# \dn
 To check which schema is currently set, run
 ```
 SHOW search_path;
+
+SELECT current_schema();
 ```
 To set the current schema to `fin`, run
 ```
