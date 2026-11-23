@@ -37,6 +37,11 @@ variable public_key {
   type = string
 }
 
+variable node_image_id {
+  type = string
+  description = "The OCID of the OKE worker node image."
+}
+
 ###################################################################################################
 # In Terraform to fetch data, you use a data source. Fetching data from a data source is similar  #
 # to the GET method in REST APIs.                                                                 #
@@ -56,17 +61,8 @@ locals {
   ads = data.oci_identity_availability_domains.avail_domains.availability_domains[*].name
 }
 
-data "oci_core_images" "use_image" {
-  compartment_id = var.compartment_id
-  operating_system = "Oracle Linux"
-  operating_system_version = "8"
-  shape = "VM.Standard.A1.Flex"
-  sort_by = "TIMECREATED"
-  sort_order = "DESC"
-}
-
 # https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/containerengine_node_pool
-resource "oci_containerengine_node_pool" "node-pool" {
+resource "oci_containerengine_node_pool" "node-pool" {  //worker nodes
   name = var.name
   cluster_id = var.cluster_id
   compartment_id = var.compartment_id
@@ -86,6 +82,9 @@ resource "oci_containerengine_node_pool" "node-pool" {
     size = var.nodes
   }
   # Enhanced cluster feature.
+  # Your cluster is a Basic cluster (which is free of OKE control-plane management fees), so node_pool_cycling_details is blocked
+  # -- you should comment node_pool_cycling_details back out, apply the new image_id in Terraform, and replace the 4 nodes manually
+  # without incurring Enhanced cluster charges.
   # node_pool_cycling_details {
   #   is_node_cycling_enabled = false
   #   maximum_surge = 1
@@ -101,12 +100,10 @@ resource "oci_containerengine_node_pool" "node-pool" {
     # https://docs.oracle.com/en-us/iaas/api/#/en/iaas/20160918/Shape/ for details.
     ocpus = var.ocpus_per_node
   }
-  # Find the image OCID for YOUR REGION from https://docs.oracle.com/iaas/images/
-  # Note: Since ARM instances are being used (see node_shape_config above), you will need to search
-  #       for an ARM architecture compatible Oracle Linux images so search for the keyword aarch.
   node_source_details {
     boot_volume_size_in_gbs = 50
-    image_id = data.oci_core_images.use_image.images.0.id
+    # Terraform will automatically fetch the exact ARM OKE worker image for var.k8s_version.
+    image_id = var.node_image_id
     source_type = "image"
   }
   initial_node_labels {

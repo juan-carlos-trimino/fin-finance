@@ -2,6 +2,16 @@
 # In Terraform to fetch data, you use a data source. Fetching data from a data source is similar  #
 # to the GET method in REST APIs.                                                                 #
 ###################################################################################################
+
+locals {
+  # Filter for ARM (aarch64) Oracle Linux 8 OKE images matching the k8s_version
+  arm_oke_images = [
+    for source in data.oci_containerengine_node_pool_option.oke-images.sources : source.image_id
+    if length(regexall("Oracle-Linux-8\\..*-aarch64-.*-OKE-${replace(var.k8s_version, "v", "")}", source.source_name)) > 0
+    && length(regexall("GPU", source.source_name)) == 0
+  ]
+}
+
 data "oci_containerengine_cluster_kube_config" "kubeconfig" {
   cluster_id = module.cluster.cluster-id
   endpoint = "PUBLIC_ENDPOINT"  # LEGACY_KUBERNETES,PUBLIC_ENDPOINT,PRIVATE_ENDPOINT,VCN_HOSTNAME.
@@ -10,4 +20,8 @@ data "oci_containerengine_cluster_kube_config" "kubeconfig" {
 
 data "oci_containerengine_node_pool" "k8s-node-port" {
   node_pool_id = module.arm64-node-pool.node-pool-id
+}
+
+data "oci_containerengine_node_pool_option" "oke-images" {
+  node_pool_option_id = "all"
 }

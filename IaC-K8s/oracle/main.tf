@@ -179,6 +179,7 @@ module "arm64-node-pool" {
   cluster_id = module.cluster.cluster-id
   cluster_cni_type = module.cluster.cluster-cni-type
   nodes = var.nodes
+  node_image_id = local.arm_oke_images[0]
   k8s_version = var.k8s_version
   public_key = local.public_key
   memory_per_node = var.memory_per_node
