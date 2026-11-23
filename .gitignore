@@ -127,10 +127,12 @@ IaC-K8s/oracle/*
 !IaC-K8s/oracle/locals.tf
 !IaC-K8s/oracle/main.tf
 !IaC-K8s/oracle/null-resource.tf
+!IaC-K8s/oracle/oke-basic-cluster-upgrade-guide.md
 !IaC-K8s/oracle/outputs.tf
 !IaC-K8s/oracle/providers.tf
 !IaC-K8s/oracle/ssh-key.tf
 !IaC-K8s/oracle/variables.tf
+!IaC-K8s/oracle/update-kubectl-oke-os.md
 !IaC-K8s/.gitkeep
 ###########
 # Storage #
