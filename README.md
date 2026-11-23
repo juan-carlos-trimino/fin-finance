@@ -1001,6 +1001,24 @@ If you want your non-superuser role to be able to read server configurations wit
 GRANT pg_read_all_settings TO <your-role-name>;
 ```
 
+#### Display Mode
+The `\x` meta-command toggles expanded display mode, which flips your query results from a horizontal table into a vertical list of key-value pairs.
+
+Toggle the expanded table formatting mode.
+```
+\x
+```
+Force expanded display mode on.
+```
+\x on
+```
+Force expanded display mode off.
+```
+\x off
+```
+Automatically switches to expanded display only when the query results are too wide to fit on the screen. This is often recommended to be placed in your `~/.psqlrc` configuration file for convenience.
+\x auto
+
 #### Editor
 Check your active working directory.
 ```
@@ -1149,6 +1167,35 @@ Execute the last run query repeatedly every N seconds. To end the `\watch` comma
 ```
 -- Run every 2 seconds
 postgres=# \watch 2
+```
+
+#### Query Output
+The `\pset` meta-command controls how query results are formatted and printed in your terminal. For settings you want to persist across all your `psql` sessions, you can add `\pset` commands to your `~/.psqlrc` file.
+
+Add an outer frame and internal borders.
+```
+\pset border 2
+```
+Specify the string to display in place of a NULL value.
+```
+\pset null '(null)'
+```
+Outline table borders and separators using Unicode characters.
+```
+\pset linestyle unicode
+\pset unicode_border_linestyle single
+\pset unicode_column_linestyle single
+\pset unicode_header_linestyle double
+```
+The context of a  ~/.psqlrc file.
+```
+\pset border 2
+\pset null '(null)'
+\pset linestyle unicode
+\pset unicode_border_linestyle single
+\pset unicode_column_linestyle single
+\pset unicode_header_linestyle double
+\x auto
 ```
 
 #### Shemas
