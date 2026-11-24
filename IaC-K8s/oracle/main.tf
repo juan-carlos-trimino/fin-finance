@@ -172,7 +172,7 @@ module "arm64-node-pool" {
     module.cluster
   ]
   source = "./modules/node"
-  name = "fin-arm64-worker-pool"
+  name = "fin-arm64-worker-pool-ol9"
   tenancy_ocid = var.tenancy_ocid
   compartment_id = oci_identity_compartment.fin-compartment.id
   subnet_id = module.private-subnet.subnet-id

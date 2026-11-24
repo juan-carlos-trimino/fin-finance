@@ -7,7 +7,7 @@ locals {
   # Filter for ARM (aarch64) Oracle Linux 8 OKE images matching the k8s_version
   arm_oke_images = [
     for source in data.oci_containerengine_node_pool_option.oke-images.sources : source.image_id
-    if length(regexall("Oracle-Linux-8\\..*-aarch64-.*-OKE-${replace(var.k8s_version, "v", "")}", source.source_name)) > 0
+    if length(regexall("Oracle-Linux-9\\..*-aarch64-.*-OKE-${replace(var.k8s_version, "v", "")}", source.source_name)) > 0
     && length(regexall("GPU", source.source_name)) == 0
   ]
 }
