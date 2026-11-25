@@ -122,8 +122,10 @@ IaC-K8s/*
 !IaC-K8s/oracle/
 IaC-K8s/oracle/*
 !IaC-K8s/oracle/.terraform.lock.hcl
+!IaC-K8s/oracle/backend.tf
 !IaC-K8s/oracle/compartment.tf
 !IaC-K8s/oracle/data.tf
+!IaC-K8s/oracle/iac.sh
 !IaC-K8s/oracle/locals.tf
 !IaC-K8s/oracle/main.tf
 !IaC-K8s/oracle/null-resource.tf
@@ -131,8 +133,8 @@ IaC-K8s/oracle/*
 !IaC-K8s/oracle/outputs.tf
 !IaC-K8s/oracle/providers.tf
 !IaC-K8s/oracle/ssh-key.tf
-!IaC-K8s/oracle/variables.tf
 !IaC-K8s/oracle/update-kubectl-oke-os.md
+!IaC-K8s/oracle/variables.tf
 !IaC-K8s/.gitkeep
 ###########
 # Storage #
