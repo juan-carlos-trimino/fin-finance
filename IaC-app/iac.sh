@@ -1,4 +1,11 @@
 #!/bin/bash
+# The '-e' option tells the shell to exit immediately if any invoked command exits with a non-zero status, which is the convention
+# for indicating errors in Unix-like operating systems. It's a handy option for scripting, as it helps to catch errors and bugs early.
+#
+# The '-u' option treats unset or undefined variables as an error when substituting (during parameter expansion).
+# Does not apply to special parameters such as wildcard * or @.
+set -euo pipefail
+
 #
 # The "Dot Space Script" Trick for Running Bash Scripts in the "Current Shell"
 # In Bash, a dot (".") is a command, which is synonymous with the "source" command. It executes the
@@ -14,150 +21,175 @@
 #
 
 display_help() {
-  # -e   Enable interpretation of backslash escapes.
-  # -n   Do not output the trailing newline.
-  printf "Usage: $0 deploy/destroy [OPTIONS]\n"
-  printf "  -h, --help                Display help\n"
-  printf "  deploy                  Apply changes to the infrastructure.\n"
-  printf "    -b, --build             Build the image\n"
-  printf "    -nb, --no-build         Use an image from the repo\n"
-  printf "                            (The image has to exist in the repo)\n"
-  printf "    -v, --version           Application version; e.g., 1.0.0\n"
-  printf "    -ed, --empty-dir        Use empty-dir\n"
-  printf "    -pd, --persistent-disk  Use persistent disk\n"
-  printf "    -gw, --gateway          If present, use a reverse proxy\n"
-  printf "                            (If not present, reverse proxy is not used)\n"
-  printf "    -p, --pprof             If present, pprof is enabled\n"
-  printf "                            (If not present, pprof is disabled)\n"
-  printf "    -pg, --postgres         Use the postgres database\n"
-  printf "  destroy                 Destroy the infrastructure.\n\n"
+  printf 'Usage: %s <deploy|destroy> [OPTIONS]\n\n' "$0"
+  printf "Commands:\n"
+  printf "  deploy                  Plan or apply changes to the infrastructure\n"
+  printf "  destroy                 Destroy the managed infrastructure\n\n"
+  printf "Options:\n"
+  printf "  -p, --plan              Run terraform plan (deploy only)\n"
+  printf "  -a, --apply             Run terraform apply (default for deploy)\n"
+  printf "  -b, --build             Build the image (deploy only)\n"
+  printf "  -n, --no-build          Use an image from the repo (deploy only)\n"
+  printf "                          (The image has to exist in the repo)\n"
+  printf "  -e, --empty-dir         Use empty-dir (deploy only)\n"
+  printf "  -i, --persistent-disk   Use persistent disk (deploy only)\n"
+  printf "  -d, --postgres          Use the postgres database (deploy only)\n"
+  printf "  -f, --pprof             If present, pprof is enabled (deploy only)\n"
+  printf "                          (If not present, pprof is disabled)\n"
+  printf "  -g, --gateway           If present, use a reverse proxy (deploy only)\n"
+  printf "                          (If not present, reverse proxy is not used)\n"
+  printf "  -v, --version <ver>     Application version; e.g., 1.0.0  (deploy only)\n"
+  printf "  -y, --auto-approve      Skip interactive approval (apply or destroy)\n"
+  printf "  -h, --help              Display help\n\n"
   printf "Examples:\n"
-  printf "Deploy app using empty-dir as storage.\n"
-  printf "Build the image using v1.0.0.\n"
-  printf "$ ./iac.sh deploy -b -v 1.0.0 -ed\n\n"
-  printf "Deploy app using persistent storage, enable the endpoints of pprof.\n"
-  printf "Use image in repo v1.0.1.\n"
-  printf "$ ./iac.sh deploy -nb -v 1.0.1 -pd -p\n\n"
-  printf "Deploy app using persistent storage and the reverse proxy.\n"
-  printf "Use image in repo v1.0.0.\n"
-  printf "$ ./iac.sh deploy -nb -v 1.0.0 -pd -gw\n\n"
+  printf "Deploy app by building the image, version 1.0.0, and empty-dir as storage.\n"
+  printf "$ ./iac.sh deploy -b -v 1.0.0 -e\n\n"
+  printf "Deploy app by not building an image, version 1.0.1, persistent storage, and enable the endpoints of pprof.\n"
+  printf "$ ./iac.sh deploy -n -v 1.0.1 -i -f\n\n"
+  printf "Deploy app by not building an image, version 1.0.0, persistent storage, and reverse proxy.\n"
+  printf "$ ./iac.sh deploy -n -v 1.0.0 -i -g\n\n"
   exit 0
 }
 
 check_options() {
-  # echo "Elements in \$@: $@"
-  arr=()
-  for arg in "$@"
-  do
-    arr+=("$arg")
-  done
-  # echo "Elements in arr: ${arr[@]}"
-  local -i ndx=0
+  local arr=("$@")
   local -i size="${#arr[@]}"
-  local app_version=""
-  local build_image=""
-  local reverse_proxy="false"
-  local db_postgres="false"
-  local k8s_crds=$reverse_proxy
-  local pprof="false"
-  local deployment_type=""
-  local empty_dir="false"
-  local persistent_disk="false"
-  for (( ndx = 1; ndx < size; ))  # Move pass the first argument.
+  if [[ "$size" -eq 0 ]];
+  then
+    display_help
+    exit 1
+  fi
+  local command="${arr[0]}"
+  local action=""
+  local deploy_mode=""
+  local auto_approve=false
+  # Initialize all global variables with safe defaults (so destroy & set -u work cleanly)
+  build_image=""
+  storage_type=""
+  use_postgres=false
+  enable_pprof=false
+  use_gateway=false
+  app_version=""
+  case "$command" in
+    -h|--help)
+      display_help
+      ;;
+    deploy)
+      action="apply"
+      ;;
+    destroy)
+      action="destroy"
+      ;;
+    *)
+      printf "Unknown command: %s\n\n" "$command" >&2
+      display_help
+      ;;
+  esac
+  local -i ndx=1
+  # Parse remaining flags starting at index 1
+  while [[ $ndx -lt $size ]];
   do
-    flag=${arr[ndx]}
-    # echo "Element at index $ndx: $flag"
+    local flag="${arr[ndx]}"
     case "$flag" in
-      "-h" | "--help")
+      -h|--help)
         display_help
         ;;
-      "-b" | "--build")
-        build_image="true"
+      -y|--auto-approve)
+        auto_approve=true
         ;;
-      "-nb" | "--no-build")
-        build_image="false"
+      -p|--plan)
+        if [[ "$command" != "deploy" ]];
+        then
+          printf "Error: %s is only valid with 'deploy'\n" "$flag" >&2
+          exit 1
+        fi
+        action="plan"
         ;;
-      "-v" | "--version")
+      -a|--apply)
+        [[ "$command" == "deploy" ]] || { printf "Error: %s is only valid with 'deploy'\n" "$flag" >&2; exit 1; }
+        [[ -z "$deploy_mode" ]] || { printf "Error: Cannot combine -p/--plan and -a/--apply\n" >&2; exit 1; }
+        deploy_mode="apply"
+        ;;
+      -b|--build)
+        [[ "$command" == "deploy" ]] || { printf "Error: %s is only valid with 'deploy'\n" "$flag" >&2; exit 1; }
+        [[ -z "$build_image" ]] || { printf "Error: Cannot combine -b/--build and -n/--no-build\n" >&2; exit 1; }
+        build_image=true
+        ;;
+      -n|--no-build)
+        [[ "$command" == "deploy" ]] || { printf "Error: %s is only valid with 'deploy'\n" "$flag" >&2; exit 1; }
+        [[ -z "$build_image" ]] || { printf "Error: Cannot combine -b/--build and -n/--no-build\n" >&2; exit 1; }
+        build_image=false
+        ;;
+      -e|--empty-dir)
+        [[ "$command" == "deploy" ]] || { printf "Error: %s is only valid with 'deploy'\n" "$flag" >&2; exit 1; }
+        [[ -z "$storage_type" ]] || { printf "Error: Cannot combine -e/--empty-dir and -i/--persistent-disk\n" >&2; exit 1; }
+        storage_type="empty-dir"
+        ;;
+      -i|--persistent-disk)
+        [[ "$command" == "deploy" ]] || { printf "Error: %s is only valid with 'deploy'\n" "$flag" >&2; exit 1; }
+        [[ -z "$storage_type" ]] || { printf "Error: Cannot combine -e/--empty-dir and -i/--persistent-disk\n" >&2; exit 1; }
+        storage_type="persistent-disk"
+        ;;
+      -d|--postgres)
+        [[ "$command" == "deploy" ]] || { printf "Error: %s is only valid with 'deploy'\n" "$flag" >&2; exit 1; }
+        use_postgres=true
+        ;;
+      -f|--pprof)
+        [[ "$command" == "deploy" ]] || { printf "Error: %s is only valid with 'deploy'\n" "$flag" >&2; exit 1; }
+        enable_pprof=true
+        ;;
+      -g|--gateway)
+        [[ "$command" == "deploy" ]] || { printf "Error: %s is only valid with 'deploy'\n" "$flag" >&2; exit 1; }
+        use_gateway=true
+        ;;
+      -v|--version)
+        [[ "$command" == "deploy" ]] || { printf "Error: %s is only valid with 'deploy'\n" "$flag" >&2; exit 1; }
         ndx=$(( ndx + 1 ))
-        # echo "Element at index $ndx: ${arr[ndx]}"
-        app_version=${arr[ndx]}
+        if [[ $ndx -ge $size || "${arr[ndx]}" == -* ]];
+        then
+          printf "Error: %s requires a version argument (e.g., 1.0.0)\n" "$flag" >&2
+          exit 1
+        fi
+        app_version="${arr[ndx]}"
         ;;
-      "-p" | "--pprof")
-        pprof="true"
-        ;;
-      "-pg" | "--postgres")
-        db_postgres="true"
-        ;;
-      "-ed" | "--empty-dir")
-        empty_dir="true"
-        ;;
-      "-pd" | "--persistent-disk")
-        persistent_disk="true"
-        ;;
-      "-gw" | "--gateway")
-        reverse_proxy="true"
-        k8s_crds=$reverse_proxy
-        ;;
-      *)  #Default.
-        echo -e "Unknown flag: $flag\n"
+      *)
+        printf "Error: Unknown flag '%s'\n\n" "$flag" >&2
         exit 1
         ;;
     esac
     ndx=$(( ndx + 1 ))
   done
-  #
-  if [[ "$size" -eq 0 ]];  # No flags; arr is emptied.
+  # Validate required deploy options
+  if [[ "$command" == "deploy" ]];
   then
-    display_help
-    exit 1
-  elif [ ${arr[0]} == "deploy" ]
-  then
-    if [ "$build_image" == "" ]
-    then
-      printf "One of these two options is required:\n"
-      printf "  -b or --build.\n"
-      printf "  -nb or --no-build.\n\n"
-      exit 1
-    elif [ "$app_version" == "" ]
-    then
-      echo -e "The option -v/--version is required.\n"
-      exit 1
-    elif [ "$empty_dir" == "false" ] && [ "$persistent_disk" == "false" ]
-    then
-      printf "One of these two options is required:\n"
-      printf "  -ed or --empty-dir.\n"
-      printf "  -pd or --persistent-disk.\n\n"
-      exit 1
-    elif [ "$empty_dir" == "true" ] && [ "$persistent_disk" == "true" ]
-    then
-      printf "Only one of these two options is required:\n"
-      printf "  -ed or --empty-dir.\n"
-      printf "  -pd or --persistent-disk.\n\n"
-      exit 1
-    fi
-    export APP_VERSION=$app_version
-    export REVERSE_PROXY=$reverse_proxy
-    export K8S_CRDS=$k8s_crds
-    export PERSISTENT_DISK=$persistent_disk
-    export EMPTY_DIR=$empty_dir
-    export PPROF=$pprof
-    export BUILD_IMAGE=$build_image
-    export DB_POSTGRES=$db_postgres
-  elif [ ${arr[0]} == "destroy" ]
-  then
-    echo ""  # Placeholder...
-  else
-    display_help
-    exit 1
+    [[ -n "$app_version" ]] || { printf "Error: -v/--version is required for 'deploy'\n" >&2; exit 1; }
+    [[ -n "$build_image" ]] || { printf "Error: Either -b/--build or -n/--no-build is required for 'deploy'\n" >&2; exit 1; }
+    [[ -n "$storage_type" ]] || { printf "Error: Either -e/--empty-dir or -i/--persistent-disk is required for 'deploy'\n" >&2; exit 1; }
   fi
-  return
+  k8s_crds=$use_gateway
+  persistent_disk=false
+  empty_dir=false
+  if [[ "$storage_type" == "persistent-disk" ]];
+  then
+    persistent_disk=true
+  elif [[ "$storage_type" == "empty-dir" ]];
+  then
+    empty_dir=true
+  fi
+  # Build global Terraform arguments array
+  tf_args=("$action")
+  if [[ "$auto_approve" == true && "$action" != "plan" ]];
+  then
+    tf_args+=("-auto-approve")
+  fi
 }
 
 print_time_elapsed() {
   printf "\n*************************************************\n"
-  echo "Done..."
-  local end_time=$(date)
-  echo "$end_time"
+  printf "Done...\n"
+  local end_time
+  end_time=$(date)
+  printf '%s\n' "$end_time"
   start_time_seconds=$(date -d "$1" +"%s")
   end_time_seconds=$(date -d "$end_time" +"%s")
   duration=$(( $end_time_seconds - $start_time_seconds ))
@@ -168,162 +200,156 @@ print_time_elapsed() {
 }
 
 # Main program
-# The '-e' option tells the shell to exit immediately if any invoked command exits with a non-zero
-# status, which is the convention for indicating errors in Unix-like operating systems. It's a
-# handy option for scripting, as it helps to catch errors and bugs early.
-set -e
-echo
-check_options $@
+printf "\n"
+check_options "$@"
 printf "****************************\n"
 printf "Starting deployment...\n"
 start_time=$(date)
 printf "$start_time\n"
-echo -e "****************************\n"
+printf '****************************\n\n'
 if [ "$1" == "destroy" ]
 then
-  declare -i arguments="$#"
-  if (( arguments > 1 ))  # Number of arguments > 1?
-  then
-    display_help
-  else
-    printf "******************************\n"
-    printf "Removing the infrastructure...\n"
-    printf "******************************\n"
-    terraform destroy -auto-approve
-    # See https://cert-manager.io/docs/installation/helm/
-    printf "\n*****************************\n"
-    printf "Deleting cert-manager's CRDs.\n"
-    printf "*****************************\n"
-    # kubectl delete crd \
-    #   issuers.cert-manager.io \
-    #   clusterissuers.cert-manager.io \
-    #   certificates.cert-manager.io \
-    #   certificaterequests.cert-manager.io \
-    #   orders.acme.cert-manager.io \
-    #   challenges.acme.cert-manager.io
-    if [ "$REVERSE_PROXY" == "true" ]
-    then
-      printf "\n*****************************\n"
-      printf "Deleting traefik's CRDs.\n"
-      printf "*****************************\n"
-      kubectl delete crd \
-        ingressroutes.traefik.io \
-        ingressroutetcps.traefik.io \
-        ingressrouteudps.traefik.io \
-        middlewares.traefik.io \
-        middlewaretcps.traefik.io \
-        serverstransports.traefik.io \
-        serverstransporttcps.traefik.io \
-        tlsoptions.traefik.io \
-        tlsstores.traefik.io \
-        traefikservices.traefik.io \
-        accesscontrolpolicies.hub.traefik.io \
-        aiservices.hub.traefik.io \
-        apibundles.hub.traefik.io \
-        apicatalogitems.hub.traefik.io \
-        apiplans.hub.traefik.io \
-        apiportals.hub.traefik.io \
-        apiratelimits.hub.traefik.io \
-        apis.hub.traefik.io \
-        apiversions.hub.traefik.io \
-        managedsubscriptions.hub.traefik.io
-      #   gatewayclasses.gateway.networking.k8s.io \
-      #   gateways.gateway.networking.k8s.io \
-      #   grpcroutes.gateway.networking.k8s.io \
-      #   httproutes.gateway.networking.k8s.io \
-      #   referencegrants.gateway.networking.k8s.io
-    fi
-    print_time_elapsed "$start_time"
-  fi
+  # Verify all variables are bound
+  # : "$app_version"
+  : "$use_gateway"
+  # : "k8s_crds"
+  # : "$empty_dir"
+  # : "$persistent_disk"
+  # : "$enable_pprof"
+  # : "$build_image"
+  # : "$use_postgres"
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  printf "******************************\n"
+  printf "Removing the infrastructure...\n"
+  printf "******************************\n"
+  terraform -chdir="${script_dir}" "${tf_args[@]}"
+  # See https://cert-manager.io/docs/installation/helm/
+  # Uncomment and delete them (with --ignore-not-found=true) only when you are decommissioning a dedicated, single-purpose cluster
+  # environment and want a 100% clean slate.
+  # printf "\n*****************************\n"
+  # printf "Deleting cert-manager's CRDs.\n"
+  # printf "*****************************\n"
+  # kubectl delete crd \
+  #   issuers.cert-manager.io \
+  #   clusterissuers.cert-manager.io \
+  #   certificates.cert-manager.io \
+  #   certificaterequests.cert-manager.io \
+  #   orders.acme.cert-manager.io \
+  #   challenges.acme.cert-manager.io
+  printf "\n*****************************\n"
+  printf "Deleting traefik's CRDs.\n"
+  printf "*****************************\n"
+  kubectl delete crd --ignore-not-found=true \
+    ingressroutes.traefik.io \
+    ingressroutetcps.traefik.io \
+    ingressrouteudps.traefik.io \
+    middlewares.traefik.io \
+    middlewaretcps.traefik.io \
+    serverstransports.traefik.io \
+    serverstransporttcps.traefik.io \
+    tlsoptions.traefik.io \
+    tlsstores.traefik.io \
+    traefikservices.traefik.io \
+    accesscontrolpolicies.hub.traefik.io \
+    aiservices.hub.traefik.io \
+    apibundles.hub.traefik.io \
+    apicatalogitems.hub.traefik.io \
+    apiplans.hub.traefik.io \
+    apiportals.hub.traefik.io \
+    apiratelimits.hub.traefik.io \
+    apis.hub.traefik.io \
+    apiversions.hub.traefik.io \
+    managedsubscriptions.hub.traefik.io
+    #   gatewayclasses.gateway.networking.k8s.io \
+    #   gateways.gateway.networking.k8s.io \
+    #   grpcroutes.gateway.networking.k8s.io \
+    #   httproutes.gateway.networking.k8s.io \
+    #   referencegrants.gateway.networking.k8s.io
+  print_time_elapsed "$start_time"
 elif [ "$1" == "deploy" ]
 then
-  # Treats unset or undefined variables as an error when substituting (during parameter expansion).
-  # Does not apply to special parameters such as wildcard * or @.
-  set -u
-  # Checks that expected input environment variables are provided.
-  : "$APP_VERSION"
-  : "$K8S_CRDS"
-  : "$REVERSE_PROXY"
-  : "$PERSISTENT_DISK"
-  : "$EMPTY_DIR"
-  : "$PPROF"
-  : "$BUILD_IMAGE"
-  : "$DB_POSTGRES"
-  # : "
-  printf "*********************\n"
-  printf "Environment variables\n"
-  printf "*********************\n"
-  printf "APP_VERSION = $(printenv APP_VERSION)\n"
-  printf "REVERSE_PROXY = $(printenv REVERSE_PROXY)\n"
-  printf "K8S_CRDS = $(printenv K8S_CRDS)\n"
-  printf "PERSISTENT_DISK = $(printenv PERSISTENT_DISK)\n"
-  printf "EMPTY_DIR = $(printenv EMPTY_DIR)\n"
-  printf "PPROF = $(printenv PPROF)\n"
-  printf "BUILD_IMAGE = $(printenv BUILD_IMAGE)\n\n"
+  # Verify all variables are bound
+  : "$app_version"
+  : "$use_gateway"
+  : "k8s_crds"
+  : "$empty_dir"
+  : "$persistent_disk"
+  : "$enable_pprof"
+  : "$build_image"
+  : "$use_postgres"
   printf "*****************\n"
   printf "Current directory\n"
   printf "*****************\n"
-  echo -e "$(pwd)\n"
+  printf '%s\n\n' "$(pwd)"
   printf "*************************************************************\n"
   printf "Creating the directory structure for the Terraform state file\n"
   printf "*************************************************************\n"
-  # To preserve linebreaks, quote the command or variable.
-  # If the directory already exists, mkdir will not create it again and will not produce an error.
-  # -v, --verbose => Print a message for each created directory.
-  # -p, --parents => No error if existing, make parent directories as needed.
-  echo -n "$(mkdir -v -p ../../../tf-states/IaC-app/)"
-  # -v, --verbose => Output a diagnostic for every file processed.
-  # -R, --recursive => Change files and directories recursively.
-  echo -e "$(chmod -v -R 700 ../../../tf-states/)\n"
+  # Because ../../../../tf-states/IaC-app/ is a relative path, it resolves relative to whatever directory the shell is in when
+  # the script runs -- not necessarily the directory where the .sh file lives. If you want it anchored to your script's location
+  # regardless of where you invoke it from, resolve the script directory first.
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   printf "*********************************\n"
   printf "Saving the vars file with secrets\n"
   printf "*********************************\n"
-  echo -n "$(mkdir -v -p ../../../tf-secret-vars/IaC-app/)"
-  echo "$(chmod -v -R 700 ../../../tf-secret-vars/)"
+  # If the directory already exists, mkdir will not create it again and will not produce an error.
+  # -v, --verbose => Print a message for each created directory.
+  # -p, --parents => No error if existing, make parent directories as needed.
+  # Adding -- before the path in mkdir ensures that even if a parent directory name somehow starts with a hyphen (-), mkdir won't
+  # mistake it for a command-line flag.
+  mkdir -v -p -- "${script_dir}/../../../tf-secret-vars/IaC-app/" || exit 1
   # -v, --verbose => Explain what is being done.
   # -a, --archive	=> Preserve the source's metadata, such as creation date, permissions, and
   #                  extended attributes.
   # --backup=simple => Make a backup of each existing destination file.
   #   simple, never => Always make simple backups
-  # -S, --suffix=SUFFIX => Override the usual backup suffix.
-  echo -e "$(cp -v -a --backup="simple" -S=".bak" tf_secrets.auto.tfvars ../../../tf-secret-vars/IaC-app/tf_secrets.auto.tfvars)\n"
+  # -S "SUFFIX", --suffix=SUFFIX => Override the usual backup suffix.
+  cp -v -a --backup="simple" -S ".bak" -- \
+     "${script_dir}/tf_secrets.auto.tfvars" \
+     "${script_dir}/../../../tf-secret-vars/IaC-app/tf_secrets.auto.tfvars"
+  # Lock down permissions AFTER copying the secret file and any .bak backup
+  # -v, --verbose => Output a diagnostic for every file processed.
+  # -R, --recursive => Change files and directories recursively.
+  chmod -v -R 700 -- "${script_dir}/../../../tf-secret-vars/" || exit 1
+  printf "*************************************************************\n"
+  printf "Creating the directory structure for the Terraform state file\n"
+  printf "*************************************************************\n"
+  tfstate_dir="$(realpath -m "${script_dir}/../../../tf-states/IaC-app")"
+  mkdir -v -p -- "${tfstate_dir}" || exit 1
+  chmod -v -R 700 -- "${tfstate_dir}" || exit 1
   printf "**********************\n"
   printf "Initializing Terraform\n"
   printf "**********************\n"
-  terraform init
-  if [ "$REVERSE_PROXY" == "true" ]
+  terraform -chdir="${script_dir}" init \
+            -reconfigure \
+            -input=false \
+            -backend-config="path=${tfstate_dir}/terraform.tfstate"
+  if [ "$use_gateway" == "true" ]
   then
-    echo -e "\n*****************************************"
+    printf "\n*****************************************\n"
     printf "Creating CustomResourceDefinitions (CRDs)\n"
     printf "*****************************************\n"
-    terraform apply -auto-approve \
-      -var "reverse_proxy=$REVERSE_PROXY" \
-      -var "k8s_crds=$K8S_CRDS"
-    export K8S_CRDS="false"
+    terraform -chdir="${script_dir}" "${tf_args[@]}" \
+      -var "reverse_proxy=$use_gateway" \
+      -var "k8s_crds=$k8s_crds"
+    k8s_crds=false
   fi
   printf "\n*************************"
   printf "\nDeploying the application"
   printf "\n*************************\n"
-  terraform apply -auto-approve \
-    -var "app_version=$APP_VERSION" \
-    -var "reverse_proxy=$REVERSE_PROXY" \
-    -var "k8s_crds=$K8S_CRDS" \
-    -var "persistent_disk=$PERSISTENT_DISK" \
-    -var "empty_dir=$EMPTY_DIR" \
-    -var "pprof=$PPROF" \
-    -var "build_image=$BUILD_IMAGE" \
-    -var "db_postgres=$DB_POSTGRES"
-  printf "\n*********************\n"
-  printf "Copying the lock file\n"
-  printf "*********************\n"
-  # Copy lock file so that it can be saved in the repo.
-  if [ -f ../../../tf-states/IaC-app/.terraform.lock.hcl ]
-  then
-    echo "$(cp -v -a ../../../tf-states/IaC-app/.terraform.lock.hcl .terraform.lock.hcl)"
-  else
-    echo "The lock file does not exist."
-  fi
+  terraform -chdir="${script_dir}" "${tf_args[@]}" \
+    -var "app_version=$app_version" \
+    -var "reverse_proxy=$use_gateway" \
+    -var "k8s_crds=$k8s_crds" \
+    -var "persistent_disk=$persistent_disk" \
+    -var "empty_dir=$empty_dir" \
+    -var "pprof=$enable_pprof" \
+    -var "build_image=$build_image" \
+    -var "db_postgres=$use_postgres"
+  # To ensure no other local user can even peek inside ${tfstate_dir} while Terraform is running, lock the folder immediately after
+  # mkdir, and run chmod again at the very end after terraform apply finishes writing the state files.
+  chmod -v -R 700 -- "${tfstate_dir}" || exit 1
   print_time_elapsed "$start_time"
 else
+  printf 'Command "%s" -> Not implemented\n\n' "$1"
   display_help
 fi

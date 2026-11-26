@@ -21,15 +21,15 @@ set -euo pipefail
 # action=""
 
 display_help() {
-  printf "Usage: $0 <deploy|destroy> [OPTIONS]\n\n"
+  printf 'Usage: %s <deploy|destroy> [OPTIONS]\n\n' "$0"
   printf "Commands:\n"
-  printf "  deploy                    Plan or apply changes to the infrastructure\n"
-  printf "  destroy                   Destroy the managed infrastructure\n\n"
+  printf "  deploy               Plan or apply changes to the infrastructure\n"
+  printf "  destroy              Destroy the managed infrastructure\n\n"
   printf "Options:\n"
-  printf "  -p, --plan                Run terraform plan (deploy only)\n"
-  printf "  -a, --apply               Run terraform apply (default for deploy)\n"
-  printf "  -y, --auto-approve        Skip interactive approval (apply or destroy)\n"
-  printf "  -h, --help                Display this help message\n\n"
+  printf "  -p, --plan           Run terraform plan (deploy only)\n"
+  printf "  -a, --apply          Run terraform apply (default for deploy)\n"
+  printf "  -y, --auto-approve   Skip interactive approval (apply or destroy)\n"
+  printf "  -h, --help           Display this help message\n\n"
   exit 0
 }
 
@@ -118,7 +118,7 @@ print_time_elapsed() {
 }
 
 # Main program
-echo
+printf "\n"
 check_options "$@"
 printf "****************************\n"
 printf "Starting deployment...\n"
@@ -131,8 +131,6 @@ then
   printf "Current directory\n"
   printf "*****************\n"
   printf '%s\n\n' "$(pwd)"
-  # To preserve linebreaks, quote the command or variable.
-  #
   # Because ../../../../tf-states/IaC-K8s/ is a relative path, it resolves relative to whatever directory the shell is in when
   # the script runs -- not necessarily the directory where the .sh file lives. If you want it anchored to your script's location
   # regardless of where you invoke it from, resolve the script directory first.
@@ -140,6 +138,11 @@ then
   printf "*********************************\n"
   printf "Saving the vars file with secrets\n"
   printf "*********************************\n"
+  # If the directory already exists, mkdir will not create it again and will not produce an error.
+  # -v, --verbose => Print a message for each created directory.
+  # -p, --parents => No error if existing, make parent directories as needed.
+  # Adding -- before the path in mkdir ensures that even if a parent directory name somehow starts with a hyphen (-), mkdir won't
+  # mistake it for a command-line flag.
   mkdir -v -p -- "${script_dir}/../../../../tf-secret-vars/IaC-K8s/" || exit 1
   # -v, --verbose => Explain what is being done.
   # -a, --archive	=> Preserve the source's metadata, such as creation date, permissions, and
@@ -151,19 +154,14 @@ then
      "${script_dir}/tf_secrets.auto.tfvars" \
      "${script_dir}/../../../../tf-secret-vars/IaC-K8s/tf_secrets.auto.tfvars"
   # Lock down permissions AFTER copying the secret file and any .bak backup
+  # -v, --verbose => Output a diagnostic for every file processed.
+  # -R, --recursive => Change files and directories recursively.
   chmod -v -R 700 -- "${script_dir}/../../../../tf-secret-vars/" || exit 1
   printf "*************************************************************\n"
   printf "Creating the directory structure for the Terraform state file\n"
   printf "*************************************************************\n"
   tfstate_dir="$(realpath -m "${script_dir}/../../../../tf-states/IaC-K8s")"
-  # If the directory already exists, mkdir will not create it again and will not produce an error.
-  # -v, --verbose => Print a message for each created directory.
-  # -p, --parents => No error if existing, make parent directories as needed.
-  # Adding -- before the path in mkdir ensures that even if a parent directory name somehow starts with a hyphen (-), mkdir won't
-  # mistake it for a command-line flag.
   mkdir -v -p -- "${tfstate_dir}" || exit 1
-  # -v, --verbose => Output a diagnostic for every file processed.
-  # -R, --recursive => Change files and directories recursively.
   chmod -v -R 700 -- "${tfstate_dir}" || exit 1
   printf "**********************\n"
   printf "Initializing Terraform\n"

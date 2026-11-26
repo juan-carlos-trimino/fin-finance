@@ -190,17 +190,20 @@ variable traefik_le_email {
 # busybox #
 ###########
 variable busybox {
-  default = "arm64v8/busybox:musl"
+  # A multi-architecture manifest tag. When K8s pulls it, the container runtime automatically downloads the exact binary that
+  # matches the underlying node's CPU.
+  default = "busybox:musl"
   type = string
 }
 
 ##############
 # PostgreSQL #
 ##############
+# Use Debian (e.g., postgres:18.7-trixie) for production Kubernetes deployments.
 variable postgres_image_tag {  # https://www.postgresql.org/docs/release/
   description = "PostgreSQL Docker images (https://hub.docker.com/_/postgres)."
   type = string
-  default = "postgres:18.4-alpine3.24"
+  default = "postgres:18.7-trixie"
 }
 
 variable postgres_db_label {
