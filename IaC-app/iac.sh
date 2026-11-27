@@ -28,6 +28,7 @@ display_help() {
   printf "Options:\n"
   printf "  -p, --plan              Run terraform plan (deploy only)\n"
   printf "  -a, --apply             Run terraform apply (default for deploy)\n"
+  printf "                          terraform plan and terraform apply require the exact same input variables\n"
   printf "  -b, --build             Build the image (deploy only)\n"
   printf "  -n, --no-build          Use an image from the repo (deploy only)\n"
   printf "                          (The image has to exist in the repo)\n"
@@ -60,16 +61,18 @@ check_options() {
     exit 1
   fi
   local command="${arr[0]}"
-  local action=""
   local deploy_mode=""
+  local storage_type=""
   local auto_approve=false
   # Initialize all global variables with safe defaults (so destroy & set -u work cleanly)
+  action=""
   build_image=""
-  storage_type=""
+  app_version=""
   use_postgres=false
   enable_pprof=false
   use_gateway=false
-  app_version=""
+  persistent_disk=false
+  empty_dir=false
   case "$command" in
     -h|--help)
       display_help
@@ -147,7 +150,7 @@ check_options() {
         ndx=$(( ndx + 1 ))
         if [[ $ndx -ge $size || "${arr[ndx]}" == -* ]];
         then
-          printf "Error: %s requires a version argument (e.g., 1.0.0)\n" "$flag" >&2
+          printf "Error: %s requires a version argument (e.g., -v 1.0.0)\n" "$flag" >&2
           exit 1
         fi
         app_version="${arr[ndx]}"
@@ -166,9 +169,7 @@ check_options() {
     [[ -n "$build_image" ]] || { printf "Error: Either -b/--build or -n/--no-build is required for 'deploy'\n" >&2; exit 1; }
     [[ -n "$storage_type" ]] || { printf "Error: Either -e/--empty-dir or -i/--persistent-disk is required for 'deploy'\n" >&2; exit 1; }
   fi
-  k8s_crds=$use_gateway
-  persistent_disk=false
-  empty_dir=false
+  #
   if [[ "$storage_type" == "persistent-disk" ]];
   then
     persistent_disk=true
@@ -177,7 +178,7 @@ check_options() {
     empty_dir=true
   fi
   # Build global Terraform arguments array
-  tf_args=("$action")
+  tf_args=()
   if [[ "$auto_approve" == true && "$action" != "plan" ]];
   then
     tf_args+=("-auto-approve")
@@ -207,22 +208,22 @@ printf "Starting deployment...\n"
 start_time=$(date)
 printf "$start_time\n"
 printf '****************************\n\n'
+printf "*************************************************************\n"
+printf "Creating the directory structure for the Terraform state file\n"
+printf "*************************************************************\n"
+# Because ../../../tf-states/IaC-app/ is a relative path, it resolves relative to whatever directory the shell is in when
+# the script runs -- not necessarily the directory where the .sh file lives. If you want it anchored to your script's location
+# regardless of where you invoke it from, resolve the script directory first.
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ "$1" == "destroy" ]
 then
-  # Verify all variables are bound
-  # : "$app_version"
-  : "$use_gateway"
-  # : "k8s_crds"
-  # : "$empty_dir"
-  # : "$persistent_disk"
-  # : "$enable_pprof"
-  # : "$build_image"
-  # : "$use_postgres"
-  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   printf "******************************\n"
   printf "Removing the infrastructure...\n"
   printf "******************************\n"
-  terraform -chdir="${script_dir}" "${tf_args[@]}"
+  # Terraform automatically loads ANY file ending in .auto.tfvars during EVERY command (plan, apply, and destroy); hence, you
+  # explicitly pass -var-file="last-deploy.tfvars" to terraform destroy. Only destroy ever reads the saved file -- zero risk
+  # of plan or apply accidentally picking up stale flags from a previous deployment.
+  terraform -chdir="${script_dir}" "$action" "${tf_args[@]}" -var-file="last-deploy.tfvars"
   # See https://cert-manager.io/docs/installation/helm/
   # Uncomment and delete them (with --ignore-not-found=true) only when you are decommissioning a dedicated, single-purpose cluster
   # environment and want a 100% clean slate.
@@ -265,29 +266,36 @@ then
     #   grpcroutes.gateway.networking.k8s.io \
     #   httproutes.gateway.networking.k8s.io \
     #   referencegrants.gateway.networking.k8s.io
+  rm -f "${script_dir}/last-deploy.tfvars"
   print_time_elapsed "$start_time"
 elif [ "$1" == "deploy" ]
 then
   # Verify all variables are bound
-  : "$app_version"
-  : "$use_gateway"
-  : "k8s_crds"
-  : "$empty_dir"
-  : "$persistent_disk"
-  : "$enable_pprof"
+  : "$action"
   : "$build_image"
+  : "$app_version"
   : "$use_postgres"
+  : "$enable_pprof"
+  : "$use_gateway"
+  : "$persistent_disk"
+  : "$empty_dir"
+  #
+  printf "*********************\n"
+  printf "Debug - variables    \n"
+  printf "*********************\n"
+  printf "action = $action\n"
+  printf "build_image = $build_image\n"
+  printf "app_version = $app_version\n"
+  printf "use_postgres = $use_postgres\n"
+  printf "enable_pprof = $enable_pprof\n"
+  printf "use_gatewate = $use_gateway\n"
+  printf "persistent_disk = $persistent_disk\n"
+  printf "empty_dir = $empty_dir\n\n"
+  #
   printf "*****************\n"
   printf "Current directory\n"
   printf "*****************\n"
   printf '%s\n\n' "$(pwd)"
-  printf "*************************************************************\n"
-  printf "Creating the directory structure for the Terraform state file\n"
-  printf "*************************************************************\n"
-  # Because ../../../../tf-states/IaC-app/ is a relative path, it resolves relative to whatever directory the shell is in when
-  # the script runs -- not necessarily the directory where the .sh file lives. If you want it anchored to your script's location
-  # regardless of where you invoke it from, resolve the script directory first.
-  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   printf "*********************************\n"
   printf "Saving the vars file with secrets\n"
   printf "*********************************\n"
@@ -323,31 +331,56 @@ then
             -reconfigure \
             -input=false \
             -backend-config="path=${tfstate_dir}/terraform.tfstate"
-  if [ "$use_gateway" == "true" ]
+  common_vars=(
+    -var "build_image=$build_image"
+    -var "app_version=$app_version"
+    -var "db_postgres=$use_postgres"
+    -var "pprof=$enable_pprof"
+    -var "reverse_proxy=$use_gateway"
+    -var "persistent_disk=$persistent_disk"
+    -var "empty_dir=$empty_dir"
+  )
+  # Only run this step when the Traefik CRD is not already present in the cluster.
+  if [[ "$use_gateway" == "true" ]] && ! kubectl get crd ingressroutes.traefik.io &>/dev/null;
   then
     printf "\n*****************************************\n"
     printf "Creating CustomResourceDefinitions (CRDs)\n"
     printf "*****************************************\n"
-    terraform -chdir="${script_dir}" "${tf_args[@]}" \
-      -var "reverse_proxy=$use_gateway" \
-      -var "k8s_crds=$k8s_crds"
-    k8s_crds=false
+    # When action=apply (with auto_approve=true)
+    # terraform -chdir="${script_dir}" apply -auto-approve "${tf_args[@]}" ... passes -auto-approve twice, which Terraform
+    # accepts without any issue.
+    terraform -chdir="${script_dir}" apply -auto-approve \
+      "${tf_args[@]}" \
+      "${common_vars[@]}" \
+      -var "k8s_crds=true"
   fi
   printf "\n*************************"
   printf "\nDeploying the application"
   printf "\n*************************\n"
-  terraform -chdir="${script_dir}" "${tf_args[@]}" \
-    -var "app_version=$app_version" \
-    -var "reverse_proxy=$use_gateway" \
-    -var "k8s_crds=$k8s_crds" \
-    -var "persistent_disk=$persistent_disk" \
-    -var "empty_dir=$empty_dir" \
-    -var "pprof=$enable_pprof" \
-    -var "build_image=$build_image" \
-    -var "db_postgres=$use_postgres"
-  # To ensure no other local user can even peek inside ${tfstate_dir} while Terraform is running, lock the folder immediately after
-  # mkdir, and run chmod again at the very end after terraform apply finishes writing the state files.
+  terraform -chdir="${script_dir}" "$action" \
+    "${tf_args[@]}" \
+    "${common_vars[@]}" \
+    -var "k8s_crds=false"
+  # To ensure no other local user can even peek inside ${tfstate_dir} while Terraform is running, lock the folder immediately
+  # after mkdir, and run chmod again at the very end after terraform apply finishes writing the state files.
   chmod -v -R 700 -- "${tfstate_dir}" || exit 1
+  # If action is apply, save current variables for a future destroy.
+  if [ "$action" == "apply" ];
+  then
+    # Add last-deploy.tfvars to your .gitignore file so Git ignores it and never commits it to your repository.
+    # You need quotes around "${app_version}" because it is a string (e.g., "1.0.0" or "latest"), whereas booleans (true/false)
+    # remain unquoted.
+    cat <<EOF > "${script_dir}/last-deploy.tfvars"
+build_image     = ${build_image}
+app_version     = "${app_version}"
+db_postgres     = ${use_postgres}
+pprof           = ${enable_pprof}
+reverse_proxy   = ${use_gateway}
+persistent_disk = ${persistent_disk}
+empty_dir       = ${empty_dir}
+k8s_crds        = false
+EOF
+  fi
   print_time_elapsed "$start_time"
 else
   printf 'Command "%s" -> Not implemented\n\n' "$1"
